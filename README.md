@@ -50,10 +50,12 @@ subgraph author's) before any allocation is opened.
 
 1. **M1 — contract test**: `crates/common` encodes one hand-written entity set; engine loads
    it into a scratch schema; graph-node serves it and answers a GraphQL query correctly.
-2. **M2 — first family** (`uniswap-v3`, schema `Qma8a81T…`): base variant (`Qmb4VUcA…`,
-   smallest data of the pair), verified differentially, landed paused on riv + kan via the
+2. **M2 — first family** (`uniswap-v3`, schema `Qma8a81T…`): **mainnet variant first**
+   (`QmTZ8ejX…`, 11.3M q/day — highest QV, per operator 2026-08-21) via the
+   [pinax-network/substreams-uniswap-v3](https://github.com/pinax-network/substreams-uniswap-v3)
+   fork; gap list in `uniswap-v3/PARITY.md`. Verified differentially, landed paused via the
    engine, activated behind a 200-GRT allocation.
-3. **M3 — mainnet variant** of the same family (`QmTZ8ejX…`, the 11.3M q/day prize).
+3. **M3 — base variant** (`Qmb4VUcA…`) — same spkg, params-only rebind.
 4. **M4 — remaining families** in market-size order (`QmWSfh5q`, `QmVjXU7y`, `QmY67iZD`,
    then the matic revival `QmWqwrVt`).
 5. **M5 — port `uniswap-v4`** from `substreams-v4-subgraph` once the active univ4base

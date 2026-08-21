@@ -11,4 +11,4 @@ graft:
 placement:
   riv: { shard: base_fast, node: index_node_chain_base_0 }
   kan: { shard: subgraphshard_b, node: index_node_chain_base_0 }
-milestone: M2   # first shipped target
+milestone: M3   # same spkg as mainnet, params-only rebind

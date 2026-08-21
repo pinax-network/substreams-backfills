@@ -12,4 +12,4 @@ graft:            # why ordinary deploy never resolves — full ancestry must ex
 placement:
   riv: { shard: mainnet_fast, node: index_node_chain_mainnet_0 }
   kan: { shard: chain_mainnet, node: index_node_chain_mainnet_0 }
-milestone: M3
+milestone: M2   # highest QV first (operator, 2026-08-21)

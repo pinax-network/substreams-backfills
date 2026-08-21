@@ -1,6 +1,6 @@
 specVersion: v0.1.0
 package:
-  name: erc20_balances_backfill
+  name: uniswap_v3_backfill
   version: v0.0.1
 # network + initialBlock are bound per target (targets/<hash>.yaml), not hardcoded here.
 modules:

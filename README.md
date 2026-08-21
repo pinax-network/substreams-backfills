@@ -11,12 +11,12 @@ served by ordinary graph-node syncing in reasonable time:
 
 | Deployment | Chain | q/day | Blocker |
 |---|---|---|---|
-| `QmTZ8ejX…` | mainnet | 11.3M | graft chain back to 2021 (base @19,470,000 → base @13,605,860) |
-| `QmWSfh5q…` | base | 3.4M | ellipfra-monopoly; from-genesis sync ≈ months |
-| `QmVjXU7y…` | bsc | 2.6M | ellipfra-monopoly |
-| `Qmb4VUcA…` | base | 2.1M | grafts @19,852,000 + from-genesis base sync |
-| `QmY67iZD…` | bsc | 1.9M | ellipfra near-monopoly |
-| `QmWqwrVt…` | matic | 5.5M | our only copy died years behind (kan sgd3); catch-up ≈ months |
+| `QmTZ8ejX…` **Uniswap V3 (mainnet)** | mainnet | 11.3M | graft chain back to 2021 (base @19,470,000 → base @13,605,860) |
+| `QmWSfh5q…` morpho-blue-base | base | 3.4M | ellipfra-monopoly; from-genesis sync ≈ months |
+| `QmVjXU7y…` pancakeswap-infinity-cl-bsc | bsc | 2.6M | ellipfra-monopoly |
+| `Qmb4VUcA…` **Uniswap V3 Base** | base | 2.1M | grafts @19,852,000 + from-genesis base sync |
+| `QmY67iZD…` exchange-v3-bsc | bsc | 1.9M | ellipfra near-monopoly |
+| `QmWqwrVt…` uniswap-v3-matic | matic | 5.5M | our only copy died years behind (kan sgd3); catch-up ≈ months |
 
 Only ellipfra (`graph-l2prod.ellipfra.com`) serves most of these — single-indexer pricing on
 ~10M q/day. A deployment-hash-faithful backfill breaks that moat.
@@ -50,7 +50,7 @@ subgraph author's) before any allocation is opened.
 
 1. **M1 — contract test**: `crates/common` encodes one hand-written entity set; engine loads
    it into a scratch schema; graph-node serves it and answers a GraphQL query correctly.
-2. **M2 — first family** (`erc20-balances`, schema `Qma8a81T…`): base variant (`Qmb4VUcA…`,
+2. **M2 — first family** (`uniswap-v3`, schema `Qma8a81T…`): base variant (`Qmb4VUcA…`,
    smallest data of the pair), verified differentially, landed paused on riv + kan via the
    engine, activated behind a 200-GRT allocation.
 3. **M3 — mainnet variant** of the same family (`QmTZ8ejX…`, the 11.3M q/day prize).

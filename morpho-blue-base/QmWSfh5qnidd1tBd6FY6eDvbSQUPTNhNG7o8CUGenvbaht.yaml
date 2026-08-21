@@ -1,5 +1,5 @@
 deployment: QmWSfh5qnidd1tBd6FY6eDvbSQUPTNhNG7o8CUGenvbaht
-family: erc20-base-QmWSfh   # own schema QmWL6kvHgo…, 7 datasources, spec 0.0.5
+family: morpho-blue-base   # own schema QmWL6kvHgo…, 7 datasources, spec 0.0.5
 schema: QmWL6kvHgoUYezDhGLm9N2yS8AJL2zkPcFTCKimSomvXku
 chain: base
 market_qpd: 3400000

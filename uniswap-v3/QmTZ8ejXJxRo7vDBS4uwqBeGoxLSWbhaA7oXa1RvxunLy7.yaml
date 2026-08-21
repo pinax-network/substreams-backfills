@@ -1,5 +1,6 @@
 deployment: QmTZ8ejXJxRo7vDBS4uwqBeGoxLSWbhaA7oXa1RvxunLy7
-family: erc20-balances
+family: uniswap-v3
+display_name: Uniswap-V3
 schema: Qma8a81T9XoX5Pbkrk8J3kxMhWdXJzFSYZge1wGi3QZBru
 chain: mainnet
 market_qpd: 11300000

@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["common", "erc20-balances"]
+members = ["common", "uniswap-v3"]
 
 [workspace.package]
 edition = "2021"

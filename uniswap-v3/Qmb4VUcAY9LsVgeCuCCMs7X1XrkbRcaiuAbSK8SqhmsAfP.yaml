@@ -1,5 +1,6 @@
 deployment: Qmb4VUcAY9LsVgeCuCCMs7X1XrkbRcaiuAbSK8SqhmsAfP
-family: erc20-balances
+family: uniswap-v3
+display_name: Uniswap V3 Base
 schema: Qma8a81T9XoX5Pbkrk8J3kxMhWdXJzFSYZge1wGi3QZBru
 chain: base
 market_qpd: 2100000

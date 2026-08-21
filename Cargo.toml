@@ -1,0 +1,13 @@
+[workspace]
+resolver = "2"
+members = ["crates/common", "backfills/erc20-balances"]
+
+[workspace.package]
+edition = "2021"
+license = "Apache-2.0"
+repository = "https://github.com/pinax-network/substreams-backfills"
+
+[workspace.dependencies]
+substreams = "0.6"
+substreams-ethereum = "0.10"
+prost = "0.13"

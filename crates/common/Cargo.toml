@@ -1,0 +1,8 @@
+[package]
+name = "backfill-common"
+version = "0.1.0"
+edition.workspace = true
+
+[dependencies]
+substreams.workspace = true
+prost.workspace = true

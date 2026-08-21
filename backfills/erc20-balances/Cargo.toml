@@ -1,0 +1,13 @@
+[package]
+name = "erc20-balances"
+version = "0.1.0"
+edition.workspace = true
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+backfill-common = { path = "../../crates/common" }
+substreams.workspace = true
+substreams-ethereum.workspace = true
+prost.workspace = true

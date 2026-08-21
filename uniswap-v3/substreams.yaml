@@ -2,11 +2,24 @@ specVersion: v0.1.0
 package:
   name: uniswap_v3_backfill
   version: v0.0.1
-# network + initialBlock are bound per target (targets/<hash>.yaml), not hardcoded here.
+
+# Per-target binding (network / initialBlock / params) — see the Qm*.yaml files:
+#   Uniswap V3 Base (Qmb4VUcA…): network base,    initialBlock 1371713,
+#     params 33128a8fc17869897dce68ed026d694621f6fdfd
+#   Uniswap-V3 mainnet (QmTZ8ej…): network mainnet, initialBlock 12369621,
+#     params 1f98431c8ad98523631ae4a59f267346ea31f984
+
 modules:
   - name: map_entities
     kind: map
+    initialBlock: 1371713
     inputs:
+      - params: string
       - source: sf.ethereum.type.v2.Block
     output:
-      type: proto:backfill.v1.EntityVersions
+      type: proto:sf.substreams.sink.entity.v1.EntityChanges
+
+params:
+  map_entities: 33128a8fc17869897dce68ed026d694621f6fdfd
+
+network: base

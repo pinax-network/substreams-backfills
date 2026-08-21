@@ -10,4 +10,5 @@ crate-type = ["cdylib"]
 backfill-common = { path = "../common" }
 substreams.workspace = true
 substreams-ethereum.workspace = true
+substreams-entity-change.workspace = true
 prost.workspace = true

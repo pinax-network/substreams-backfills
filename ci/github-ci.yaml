@@ -1,0 +1,24 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - run: cargo check --workspace
+      - name: targets are well-formed
+        run: |
+          python3 -c "
+          import yaml, glob, sys
+          for f in glob.glob('targets/*.yaml'):
+              d = yaml.safe_load(open(f))
+              assert d['deployment'] in f, f
+              assert 'family' in d and 'chain' in d, f
+          print('targets ok')
+          "

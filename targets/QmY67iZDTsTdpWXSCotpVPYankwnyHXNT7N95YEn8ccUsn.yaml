@@ -1,0 +1,9 @@
+deployment: QmY67iZDTsTdpWXSCotpVPYankwnyHXNT7N95YEn8ccUsn
+family: erc20-bsc-QmY67i   # schema QmP9xqULGJ…, spec 0.0.2 (oldest — check engine min-spec)
+schema: QmP9xqULGJzQE7SFKyzkgD8LEkjoy1aChCJnbNkCT4VDRi
+chain: bsc
+market_qpd: 1900000
+signal_grt: 14324
+competitors: 2   # ellipfra 112k + 7k straggler
+note: offchain sync also running (riv sgd5281 bsc_fast + kan sgd5305)
+milestone: M4

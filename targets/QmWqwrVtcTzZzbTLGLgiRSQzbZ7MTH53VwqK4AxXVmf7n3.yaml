@@ -1,0 +1,7 @@
+deployment: QmWqwrVtcTzZzbTLGLgiRSQzbZ7MTH53VwqK4AxXVmf7n3
+family: TBD   # matic subgraph, schema not yet inventoried
+chain: matic
+market_qpd: 5500000
+competitors: unknown
+note: kan sgd3 died disk-full ~34M blocks behind (matic shard expanded 4Ti->4.5Ti 2026-08-20); revival via backfill, not catch-up
+milestone: M4

@@ -1,0 +1,14 @@
+deployment: QmTZ8ejXJxRo7vDBS4uwqBeGoxLSWbhaA7oXa1RvxunLy7
+family: erc20-balances
+schema: Qma8a81T9XoX5Pbkrk8J3kxMhWdXJzFSYZge1wGi3QZBru
+chain: mainnet
+market_qpd: 11300000
+signal_grt: 110000
+competitors: 5   # ellipfra top allocator
+graft:            # why ordinary deploy never resolves — full ancestry must exist locally
+  - { base: QmZeCuoZeadgHkGwLwMeguyqUKz1WPWQYKcKyMCeQqGhsF, block: 19470000 }
+  - { base: QmSLHXCZBNKVtJRrWiEAF1yRQNPqAFptBsAcLdXQPsubSX, block: 13605860 }
+placement:
+  riv: { shard: mainnet_fast, node: index_node_chain_mainnet_0 }
+  kan: { shard: chain_mainnet, node: index_node_chain_mainnet_0 }
+milestone: M3

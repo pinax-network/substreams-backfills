@@ -1,0 +1,13 @@
+deployment: Qmb4VUcAY9LsVgeCuCCMs7X1XrkbRcaiuAbSK8SqhmsAfP
+family: erc20-balances
+schema: Qma8a81T9XoX5Pbkrk8J3kxMhWdXJzFSYZge1wGi3QZBru
+chain: base
+market_qpd: 2100000
+signal_grt: 26000
+competitors: 1   # ellipfra only, 15k GRT
+graft:
+  - { base: QmPWDTWRfS8XewMJhxXoQiZX6RkrUMYH7BFnnB846v6wzR, block: 19852000 }  # base is graft-free
+placement:
+  riv: { shard: base_fast, node: index_node_chain_base_0 }
+  kan: { shard: subgraphshard_b, node: index_node_chain_base_0 }
+milestone: M2   # first shipped target

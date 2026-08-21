@@ -1,5 +1,5 @@
 deployment: QmWqwrVtcTzZzbTLGLgiRSQzbZ7MTH53VwqK4AxXVmf7n3
-family: TBD   # matic subgraph, schema not yet inventoried
+family: uniswap-v3-matic
 chain: matic
 market_qpd: 5500000
 competitors: unknown

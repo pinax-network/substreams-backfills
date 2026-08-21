@@ -1,5 +1,5 @@
 deployment: QmY67iZDTsTdpWXSCotpVPYankwnyHXNT7N95YEn8ccUsn
-family: erc20-bsc-QmY67i   # schema QmP9xqULGJ…, spec 0.0.2 (oldest — check engine min-spec)
+family: exchange-v3-bsc   # schema QmP9xqULGJ…, spec 0.0.2 (oldest — check engine min-spec)
 schema: QmP9xqULGJzQE7SFKyzkgD8LEkjoy1aChCJnbNkCT4VDRi
 chain: bsc
 market_qpd: 1900000

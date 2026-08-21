@@ -28,14 +28,14 @@ Tracking: [k8s-subgraphs#779](https://github.com/pinax-network/k8s-subgraphs/iss
 - **Engine** (separate repo): [`substreams-graph-node-backfill`](https://github.com/pinax-network/substreams-graph-node-backfill)
   (v0.5.0+) — loads entity rows into graph-node Postgres schemas and finalizes deployment
   metadata. This repo NEVER duplicates engine logic.
-- **`crates/common`** — shared Rust for the hard 20%: emitting entities that are byte-faithful
+- **`common/`** — shared Rust for the hard 20%: emitting entities that are byte-faithful
   to graph-node's storage semantics (`vid` ordering, `block_range` vs immutable `block$`,
   causality regions, PoI compatibility). One reviewed implementation.
-- **`backfills/<family>/`** — one Substreams package per subgraph *family* (same schema =
-  same family; the mainnet + base "ERC20" targets share schema `Qma8a81T…` and are one
-  family parameterized by chain/addresses/start-block).
-- **`targets/<Qm-hash>.yaml`** — the per-deployment binding: schema hash, chain, graft
-  ancestry, market data, and the sgd/shard placement per cluster.
+- **`<family>/`** (root-level, one dir per subgraph family — same schema = same family;
+  the mainnet + base "ERC20" targets share schema `Qma8a81T…` and are one family
+  parameterized by chain/addresses/start-block).
+- **`<family>/<Qm-hash>.yaml`** — the per-deployment binding living next to its module:
+  schema hash, chain, graft ancestry, market data, sgd/shard placement per cluster.
 
 ## Deployment-hash fidelity — the one invariant
 

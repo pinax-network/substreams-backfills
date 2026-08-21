@@ -16,7 +16,7 @@ jobs:
         run: |
           python3 -c "
           import yaml, glob, sys
-          for f in glob.glob('targets/*.yaml'):
+          for f in glob.glob('*/Qm*.yaml'):
               d = yaml.safe_load(open(f))
               assert d['deployment'] in f, f
               assert 'family' in d and 'chain' in d, f

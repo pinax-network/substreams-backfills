@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/common", "backfills/erc20-balances"]
+members = ["common", "erc20-balances"]
 
 [workspace.package]
 edition = "2021"

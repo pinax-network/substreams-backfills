@@ -7,7 +7,7 @@ edition.workspace = true
 crate-type = ["cdylib"]
 
 [dependencies]
-backfill-common = { path = "../../crates/common" }
+backfill-common = { path = "../common" }
 substreams.workspace = true
 substreams-ethereum.workspace = true
 prost.workspace = true

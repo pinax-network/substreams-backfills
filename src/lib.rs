@@ -1308,7 +1308,8 @@ pub fn graph_out(
     // Tick Day/Hour data
     // db::create_entity_tick_windows(&mut tables, &events.ticks_created);
     // db::update_tick_windows(&mut tables, &events.ticks_updated);
-    // db::liquidities_tick_windows(&mut tables, &ticks_liquidities_deltas);
+    db::tick_windows_create(&mut tables, &ticks_liquidities_deltas);
+    db::liquidities_tick_windows(&mut tables, &ticks_liquidities_deltas);
 
     // Position:
     // TODO: validate all the positions here

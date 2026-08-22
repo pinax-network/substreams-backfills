@@ -150,7 +150,6 @@ fn create_pool(tables: &mut Tables, pool: &Pool) {
         .set("totalValueLockedETH", &bigdecimal0)
         .set("totalValueLockedUSD", &bigdecimal0)
         .set("totalValueLockedUSDUntracked", &bigdecimal0)
-        .set("totalValueLockedETHUntracked", &bigdecimal0)
         .set("liquidityProviderCount", &bigint0);
 }
 
@@ -171,7 +170,7 @@ fn create_pool_windows_entity(
         .set("tick", BigInt::zero())
         .set("feeGrowthGlobal0X128", BigInt::zero())
         .set("feeGrowthGlobal1X128", BigInt::zero())
-        .set("totalValueLockedUSD", BigDecimal::zero())
+        .set("tvlUSD", BigDecimal::zero())
         .set("volumeToken0", BigDecimal::zero())
         .set("volumeToken1", BigDecimal::zero())
         .set("volumeUSD", BigDecimal::zero())
@@ -233,11 +232,12 @@ pub fn total_value_locked_pool_entity_change(tables: &mut Tables, derived_tvl_de
         .iter()
         .operation_eq(Operation::Create)
         .key_first_segment_eq("pool")
+        // NOTE: totalValueLockedETHUntracked is intentionally absent — the target schema
+        // (Qma8a81T…) has no such column on Pool. The store still tracks it for Factory.
         .key_last_segment_in([
             "totalValueLockedUSD",
             "totalValueLockedETH",
             "totalValueLockedUSDUntracked",
-            "totalValueLockedETHUntracked",
         ])
     {
         let pool_address = key::segment_at(&delta.key, 1);
@@ -387,7 +387,7 @@ fn create_token_windows_entity(
         .set("token", format!("0x{}", token_addr))
         .set("volume", &bigdecimal0)
         .set("volumeUSD", &bigdecimal0)
-        .set("volumeUSDUntracked", &bigdecimal0) // TODO: NEED TO SET THIS VALUE IN THE SUBSTREAMS
+        .set("untrackedVolumeUSD", &bigdecimal0) // TODO: NEED TO SET THIS VALUE IN THE SUBSTREAMS
         .set("totalValueLocked", &bigdecimal0)
         .set("totalValueLockedUSD", &bigdecimal0)
         .set("priceUSD", &bigdecimal0)
@@ -541,6 +541,86 @@ pub fn update_tick_entity_change(tables: &mut Tables, ticks_updated: &Vec<events
         if tick.fee_growth_outside_1x_128.len() != 0 {
             row.set_bigint("feeGrowthOutside1X128", &tick.fee_growth_outside_1x_128);
         }
+    }
+}
+
+// -----------------------------------
+//  Map Tick Day/Hour Data Entities
+// -----------------------------------
+// The upstream StreamingFast port left TickDayData/TickHourData commented out (in its
+// schema.graphql too), but the target deployment schema Qma8a81T… DECLARES both with
+// non-nullable fields — a backfill that omits them produces rows graph-node rejects and a
+// deployment that answers tick-window queries differently from a natively-synced copy.
+//
+// store_ticks_liquidities already writes the source data as
+// `Tick{Day,Hour}Data:{time_id}:{pool}:{tick_idx}:liquidity{Gross,Net}` and expires the
+// previous window with delete_prefix, so we only need the entity emission.
+//
+// Window id follows the subgraph's convention `<tick.id>-<time_id>` where tick.id is
+// `0x{pool}#{tickIdx}` (same format create_tick_entity_change writes). volumeToken0/1,
+// volumeUSD, feesUSD and feeGrowthOutside*X128 are initialized to zero and never updated,
+// matching the subgraph's own tick-window behaviour. BOTH the id format and that
+// zero-volume behaviour are pinned by differential verification against a reference
+// indexer before this deployment is ever allocated to.
+pub fn tick_windows_create(tables: &mut Tables, ticks_liquidities_deltas: &Deltas<DeltaBigInt>) {
+    for delta in ticks_liquidities_deltas.iter().operation_eq(Operation::Create) {
+        let table_name = match key::first_segment(&delta.key) {
+            "TickDayData" => "TickDayData",
+            "TickHourData" => "TickHourData",
+            _ => continue,
+        };
+        let time_id: i64 = match key::segment_at(&delta.key, 1).parse() {
+            Ok(v) => v,
+            Err(_) => continue,
+        };
+        let pool_address = key::segment_at(&delta.key, 2);
+        let tick_idx = key::segment_at(&delta.key, 3);
+        let bigdecimal0 = BigDecimal::zero();
+        let bigint0 = BigInt::zero();
+
+        let row = tables
+            .update_row(table_name, format!("0x{pool_address}#{tick_idx}-{time_id}"))
+            .set("pool", format!("0x{pool_address}"))
+            .set("tick", format!("0x{pool_address}#{tick_idx}"))
+            .set("liquidityGross", &bigint0)
+            .set("liquidityNet", &bigint0)
+            .set("volumeToken0", &bigdecimal0)
+            .set("volumeToken1", &bigdecimal0)
+            .set("volumeUSD", &bigdecimal0)
+            .set("feesUSD", &bigdecimal0);
+
+        match table_name {
+            "TickDayData" => {
+                row.set("date", (time_id * 86400) as i32)
+                    .set("feeGrowthOutside0X128", &bigint0)
+                    .set("feeGrowthOutside1X128", &bigint0);
+            }
+            "TickHourData" => {
+                row.set("periodStartUnix", (time_id * 3600) as i32);
+            }
+            _ => {}
+        }
+    }
+}
+
+pub fn liquidities_tick_windows(tables: &mut Tables, ticks_liquidities_deltas: &Deltas<DeltaBigInt>) {
+    for delta in ticks_liquidities_deltas
+        .iter()
+        .operation_not_eq(Operation::Delete)
+        .key_last_segment_in(["liquidityGross", "liquidityNet"])
+    {
+        let table_name = match key::first_segment(&delta.key) {
+            "TickDayData" => "TickDayData",
+            "TickHourData" => "TickHourData",
+            _ => continue,
+        };
+        let time_id = key::segment_at(&delta.key, 1);
+        let pool_address = key::segment_at(&delta.key, 2);
+        let tick_idx = key::segment_at(&delta.key, 3);
+
+        tables
+            .update_row(table_name, format!("0x{pool_address}#{tick_idx}-{time_id}"))
+            .set(key::last_segment(&delta.key), &delta.new_value);
     }
 }
 
@@ -1208,7 +1288,7 @@ pub fn totals_uniswap_day_data_update(tables: &mut Tables, derived_factory_tvl_d
 
         tables
             .update_row("UniswapDayData", day_id)
-            .set("totalValueLockedUSD", &delta.new_value);
+            .set("tvlUSD", &delta.new_value);
     }
 }
 
@@ -1236,7 +1316,7 @@ fn create_uniswap_day_data(tables: &mut Tables, day_id: i64, day_start_timestamp
         .set("volumeETH", &bigdecimal0)
         .set("volumeUSD", &bigdecimal0)
         .set("volumeUSDUntracked", &bigdecimal0) // TODO: NEED TO SET THIS VALUE IN THE SUBSTREAMS
-        .set("totalValueLockedUSD", &bigdecimal0)
+        .set("tvlUSD", &bigdecimal0)
         .set("feesUSD", &bigdecimal0)
         .set("txCount", &delta.new_value);
 }
@@ -1568,7 +1648,7 @@ pub fn total_value_locked_usd_pool_windows(tables: &mut Tables, derived_tvl_delt
 
         tables
             .update_row(table_name, format!("0x{pool_address}-{time_id}"))
-            .set("totalValueLockedUSD", &delta.new_value);
+            .set("tvlUSD", &delta.new_value);
     }
 }
 
@@ -1630,7 +1710,7 @@ pub fn swap_volume_token_windows(tables: &mut Tables, swaps_volume_deltas: &Delt
             "volume" => "volume",
             "volumeUSD" => "volumeUSD",
             "feesUSD" => "feesUSD",
-            "untrackedUSD" => "volumeUSDUntracked",
+            "untrackedUSD" => "untrackedVolumeUSD",
             _ => continue,
         };
 

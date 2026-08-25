@@ -47,7 +47,15 @@ Builds clean for `wasm32-unknown-unknown --release`.
   Transaction/Swap/Mint/Burn as `block_range` (mutable) tables while this module emits them
   as immutable; the engine must write mutable-layout rows for those four on this target.
 
-### Verification items to pin before any allocation
+### Live firehose verification (2026-08-25, eth.substreams.pinax.network)
+
+`substreams run graph_out -s 12370624 -t +50` (first v3 mints) — the module's first live
+output. All 16 entity types emit; **TickDayData/TickHourData emit correctly** with exactly
+the target schema's field sets, id format `0x{pool}#{tickIdx}-{timeId}` confirmed against
+real data (day 18751 ✓). Verification item 1 (id format) is PINNED — it matches the
+subgraph's `tick.id + '-' + timeId` convention structurally.
+
+### Remaining verification before any allocation
 1. tick-window id format (`0x{pool}#{tickIdx}-{time_id}`) — inferred from this port's own
    `tick.id` convention, not yet confirmed against the subgraph's `intervalUpdates.ts`.
 2. zero-volume / zero-feeGrowth tick windows — matches subgraph behaviour as understood;

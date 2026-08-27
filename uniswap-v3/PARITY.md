@@ -40,12 +40,17 @@ block-hash-bound output, query response, or evidence digest was retained in this
 repository. It cannot certify every handler or entity, tick identity parity,
 zero-value behavior, temporal rows, or proof of indexing.
 
-The current source is also Ethereum-mainnet-specific. It hard-codes the
-factory, position manager, start boundaries, wrapped native token,
-reference-price pool and tokens, stablecoins, whitelist, and token exceptions.
-Base requires a complete versioned `ChainConfig` wired into every module that
-reads those values. Both manifests must then prove they use the same compiled
-WASM bytes with different, fully pinned configurations.
+The frozen source remains Ethereum-mainnet-specific, but the versioned
+`chain-config/` overlay now externalizes the complete audited factory, position
+manager, start-boundary, pricing, whitelist, filter, and metadata contract.
+Every consuming handler validates an exact digest-bound selector before output.
+CI builds one materialized WASM and parses both diagnostic packages to prove
+that their embedded WASM bytes match, while recording the expected distinct
+per-chain execution hashes.
+
+The configuration architecture is therefore no longer the certification
+blocker. What remains is fixed-range mainnet logical parity, representative
+Base Firehose/reference parity, and a controlled production package freeze.
 
 Finally, `graph_out` emits standard coalesced `EntityChanges`. That format does
 not by itself preserve every intermediate save, empty-but-triggered handler, or
@@ -56,14 +61,17 @@ profiles, and generic verifier.
 The CI-built SPKG is likewise diagnostic: CI checks the package name/version,
 mainnet network, exact 22-module set, initial block, and `graph_out` output type,
 but does not freeze environment-dependent package or WASM bytes. The immutable
-dual-chain production package is an output of the versioned `ChainConfig` work.
+dual-chain production package remains a later controlled-release output; CI
+packages are diagnostic and are not frozen here.
 
 ## Required order
 
 1. Preserve this exact source import and hermetic logical checks.
-2. Implement and differentially test complete mainnet/Base `ChainConfig`.
-3. Capture canonical Firehose fixtures and authoritative historical GraphQL or
-   read-only database evidence for every handler and aggregate boundary.
+2. Use the pinned mainnet/Base `ChainConfig` and complete fixed-range logical
+   parity for mainnet.
+3. Capture canonical Base Firehose fixtures and authoritative historical
+   GraphQL or read-only database evidence for every handler and aggregate
+   boundary.
 4. Certify mainnet through the generic ordered runtime against an exact stopped
    oracle and disposable scratch target.
 5. Land mainnet only in named, revalidated targets, paused.

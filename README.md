@@ -46,6 +46,10 @@ only after this gate passes.
   mainnet parity fork. Its history is retained at
   `upstream/uniswap-v3-qma8a81t-parity`; the surrounding family directory owns target
   bindings and the explicit logical-versus-physical evidence boundary.
+- **`uniswap-v3/chain-config/`** — a versioned, fail-closed mainnet/Base overlay
+  materialized outside the frozen source tree. Both generated manifests use one
+  compiled WASM; CI rejects any difference in the WASM embedded in their diagnostic
+  packages and records distinct configuration-derived execution hashes.
 - **`common/`** — shared contracts extracted only after they reproduce the V4 reference.
   A family boundary must preserve ordered mapping operations and the inputs required for
   exact PoI; a coalesced `EntityChanges` stream is not assumed sufficient.
@@ -114,6 +118,7 @@ The exact source tree at commit
 `42c7b15345e6df80561b694e52a0eb622b374b96` is imported under
 `uniswap-v3/source/` and retains its independent Rust 1.79 toolchain and lockfile. The
 offline verifier proves the imported tree plus the 20-entity logical field/type contract.
-It deliberately records that the source remains mainnet-hard-coded and that coalesced
-`EntityChanges` cannot certify exact physical history or PoI. No host-built package from
-this import is a production pin.
+The frozen source remains mainnet-hard-coded; the reviewed `chain-config/` overlay
+externalizes those chain-sensitive values without mutating the import. Coalesced
+`EntityChanges` still cannot certify exact physical history or PoI, and no host-built
+package from either the raw import or configured overlay is a production pin.

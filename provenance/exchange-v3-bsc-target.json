@@ -1,6 +1,9 @@
 {
   "format_version": 1,
   "family": "exchange-v3-bsc",
+  "implementation_status": "immutable_target_and_exact_source_baseline_only",
+  "runtime_parity": false,
+  "eligibility_decision": "awaiting_same_pod_72_hour_evidence",
   "deployment": {
     "cid": "QmY67iZDTsTdpWXSCotpVPYankwnyHXNT7N95YEn8ccUsn",
     "chain": "bsc",
@@ -93,6 +96,7 @@
       "cid": "QmdhxLJ6M6UoXPMS2myJtD8wyxJcXeWawX3kRDTojsozK3",
       "source_bytes": 22442,
       "source_sha256": "c4b019c3aa9712992940e4715acdf2750e00ab8170b12cbd6acf45765633e7f8",
+      "vendored_path": "exchange-v3-bsc/reference/mappings/Factory.wasm",
       "exports": [
         "handlePoolCreated"
       ]
@@ -102,6 +106,7 @@
       "cid": "QmVfHnKzZii6yom6Pt5Ao49oAyhGdJsnDs9dc6hPV8S9LC",
       "source_bytes": 19527,
       "source_sha256": "72805576b1444206223e544727c82d93af1460edadd590b11bc8760f40c2849e",
+      "vendored_path": "exchange-v3-bsc/reference/mappings/NonfungiblePositionManager.wasm",
       "exports": [
         "handleIncreaseLiquidity",
         "handleDecreaseLiquidity",
@@ -114,6 +119,7 @@
       "cid": "QmcRScUVN8cN53U5o93vuEApFYg8JhfYHu6TaGLEtAYfr6",
       "source_bytes": 42716,
       "source_sha256": "d806f2510c494774a2fb8800e135338d2c5d9fec69adc2a1035404acfd221847",
+      "vendored_path": "exchange-v3-bsc/reference/mappings/Pool.wasm",
       "exports": [
         "handleInitialize",
         "handleSwap",
@@ -125,6 +131,11 @@
       ]
     }
   ],
+  "layout_profile": {
+    "path": "exchange-v3-bsc/layout-profile-v1.json",
+    "bytes": 10417,
+    "sha256": "8a5193a2eb5c4e938aed0faed4d829589c1b1e5bc4a0549d5efd7c41e4f96b16"
+  },
   "logical_contract": {
     "entity_count": 20,
     "logical_sha256": "6245df5b395816b39c45ea7d3e4cca765be52904f5a8ced5ee026fdb5d9333b6",
@@ -244,6 +255,7 @@
     "branch": "v3",
     "earliest_exact_commit": "1da7ba61abb26633ff819ce8cdfe945be8770a92",
     "tree": "a2a113c9eedd7ed0e6fdcaea275153233223c95d",
+    "parent": "e2019f716f4310f4ce28addc4439980804d9e413",
     "version_boundary": "The exact commit changes the BSC minimum native liquidity threshold from 60 to 10; later unrelated commits may retain the same build inputs and mapping bytes.",
     "source_files": [
       {

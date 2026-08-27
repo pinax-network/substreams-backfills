@@ -5,6 +5,7 @@ repository_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 source_url="https://github.com/pancakeswap/pancake-subgraph.git"
 source_commit="1da7ba61abb26633ff819ce8cdfe945be8770a92"
 source_tree="a2a113c9eedd7ed0e6fdcaea275153233223c95d"
+source_parent="e2019f716f4310f4ce28addc4439980804d9e413"
 python_executable="${EXCHANGE_V3_SOURCE_PYTHON:-python3}"
 
 temporary_root=$(mktemp -d)
@@ -23,17 +24,23 @@ if [[ $# -eq 1 ]]; then
 else
   source_repository="$temporary_root/repository"
   git init -q "$source_repository"
-  git -C "$source_repository" fetch --no-tags --depth=1 "$source_url" "$source_commit"
+  # Include the direct parent so Git does not hide `%P` behind a shallow boundary.
+  git -C "$source_repository" fetch --no-tags --depth=2 "$source_url" "$source_commit"
 fi
 
 actual_commit=$(git -C "$source_repository" rev-parse "$source_commit^{commit}")
 actual_tree=$(git -C "$source_repository" show -s --format=%T "$source_commit")
+actual_parent=$(git -C "$source_repository" show -s --format=%P "$source_commit")
 [[ "$actual_commit" == "$source_commit" ]] || {
   echo "exact Exchange V3 source commit drift: $actual_commit" >&2
   exit 1
 }
 [[ "$actual_tree" == "$source_tree" ]] || {
   echo "exact Exchange V3 source tree drift: $actual_tree" >&2
+  exit 1
+}
+[[ "$actual_parent" == "$source_parent" ]] || {
+  echo "exact Exchange V3 source parent drift: $actual_parent" >&2
   exit 1
 }
 
@@ -105,4 +112,4 @@ cmp "$original_lock" "$source_work/yarn.lock"
   --root "$repository_root" \
   --exact-source-root "$source_work"
 
-echo "verified exact Exchange V3 BSC source commit/tree, locked compiler toolchain, manifest, schema, ABIs, and all three mapping binaries"
+echo "verified exact Exchange V3 BSC source commit/tree/parent, locked compiler toolchain, manifest, schema, ABIs, and all three mapping binaries"

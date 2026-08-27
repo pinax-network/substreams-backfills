@@ -12,7 +12,10 @@ block 26,931,961.
 
 ## Immutable target and source baseline
 
-`reference/` vendors the exact deployed IPFS manifest, schema, and seven ABI objects.
+`reference/` vendors the exact deployed IPFS manifest, schema, seven ABI objects, and
+three mapping binaries. `layout-profile-v1.json` records the target-specific handler,
+entity, fee, position, aggregate, pricing, and metadata contract needed for a later
+implementation gap.
 `provenance/exchange-v3-bsc-target.json` pins every CID, byte count, SHA-256 digest,
 data-source/template address and handler, the 20-entity all-mutable schema profile, and
 the static schema difference from the frozen imported Uniswap V3 reference. Run:
@@ -24,7 +27,8 @@ python3 scripts/verify-exchange-v3-bsc-target.py
 The earliest byte-exact source is
 [`pancakeswap/pancake-subgraph`](https://github.com/pancakeswap/pancake-subgraph) commit
 `1da7ba61abb26633ff819ce8cdfe945be8770a92`, tree
-`a2a113c9eedd7ed0e6fdcaea275153233223c95d`. The commit changes the BSC minimum native
+`a2a113c9eedd7ed0e6fdcaea275153233223c95d`, with sole parent
+`e2019f716f4310f4ce28addc4439980804d9e413`. The commit changes the BSC minimum native
 liquidity threshold from 60 to 10; that one configuration boundary changes the Factory
 and Pool binaries to the deployed bytes while the PositionManager binary stays stable.
 

@@ -23,6 +23,15 @@ Only ellipfra (`graph-l2prod.ellipfra.com`) serves most of these — single-inde
 
 Tracking: [k8s-subgraphs#779](https://github.com/pinax-network/k8s-subgraphs/issues/779).
 
+## Backfill eligibility gate
+
+Implementation and compute/load actions are fail-closed unless the target
+binding points at fresh, immutable evidence that the fastest healthy Graph Node
+path exceeds 28 days in both its 24-hour and 72-hour forecast. See
+[`docs/eligibility.md`](docs/eligibility.md) for the exact formula, evidence
+contract, capture workflow, and action checks. Market QoS prioritizes targets
+only after this gate passes.
+
 ## Architecture
 
 - **Engine** (separate repo): [`substreams-graph-node-backfill`](https://github.com/pinax-network/substreams-graph-node-backfill)

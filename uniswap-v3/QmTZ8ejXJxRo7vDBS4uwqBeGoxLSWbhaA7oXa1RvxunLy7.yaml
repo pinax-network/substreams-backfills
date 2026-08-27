@@ -13,3 +13,12 @@ placement:
   riv: { shard: mainnet_fast, node: index_node_chain_mainnet_0 }
   kan: { shard: chain_mainnet, node: index_node_chain_mainnet_0 }
 milestone: M2   # highest QV first (operator, 2026-08-21)
+eligibility:
+  policy: graph-node-net-catchup-v1
+  required_clusters: [riv-dev1, kan-subgraphs-a]
+  latest:
+    decision: indeterminate
+    reason: no_fresh_evidence
+    measured_at: null
+    evidence: null
+    sha256: null

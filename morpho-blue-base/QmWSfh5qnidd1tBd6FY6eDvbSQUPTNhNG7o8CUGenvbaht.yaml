@@ -7,3 +7,12 @@ signal_grt: 670   # query-fees-only economics
 competitors: 1    # ellipfra only
 note: ordinary offchain sync also running (riv sgd5284 base_fast + kan sgd5307) — backfill wins if sync proves months-long
 milestone: M4
+eligibility:
+  policy: graph-node-net-catchup-v1
+  required_clusters: [riv-dev1, kan-subgraphs-a]
+  latest:
+    decision: indeterminate
+    reason: no_fresh_evidence
+    measured_at: null
+    evidence: null
+    sha256: null

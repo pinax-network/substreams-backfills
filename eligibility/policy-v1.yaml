@@ -1,0 +1,37 @@
+format_version: 1
+id: graph-node-net-catchup-v1
+threshold_days: 28
+windows:
+  24h: 86400
+  72h: 259200
+sample_max_age_seconds: 600
+freshness:
+  implementation-start: 86400
+  compute-or-load-start: 3600
+required_clusters:
+  - riv-dev1
+  - kan-subgraphs-a
+healthy_copy:
+  health: healthy
+  status: indexing
+decisions:
+  - eligible
+  - monitor
+  - complete
+  - indeterminate
+reasons:
+  - both_windows_exceed_threshold
+  - non_positive_net_rate
+  - missing_attached_version
+  - missing_graft_base
+  - fastest_window_at_or_below_threshold
+  - native_sync_complete
+  - missing_required_cluster
+  - no_healthy_copy
+  - stale_or_incomplete_samples
+  - head_regression
+  - conflicting_identity
+  - no_fresh_evidence
+structural_blockers:
+  - missing_attached_version
+  - missing_graft_base

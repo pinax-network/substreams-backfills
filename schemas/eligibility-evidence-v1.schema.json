@@ -1,0 +1,180 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/pinax-network/substreams-backfills/schemas/eligibility-evidence-v1.schema.json",
+  "title": "Graph Node net catch-up eligibility evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format_version",
+    "policy",
+    "deployment",
+    "family",
+    "chain",
+    "measured_at",
+    "collector",
+    "sources",
+    "clusters",
+    "summary"
+  ],
+  "properties": {
+    "format_version": {"const": 1},
+    "policy": {"const": "graph-node-net-catchup-v1"},
+    "deployment": {"type": "string", "pattern": "^Qm[1-9A-HJ-NP-Za-km-z]{44}$"},
+    "family": {"type": "string"},
+    "chain": {"type": "string"},
+    "measured_at": {"type": "string"},
+    "collector": {
+      "type": "object",
+      "required": ["version"],
+      "properties": {
+        "version": {"const": 1},
+        "repository_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"}
+      },
+      "additionalProperties": false
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status_api", "victoriametrics", "postgres_inventory"],
+      "properties": {
+        "status_api": {"type": "array", "minItems": 1},
+        "victoriametrics": {
+          "type": "object",
+          "required": ["queries"],
+          "properties": {
+            "queries": {"type": "array"}
+          },
+          "additionalProperties": true
+        },
+        "postgres_inventory": {"type": "array"}
+      }
+    },
+    "clusters": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/cluster"}
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision", "reason", "threshold_days", "fastest_24h", "fastest_72h"],
+      "properties": {
+        "decision": {"enum": ["eligible", "monitor", "complete", "indeterminate"]},
+        "reason": {"type": "string"},
+        "threshold_days": {"const": 28},
+        "fastest_24h": {"$ref": "#/$defs/fastest"},
+        "fastest_72h": {"$ref": "#/$defs/fastest"}
+      }
+    }
+  },
+  "$defs": {
+    "fastest": {
+      "type": ["object", "null"],
+      "required": ["copy_id", "eta_days", "eta_kind"],
+      "properties": {
+        "copy_id": {"type": "string"},
+        "eta_days": {"type": ["string", "null"]},
+        "eta_kind": {"enum": ["finite", "infinite"]}
+      },
+      "additionalProperties": false
+    },
+    "cluster": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cluster", "accounted", "copies", "structural_blockers"],
+      "properties": {
+        "cluster": {"type": "string"},
+        "accounted": {"type": "boolean"},
+        "copies": {"type": "array", "items": {"$ref": "#/$defs/copy"}},
+        "structural_blockers": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/blocker"}
+        }
+      }
+    },
+    "blocker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "observed_at", "source", "details"],
+      "properties": {
+        "type": {"enum": ["missing_attached_version", "missing_graft_base"]},
+        "observed_at": {"type": "string"},
+        "source": {"type": "string", "minLength": 1},
+        "details": {"type": "string", "minLength": 1}
+      }
+    },
+    "copy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["copy_id", "selector", "current", "windows"],
+      "properties": {
+        "copy_id": {"type": "string", "minLength": 1},
+        "selector": {"type": "object"},
+        "current": {"$ref": "#/$defs/current"},
+        "windows": {
+          "type": "object",
+          "properties": {
+            "24h": {"$ref": "#/$defs/window"},
+            "72h": {"$ref": "#/$defs/window"}
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "current": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["observed_at", "active", "attached", "health", "status", "failed", "synced"],
+      "properties": {
+        "observed_at": {"type": "string"},
+        "active": {"type": "boolean"},
+        "attached": {"type": "boolean"},
+        "health": {"type": "string"},
+        "status": {"type": "string"},
+        "failed": {"type": "boolean"},
+        "synced": {"type": "boolean"},
+        "deployment_head": {"type": ["integer", "null"], "minimum": 0},
+        "chain_head": {"type": ["integer", "null"], "minimum": 0}
+      }
+    },
+    "point": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requested_at", "deployment_observed_at", "deployment_head", "chain_observed_at", "chain_head"],
+      "properties": {
+        "requested_at": {"type": "string"},
+        "deployment_observed_at": {"type": "string"},
+        "deployment_head": {"type": "integer", "minimum": 0},
+        "chain_observed_at": {"type": "string"},
+        "chain_head": {"type": "integer", "minimum": 0}
+      }
+    },
+    "window": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end",
+        "duration_seconds",
+        "deployment_delta",
+        "chain_delta",
+        "net_delta",
+        "net_rate_blocks_per_day",
+        "lag_blocks",
+        "eta_days",
+        "eta_kind"
+      ],
+      "properties": {
+        "start": {"$ref": "#/$defs/point"},
+        "end": {"$ref": "#/$defs/point"},
+        "duration_seconds": {"type": "integer", "minimum": 1},
+        "deployment_delta": {"type": "integer"},
+        "chain_delta": {"type": "integer"},
+        "net_delta": {"type": "integer"},
+        "net_rate_blocks_per_day": {"type": "string"},
+        "lag_blocks": {"type": "integer", "minimum": 0},
+        "eta_days": {"type": ["string", "null"]},
+        "eta_kind": {"enum": ["finite", "infinite"]}
+      }
+    }
+  }
+}

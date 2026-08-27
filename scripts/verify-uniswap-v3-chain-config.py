@@ -292,16 +292,20 @@ def production_prefix(path: Path) -> str:
     return text[: marker.start()] if marker else text
 
 
+def non_build_files(directory: Path) -> dict[str, Path]:
+    return {
+        path.relative_to(directory).as_posix(): path
+        for path in directory.rglob("*")
+        if path.is_file() and "target" not in path.relative_to(directory).parts
+    }
+
+
 def verify_runtime(root: Path, runtime: Path, configs: dict[str, dict[str, object]], manifests: dict[str, dict[str, object]]) -> Path:
     require(runtime.is_dir(), f"runtime directory does not exist: {runtime}")
     source = root / "uniswap-v3/source"
     changed: set[str] = set()
-    source_files = {path.relative_to(source).as_posix(): path for path in source.rglob("*") if path.is_file()}
-    runtime_files = {
-        path.relative_to(runtime).as_posix(): path
-        for path in runtime.rglob("*")
-        if path.is_file() and "target" not in path.relative_to(runtime).parts
-    }
+    source_files = non_build_files(source)
+    runtime_files = non_build_files(runtime)
     for relative in set(source_files) | set(runtime_files):
         if relative not in source_files or relative not in runtime_files or source_files[relative].read_bytes() != runtime_files[relative].read_bytes():
             changed.add(relative)

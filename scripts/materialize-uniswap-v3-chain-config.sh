@@ -24,7 +24,10 @@ else
 fi
 
 "$repo_dir/scripts/verify-uniswap-v3-import.sh"
-cp -a "$source_dir/." "$destination/"
+(
+    cd "$source_dir"
+    tar --exclude="./target" -cf - .
+) | tar -C "$destination" -xf -
 patch --directory "$destination" --strip 1 --forward --batch < "$overlay_dir/runtime.patch"
 mkdir -p "$destination/configs"
 cp "$overlay_dir/configs/"*.json "$destination/configs/"

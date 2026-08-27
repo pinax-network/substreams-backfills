@@ -102,6 +102,16 @@ class UniswapV3ChainConfigTest(unittest.TestCase):
             with self.assertRaises(MODULE.VerificationError):
                 MODULE.embedded_wasm_binaries(package)
 
+    def test_runtime_inventory_ignores_only_target_build_artifacts(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            (directory / "src").mkdir()
+            (directory / "src/lib.rs").write_text("pub fn configured() {}\n")
+            (directory / "target/debug").mkdir(parents=True)
+            (directory / "target/debug/cache").write_bytes(b"ephemeral")
+
+            self.assertEqual(set(MODULE.non_build_files(directory)), {"src/lib.rs"})
+
 
 if __name__ == "__main__":
     unittest.main()

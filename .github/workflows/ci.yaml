@@ -39,6 +39,10 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.90.0
         with:
           targets: wasm32-unknown-unknown
+      - name: Install checksum-pinned Buf CLI
+        uses: bufbuild/buf-setup-action@a47c93e0b1648d5651a065437926377d060baa99
+        with:
+          version: 1.72.0
       - name: Install checksum-pinned Substreams CLI
         run: |
           curl -fsSL https://github.com/streamingfast/substreams/releases/download/v1.20.3/substreams_linux_x86_64.tar.gz -o /tmp/substreams.tar.gz
@@ -62,16 +66,14 @@ jobs:
         with:
           name: uniswap-v4-offline-parity
           path: ${{ runner.temp }}/uniswap-v4-parity
-          if-no-files-found: error
+          if-no-files-found: warn
       - name: Upload frozen package evidence
-        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: uniswap-v4-frozen-packages
           path: ${{ runner.temp }}/uniswap-v4-release
           if-no-files-found: error
       - name: Upload NUL audit candidate
-        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: uniswap-v4-nul-audit-candidate

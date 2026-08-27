@@ -1,0 +1,78 @@
+dataSources:
+  - kind: ethereum/contract
+    mapping:
+      abis:
+        - file:
+            /: /ipfs/QmPfKNZPkVATzL3EHypkcsyKhehR4jkiYEVqSzh2hxWYj1
+          name: ERC20
+        - file:
+            /: /ipfs/QmbHnhUFZa6qqqRyubUYhXntox1TCBxqryaBM1iNGqVJzT
+          name: ERC20SymbolBytes
+        - file:
+            /: /ipfs/QmQCP6Pdp1MqpwRv2qoPHuUTwZGy7Q3eDHg4w5kzwE9mBj
+          name: ERC20NameBytes
+        - file:
+            /: /ipfs/QmVPT7Pnc1oK5rtmmDKzxLKjiAe9v3oMANo5g45yuDrpzi
+          name: PoolManager
+      apiVersion: 0.0.7
+      entities:
+        - Pool
+        - Token
+      eventHandlers:
+        - event: >-
+            Initialize(indexed bytes32,indexed address,indexed
+            address,address,uint24,bytes32,uint160,int24)
+          handler: handleInitialize
+        - event: >-
+            ModifyLiquidity(indexed bytes32,indexed
+            address,int24,int24,int256,bytes32)
+          handler: handleModifyLiquidity
+        - event: >-
+            Swap(indexed bytes32,indexed
+            address,int128,int128,uint160,uint128,int24,uint24,uint16)
+          handler: handleSwap
+      file:
+        /: /ipfs/QmaECZTdpba4YL5MA2E5MVgCnMYeK4nMUqMixzvF1aztQR
+      kind: ethereum/events
+      language: wasm/assemblyscript
+    name: PoolManager
+    network: bsc
+    source:
+      abi: PoolManager
+      address: '0xa0FfB9c1CE1Fe56963B0321B32E7A0302114058b'
+      startBlock: 47214308
+  - kind: ethereum/contract
+    mapping:
+      abis:
+        - file:
+            /: /ipfs/Qme7qpTdeAaQA3wQbjatFKcKSf8VgJpVkcjaGMihzr4FmZ
+          name: PositionManager
+      apiVersion: 0.0.7
+      entities:
+        - Position
+      eventHandlers:
+        - event: Subscription(indexed uint256,indexed address)
+          handler: handleSubscription
+        - event: Unsubscription(indexed uint256,indexed address)
+          handler: handleUnsubscription
+        - event: Transfer(indexed address,indexed address,indexed uint256)
+          handler: handleTransfer
+      file:
+        /: /ipfs/QmaECZTdpba4YL5MA2E5MVgCnMYeK4nMUqMixzvF1aztQR
+      kind: ethereum/events
+      language: wasm/assemblyscript
+    name: PositionManager
+    network: bsc
+    source:
+      abi: PositionManager
+      address: '0x55f4c8abA71A1e923edC303eb4fEfF14608cC226'
+      startBlock: 47215015
+description: PancakeSwap Infinity CL subgraph
+features:
+  - nonFatalErrors
+  - grafting
+repository: https://github.com/NgoKimPhu/infinity-cl-subgraph
+schema:
+  file:
+    /: /ipfs/QmcWb81VRk9SycZYgLyr9i6tYCnHsVsPTyTvfNpywDRJfr
+specVersion: 0.0.4

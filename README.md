@@ -42,6 +42,10 @@ only after this gate passes.
   Substreams pipeline. Its exact upstream history is retained on the isolated
   `upstream/uniswap-v4-v0.4.1` branch. It is the golden reference from which reusable
   family-to-engine contracts are derived; its frozen production SPKGs remain byte-identical.
+- **`pancakeswap-infinity-cl-bsc/`** — the immutable deployed Graph artifact set,
+  exact reproducible source pin, and machine-readable semantic gap profile for M5.
+  This baseline is a target contract for the V4-derived implementation, not a claim
+  that a Pancake runtime or Graph Node physical parity already exists.
 - **`uniswap-v3/source/`** — the source-identical Rust 1.79 import of the reviewed
   mainnet parity fork. Its history is retained at
   `upstream/uniswap-v3-qma8a81t-parity`; the surrounding family directory owns target

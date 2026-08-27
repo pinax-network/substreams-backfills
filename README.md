@@ -42,6 +42,10 @@ only after this gate passes.
   Substreams pipeline. Its exact upstream history is retained on the isolated
   `upstream/uniswap-v4-v0.4.1` branch. It is the golden reference from which reusable
   family-to-engine contracts are derived; its frozen production SPKGs remain byte-identical.
+- **`uniswap-v3/source/`** — the source-identical Rust 1.79 import of the reviewed
+  mainnet parity fork. Its history is retained at
+  `upstream/uniswap-v3-qma8a81t-parity`; the surrounding family directory owns target
+  bindings and the explicit logical-versus-physical evidence boundary.
 - **`common/`** — shared contracts extracted only after they reproduce the V4 reference.
   A family boundary must preserve ordered mapping operations and the inputs required for
   exact PoI; a coalesced `EntityChanges` stream is not assumed sufficient.
@@ -103,3 +107,13 @@ The original repository and releases remain available until the active V4 backfi
 its terminal certificate, the imported package reproduces a certified 100,000-block segment,
 and every engine/release consumer is deliberately transferred. Historical release URLs and
 embedded package metadata are provenance and must not be rewritten in place.
+
+## Uniswap V3 import contract
+
+The exact source tree at commit
+`42c7b15345e6df80561b694e52a0eb622b374b96` is imported under
+`uniswap-v3/source/` and retains its independent Rust 1.79 toolchain and lockfile. The
+offline verifier proves the imported tree plus the 20-entity logical field/type contract.
+It deliberately records that the source remains mainnet-hard-coded and that coalesced
+`EntityChanges` cannot certify exact physical history or PoI. No host-built package from
+this import is a production pin.

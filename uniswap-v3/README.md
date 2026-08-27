@@ -1,27 +1,53 @@
-# uniswap-v3 — mainnet + Base (shared schema `Qma8a81T…`)
+# Uniswap V3 mainnet and Base
 
-| Target | Display name | Chain | Factory | startBlock | q/day |
-|---|---|---|---|---|---|
-| `QmTZ8ejX…` | Uniswap-V3 | mainnet | `0x1F98431c8aD98523631AE4a59f267346ea31F984` | 12,369,621 | 11.3M |
-| `Qmb4VUcA…` | Uniswap V3 Base | base | `0x33128a8fC17869897dcE68Ed026d694621f6FDfD` | 1,371,713 | 2.1M |
+The two target deployments share schema `Qma8a81T…`, but they do not yet share a
+safe runtime configuration.
 
-Datasources: `Factory`, `NonfungiblePositionManager`, `Pool` (template).
-Both graft (mainnet's chain reaches 2021) — ordinary deploys never resolve; see repo README.
+| Target | Chain | Factory | Start block | Value signal |
+|---|---|---|---:|---:|
+| `QmTZ8ejX…` | Ethereum mainnet | `0x1F98431c8aD98523631AE4a59f267346ea31F984` | 12,369,621 | 11.3M queries/day |
+| `Qmb4VUcA…` | Base | `0x33128a8fC17869897dcE68Ed026d694621f6FDfD` | 1,371,713 | 2.1M queries/day |
 
-## References
+## Imported source
 
-- Subgraph source: https://github.com/Uniswap/uniswap-v3-subgraph (both manifests' `repository`)
-- **StreamingFast `substreams-uniswap-v3`**: https://github.com/streamingfast/substreams-uniswap-v3 —
-  the canonical Substreams port of this exact subgraph, built for entity parity with the
-  graph-out format. Our module starts as an adaptation of its entity mapping (chain
-  parameterized, schema pinned to `Qma8a81T…`), NOT a from-scratch rewrite.
-- Differential reference endpoints for verification: the incumbent indexers on each chain
-  via the gateway.
+`source/` is an exact import of
+`pinax-network/substreams-uniswap-v3` PR #1 at commit
+`42c7b15345e6df80561b694e52a0eb622b374b96`. Its complete upstream history is
+mirrored at `upstream/uniswap-v3-qma8a81t-parity`; it remains an independent
+Rust 1.79 project with its own lockfile. The machine-readable provenance lock
+points to a complete 75-file inventory containing every path, mode, Git blob,
+size, and SHA-256 digest.
 
-## Plan (M2 = base first)
+The import proves a narrower claim than a deployable backfill:
 
-1. `map_entities` emits `EntityChanges` (substreams-entity-change) for the full entity set:
-   Factory, Bundle, Pool, Token, Tick, Position, PositionSnapshot, Transaction, Mint, Burn,
-   Swap, Collect, Flash, plus Uniswap/Pool/Token Day/Hour aggregates.
-2. Engine (`substreams-graph-node-backfill`) loads them into the target schema, lands paused.
-3. Differential verify (sampled entities at pinned blocks vs reference) → activate → 200 GRT.
+- its GraphQL entity, field, and type contract matches the 20-entity target
+  schema after ignoring physical `@entity(immutable: true)` directives;
+- it builds for `wasm32-unknown-unknown`, and its host-target tests run under
+  the pinned toolchain;
+- its tick-window output wiring and renamed output/store-key boundaries are
+  guarded by an offline contract verifier;
+- four deterministic contract fixtures execute the exact imported
+  `TickDayData`/`TickHourData` create and update functions without modifying the
+  imported tree;
+- CI builds the WASM and inspects an evidence-only package structurally. Its
+  environment-dependent bytes are not a production package pin.
+
+The reviewed upstream tree is not `rustfmt`-clean and emits extensive
+pre-existing Clippy warnings, primarily in generated ABI/protobuf files. Exact
+import verification deliberately preserves those bytes; runnable tests,
+logical contracts, the release WASM build, and package structure are the import
+gates. Formatting or lint cleanup belongs in a later, explicitly reviewed
+change rather than being smuggled into the canonical-source import.
+
+It does **not** prove exact physical history, save ordering, proof of indexing,
+GraphQL parity, or Base compatibility. The imported module is hard-coded for
+Ethereum mainnet across its factory, position manager, start blocks, wrapped
+native token, reference-price pool, stablecoins, and whitelist. A factory-only
+parameter is not a valid Base rebind.
+
+See [PARITY.md](PARITY.md) for the evidence boundary and remaining order.
+
+The deployment bindings stay beside the source import:
+
+- `QmTZ8ejXJxRo7vDBS4uwqBeGoxLSWbhaA7oXa1RvxunLy7.yaml`
+- `Qmb4VUcAY9LsVgeCuCCMs7X1XrkbRcaiuAbSK8SqhmsAfP.yaml`

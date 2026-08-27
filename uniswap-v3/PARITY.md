@@ -1,71 +1,71 @@
-# Parity: pinax-network/substreams-uniswap-v3 (fork) vs target schema `Qma8a81T…`
+# Uniswap V3 parity contract
 
-Diffed 2026-08-21 (upstream `develop` schema vs the IPFS schema both targets pin).
-Upstream: 17 entities. Target: 20. The fork needs FOUR classes of change:
+This file separates what the imported parity source proves from the work still
+required before either deployment can be loaded or served.
 
-## 1. Field renames (adapter-trivial)
-| upstream | target |
-|---|---|
-| `PoolDayData.totalValueLockedUSD` | `tvlUSD` |
-| `PoolHourData.totalValueLockedUSD` | `tvlUSD` |
-| `UniswapDayData.totalValueLockedUSD` | `tvlUSD` |
-| `TokenDayData.volumeUSDUntracked` | `untrackedVolumeUSD` |
-| `TokenHourData.volumeUSDUntracked` | `untrackedVolumeUSD` |
+## Proven by the import
 
-## 2. Drop upstream-extra fields
-- `Pool.totalValueLockedETHUntracked`
+The exact source tree at commit
+`42c7b15345e6df80561b694e52a0eb622b374b96` contains 20 GraphQL entity types.
+After entity directives are excluded, its complete entity/field/type contract
+has SHA-256
+`6c801fc4c141c0ae12dbb937652f0dd49c9be5bd3b1b3c8e38bdb92fe6efec5d`,
+which matches the schema stored at IPFS CID
+`Qma8a81T9XoX5Pbkrk8J3kxMhWdXJzFSYZge1wGi3QZBru`.
 
-## 3. Immutability layout differences (ENGINE flag, not module logic)
-Upstream emits `Transaction`, `Swap`, `Mint`, `Burn` as `@entity(immutable: true)`
-(→ `block$` tables). The TARGET schema declares them **mutable** (→ `block_range`
-tables). Data is still append-only; the engine must write mutable-layout rows
-(upper-unbounded block_range, standard vids) for these four on this target.
+The source changes relative to its upstream base are:
 
-## 4. The one real functional gap: tick aggregates
-`TickHourData` + `TickDayData` are **commented out** upstream (never implemented).
-Target has both, fully fielded (liquidityGross/Net, feeGrowthOutside{0,1}X128,
-volumeToken0/1, volumeUSD, feesUSD). Implement in the fork mirroring the
-TokenHourData/TokenDayData aggregation pattern keyed by (tick, period).
+- output field renames for `tvlUSD` and `untrackedVolumeUSD` while retaining
+  the original Store key names;
+- removal of `Pool.totalValueLockedETHUntracked`, which is absent from the
+  target schema;
+- `TickDayData` and `TickHourData` output wiring using
+  `0x{pool}#{tick}-{time_id}` identities and initialized aggregate fields.
 
-## STATUS 2026-08-22 — §1, §2 and §4 are DONE
+The import CI executes those exact `db.rs` functions from an external Rust 1.79
+contract-test crate. Deterministic day/hour create fixtures pin entity IDs,
+timestamps, zero defaults, and field sets; update fixtures pin gross/net values
+and deletion filtering. This exercises the imported implementation while
+leaving its source tree byte-identical to the reviewed commit.
 
-[pinax-network/substreams-uniswap-v3#1](https://github.com/pinax-network/substreams-uniswap-v3/pull/1)
-(branch `qma8a81t-parity`) implements all module-side work. **Schema parity is exact:
-20/20 entities, zero field differences** against `Qma8a81T…`, verified programmatically.
-Builds clean for `wasm32-unknown-unknown --release`.
+The target declares `Transaction`, `Swap`, `Mint`, and `Burn` as mutable. The
+imported logical schema declares those four entities immutable. That is a real
+physical-layout difference which the future schema profile and loader must
+handle; it is not erased by the logical contract match.
 
-- §1 renames — done, output field names only. The same strings also appear in
-  `key_last_segment_*` **store-key filters**, which must NOT be renamed (they match keys
-  written by the map modules; renaming silently stops the match and emits stale values).
-- §2 `Pool.totalValueLockedETHUntracked` — dropped from the create row AND from the Pool
-  tvl delta filter. Factory legitimately keeps the field.
-- §4 tick aggregates — implemented (`db::tick_windows_create` +
-  `db::liquidities_tick_windows`, wired into `graph_out`). `store_ticks_liquidities`
-  already wrote `Tick{Day,Hour}Data:{time_id}:{pool}:{tick}:liquidity{Gross,Net}`; only
-  the entity emission was missing. Window id = `0x{pool}#{tickIdx}-{time_id}`.
-- §3 immutability — unchanged by design: a LOADER concern. The target stores
-  Transaction/Swap/Mint/Burn as `block_range` (mutable) tables while this module emits them
-  as immutable; the engine must write mutable-layout rows for those four on this target.
+## Evidence not yet sufficient for certification
 
-### Live firehose verification (2026-08-25, eth.substreams.pinax.network)
+The previously reported 50-block Firehose run is useful smoke evidence, but no
+block-hash-bound output, query response, or evidence digest was retained in this
+repository. It cannot certify every handler or entity, tick identity parity,
+zero-value behavior, temporal rows, or proof of indexing.
 
-`substreams run graph_out -s 12370624 -t +50` (first v3 mints) — the module's first live
-output. All 16 entity types emit; **TickDayData/TickHourData emit correctly** with exactly
-the target schema's field sets, id format `0x{pool}#{tickIdx}-{timeId}` confirmed against
-real data (day 18751 ✓). Verification item 1 (id format) is PINNED — it matches the
-subgraph's `tick.id + '-' + timeId` convention structurally.
+The current source is also Ethereum-mainnet-specific. It hard-codes the
+factory, position manager, start boundaries, wrapped native token,
+reference-price pool and tokens, stablecoins, whitelist, and token exceptions.
+Base requires a complete versioned `ChainConfig` wired into every module that
+reads those values. Both manifests must then prove they use the same compiled
+WASM bytes with different, fully pinned configurations.
 
-### Remaining verification before any allocation
-1. tick-window id format (`0x{pool}#{tickIdx}-{time_id}`) — inferred from this port's own
-   `tick.id` convention, not yet confirmed against the subgraph's `intervalUpdates.ts`.
-2. zero-volume / zero-feeGrowth tick windows — matches subgraph behaviour as understood;
-   confirm against a reference indexer at pinned blocks.
+Finally, `graph_out` emits standard coalesced `EntityChanges`. That format does
+not by itself preserve every intermediate save, empty-but-triggered handler, or
+causality detail needed for exact Graph Node proof of indexing. Physical and PoI
+certification therefore waits for the V4-derived ordered protocol, schema
+profiles, and generic verifier.
 
-## Remaining order of work (M2 = mainnet `QmTZ8ejX…` — highest QV)
-1. ~~Fork builds~~ / ~~§1+§2 renames~~ / ~~§4 tick aggregates~~ — done, PR #1.
-2. Run the module against mainnet firehose; spot-check entities vs the gateway at pinned
-   blocks (this is where the two verification items above get pinned).
-3. Engine run into a riv scratch schema with §3 layout flags; differential verify
-   (sampled entities × pinned blocks vs incumbent responses); land paused → activate.
-5. Base (`Qmb4VUcA…`) = same spkg, params factory `0x33128a…`, initialBlock 1371713.
-6. Matic (`QmWqwrVt…`) = older 2-datasource manifest/schema — re-diff before reuse.
+The CI-built SPKG is likewise diagnostic: CI checks the package name/version,
+mainnet network, exact 22-module set, initial block, and `graph_out` output type,
+but does not freeze environment-dependent package or WASM bytes. The immutable
+dual-chain production package is an output of the versioned `ChainConfig` work.
+
+## Required order
+
+1. Preserve this exact source import and hermetic logical checks.
+2. Implement and differentially test complete mainnet/Base `ChainConfig`.
+3. Capture canonical Firehose fixtures and authoritative historical GraphQL or
+   read-only database evidence for every handler and aggregate boundary.
+4. Certify mainnet through the generic ordered runtime against an exact stopped
+   oracle and disposable scratch target.
+5. Land mainnet only in named, revalidated targets, paused.
+6. Repeat exact certification for Base with the same WASM and its pinned config;
+   land paused and request activation separately.

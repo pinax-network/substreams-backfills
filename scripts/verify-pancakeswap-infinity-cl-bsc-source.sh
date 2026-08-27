@@ -24,7 +24,8 @@ if [[ $# -eq 1 ]]; then
 else
   source_repository="$temporary_root/repository"
   git init -q "$source_repository"
-  git -C "$source_repository" fetch --no-tags --depth=1 "$source_url" "$source_commit"
+  # Include the direct parent so Git does not hide `%P` behind a shallow boundary.
+  git -C "$source_repository" fetch --no-tags --depth=2 "$source_url" "$source_commit"
 fi
 
 actual_commit=$(git -C "$source_repository" rev-parse "$source_commit^{commit}")

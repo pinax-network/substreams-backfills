@@ -26,11 +26,16 @@ Tracking: [k8s-subgraphs#779](https://github.com/pinax-network/k8s-subgraphs/iss
 ## Architecture
 
 - **Engine** (separate repo): [`substreams-graph-node-backfill`](https://github.com/pinax-network/substreams-graph-node-backfill)
-  (v0.5.0+) — loads entity rows into graph-node Postgres schemas and finalizes deployment
-  metadata. This repo NEVER duplicates engine logic.
-- **`common/`** — shared Rust for the hard 20%: emitting entities that are byte-faithful
-  to graph-node's storage semantics (`vid` ordering, `block_range` vs immutable `block$`,
-  causality regions, PoI compatibility). One reviewed implementation.
+  — owns native entity reduction, proof of indexing, Graph Node-native temporal rows,
+  PostgreSQL COPY/Parquet output, checkpoints, lifecycle controls, and physical parity.
+  This repository never duplicates that safety-critical runtime.
+- **`uniswap-v4/`** — the source-identical import of the proven Uniswap V4 Base
+  Substreams pipeline. Its exact upstream history is retained on the isolated
+  `upstream/uniswap-v4-v0.4.1` branch. It is the golden reference from which reusable
+  family-to-engine contracts are derived; its frozen production SPKGs remain byte-identical.
+- **`common/`** — shared contracts extracted only after they reproduce the V4 reference.
+  A family boundary must preserve ordered mapping operations and the inputs required for
+  exact PoI; a coalesced `EntityChanges` stream is not assumed sufficient.
 - **`<family>/`** (root-level, one dir per subgraph family — same schema = same family;
   the mainnet + base "ERC20" targets share schema `Qma8a81T…` and are one family
   parameterized by chain/addresses/start-block).
@@ -48,16 +53,44 @@ subgraph author's) before any allocation is opened.
 
 ## Delivery milestones
 
-1. **M1 — contract test**: `crates/common` encodes one hand-written entity set; engine loads
-   it into a scratch schema; graph-node serves it and answers a GraphQL query correctly.
-2. **M2 — first family** (`uniswap-v3`, schema `Qma8a81T…`): **mainnet variant first**
+0. **M0 — eligibility gates**: build a new backfill only when the fastest healthy Graph
+   Node copy has a net catch-up ETA greater than 28 days. Borderline deployments remain
+   monitoring-only.
+1. **M1 — Uniswap V4 reference port**: preserve the complete Substreams-owned source,
+   isolated upstream history, immutable package bytes, module hashes, Store cache boundaries,
+   fixtures, and audit packages; then reproduce a certified segment through the pinned engine
+   without touching the active source or recovery databases.
+2. **M2 — V4-derived family contract**: extract the ordered block-change protocol, target
+   schema profiles, metadata finalization, and certification harness while retaining V4 as
+   a golden regression.
+3. **M3 — Uniswap V3** (`uniswap-v3`, schema `Qma8a81T…`): **mainnet variant first**
    (`QmTZ8ejX…`, 11.3M q/day — highest QV, per operator 2026-08-21) via the
    [pinax-network/substreams-uniswap-v3](https://github.com/pinax-network/substreams-uniswap-v3)
    fork; gap list in `uniswap-v3/PARITY.md`. Verified differentially, landed paused via the
    engine, activated behind a 200-GRT allocation.
-3. **M3 — base variant** (`Qmb4VUcA…`) — same spkg, params-only rebind.
-4. **M4 — remaining families** in market-size order (`QmWSfh5q`, `QmVjXU7y`, `QmY67iZD`,
-   then the matic revival `QmWqwrVt`).
-5. **M5 — port `uniswap-v4`** from `substreams-v4-subgraph` once the active univ4base
-   backfill completes a committed segment (owning agent's safety contract governs timing;
-   the old repo stays frozen until the port reproduces a segment).
+   Base (`Qmb4VUcA…`) follows through a complete versioned chain configuration while using
+   the same certified WASM bytes; a factory-only rebind is insufficient.
+4. **M4 — Uniswap V3 Matic** (`QmWqwrVt…`).
+5. **M5 — PancakeSwap Infinity CL BSC** (`QmVjXU7y…`).
+6. **M6 — Exchange V3 BSC** (`QmY67iZD…`).
+
+Morpho Blue Base remains outside implementation while either its 24-hour or 72-hour net
+catch-up forecast is at or below 28 days. No milestone grants production activation: every
+target lands paused and requires its own certified evidence and operational approval.
+
+## Uniswap V4 import contract
+
+The imported directory is pinned to source commit
+`6812a4deaa5a520020e8d727e17f6d0b7113d0a9` (`v0.4.1`) and Git tree
+`2d60d30242443adc2c021a5b609c27edcb75128a`. It remains an independent Cargo project so
+its Rust/Substreams versions and lockfiles do not get silently unified with other families.
+The exact upstream commit history is mirrored at
+`refs/heads/upstream/uniswap-v4-v0.4.1`, outside the default-branch ancestry. This preserves
+the history without allowing its old repository-local `Closes #…` commit messages to close
+unrelated roadmap issues here. Run `./scripts/verify-uniswap-v4-import.sh` to prove the mirror,
+imported tree, file modes, frozen package bytes, and release lock are unchanged.
+
+The original repository and releases remain available until the active V4 backfill reaches
+its terminal certificate, the imported package reproduces a certified 100,000-block segment,
+and every engine/release consumer is deliberately transferred. Historical release URLs and
+embedded package metadata are provenance and must not be rewritten in place.

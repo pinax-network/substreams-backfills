@@ -4,7 +4,7 @@
 //! backfill module must load (via substreams-graph-node-backfill) into a graph-node
 //! schema such that queries are indistinguishable from a natively-synced deployment.
 //!
-//! What that means concretely (M1 scope):
+//! What that means concretely (M2 scope):
 //! - mutable entities carry `block_range int4range` semantics: a version is
 //!   [lower, upper) in blocks; the current version is upper-unbounded. `vid` is a
 //!   monotonically increasing i64 in write order — the engine assigns final vids,
@@ -13,11 +13,12 @@
 //!   instead of a range and are never updated.
 //! - BigDecimal/BigInt string forms must round-trip identically to graph-node's
 //!   storage normalization (no scientific notation drift, no trailing zeros).
-//! - PoI is NOT reproduced by backfills; deployments land paused and unfailed with
-//!   PoI table empty beyond the landing block, matching the transplant recipe.
+//! - Proof of indexing is reproduced by the native backfill engine from the exact
+//!   ordered mapping operations. A family is not deployment-hash faithful if it
+//!   drops, coalesces, or reorders operations needed by Graph Node's PoI stream.
 
-/// Placeholder for the M1 entity-encoding contract. Replaced by generated types per
-/// family schema; kept minimal until the engine contract test pins the byte format.
+/// Placeholder retained until M2 replaces it with the ordered, V4-derived
+/// family-to-engine protocol and pins its byte format through a golden regression.
 pub struct EntityVersion {
     pub entity: &'static str,
     pub id: String,

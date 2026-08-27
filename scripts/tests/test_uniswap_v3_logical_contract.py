@@ -46,6 +46,13 @@ class UniswapV3LogicalContractTest(unittest.TestCase):
         self.assertIn(old, contents)
         path.write_text(contents.replace(old, new, 1))
 
+    def replace_last(self, relative_path: str, old: str, new: str) -> None:
+        path = self.source / relative_path
+        contents = path.read_text()
+        position = contents.rfind(old)
+        self.assertNotEqual(position, -1)
+        path.write_text(contents[:position] + new + contents[position + len(old) :])
+
     def test_exact_import_passes(self) -> None:
         result = self.verify()
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -55,10 +62,35 @@ class UniswapV3LogicalContractTest(unittest.TestCase):
         self.assertNotEqual(self.verify().returncode, 0)
 
     def test_tick_window_wiring_drift_is_rejected(self) -> None:
-        self.replace(
+        self.replace_last(
             "src/lib.rs",
             "db::tick_windows_create(&mut tables, &ticks_liquidities_deltas);",
             "// removed by negative fixture",
+        )
+        self.assertNotEqual(self.verify().returncode, 0)
+
+    def test_pool_window_store_key_rename_is_rejected(self) -> None:
+        self.replace_last(
+            "src/db.rs",
+            '.key_last_segment_eq("totalValueLockedUSD")',
+            '.key_last_segment_eq("tvlUSD")',
+        )
+        self.assertNotEqual(self.verify().returncode, 0)
+
+    def test_token_window_store_key_rename_is_rejected(self) -> None:
+        self.replace_last(
+            "src/db.rs",
+            '"untrackedUSD" => "untrackedVolumeUSD"',
+            '"untrackedVolumeUSD" => "untrackedVolumeUSD"',
+        )
+        self.assertNotEqual(self.verify().returncode, 0)
+
+    def test_target_absent_pool_field_is_rejected(self) -> None:
+        self.replace(
+            "src/db.rs",
+            '.set("liquidityProviderCount", &bigint0);',
+            '.set("totalValueLockedETHUntracked", &bigdecimal0)\n'
+            '        .set("liquidityProviderCount", &bigint0);',
         )
         self.assertNotEqual(self.verify().returncode, 0)
 

@@ -83,10 +83,10 @@ def logical_hash(entities: dict[str, dict[str, str]]) -> str:
 
 
 def function_body(source: str, name: str) -> str:
-    marker = re.search(rf"pub fn {re.escape(name)}\b", source)
+    marker = re.search(rf"(?:pub\s+)?fn {re.escape(name)}\b", source)
     if not marker:
         fail(f"missing function {name}")
-    next_function = re.search(r"\npub fn \w+\b", source[marker.end() :])
+    next_function = re.search(r"\n(?:pub\s+)?fn \w+\b", source[marker.end() :])
     end = len(source) if not next_function else marker.end() + next_function.start()
     return source[marker.start() : end]
 
@@ -105,16 +105,32 @@ def verify_source_contract(source_root: Path) -> None:
     db_source = (source_root / "src/db.rs").read_text()
     lib_source = (source_root / "src/lib.rs").read_text()
 
+    create_pool = function_body(db_source, "create_pool")
     pool_tvl = function_body(db_source, "total_value_locked_pool_entity_change")
-    if '"totalValueLockedETHUntracked"' in pool_tvl:
-        fail("Pool TVL filter reintroduced target-absent totalValueLockedETHUntracked")
+    if any(
+        '"totalValueLockedETHUntracked"' in body
+        for body in (create_pool, pool_tvl)
+    ):
+        fail("Pool reintroduced target-absent totalValueLockedETHUntracked")
+
+    pool_window_tvl = function_body(db_source, "total_value_locked_usd_pool_windows")
     for required in (
         '.key_last_segment_eq("totalValueLockedUSD")',
         '.set("tvlUSD",',
-        '.set("untrackedVolumeUSD",',
     ):
-        if required not in db_source:
-            fail(f"renamed output/store-key boundary missing {required}")
+        if required not in pool_window_tvl:
+            fail(f"Pool window output/store-key boundary missing {required}")
+
+    token_window_volume = function_body(db_source, "swap_volume_token_windows")
+    if '"untrackedUSD" => "untrackedVolumeUSD"' not in token_window_volume:
+        fail("Token window untracked-volume output/store-key boundary drifted")
+
+    create_pool_window = function_body(db_source, "create_pool_windows_entity")
+    if '.set("tvlUSD",' not in create_pool_window:
+        fail("Pool window create output field tvlUSD drifted")
+    create_token_window = function_body(db_source, "create_token_windows_entity")
+    if '.set("untrackedVolumeUSD",' not in create_token_window:
+        fail("Token window create output field untrackedVolumeUSD drifted")
 
     tick_create = function_body(db_source, "tick_windows_create")
     tick_update = function_body(db_source, "liquidities_tick_windows")
@@ -166,7 +182,7 @@ def main() -> int:
         return 1
 
     print(
-        "verified 20 logical entities, target field/type hash, renamed Store boundaries, "
+        "verified 20 logical entities, target field/type hash, renamed output/Store boundaries, "
         "tick-window wiring, and the explicit mainnet-only configuration marker"
     )
     return 0

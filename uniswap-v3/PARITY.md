@@ -22,6 +22,12 @@ The source changes relative to its upstream base are:
 - `TickDayData` and `TickHourData` output wiring using
   `0x{pool}#{tick}-{time_id}` identities and initialized aggregate fields.
 
+The import CI executes those exact `db.rs` functions from an external Rust 1.79
+contract-test crate. Deterministic day/hour create fixtures pin entity IDs,
+timestamps, zero defaults, and field sets; update fixtures pin gross/net values
+and deletion filtering. This exercises the imported implementation while
+leaving its source tree byte-identical to the reviewed commit.
+
 The target declares `Transaction`, `Swap`, `Mint`, and `Burn` as mutable. The
 imported logical schema declares those four entities immutable. That is a real
 physical-layout difference which the future schema profile and loader must
@@ -46,6 +52,11 @@ not by itself preserve every intermediate save, empty-but-triggered handler, or
 causality detail needed for exact Graph Node proof of indexing. Physical and PoI
 certification therefore waits for the V4-derived ordered protocol, schema
 profiles, and generic verifier.
+
+The CI-built SPKG is likewise diagnostic: CI checks the package name/version,
+mainnet network, exact 22-module set, initial block, and `graph_out` output type,
+but does not freeze environment-dependent package or WASM bytes. The immutable
+dual-chain production package is an output of the versioned `ChainConfig` work.
 
 ## Required order
 

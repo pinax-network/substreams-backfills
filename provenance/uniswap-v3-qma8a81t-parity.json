@@ -13,6 +13,12 @@
     "executable_files": 1,
     "rust_toolchain": "1.79"
   },
+  "file_inventory": {
+    "path": "provenance/uniswap-v3-qma8a81t-parity-files.json",
+    "sha256": "177a98f60f230d1b13dfa064f3b98a50163a506d2c7a08432330d47ee2170e60",
+    "format_version": 1,
+    "records": 75
+  },
   "target_schema": {
     "cid": "Qma8a81T9XoX5Pbkrk8J3kxMhWdXJzFSYZge1wGi3QZBru",
     "raw_sha256": "ae03d0c6d3c6c03f87ae8e699b1e71804266c1d4adb7acbf4f4de5d48727c39c",
@@ -33,5 +39,11 @@
     "chain_configuration": "The imported source is hard-coded for Ethereum mainnet. Base requires a complete versioned ChainConfig before a shared binary can be certified.",
     "engine_protocol": "Coalesced EntityChanges proves the logical final entity shape only. Exact physical history and proof of indexing require the V4-derived ordered protocol and profile-driven engine.",
     "evidence": "The prior 50-block live run was not retained with canonical block hashes and evidence digests, so it remains smoke evidence rather than a certificate."
+  },
+  "validation": {
+    "exact_import": "The isolated history mirror, source tree, file modes, and every file's Git blob and SHA-256 digest are verified in CI.",
+    "host_tests": "The imported source's 42 host-target tests run with the pinned Rust 1.79 toolchain.",
+    "tick_windows": "Four deterministic external contract tests execute the exact imported db.rs TickDayData/TickHourData create and update functions without changing the source tree.",
+    "wasm_and_package": "CI performs a locked release WASM build, packs an evidence-only SPKG, and checks its identity, mainnet network, 22-module set, initial block, and graph_out EntityChanges output structurally. Package bytes are intentionally not frozen."
   }
 }

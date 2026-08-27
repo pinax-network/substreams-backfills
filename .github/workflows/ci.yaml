@@ -46,12 +46,32 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.79
         with:
           targets: wasm32-unknown-unknown
+      - name: Install checksum-pinned Substreams CLI
+        run: |
+          curl -fsSL https://github.com/streamingfast/substreams/releases/download/v1.20.3/substreams_linux_x86_64.tar.gz -o /tmp/substreams.tar.gz
+          echo "90c71d04a75490efdf0493254a8563c3555690e622b3c6ade5100c0c773f8675  /tmp/substreams.tar.gz" | sha256sum -c -
+          sudo tar -xzf /tmp/substreams.tar.gz -C /usr/local/bin substreams
       - name: Test imported source on the host target
         working-directory: uniswap-v3/source
         run: cargo test --locked --target x86_64-unknown-linux-gnu
+      - name: Test deterministic TickDayData and TickHourData fixtures
+        run: >-
+          cargo test --locked
+          --manifest-path uniswap-v3/contract-tests/Cargo.toml
+          --target x86_64-unknown-linux-gnu
       - name: Build imported source for Substreams WASM
         working-directory: uniswap-v3/source
         run: cargo build --locked --target wasm32-unknown-unknown --release
+      - name: Pack and inspect evidence-only package
+        run: |
+          substreams pack -o "$RUNNER_TEMP/uniswap-v3-diagnostic.spkg" uniswap-v3/source/substreams.yaml
+          python3 scripts/verify-uniswap-v3-diagnostic-package.py "$RUNNER_TEMP/uniswap-v3-diagnostic.spkg"
+      - name: Upload V3 diagnostic package
+        uses: actions/upload-artifact@v4
+        with:
+          name: uniswap-v3-diagnostic-package
+          path: ${{ runner.temp }}/uniswap-v3-diagnostic.spkg
+          if-no-files-found: error
 
   uniswap-v4-reference:
     runs-on: ubuntu-latest

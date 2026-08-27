@@ -14,7 +14,9 @@ safe runtime configuration.
 `pinax-network/substreams-uniswap-v3` PR #1 at commit
 `42c7b15345e6df80561b694e52a0eb622b374b96`. Its complete upstream history is
 mirrored at `upstream/uniswap-v3-qma8a81t-parity`; it remains an independent
-Rust 1.79 project with its own lockfile.
+Rust 1.79 project with its own lockfile. The machine-readable provenance lock
+points to a complete 75-file inventory containing every path, mode, Git blob,
+size, and SHA-256 digest.
 
 The import proves a narrower claim than a deployable backfill:
 
@@ -23,7 +25,19 @@ The import proves a narrower claim than a deployable backfill:
 - it builds for `wasm32-unknown-unknown`, and its host-target tests run under
   the pinned toolchain;
 - its tick-window output wiring and renamed output/store-key boundaries are
-  guarded by an offline contract verifier.
+  guarded by an offline contract verifier;
+- four deterministic contract fixtures execute the exact imported
+  `TickDayData`/`TickHourData` create and update functions without modifying the
+  imported tree;
+- CI builds the WASM and inspects an evidence-only package structurally. Its
+  environment-dependent bytes are not a production package pin.
+
+The reviewed upstream tree is not `rustfmt`-clean and emits extensive
+pre-existing Clippy warnings, primarily in generated ABI/protobuf files. Exact
+import verification deliberately preserves those bytes; runnable tests,
+logical contracts, the release WASM build, and package structure are the import
+gates. Formatting or lint cleanup belongs in a later, explicitly reviewed
+change rather than being smuggled into the canonical-source import.
 
 It does **not** prove exact physical history, save ordering, proof of indexing,
 GraphQL parity, or Base compatibility. The imported module is hard-coded for

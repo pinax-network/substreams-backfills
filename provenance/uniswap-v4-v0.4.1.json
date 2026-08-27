@@ -1,0 +1,65 @@
+{
+  "format_version": 1,
+  "family": "uniswap-v4-base",
+  "source": {
+    "repository": "pinax-network/substreams-v4-subgraph",
+    "tag": "v0.4.1",
+    "commit": "6812a4deaa5a520020e8d727e17f6d0b7113d0a9",
+    "tree": "2d60d30242443adc2c021a5b609c27edcb75128a",
+    "tracked_files": 98,
+    "executable_files": 13
+  },
+  "production_release": {
+    "tag": "v0.4.0",
+    "commit": "7609dc67ce83865a16e441ff2b3b56db6c46ee2a"
+  },
+  "release_assets": [
+    {
+      "release": "v0.1.0",
+      "name": "uniswap-v4-base-backfill-v0.1.0.spkg",
+      "sha256": "75b810d18ec1dc78ca5535b2cc56828334c873b93d39500f93ca036499048453",
+      "retained_in_import": false
+    },
+    {
+      "release": "v0.4.0",
+      "name": "uniswap-v4-base-state-stores-v0.1.0.spkg",
+      "sha256": "ac3b295591e68949881509379aa99d8460134873f895187746a35ece003fa440",
+      "retained_in_import": true
+    },
+    {
+      "release": "v0.4.0",
+      "name": "uniswap-v4-base-store-fed-reducer-v0.1.0.spkg",
+      "sha256": "7cf06bb4b73c1409c581a7f878fb832c3e15c1d82193103d8bc7609dce8b58f3",
+      "retained_in_import": true
+    },
+    {
+      "release": "v0.4.0",
+      "name": "uniswap-v4-base-store-state-reducer-v0.4.0.spkg",
+      "sha256": "bc8a841dbb74f9bbc7d90826251ab766ad350170a4832fc3e9b084664d22254a",
+      "retained_in_import": true
+    },
+    {
+      "release": "v0.4.1",
+      "name": "uniswap-v4-base-nul-metadata-audit-v0.1.0.spkg",
+      "sha256": "c2470ab845cebc929aa20489a21114cb9db891aef9ad99559c97757b1938e81a",
+      "retained_in_import": false
+    }
+  ],
+  "module_contracts": {
+    "map_events": "8fbf7c14cefe3d5b0c249a8cf4566bcaa8d2ed26",
+    "map_store_state_inputs": "223408b90abae80960c41e11205fad2294accfa9",
+    "map_nul_metadata_audit_release": "c58cac15b43690d507a86a86df5487504ea56e09"
+  },
+  "ownership": {
+    "substreams": "substreams-backfills/uniswap-v4",
+    "native_reducer_and_loader": "pinax-network/substreams-graph-node-backfill",
+    "kubernetes_workflows": "pinax-network/k8s-subgraphs"
+  },
+  "retirement_gates": [
+    "mirror and lock the v0.1.0 event package",
+    "mirror and lock the v0.4.1 NUL-audit release package",
+    "reproduce a certified 100000-block segment with the pinned engine",
+    "complete the active V4 backfill terminal certificate",
+    "transfer every compatibility and release consumer before archiving the source repository"
+  ]
+}

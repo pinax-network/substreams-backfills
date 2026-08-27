@@ -1,0 +1,383 @@
+{
+  "format_version": 1,
+  "family": "exchange-v3-bsc",
+  "deployment": {
+    "cid": "QmY67iZDTsTdpWXSCotpVPYankwnyHXNT7N95YEn8ccUsn",
+    "chain": "bsc",
+    "spec_version": "0.0.2",
+    "mapping_api_version": "0.0.4",
+    "repository": "https://github.com/pancakeswap/pancake-subgraph",
+    "features": [
+      "nonFatalErrors"
+    ],
+    "data_sources": [
+      {
+        "name": "Factory",
+        "address": "0x0bfbcf9fa4f9c56b0f40a671ad40e0805a091865",
+        "start_block": 26956207,
+        "mapping_role": "factory_mapping_wasm"
+      },
+      {
+        "name": "NonfungiblePositionManager",
+        "address": "0x46a15b0b27311cedf172ab29e4f4766fbe7f4364",
+        "start_block": 26931961,
+        "mapping_role": "position_manager_mapping_wasm"
+      }
+    ],
+    "templates": [
+      {
+        "name": "Pool",
+        "mapping_role": "pool_mapping_wasm"
+      }
+    ]
+  },
+  "artifact_lock": [
+    {
+      "role": "deployment",
+      "cid": "QmY67iZDTsTdpWXSCotpVPYankwnyHXNT7N95YEn8ccUsn",
+      "source_bytes": 4477,
+      "source_sha256": "557c8a194bd9a3d10c8c06c2b0099f8fbcd41005b4240282bd123508e27d3cf5",
+      "vendored_path": "exchange-v3-bsc/reference/deployment.yaml"
+    },
+    {
+      "role": "schema",
+      "cid": "QmP9xqULGJzQE7SFKyzkgD8LEkjoy1aChCJnbNkCT4VDRi",
+      "source_bytes": 19382,
+      "source_sha256": "7096664659ebc8c881bb473922565d65ac7c9cb550c3635a51862139c4302641",
+      "vendored_path": "exchange-v3-bsc/reference/schema.graphql"
+    },
+    {
+      "role": "factory_abi",
+      "cid": "QmYxaKG6NxTFjcWvF4VSb9Wk9F4TKLEQZidX9aC89E5CLd",
+      "source_bytes": 8559,
+      "source_sha256": "6040aedf8e250e4824078449f1d6957e6db1c5a03a070db0988d00d13177448a",
+      "vendored_path": "exchange-v3-bsc/reference/abis/factory.json"
+    },
+    {
+      "role": "erc20_abi",
+      "cid": "QmXuTbDkNrN27VydxbS2huvKRk62PMgUTdPDWkxcr2w7j2",
+      "source_bytes": 3684,
+      "source_sha256": "4b83c6645aed2df5e4e9a1d11f372453fc052ac8575348c8c04a33ceacd0ae90",
+      "vendored_path": "exchange-v3-bsc/reference/abis/ERC20.json"
+    },
+    {
+      "role": "erc20_symbol_bytes_abi",
+      "cid": "QmbHnhUFZa6qqqRyubUYhXntox1TCBxqryaBM1iNGqVJzT",
+      "source_bytes": 270,
+      "source_sha256": "9ccb9b5d95394b2ffb4ced54cffa0c5ea282917f4eec36c121ce28c257965193",
+      "vendored_path": "exchange-v3-bsc/reference/abis/ERC20SymbolBytes.json"
+    },
+    {
+      "role": "erc20_name_bytes_abi",
+      "cid": "QmQCP6Pdp1MqpwRv2qoPHuUTwZGy7Q3eDHg4w5kzwE9mBj",
+      "source_bytes": 268,
+      "source_sha256": "b874c853ffa5309e4b7fbf4934c1efdb4fe31e1a65f7041e67f4a7f2258ffb77",
+      "vendored_path": "exchange-v3-bsc/reference/abis/ERC20NameBytes.json"
+    },
+    {
+      "role": "pool_abi",
+      "cid": "QmabUZX7w3JJ8QaYnpuNaZ1iHteB9LfvVwk98YATUg4hVt",
+      "source_bytes": 20622,
+      "source_sha256": "d11de4a76e9daeac0998eac4b36f17fc307193ce299d54b031940b88b61fecfc",
+      "vendored_path": "exchange-v3-bsc/reference/abis/pool.json"
+    },
+    {
+      "role": "position_manager_abi",
+      "cid": "QmaWAco4g2iX7B9ar65RhWXUSWSs8yQCpLxBVipzcsDycb",
+      "source_bytes": 24646,
+      "source_sha256": "a06cac5c70cae9069812dce3f9d8c746a3f6988bcbb76332340509049ed0c7e6",
+      "vendored_path": "exchange-v3-bsc/reference/abis/NonfungiblePositionManager.json"
+    },
+    {
+      "role": "factory_mapping_wasm",
+      "cid": "QmdhxLJ6M6UoXPMS2myJtD8wyxJcXeWawX3kRDTojsozK3",
+      "source_bytes": 22442,
+      "source_sha256": "c4b019c3aa9712992940e4715acdf2750e00ab8170b12cbd6acf45765633e7f8",
+      "exports": [
+        "handlePoolCreated"
+      ]
+    },
+    {
+      "role": "position_manager_mapping_wasm",
+      "cid": "QmVfHnKzZii6yom6Pt5Ao49oAyhGdJsnDs9dc6hPV8S9LC",
+      "source_bytes": 19527,
+      "source_sha256": "72805576b1444206223e544727c82d93af1460edadd590b11bc8760f40c2849e",
+      "exports": [
+        "handleIncreaseLiquidity",
+        "handleDecreaseLiquidity",
+        "handleCollect",
+        "handleTransfer"
+      ]
+    },
+    {
+      "role": "pool_mapping_wasm",
+      "cid": "QmcRScUVN8cN53U5o93vuEApFYg8JhfYHu6TaGLEtAYfr6",
+      "source_bytes": 42716,
+      "source_sha256": "d806f2510c494774a2fb8800e135338d2c5d9fec69adc2a1035404acfd221847",
+      "exports": [
+        "handleInitialize",
+        "handleSwap",
+        "handleMint",
+        "handleBurn",
+        "handleFlash",
+        "handleCollect",
+        "handleCollectProtocol"
+      ]
+    }
+  ],
+  "logical_contract": {
+    "entity_count": 20,
+    "logical_sha256": "6245df5b395816b39c45ea7d3e4cca765be52904f5a8ced5ee026fdb5d9333b6",
+    "entities": [
+      "Bundle",
+      "Burn",
+      "Collect",
+      "Factory",
+      "Flash",
+      "Mint",
+      "PancakeDayData",
+      "Pool",
+      "PoolDayData",
+      "PoolHourData",
+      "Position",
+      "PositionSnapshot",
+      "Swap",
+      "Tick",
+      "TickDayData",
+      "TickHourData",
+      "Token",
+      "TokenDayData",
+      "TokenHourData",
+      "Transaction"
+    ],
+    "immutable_entities": [],
+    "mutable_entities": [
+      "Bundle",
+      "Burn",
+      "Collect",
+      "Factory",
+      "Flash",
+      "Mint",
+      "PancakeDayData",
+      "Pool",
+      "PoolDayData",
+      "PoolHourData",
+      "Position",
+      "PositionSnapshot",
+      "Swap",
+      "Tick",
+      "TickDayData",
+      "TickHourData",
+      "Token",
+      "TokenDayData",
+      "TokenHourData",
+      "Transaction"
+    ],
+    "frozen_uniswap_v3": {
+      "entity_count": 20,
+      "logical_sha256": "6c801fc4c141c0ae12dbb937652f0dd49c9be5bd3b1b3c8e38bdb92fe6efec5d",
+      "missing_from_exchange": [
+        "UniswapDayData"
+      ],
+      "extra_in_exchange": [
+        "PancakeDayData"
+      ],
+      "immutable_in_uniswap_but_mutable_in_exchange": [
+        "Burn",
+        "Mint",
+        "Swap",
+        "Transaction"
+      ],
+      "field_differences": {
+        "Factory": {
+          "extra_in_exchange": [
+            "totalProtocolFeesETH",
+            "totalProtocolFeesUSD"
+          ]
+        },
+        "Pool": {
+          "extra_in_exchange": [
+            "feeProtocol",
+            "protocolFeesUSD",
+            "totalValueLockedETHUntracked"
+          ]
+        },
+        "PoolDayData": {
+          "extra_in_exchange": [
+            "protocolFeesUSD"
+          ]
+        },
+        "PoolHourData": {
+          "extra_in_exchange": [
+            "protocolFeesUSD"
+          ]
+        },
+        "Swap": {
+          "extra_in_exchange": [
+            "amountFeeUSD"
+          ]
+        },
+        "Token": {
+          "extra_in_exchange": [
+            "derivedUSD",
+            "protocolFeesUSD",
+            "tokenHourData"
+          ]
+        },
+        "TokenDayData": {
+          "extra_in_exchange": [
+            "protocolFeesUSD"
+          ]
+        },
+        "TokenHourData": {
+          "extra_in_exchange": [
+            "protocolFeesUSD"
+          ]
+        }
+      },
+      "scope": "static_schema_only_pending_certified_runtime_gap"
+    }
+  },
+  "exact_source": {
+    "status": "exact_reproduction",
+    "repository": "https://github.com/pancakeswap/pancake-subgraph",
+    "branch": "v3",
+    "earliest_exact_commit": "1da7ba61abb26633ff819ce8cdfe945be8770a92",
+    "tree": "a2a113c9eedd7ed0e6fdcaea275153233223c95d",
+    "version_boundary": "The exact commit changes the BSC minimum native liquidity threshold from 60 to 10; later unrelated commits may retain the same build inputs and mapping bytes.",
+    "source_files": [
+      {
+        "path": "package.json",
+        "bytes": 1040,
+        "sha256": "6e5cda08dff1cf4d2616369e8b510998150a7d7007c744a4a7c804373ec00226",
+        "git_blob": "3ae119b16de54838b02a2d968ed378cb003fef92"
+      },
+      {
+        "path": "yarn.lock",
+        "bytes": 178387,
+        "sha256": "233d6036dec21fd17e5c7ba6d1c6d11361840b4945e337dcb745a8ccfbb37b21",
+        "git_blob": "ba125969fc9e6f8f0e78a8dae9e4ef34ccabe0c1"
+      },
+      {
+        "path": ".github/workflows/build.yml",
+        "bytes": 992,
+        "sha256": "f863170f13330245379601c5561c071bec5766bb3c4a47a6da0e61062b171931",
+        "git_blob": "d25c222f73084602be012ac1264bb379d150f42a"
+      },
+      {
+        "path": "config/bsc.js",
+        "bytes": 1318,
+        "sha256": "decd89ca99f24c04fdf492abeb6f4e676dd3a9456b0c5a097fcb6facd9f15605",
+        "git_blob": "8bc2b579bdb40d7e82dd15e42272c1d14b58cbca"
+      },
+      {
+        "path": "subgraphs/exchange-v3/template/package.json",
+        "bytes": 1411,
+        "sha256": "eb6462816b006d02cdb6609a3d0cc18143368e848dcb20dd87f6ef11b2c632d5",
+        "git_blob": "7b545bc6a25f3bda6e5f0597446412f881387648"
+      },
+      {
+        "path": "subgraphs/exchange-v3/template/subgraph.template.yaml",
+        "bytes": 3628,
+        "sha256": "42b82757ccb80df40a92b14798bbb9b66863c310dca03cd1cded10ec9770df9e",
+        "git_blob": "31d542c83cc0a3395f9ac83973b1523b3805f5bc"
+      },
+      {
+        "path": "subgraphs/exchange-v3/template/schema.graphql",
+        "bytes": 19382,
+        "sha256": "7096664659ebc8c881bb473922565d65ac7c9cb550c3635a51862139c4302641",
+        "git_blob": "633ea8b8a22b4007b40d0ed13dbaac79b3561c6f"
+      },
+      {
+        "path": "subgraphs/exchange-v3/template/mappings/factory.ts",
+        "bytes": 5836,
+        "sha256": "56b1669e4134c5a14e792772400ea93da60bd5947369723dfb065140a39a157f",
+        "git_blob": "a334b29b23c2743e6f402526b9d0cfa0c7f7dba3"
+      },
+      {
+        "path": "subgraphs/exchange-v3/template/mappings/position-manager.ts",
+        "bytes": 6538,
+        "sha256": "4a84cec9f134b6370e64737697101c81773d9ecc3cb7216037cc9accb84f9953",
+        "git_blob": "37d78352dc00db95e95cc8ddacdcd7bac74a5e17"
+      },
+      {
+        "path": "subgraphs/exchange-v3/template/mappings/core.ts",
+        "bytes": 24890,
+        "sha256": "063097586ff41fedbe310671e5b00786278c29f18ce30886e2abd323fd59dd10",
+        "git_blob": "62b3a262b9dfa5932e0059f75ff6a1563b0f4428"
+      },
+      {
+        "path": "subgraphs/exchange-v3/template/utils/pricing.template.ts",
+        "bytes": 7636,
+        "sha256": "04054e92deaf05dbb62604d954c2136a7bc2d61e1f169805f329b715ffe490a9",
+        "git_blob": "11b881e0c8512c6f48e7c0dd40dbc64f6175ace6"
+      }
+    ],
+    "toolchain": {
+      "source_ci_node_range": "14.x",
+      "reproduction_node": "14.21.3",
+      "reproduction_yarn": "1.22.22",
+      "graph_cli": "0.21.0",
+      "graph_ts": "0.20.1",
+      "assemblyscript": "0.6.0",
+      "assemblyscript_git_commit": "3ed76a97f05335504166fce1653da75f4face28f"
+    },
+    "install_transport_override": {
+      "reason": "The lock's deleted concat-stream GitHub fork tarball now returns 404.",
+      "locked_request": "concat-stream@github:hugomrdias/concat-stream#feat/smaller",
+      "dead_url": "https://codeload.github.com/hugomrdias/concat-stream/tar.gz/057bc7b5d6d8df26c8cf00a3f151b6721a0a8034",
+      "replacement": "https://registry.yarnpkg.com/concat-stream/-/concat-stream-2.0.0.tgz#414cf5af790a48c60ab9be4527d56d5e41133cb1",
+      "replacement_integrity": "sha512-MWufYdFw53ccGjCA+Ol7XJYpAlW6/prSMzuPOTRnJGcGzuhLn4Scrz7qf6o8bROZ514ltazcIFJZevcfbo0x7A==",
+      "scope": "install_transport_only_graph_cli_ipfs_client_not_compiler",
+      "original_lock_restored_before_validation": true
+    },
+    "build": {
+      "commands": [
+        "yarn install --frozen-lockfile --ignore-scripts",
+        "NETWORK=bsc yarn workspace exchange-v3-template template",
+        "yarn workspace exchange-v3-template codegen",
+        "yarn workspace exchange-v3-template build"
+      ],
+      "factory_wasm_bytes": 22442,
+      "factory_wasm_sha256": "c4b019c3aa9712992940e4715acdf2750e00ab8170b12cbd6acf45765633e7f8",
+      "position_manager_wasm_bytes": 19527,
+      "position_manager_wasm_sha256": "72805576b1444206223e544727c82d93af1460edadd590b11bc8760f40c2849e",
+      "pool_wasm_bytes": 42716,
+      "pool_wasm_sha256": "d806f2510c494774a2fb8800e135338d2c5d9fec69adc2a1035404acfd221847",
+      "result": "byte_exact_to_all_deployed_mapping_objects"
+    },
+    "earliest_exact_boundary": {
+      "previous_commit": "e2019f716f4310f4ce28addc4439980804d9e413",
+      "previous_factory_wasm_sha256": "7bfca75a412716f30227bead38492cdffd1214fc68832ed649ae0b9505bbb7da",
+      "previous_position_manager_wasm_sha256": "72805576b1444206223e544727c82d93af1460edadd590b11bc8760f40c2849e",
+      "previous_pool_wasm_sha256": "1e15db63d1229f16c64a506d14e49b5987a1d6c69471aec78cf77f81541d29fa",
+      "exact_change": "Set BSC v3.minETHLocked from 60 to 10."
+    },
+    "chain_configuration": {
+      "wrapped_native": "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c",
+      "wrapped_native_stable_pool": "0x36696169c63e42cd08ce11f5deebbcebae652050",
+      "stable_is_token0": true,
+      "minimum_native_locked": "10",
+      "stable_coins": [
+        "0x55d398326f99059ff775485246999027b3197955",
+        "0xe9e7cea3dedca5984780bafc599bd69add087d56",
+        "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d"
+      ],
+      "whitelist_tokens": [
+        "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c",
+        "0x55d398326f99059ff775485246999027b3197955",
+        "0xe9e7cea3dedca5984780bafc599bd69add087d56",
+        "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d",
+        "0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c",
+        "0x2170ed0880ac9a755fd29b2688956bd959f933f8",
+        "0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82"
+      ]
+    }
+  },
+  "remaining_gates": [
+    "Refresh both 24-hour and same-pod 72-hour net catch-up forecasts and require both to exceed 28 days.",
+    "Prove the generic loader handles spec-0.0.2-derived physical schema and metadata.",
+    "Complete the certified runtime functional gap after issues 5 and 9.",
+    "Produce a paused differential certificate and obtain separate operational approval before activation."
+  ]
+}

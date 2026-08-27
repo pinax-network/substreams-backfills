@@ -1,0 +1,273 @@
+{
+  "format_version": 1,
+  "profile_id": "pancakeswap-infinity-cl-bsc-QmVjXU7y",
+  "status": "immutable_target_contract_only",
+  "family": "pancakeswap-infinity-cl",
+  "chain": "bsc",
+  "deployment": {
+    "cid": "QmVjXU7yQNyyLphPGqoz8iBzqu5YXphooFJn15JqZ6ZMFz",
+    "spec_version": "0.0.4",
+    "mapping_api_version": "0.0.7",
+    "module_initial_block": 47214308,
+    "graft": null,
+    "features": [
+      "nonFatalErrors",
+      "grafting"
+    ]
+  },
+  "data_sources": [
+    {
+      "name": "PoolManager",
+      "address": "0xa0FfB9c1CE1Fe56963B0321B32E7A0302114058b",
+      "start_block": 47214308,
+      "handlers": [
+        {
+          "name": "handleInitialize",
+          "signature": "Initialize(bytes32,address,address,address,uint24,bytes32,uint160,int24)",
+          "topic0": "0x426cc62fe6a33a40ba2788c2c87a9c34ee4582b95bc9fa5a7bb7ae70b750b99c"
+        },
+        {
+          "name": "handleModifyLiquidity",
+          "signature": "ModifyLiquidity(bytes32,address,int24,int24,int256,bytes32)",
+          "topic0": "0xf208f4912782fd25c7f114ca3723a2d5dd6f3bcc3ac8db5af63baa85f711d5ec"
+        },
+        {
+          "name": "handleSwap",
+          "signature": "Swap(bytes32,address,int128,int128,uint160,uint128,int24,uint24,uint16)",
+          "topic0": "0x04206ad2b7c0f463bff3dd4f33c5735b0f2957a351e4f79763a4fa9e775dd237"
+        }
+      ]
+    },
+    {
+      "name": "PositionManager",
+      "address": "0x55f4c8abA71A1e923edC303eb4fEfF14608cC226",
+      "start_block": 47215015,
+      "handlers": [
+        {
+          "name": "handleSubscription",
+          "signature": "Subscription(uint256,address)",
+          "topic0": "0x9709492381f90bdc5938bb4e3b8e35b7e0eac8af058619e27191c5a40ce79fa9"
+        },
+        {
+          "name": "handleUnsubscription",
+          "signature": "Unsubscription(uint256,address)",
+          "topic0": "0xa0ebb1de82db929a9153472f37d3a66dbede4436258311ad0f52a35a2c91d150"
+        },
+        {
+          "name": "handleTransfer",
+          "signature": "Transfer(address,address,uint256)",
+          "topic0": "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+        }
+      ]
+    }
+  ],
+  "pool_key": {
+    "pool_id_strategy": "authoritative_initialize_event_id_bytes32",
+    "recompute_pool_id": false,
+    "contract_tuple_fields": [
+      "currency0",
+      "currency1",
+      "hooks",
+      "poolManager",
+      "fee",
+      "parameters"
+    ],
+    "initialize_event_fields": [
+      "id",
+      "currency0",
+      "currency1",
+      "hooks",
+      "fee",
+      "parameters",
+      "sqrtPriceX96",
+      "tick"
+    ],
+    "persisted_pool_fields": [
+      "token0",
+      "token1",
+      "feeTier",
+      "hooks",
+      "parameters",
+      "hooksRegistration",
+      "tickSpacing"
+    ],
+    "parameters": {
+      "type": "bytes32",
+      "persist_raw": true,
+      "hooks_registration": {
+        "byte_slice": [
+          30,
+          32
+        ],
+        "result_type": "Bytes"
+      },
+      "tick_spacing": {
+        "byte_slice": [
+          27,
+          30
+        ],
+        "operation": "reverse_then_graph_bigint_from_byte_array",
+        "result_type": "BigInt"
+      }
+    }
+  },
+  "fee_and_protocol": {
+    "pool_fee_tier_source": "initialize.fee",
+    "swap_event_fee": "decoded_for_signature_but_ignored_by_mapping",
+    "swap_protocol_fee": "decoded_for_signature_but_ignored_by_mapping",
+    "dynamic_lp_fee_updated_handler": false,
+    "protocol_fee_updated_handler": false,
+    "fee_amount_formula": "tracked_swap_amount_times_pool_fee_tier_div_1000000",
+    "protocol_fee_entity_or_aggregate": false
+  },
+  "hooks": {
+    "pool_hooks_source": "initialize.hooks",
+    "pool_hooks_storage": "lowercase_hex_string",
+    "registration_source": "parameters_last_two_bytes",
+    "hook_specific_data_source": false,
+    "hook_specific_entity": false,
+    "base_arrakis_hook_reducer": false,
+    "base_creator_or_content_hook_pricing_overrides": false
+  },
+  "positions": {
+    "position_id": "decimal_token_id_string",
+    "created_by": "first_position_manager_transfer",
+    "owner_update": "every_position_manager_transfer_to_address",
+    "burn_delete": false,
+    "subscription_mutates_position": false,
+    "unsubscription_mutates_position": false,
+    "subscription_rows_link_to_position_id": true,
+    "position_manager_modify_liquidity_handler": false,
+    "event_id": "transaction_hash_hex_dash_graph_block_log_index"
+  },
+  "entity_layout": {
+    "entity_count": 17,
+    "all_entities_mutable": true,
+    "immutable_entities": [],
+    "entities": [
+      "PoolManager",
+      "Bundle",
+      "Token",
+      "Pool",
+      "Tick",
+      "Transaction",
+      "Swap",
+      "ModifyLiquidity",
+      "UniswapDayData",
+      "PoolDayData",
+      "PoolHourData",
+      "TokenDayData",
+      "TokenHourData",
+      "Position",
+      "Subscribe",
+      "Unsubscribe",
+      "Transfer"
+    ],
+    "pool_fields_added_over_imported_uniswap_v4_parent": [
+      "parameters",
+      "hooksRegistration"
+    ],
+    "arrakis_hook_entity": false
+  },
+  "aggregates": {
+    "swap_amount_sign": "negate_event_amounts_before_decimal_conversion",
+    "tracked_volume_divisor": 2,
+    "untracked_volume_divisor": 2,
+    "intervals": [
+      "protocol_day",
+      "pool_day",
+      "pool_hour",
+      "token_day",
+      "token_hour"
+    ],
+    "modify_liquidity_updates_ticks": true,
+    "modify_liquidity_amounts_source": "tick_math_using_current_pool_tick_and_sqrt_price",
+    "pool_interval_tx_count_increments_on_initialize": true,
+    "fields_initialized_but_not_updated_by_subscribed_handlers": [
+      "Pool.observationIndex",
+      "Pool.liquidityProviderCount",
+      "Pool.collectedFeesToken0",
+      "Pool.collectedFeesToken1",
+      "Pool.collectedFeesUSD",
+      "Token.poolCount",
+      "PoolManager.totalValueLockedUSDUntracked",
+      "PoolManager.totalValueLockedETHUntracked"
+    ]
+  },
+  "pricing": {
+    "pool_manager_entity_id": "0xa0FfB9c1CE1Fe56963B0321B32E7A0302114058b",
+    "stablecoin_wrapped_native_pool_id": "0x752e76950f6167b8dbb0495b957d264d61724dfa26e3dd6fad1ba820862ce9cf",
+    "stablecoin_is_token0": false,
+    "wrapped_native_address": "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c",
+    "minimum_native_locked": "10",
+    "stablecoin_addresses": [
+      "0x55d398326f99059ff775485246999027b3197955",
+      "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d"
+    ],
+    "whitelist_tokens": [
+      "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c",
+      "0x55d398326f99059ff775485246999027b3197955",
+      "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d",
+      "0x0000000000000000000000000000000000000000"
+    ],
+    "token_overrides": [],
+    "pools_to_skip": [],
+    "pool_mappings": [],
+    "native_token": {
+      "symbol": "BNB",
+      "name": "Binance Coin",
+      "decimals": 18
+    }
+  },
+  "metadata": {
+    "call_order": [
+      "symbol",
+      "name",
+      "totalSupply",
+      "decimals"
+    ],
+    "symbol_and_name_fallback": "string_then_bytes32_then_unknown",
+    "null_bytes32_sentinel": "0x0000000000000000000000000000000000000000000000000000000000000001",
+    "decimals_acceptance": "successful_uint8_less_than_255",
+    "missing_decimals_behavior": "return_from_initialize_without_pool_or_token_saves"
+  },
+  "uniswap_v4_prior_art": {
+    "deployment": "Qmbsc6XQWbiv4DfLVfaNciScqYLyDWUYjWzrFBbzzmRsMB",
+    "shared_parent_entities": 17,
+    "shared_handlers": [
+      "Initialize",
+      "ModifyLiquidity",
+      "Swap",
+      "Subscription",
+      "Unsubscription",
+      "Transfer"
+    ],
+    "reusable_components": [
+      "ordered_event_envelope_and_graph_trigger_order",
+      "historical_erc20_metadata_batching",
+      "graph_decimal_and_tick_liquidity_math",
+      "pool_tick_liquidity_and_metadata_store_patterns",
+      "transaction_position_subscription_and_transfer_reducer_shapes",
+      "poi_and_native_graph_node_writer_architecture"
+    ],
+    "required_target_changes": [
+      "profile_driven_network_deployment_address_and_start_block_validation",
+      "pancake_initialize_and_swap_abi_decoders",
+      "protobuf_fields_for_raw_parameters_hooks_registration_and_protocol_fee",
+      "pool_state_poi_writer_and_seed_fields_for_parameters_and_hooks_registration",
+      "bsc_native_token_stable_pool_whitelist_and_minimum_liquidity_configuration",
+      "static_initialize_fee_policy_and_intentional_swap_fee_protocol_fee_ignores",
+      "remove_base_arrakis_and_creator_content_hook_semantics",
+      "make_all_seventeen_target_entities_temporal_and_mutable",
+      "target_specific_substreams_packages_module_hashes_and_initial_blocks",
+      "bsc_canonical_event_metadata_and_reducer_fixtures",
+      "exact_graph_node_schema_poi_vid_and_postgresql_parity_certification"
+    ]
+  },
+  "remaining_gates": [
+    "fresh_24_hour_and_same_pod_72_hour_graph_node_catchup_forecasts_both_greater_than_28_days",
+    "profile_driven_decoder_store_reducer_poi_writer_and_schema_implementation",
+    "canonical_bsc_fixture_and_full_graph_node_differential_certification",
+    "paused_restore_validation_and_separate_operational_activation_approval"
+  ]
+}

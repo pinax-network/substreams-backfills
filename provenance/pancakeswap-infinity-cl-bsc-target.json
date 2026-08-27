@@ -1,0 +1,270 @@
+{
+  "format_version": 1,
+  "family": "pancakeswap-infinity-cl-bsc",
+  "implementation_status": "immutable_target_and_exact_source_baseline_only",
+  "runtime_parity": false,
+  "eligibility_decision": "awaiting_same_pod_72_hour_evidence",
+  "deployment": {
+    "cid": "QmVjXU7yQNyyLphPGqoz8iBzqu5YXphooFJn15JqZ6ZMFz",
+    "chain": "bsc",
+    "spec_version": "0.0.4",
+    "mapping_api_version": "0.0.7",
+    "repository": "https://github.com/NgoKimPhu/infinity-cl-subgraph",
+    "features": [
+      "nonFatalErrors",
+      "grafting"
+    ],
+    "concrete_graft": null,
+    "data_sources": [
+      {
+        "name": "PoolManager",
+        "address": "0xa0FfB9c1CE1Fe56963B0321B32E7A0302114058b",
+        "start_block": 47214308
+      },
+      {
+        "name": "PositionManager",
+        "address": "0x55f4c8abA71A1e923edC303eb4fEfF14608cC226",
+        "start_block": 47215015
+      }
+    ]
+  },
+  "artifact_lock": [
+    {
+      "role": "deployment",
+      "cid": "QmVjXU7yQNyyLphPGqoz8iBzqu5YXphooFJn15JqZ6ZMFz",
+      "path": "pancakeswap-infinity-cl-bsc/reference/deployment.yaml",
+      "bytes": 2527,
+      "sha256": "08a33abeae76073b5083921542a226fea774e84db1e575e4b5aaf168a8b72a97"
+    },
+    {
+      "role": "schema",
+      "cid": "QmcWb81VRk9SycZYgLyr9i6tYCnHsVsPTyTvfNpywDRJfr",
+      "path": "pancakeswap-infinity-cl-bsc/reference/schema.graphql",
+      "bytes": 13473,
+      "sha256": "af4a4495ef03ac1cb0228cc81b9d6033965715fca5b7ceaa039416fff8d02219"
+    },
+    {
+      "role": "erc20_abi",
+      "cid": "QmPfKNZPkVATzL3EHypkcsyKhehR4jkiYEVqSzh2hxWYj1",
+      "path": "pancakeswap-infinity-cl-bsc/reference/abis/ERC20.json",
+      "bytes": 3685,
+      "sha256": "b3ce2325d5da94241c5ee0fac37840c017e04f8569ea56e955863b34d9b6a9b1"
+    },
+    {
+      "role": "erc20_name_bytes_abi",
+      "cid": "QmQCP6Pdp1MqpwRv2qoPHuUTwZGy7Q3eDHg4w5kzwE9mBj",
+      "path": "pancakeswap-infinity-cl-bsc/reference/abis/ERC20NameBytes.json",
+      "bytes": 268,
+      "sha256": "b874c853ffa5309e4b7fbf4934c1efdb4fe31e1a65f7041e67f4a7f2258ffb77"
+    },
+    {
+      "role": "erc20_symbol_bytes_abi",
+      "cid": "QmbHnhUFZa6qqqRyubUYhXntox1TCBxqryaBM1iNGqVJzT",
+      "path": "pancakeswap-infinity-cl-bsc/reference/abis/ERC20SymbolBytes.json",
+      "bytes": 270,
+      "sha256": "9ccb9b5d95394b2ffb4ced54cffa0c5ea282917f4eec36c121ce28c257965193"
+    },
+    {
+      "role": "pool_manager_abi",
+      "cid": "QmVPT7Pnc1oK5rtmmDKzxLKjiAe9v3oMANo5g45yuDrpzi",
+      "path": "pancakeswap-infinity-cl-bsc/reference/abis/PoolManager.json",
+      "bytes": 28146,
+      "sha256": "666d6a1b89b9181b4b9cdc8b6cac6c2af5737ad6580e813c4a070a7b829316d3"
+    },
+    {
+      "role": "position_manager_abi",
+      "cid": "Qme7qpTdeAaQA3wQbjatFKcKSf8VgJpVkcjaGMihzr4FmZ",
+      "path": "pancakeswap-infinity-cl-bsc/reference/abis/PositionManager.json",
+      "bytes": 28826,
+      "sha256": "72aa6f764111266a48cfe8dd9395e35595a2522e937c78e53d01a64d88666566"
+    },
+    {
+      "role": "mapping_wasm",
+      "cid": "QmaECZTdpba4YL5MA2E5MVgCnMYeK4nMUqMixzvF1aztQR",
+      "path": "pancakeswap-infinity-cl-bsc/reference/mappings/Mapping.wasm",
+      "bytes": 106483,
+      "sha256": "21458408bed3eb9445d99410d251194e8c48c7bd8f68e8796cfe2be9215f77f6",
+      "exports": [
+        "handleInitialize",
+        "handleModifyLiquidity",
+        "handleSubscription",
+        "handleSwap",
+        "handleTransfer",
+        "handleUnsubscription"
+      ]
+    }
+  ],
+  "exact_source": {
+    "status": "exact_reproduction",
+    "repository": "https://github.com/NgoKimPhu/infinity-cl-subgraph",
+    "commit": "40b0021be04cda3e32dde8e3cf0c3397863fc0c0",
+    "tree": "b7a7778bc5c7f316cc46913b7b1d54ffcfa07c22",
+    "parent": "e53351269ab0bb9a265ab04d71189156f3fa03a8",
+    "tracked_file_count": 58,
+    "source_files": [
+      {
+        "path": "package.json",
+        "bytes": 1547,
+        "sha256": "216d2b1e9fe7f1fa853a50c325b715ef0c3aac180d6ebc4d07590349b806396d",
+        "git_blob": "85349919ed10c0ef119d103285ad4af675dfa896"
+      },
+      {
+        "path": "package-lock.json",
+        "bytes": 402813,
+        "sha256": "2c6ef0c4e651cb9082ce64e3c9b7bb2f67728880a038190e1328a97808cf4c9e",
+        "git_blob": "38f8e12ad7568140da676b9da965f7556c9bf464"
+      },
+      {
+        "path": "yarn.lock",
+        "bytes": 231900,
+        "sha256": "00635b81287cddc5eae332d71786ae352245f89c0682260fa53ed7d9e26e53a7",
+        "git_blob": "a9af8809688e371a0fba18161785cbe24d0d0c36"
+      },
+      {
+        "path": ".yarnrc.yml",
+        "bytes": 25,
+        "sha256": "473e6def86fc03638120e0c01d0c8bbab095677256460fa4ea763e5d4697f270",
+        "git_blob": "3186f3f0795ab612d5508593672dc9ad94bccca0"
+      },
+      {
+        "path": "subgraph.yaml",
+        "bytes": 2145,
+        "sha256": "6bcbee5032de14963e9c05a39fb2458a92c392705f000c9d9ee54cb4e82c0ecc",
+        "git_blob": "c50ab98eb077325a335de3290cefbe78ab81d2bb"
+      },
+      {
+        "path": "schema.graphql",
+        "bytes": 13473,
+        "sha256": "af4a4495ef03ac1cb0228cc81b9d6033965715fca5b7ceaa039416fff8d02219",
+        "git_blob": "17dfca6dee452ec2be30dbf756b67dbf2c9efc02"
+      },
+      {
+        "path": "networks.json",
+        "bytes": 262,
+        "sha256": "df96a2d83f1de3aec01d4f8b775b46c677a260e1dcc8c4066e8087fc82f08ef7",
+        "git_blob": "f443cbcb5288e70b33ef1f7334820cb3a17acc7b"
+      },
+      {
+        "path": ".github/workflows/CI.yml",
+        "bytes": 1974,
+        "sha256": "497280d4df95f856f203161f757376f2f67e609b2ad8dd624c689a66e8c4eba6",
+        "git_blob": "4b8a9ec86d2b261dfdee50360bae491c5b815d5f"
+      }
+    ],
+    "historical_source_ci": {
+      "workflow": ".github/workflows/CI.yml",
+      "node": "18.x",
+      "dependency_install": "yarn install",
+      "build": "yarn build",
+      "package_manager_version": null,
+      "immutable_toolchain": false
+    },
+    "reproduction_toolchain": {
+      "node": "24.13.1",
+      "npm": "11.11.0",
+      "package_lock_version": 3,
+      "graph_cli": "0.64.1",
+      "graph_ts": "0.32.0",
+      "assemblyscript": "0.19.23",
+      "binaryen": "102.0.0-nightly.20211028",
+      "typescript": "3.9.9",
+      "npm_run_all": "4.1.5",
+      "relationship_to_historical_ci": "independent_byte_exact_reproduction_not_original_deployment_toolchain"
+    },
+    "build": {
+      "method": "independent_byte_exact_reproduction",
+      "commands": [
+        "npm ci --legacy-peer-deps --ignore-scripts",
+        "npm run build"
+      ],
+      "generated_manifest_bytes": 2195,
+      "generated_manifest_sha256": "3d466cb0e39c5d02c9204feae156192984f735ef00488577d0660b8d15343ada",
+      "mapping_bytes": 106483,
+      "mapping_sha256": "21458408bed3eb9445d99410d251194e8c48c7bd8f68e8796cfe2be9215f77f6",
+      "result": "byte_exact_to_all_deployed_child_artifacts"
+    },
+    "build_normalization": {
+      "schema": "identity",
+      "abis": "graph_cli_removes_exactly_one_source_trailing_lf",
+      "deployment_manifest": "replace_seven_local_build_paths_with_their_computed_cidv0_links"
+    },
+    "source_abi_payloads": [
+      {
+        "path": "abis/ERC20.json",
+        "bytes": 3686,
+        "sha256": "929f801517d474eae12c45fc263502bc0644364854379f46a7bb273354d96d2e"
+      },
+      {
+        "path": "abis/ERC20NameBytes.json",
+        "bytes": 269,
+        "sha256": "f2931748c6851e1636b458030361de258db60441c353351e7eb4616c90039bce"
+      },
+      {
+        "path": "abis/ERC20SymbolBytes.json",
+        "bytes": 271,
+        "sha256": "6e114ca21ff78fcae5364358aec454862cdcef2cebdb541752e45ee84d38ace9"
+      },
+      {
+        "path": "abis/PoolManager.json",
+        "bytes": 28147,
+        "sha256": "4b09ffd628dca73228fdf699fbcbba11f6c5495cf5bdaf5922c1685bbe559392"
+      },
+      {
+        "path": "abis/PositionManager.json",
+        "bytes": 28827,
+        "sha256": "21d4794971609c029d880140151507b9f51e645667d487d4d34749a0e882d56e"
+      }
+    ],
+    "matched_evidence": [
+      "The source schema is byte-identical to the deployed schema object.",
+      "Every generated ABI payload is byte-identical to its deployed object after Graph CLI removes one trailing LF from the source JSON.",
+      "The clean source build mapping WASM is byte-identical to the deployed mapping object.",
+      "Resolving all seven local generated-manifest file paths to their computed CIDv0 links produces the deployed manifest object exactly.",
+      "All eight deployed objects independently recompute to their recorded CIDv0 values."
+    ]
+  },
+  "logical_contract": {
+    "entity_count": 17,
+    "logical_sha256": "e9bdfc5b10be66cd3c0ebead32cd31497ba3e0ad380e5ddffd9c1ecdc455641e",
+    "immutable_entities": [],
+    "all_entities_mutable": true,
+    "uniswap_v4_parent": {
+      "deployment": "QmS1ehFzXTD9eA1f1EgjZvdyAj2EHtVNMrEN91H3pLuHMy",
+      "entity_count": 17,
+      "logical_sha256": "caf9ba372feb9e9e1370d866f1b48d08cc8f10fb261075dc516e9e6e96e65e53"
+    },
+    "uniswap_v4_child_addition": {
+      "deployment": "Qmbsc6XQWbiv4DfLVfaNciScqYLyDWUYjWzrFBbzzmRsMB",
+      "entities": [
+        "ArrakisHook"
+      ]
+    },
+    "differences_from_uniswap_v4_parent": {
+      "Pool": {
+        "added_fields": {
+          "hooksRegistration": "Bytes!",
+          "parameters": "Bytes!"
+        }
+      }
+    },
+    "runtime_critical_mutability_difference": [
+      "Transaction",
+      "Swap",
+      "ModifyLiquidity",
+      "Subscribe",
+      "Unsubscribe",
+      "Transfer"
+    ]
+  },
+  "layout_profile": {
+    "path": "pancakeswap-infinity-cl-bsc/layout-profile-v1.json",
+    "bytes": 9077,
+    "sha256": "372f7845b6426422d1d5b31f972ab5b40ba0106223a2b10a8cf6b55115671d86"
+  },
+  "remaining_gates": [
+    "Refresh both 24-hour and same-pod 72-hour net catch-up forecasts; backfill work remains eligible only if both fastest healthy paths exceed 28 days.",
+    "Implement the profile-driven Pancake decoder, protobuf contract, Store packages, reducer, POI, temporal writer, seed/replay, and schema paths without changing the certified Uniswap V4 deployment.",
+    "Capture canonical BSC event and metadata fixtures and prove complete Graph Node entity, save-order, POI, VID, block-range, and PostgreSQL parity.",
+    "Restore only into a disposable paused target and require separate operational approval before allocation or activation."
+  ]
+}

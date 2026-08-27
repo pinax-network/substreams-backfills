@@ -28,6 +28,8 @@ jobs:
         run: python3 scripts/validate-targets.py
       - name: Verify immutable Uniswap V3 Matic target
         run: python3 scripts/verify-uniswap-v3-matic-target.py
+      - name: Verify immutable PancakeSwap Infinity CL BSC target
+        run: python3 scripts/verify-pancakeswap-infinity-cl-bsc-target.py
       - name: Test eligibility decisions and freshness gates
         run: python3 -m unittest discover -s scripts/tests -p 'test_*.py'
 
@@ -131,6 +133,27 @@ jobs:
           node-version: "18.18.0"
       - name: Reproduce exact deployed Matic source
         run: ./scripts/verify-uniswap-v3-matic-source.sh
+
+  pancakeswap-infinity-cl-bsc-reference:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-ci.txt
+      - name: Install checksum-pinned validation dependencies
+        run: python3 -m pip install --require-hashes -r requirements-ci.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.13.1"
+      - name: Pin exact npm reproduction tool
+        run: |
+          npm install --global npm@11.11.0
+          test "$(npm --version)" = "11.11.0"
+      - name: Reproduce exact deployed Pancake source
+        run: ./scripts/verify-pancakeswap-infinity-cl-bsc-source.sh
 
   uniswap-v4-reference:
     runs-on: ubuntu-latest

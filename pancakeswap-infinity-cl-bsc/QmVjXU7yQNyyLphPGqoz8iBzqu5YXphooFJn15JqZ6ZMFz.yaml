@@ -6,7 +6,7 @@ market_qpd: 2600000
 signal_grt: 3950
 competitors: 1   # ellipfra only
 note: offchain sync also running (riv sgd5283 bsc_fast + kan sgd5304)
-milestone: M4
+milestone: M5
 eligibility:
   policy: graph-node-net-catchup-v1
   required_clusters: [riv-subgraphs-a, kan-subgraphs-a]

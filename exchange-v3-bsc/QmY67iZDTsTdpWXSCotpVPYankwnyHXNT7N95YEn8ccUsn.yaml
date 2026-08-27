@@ -7,3 +7,12 @@ signal_grt: 14324
 competitors: 2   # ellipfra 112k + 7k straggler
 note: offchain sync also running (riv sgd5281 bsc_fast + kan sgd5305)
 milestone: M4
+eligibility:
+  policy: graph-node-net-catchup-v1
+  required_clusters: [riv-dev1, kan-subgraphs-a]
+  latest:
+    decision: indeterminate
+    reason: no_fresh_evidence
+    measured_at: null
+    evidence: null
+    sha256: null

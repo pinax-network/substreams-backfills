@@ -12,3 +12,12 @@ placement:
   riv: { shard: base_fast, node: index_node_chain_base_0 }
   kan: { shard: subgraphshard_b, node: index_node_chain_base_0 }
 milestone: M3   # same spkg as mainnet, params-only rebind
+eligibility:
+  policy: graph-node-net-catchup-v1
+  required_clusters: [riv-dev1, kan-subgraphs-a]
+  latest:
+    decision: indeterminate
+    reason: no_fresh_evidence
+    measured_at: null
+    evidence: null
+    sha256: null

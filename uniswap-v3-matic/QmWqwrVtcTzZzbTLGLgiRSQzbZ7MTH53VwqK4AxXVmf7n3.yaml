@@ -5,3 +5,12 @@ market_qpd: 5500000
 competitors: unknown
 note: kan sgd3 died disk-full ~34M blocks behind (matic shard expanded 4Ti->4.5Ti 2026-08-20); revival via backfill, not catch-up
 milestone: M4
+eligibility:
+  policy: graph-node-net-catchup-v1
+  required_clusters: [riv-dev1, kan-subgraphs-a]
+  latest:
+    decision: indeterminate
+    reason: no_fresh_evidence
+    measured_at: null
+    evidence: null
+    sha256: null

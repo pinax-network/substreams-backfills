@@ -1,2 +1,4 @@
 target/
 *.spkg
+__pycache__/
+*.py[cod]

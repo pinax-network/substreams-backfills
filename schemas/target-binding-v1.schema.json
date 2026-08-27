@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/pinax-network/substreams-backfills/schemas/target-binding-v1.schema.json",
+  "title": "Substreams backfill target binding",
+  "type": "object",
+  "required": ["deployment", "family", "chain", "eligibility"],
+  "properties": {
+    "deployment": {"type": "string", "pattern": "^Qm[1-9A-HJ-NP-Za-km-z]{44}$"},
+    "family": {"type": "string", "minLength": 1},
+    "chain": {"type": "string", "minLength": 1},
+    "eligibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policy", "required_clusters", "latest"],
+      "properties": {
+        "policy": {"const": "graph-node-net-catchup-v1"},
+        "required_clusters": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "latest": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["decision", "reason", "measured_at", "evidence", "sha256"],
+          "properties": {
+            "decision": {"enum": ["eligible", "monitor", "complete", "indeterminate"]},
+            "reason": {"type": "string", "minLength": 1},
+            "measured_at": {"type": ["string", "null"]},
+            "evidence": {"type": ["string", "null"]},
+            "sha256": {
+              "anyOf": [
+                {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+                {"type": "null"}
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": true
+}

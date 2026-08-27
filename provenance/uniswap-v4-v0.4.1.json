@@ -5,6 +5,7 @@
     "repository": "pinax-network/substreams-v4-subgraph",
     "tag": "v0.4.1",
     "commit": "6812a4deaa5a520020e8d727e17f6d0b7113d0a9",
+    "history_mirror": "refs/heads/upstream/uniswap-v4-v0.4.1",
     "tree": "2d60d30242443adc2c021a5b609c27edcb75128a",
     "tracked_files": 98,
     "executable_files": 13
@@ -57,6 +58,7 @@
   },
   "integration_constraints": {
     "cargo": "The imported project remains excluded from the root workspace and retains every original lockfile.",
+    "git_history": "The exact upstream history is mirrored at refs/heads/upstream/uniswap-v4-v0.4.1 and intentionally excluded from the default-branch ancestry because its repository-local closing directives would target unrelated issues in this repository.",
     "generated_protobuf": "Substreams CLI v1.20.3 computes relocation-sensitive generated-state metadata. Monorepo CI preserves the committed source tree and mirrors the authoritative source parity workflow instead of regenerating bindings from the moved path.",
     "host_builds": "Host-built WASM and SPKG files prove behavior and cache boundaries but never replace the frozen release bytes."
   },

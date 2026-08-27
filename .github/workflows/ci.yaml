@@ -34,7 +34,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Verify history-preserving import
+      - name: Fetch pinned V4 history mirror
+        run: >-
+          git fetch --no-tags origin
+          refs/heads/upstream/uniswap-v4-v0.4.1:refs/remotes/origin/upstream/uniswap-v4-v0.4.1
+      - name: Verify isolated history mirror and exact source import
         run: ./scripts/verify-uniswap-v4-import.sh
       - uses: dtolnay/rust-toolchain@1.90.0
         with:

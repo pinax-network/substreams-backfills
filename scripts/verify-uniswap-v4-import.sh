@@ -6,6 +6,7 @@ cd "$repo_dir"
 
 source_commit=6812a4deaa5a520020e8d727e17f6d0b7113d0a9
 source_tree=2d60d30242443adc2c021a5b609c27edcb75128a
+source_ref=refs/remotes/origin/upstream/uniswap-v4-v0.4.1
 import_path=uniswap-v4
 
 fail() {
@@ -13,11 +14,16 @@ fail() {
     exit 1
 }
 
-actual_source_tree=$(git rev-parse "${source_commit}^{tree}")
+actual_source_commit=$(git rev-parse --verify "${source_ref}^{commit}")
+[[ "$actual_source_commit" == "$source_commit" ]] \
+    || fail "$source_ref points to $actual_source_commit"
+
+actual_source_tree=$(git rev-parse "${source_ref}^{tree}")
 [[ "$actual_source_tree" == "$source_tree" ]] || fail "source tree is $actual_source_tree"
 
-git merge-base --is-ancestor "$source_commit" HEAD \
-    || fail "source commit is not retained in destination history"
+if git merge-base --is-ancestor "$source_commit" HEAD; then
+    fail "upstream history entered the default-branch lineage; its repository-local closing directives are unsafe here"
+fi
 
 import_tree=$(git rev-parse "HEAD:${import_path}")
 [[ "$import_tree" == "$source_tree" ]] || fail "import tree is $import_tree"
@@ -55,4 +61,4 @@ verify_sha256 \
     bc8a841dbb74f9bbc7d90826251ab766ad350170a4832fc3e9b084664d22254a \
     "$import_path/release/v0.4.0/uniswap-v4-base-store-state-reducer-v0.4.0.spkg"
 
-echo "verified Uniswap V4 source commit, tree, 98 files, 13 executable modes, and frozen v0.4.0 packages"
+echo "verified mirrored Uniswap V4 history, exact imported tree, 98 files, 13 executable modes, and frozen v0.4.0 packages"

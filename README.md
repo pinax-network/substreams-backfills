@@ -29,8 +29,9 @@ Tracking: [k8s-subgraphs#779](https://github.com/pinax-network/k8s-subgraphs/iss
   — owns native entity reduction, proof of indexing, Graph Node-native temporal rows,
   PostgreSQL COPY/Parquet output, checkpoints, lifecycle controls, and physical parity.
   This repository never duplicates that safety-critical runtime.
-- **`uniswap-v4/`** — the history-preserving, source-identical import of the proven
-  Uniswap V4 Base Substreams pipeline. It is the golden reference from which reusable
+- **`uniswap-v4/`** — the source-identical import of the proven Uniswap V4 Base
+  Substreams pipeline. Its exact upstream history is retained on the isolated
+  `upstream/uniswap-v4-v0.4.1` branch. It is the golden reference from which reusable
   family-to-engine contracts are derived; its frozen production SPKGs remain byte-identical.
 - **`common/`** — shared contracts extracted only after they reproduce the V4 reference.
   A family boundary must preserve ordered mapping operations and the inputs required for
@@ -56,9 +57,9 @@ subgraph author's) before any allocation is opened.
    Node copy has a net catch-up ETA greater than 28 days. Borderline deployments remain
    monitoring-only.
 1. **M1 — Uniswap V4 reference port**: preserve the complete Substreams-owned source,
-   history, immutable package bytes, module hashes, Store cache boundaries, fixtures, and
-   audit packages; then reproduce a certified segment through the pinned engine without
-   touching the active source or recovery databases.
+   isolated upstream history, immutable package bytes, module hashes, Store cache boundaries,
+   fixtures, and audit packages; then reproduce a certified segment through the pinned engine
+   without touching the active source or recovery databases.
 2. **M2 — V4-derived family contract**: extract the ordered block-change protocol, target
    schema profiles, metadata finalization, and certification harness while retaining V4 as
    a golden regression.
@@ -67,7 +68,8 @@ subgraph author's) before any allocation is opened.
    [pinax-network/substreams-uniswap-v3](https://github.com/pinax-network/substreams-uniswap-v3)
    fork; gap list in `uniswap-v3/PARITY.md`. Verified differentially, landed paused via the
    engine, activated behind a 200-GRT allocation.
-   Base (`Qmb4VUcA…`) follows as a parameters-only rebind of the same certified family.
+   Base (`Qmb4VUcA…`) follows through a complete versioned chain configuration while using
+   the same certified WASM bytes; a factory-only rebind is insufficient.
 4. **M4 — Uniswap V3 Matic** (`QmWqwrVt…`).
 5. **M5 — PancakeSwap Infinity CL BSC** (`QmVjXU7y…`).
 6. **M6 — Exchange V3 BSC** (`QmY67iZD…`).
@@ -82,8 +84,11 @@ The imported directory is pinned to source commit
 `6812a4deaa5a520020e8d727e17f6d0b7113d0a9` (`v0.4.1`) and Git tree
 `2d60d30242443adc2c021a5b609c27edcb75128a`. It remains an independent Cargo project so
 its Rust/Substreams versions and lockfiles do not get silently unified with other families.
-Run `./scripts/verify-uniswap-v4-import.sh` to prove its history, tree, file modes, frozen
-package bytes, and release lock are unchanged.
+The exact upstream commit history is mirrored at
+`refs/heads/upstream/uniswap-v4-v0.4.1`, outside the default-branch ancestry. This preserves
+the history without allowing its old repository-local `Closes #…` commit messages to close
+unrelated roadmap issues here. Run `./scripts/verify-uniswap-v4-import.sh` to prove the mirror,
+imported tree, file modes, frozen package bytes, and release lock are unchanged.
 
 The original repository and releases remain available until the active V4 backfill reaches
 its terminal certificate, the imported package reproduces a certified 100,000-block segment,

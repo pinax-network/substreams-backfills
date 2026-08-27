@@ -1,0 +1,163 @@
+{
+  "format_version": 1,
+  "config_version": "uniswap-v3-chain-config/v1",
+  "source": {
+    "repository": "pinax-network/substreams-uniswap-v3",
+    "commit": "42c7b15345e6df80561b694e52a0eb622b374b96",
+    "tree": "a00e882e92d07b46550b74dea279c114d57631ac",
+    "import_path": "uniswap-v3/source",
+    "contract": "provenance/uniswap-v3-qma8a81t-parity.json",
+    "mutation_policy": "The imported source stays byte-identical. runtime.patch is applied only to a separate materialized directory."
+  },
+  "overlay": {
+    "path": "uniswap-v3/chain-config/runtime.patch",
+    "raw_sha256": "4f87d22239b84aebca6712a72e2c4047b0735e911756973b6e7c228fe455e8ae",
+    "materializer": "scripts/materialize-uniswap-v3-chain-config.sh"
+  },
+  "configurations": {
+    "mainnet": {
+      "path": "uniswap-v3/chain-config/configs/mainnet-v1.json",
+      "raw_sha256": "30f5caf9ee8906a8886dc103e55286b9d5b6dbd8784d1c97d21b9a38b266bb55",
+      "selector": "version=1;network=mainnet;sha256=30f5caf9ee8906a8886dc103e55286b9d5b6dbd8784d1c97d21b9a38b266bb55",
+      "manifest": "uniswap-v3/chain-config/manifests/substreams.mainnet.yaml",
+      "manifest_raw_sha256": "446035d5a6778a73bfc97adc6b112d96cd855aad874cf78cc048b3a472bead18"
+    },
+    "base": {
+      "path": "uniswap-v3/chain-config/configs/base-v1.json",
+      "raw_sha256": "2eeed82547cea2d8e6c6adb9b3770bd8f8bbdde3b43ce4c7a5410325cf9b2832",
+      "selector": "version=1;network=base;sha256=2eeed82547cea2d8e6c6adb9b3770bd8f8bbdde3b43ce4c7a5410325cf9b2832",
+      "manifest": "uniswap-v3/chain-config/manifests/substreams.base.yaml",
+      "manifest_raw_sha256": "a08a5ec060f65538869d13550aaf8ab8f24ea5dcc2b276965904b4e8397775b8"
+    }
+  },
+  "targets": {
+    "mainnet": {
+      "deployment_manifest": {
+        "cid": "QmTZ8ejXJxRo7vDBS4uwqBeGoxLSWbhaA7oXa1RvxunLy7",
+        "raw_sha256": "691ea53201c6e3c65de3959b76be1a8fd1d9c119e1aaf55ab4a521f8e8a06e16"
+      },
+      "graft": {
+        "base": "QmZeCuoZeadgHkGwLwMeguyqUKz1WPWQYKcKyMCeQqGhsF",
+        "block": 19470000
+      },
+      "mappings": {
+        "factory": {
+          "cid": "QmbJGLb6sXkN11djxLvKGb2zDk3s7ddgEsULwzC7TVyrEb",
+          "raw_sha256": "9a33e52667ce538278f9ab88ac9818f5442021e8a2ddb22fd5994a9643148887"
+        },
+        "nonfungible_position_manager": {
+          "cid": "QmWxG1yzdQmp4pRDiqKvTZyRrrrZPRUTza6xznjR1wu1sD",
+          "raw_sha256": "34487685c81672436f34b79f3749f41e6b3c724b52dd8cb24b933e3cb5006124"
+        },
+        "pool_template": {
+          "cid": "QmSaGgPnyhStviGQSGTokQYRgVqLFNvnGWfnv8tSfuvpWD",
+          "raw_sha256": "f9a25426839d83f84679cd0d272582f2631c57117093ffd342351bc04aff8970"
+        }
+      }
+    },
+    "base": {
+      "deployment_manifest": {
+        "cid": "Qmb4VUcAY9LsVgeCuCCMs7X1XrkbRcaiuAbSK8SqhmsAfP",
+        "raw_sha256": "b4516b3e083985529c801b5071f804ab103ff307264bf82d18cda61b0ccc1085"
+      },
+      "graft": {
+        "base": "QmPWDTWRfS8XewMJhxXoQiZX6RkrUMYH7BFnnB846v6wzR",
+        "block": 19852000
+      },
+      "mappings": {
+        "factory": {
+          "cid": "QmXFDgK3qLnmsLFcPWobXbdnqV9gESL9BvYY29si4vpTjr",
+          "raw_sha256": "296eb1ad59dca0ef5000e7e48971cb4c39ce8a3d8cfeb7541f6e8b924d049694"
+        },
+        "nonfungible_position_manager": {
+          "cid": "QmPjhEuGqknJJ2LfJCi6XTLFLtiymYfZAtjTLfkmJJGMEj",
+          "raw_sha256": "6338f6b3b2071d0599b8381c948070ca138827bd61b6e5e05eb0d112177b0c91"
+        },
+        "pool_template": {
+          "cid": "QmPZCHE1URf4oviX7Tbrkw3aMENo1qAeEGa1AS2gMumG7P",
+          "raw_sha256": "e0050819429ca279916027512234119308ab26f4ff115939e6409aab676a501c"
+        }
+      }
+    }
+  },
+  "shared_artifacts": {
+    "schema": {
+      "cid": "Qma8a81T9XoX5Pbkrk8J3kxMhWdXJzFSYZge1wGi3QZBru",
+      "raw_sha256": "ae03d0c6d3c6c03f87ae8e699b1e71804266c1d4adb7acbf4f4de5d48727c39c"
+    },
+    "abis": {
+      "factory": {
+        "cid": "QmTU8eKx6pCgtff6Uvc7srAwR8BPiM3jTMBw9ahrXBjRzY",
+        "raw_sha256": "daa769db333fa28d331cc0d866a666ebb98c995a915cb44828a801608ab0d1c1"
+      },
+      "erc20": {
+        "cid": "QmPfKNZPkVATzL3EHypkcsyKhehR4jkiYEVqSzh2hxWYj1",
+        "raw_sha256": "b3ce2325d5da94241c5ee0fac37840c017e04f8569ea56e955863b34d9b6a9b1"
+      },
+      "erc20_symbol_bytes": {
+        "cid": "QmbHnhUFZa6qqqRyubUYhXntox1TCBxqryaBM1iNGqVJzT",
+        "raw_sha256": "9ccb9b5d95394b2ffb4ced54cffa0c5ea282917f4eec36c121ce28c257965193"
+      },
+      "erc20_name_bytes": {
+        "cid": "QmQCP6Pdp1MqpwRv2qoPHuUTwZGy7Q3eDHg4w5kzwE9mBj",
+        "raw_sha256": "b874c853ffa5309e4b7fbf4934c1efdb4fe31e1a65f7041e67f4a7f2258ffb77"
+      },
+      "pool": {
+        "cid": "QmULRc8Ac1J6YFy11z7JRpyThb6f7nmL5mMTQvN7LKj2Vy",
+        "raw_sha256": "df8064cbe381e7a929aa4e1a658ce3617daed0e871883bf29ced54112fdfdbfd"
+      },
+      "nonfungible_position_manager": {
+        "cid": "QmaxxqQ7xzbGDPWu184uoq2g5sofazB9B9tEDrpPjmRZ8q",
+        "raw_sha256": "456c1726a11497a2b12e719111381203a1e96178ea4547af63e8947dc19490cd"
+      }
+    }
+  },
+  "base_constant_audit": {
+    "method": "Constants were decoded from the pinned Base AssemblyScript mapping WASM data segments. Manifest addresses and starts came from the pinned deployment manifest.",
+    "deployed_behavior_preserved": {
+      "stablecoins": [
+        "b97ef9ef8734c71904d8002f8b6bc66dd9c48a6e"
+      ],
+      "ignored_pools": [
+        "8fe8d9bb8eeba3ed688069c3d6b556c9ca258248"
+      ],
+      "swap_ignored_pools": [
+        "9663f2ca0454accad3e094448ea6f77443880454"
+      ],
+      "static_token_metadata": []
+    },
+    "stablecoin_note": "b97ef9... is the Avalanche USDC address, but it is intentionally retained because it is present in the deployed Base mapping WASM.",
+    "reference_pool_read": {
+      "kind": "read-only eth_call",
+      "block": 21947840,
+      "pool": "0x4c36388be6f416a29c8d8eee81c771ce6be14b18",
+      "token0": "0x4200000000000000000000000000000000000006",
+      "token1": "0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca"
+    }
+  },
+  "package_contract": {
+    "shared_binary_path": "target/wasm32-unknown-unknown/release/substreams_uniswap_v3.wasm",
+    "build_once": true,
+    "embedded_wasm_equality": "Both diagnostic packages must contain one byte-identical copy of the single build output.",
+    "execution_hashes": "Recorded separately per chain because params and initialBlock are inputs to the execution hash.",
+    "production_pin_status": "pending-controlled-release",
+    "production_spkg_sha256": null,
+    "production_module_hashes": null
+  },
+  "evidence_boundary": {
+    "completed_here": [
+      "static source and deployed-WASM constant audit",
+      "fail-closed configuration contract",
+      "single-build dual-manifest packaging proof",
+      "offline regression and negative tests"
+    ],
+    "not_performed_here": [
+      "live Substreams streams",
+      "mainnet fixed-range logical parity",
+      "Base Firehose/reference parity",
+      "production package freeze",
+      "workflow submission",
+      "database mutation"
+    ]
+  }
+}

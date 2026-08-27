@@ -1,7 +1,7 @@
 # Uniswap V3 mainnet and Base
 
-The two target deployments share schema `Qma8a81T…`, but they do not yet share a
-safe runtime configuration.
+The two target deployments share schema `Qma8a81T…` and now have a complete,
+versioned configuration overlay for one shared runtime binary.
 
 | Target | Chain | Factory | Start block | Value signal |
 |---|---|---|---:|---:|
@@ -39,11 +39,16 @@ logical contracts, the release WASM build, and package structure are the import
 gates. Formatting or lint cleanup belongs in a later, explicitly reviewed
 change rather than being smuggled into the canonical-source import.
 
-It does **not** prove exact physical history, save ordering, proof of indexing,
-GraphQL parity, or Base compatibility. The imported module is hard-coded for
-Ethereum mainnet across its factory, position manager, start blocks, wrapped
-native token, reference-price pool, stablecoins, and whitelist. A factory-only
-parameter is not a valid Base rebind.
+The frozen import itself remains hard-coded for Ethereum mainnet. The sibling
+[`chain-config/`](chain-config/README.md) overlay externalizes the complete
+audited mainnet/Base contract without changing those source bytes. CI
+materializes it separately, tests both pinned configurations, builds one WASM,
+and proves the mainnet and Base diagnostic packages embed identical WASM bytes.
+A factory-only parameter is still not a valid Base rebind.
+
+This does **not** yet prove fixed-range mainnet output parity, Base Firehose and
+authoritative-reference parity, exact physical history, save ordering, proof of
+indexing, GraphQL parity, or a controlled production package pin.
 
 See [PARITY.md](PARITY.md) for the evidence boundary and remaining order.
 

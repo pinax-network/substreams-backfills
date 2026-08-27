@@ -1,0 +1,999 @@
+diff --git a/Cargo.lock b/Cargo.lock
+index fe1e04b..fd60018 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -756,0 +757,11 @@ dependencies = [
++[[package]]
++name = "sha2"
++version = "0.10.9"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "a7507d819769d01a365ab707794a4084392c824f54a7a6a7862f8c3d0892b283"
++dependencies = [
++ "cfg-if",
++ "cpufeatures",
++ "digest",
++]
++
+@@ -899,0 +911,3 @@ dependencies = [
++ "serde",
++ "serde_json",
++ "sha2",
+diff --git a/Cargo.toml b/Cargo.toml
+index 54ded98..565a059 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -17,0 +18,3 @@ phf = { version = "0.11.1", features = ["macros"] }
++serde = { version = "1.0.197", features = ["derive"] }
++serde_json = "1.0.114"
++sha2 = "0.10.8"
+diff --git a/src/config.rs b/src/config.rs
+new file mode 100644
+index 0000000..01ce5b0
+--- /dev/null
++++ b/src/config.rs
+@@ -0,0 +1,456 @@
++use std::collections::{BTreeMap, BTreeSet};
++
++use serde::Deserialize;
++use sha2::{Digest, Sha256};
++use substreams::errors::Error;
++
++const CONFIG_VERSION: &str = "uniswap-v3-chain-config/v1";
++const MAINNET_SHA256: &str = "30f5caf9ee8906a8886dc103e55286b9d5b6dbd8784d1c97d21b9a38b266bb55";
++const BASE_SHA256: &str = "2eeed82547cea2d8e6c6adb9b3770bd8f8bbdde3b43ce4c7a5410325cf9b2832";
++
++#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
++#[serde(deny_unknown_fields)]
++pub struct ChainConfig {
++    pub format_version: u32,
++    pub config_version: String,
++    pub network: String,
++    pub deployment: String,
++    pub schema_cid: String,
++    pub graft: GraftConfig,
++    pub contracts: ContractConfig,
++    pub initial_blocks: InitialBlockConfig,
++    pub pricing: PricingConfig,
++    pub filters: FilterConfig,
++    pub static_token_metadata: Vec<StaticTokenMetadata>,
++}
++
++#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
++#[serde(deny_unknown_fields)]
++pub struct GraftConfig {
++    pub base: String,
++    pub block: u64,
++}
++
++#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
++#[serde(deny_unknown_fields)]
++pub struct ContractConfig {
++    pub factory: String,
++    pub factory_entity_id: String,
++    pub nonfungible_position_manager: String,
++}
++
++#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
++#[serde(deny_unknown_fields)]
++pub struct InitialBlockConfig {
++    pub module: u64,
++    pub factory: u64,
++    pub factory_creation: u64,
++    pub nonfungible_position_manager: u64,
++}
++
++#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
++#[serde(deny_unknown_fields)]
++pub struct PricingConfig {
++    pub wrapped_native_token: String,
++    pub usd_reference_pool: String,
++    pub usd_reference_token: String,
++    pub usd_reference_token_side: u8,
++    pub minimum_native_locked: String,
++    pub stablecoins: Vec<String>,
++    pub whitelist_tokens: Vec<String>,
++}
++
++#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
++#[serde(deny_unknown_fields)]
++pub struct FilterConfig {
++    pub ignored_pools: Vec<String>,
++    pub swap_ignored_pools: Vec<String>,
++}
++
++#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
++#[serde(deny_unknown_fields)]
++pub struct StaticTokenMetadata {
++    pub address: String,
++    pub name: String,
++    pub symbol: String,
++    pub decimals: u64,
++}
++
++impl ChainConfig {
++    pub fn from_params(input: &str) -> Result<Self, Error> {
++        let selector = Selector::parse(input)?;
++        let (raw, expected_network) = match selector.network.as_str() {
++            "mainnet" => (include_str!("../configs/mainnet-v1.json"), "mainnet"),
++            "base" => (include_str!("../configs/base-v1.json"), "base"),
++            other => return Err(Error::msg(format!("unknown ChainConfig network `{other}`"))),
++        };
++
++        let actual_digest = hex::encode(Sha256::digest(raw.as_bytes()));
++        if selector.sha256 != actual_digest {
++            return Err(Error::msg(format!(
++                "ChainConfig digest mismatch: selector has `{}`, embedded config is `{actual_digest}`",
++                selector.sha256
++            )));
++        }
++
++        let config = Self::parse_and_validate(raw)?;
++        if config.network != expected_network {
++            return Err(Error::msg(format!(
++                "ChainConfig network mismatch: selector has `{expected_network}`, config has `{}`",
++                config.network
++            )));
++        }
++        Ok(config)
++    }
++
++    fn parse_and_validate(raw: &str) -> Result<Self, Error> {
++        let config: Self = serde_json::from_str(raw)
++            .map_err(|error| Error::msg(format!("invalid ChainConfig JSON: {error}")))?;
++        config.validate()?;
++        Ok(config)
++    }
++
++    fn validate(&self) -> Result<(), Error> {
++        if self.format_version != 1 || self.config_version != CONFIG_VERSION {
++            return Err(Error::msg(format!(
++                "unsupported ChainConfig version `{}`/{}",
++                self.config_version, self.format_version
++            )));
++        }
++        if !matches!(self.network.as_str(), "mainnet" | "base") {
++            return Err(Error::msg(format!("unsupported network `{}`", self.network)));
++        }
++        validate_cid("deployment", &self.deployment)?;
++        validate_cid("schema_cid", &self.schema_cid)?;
++        validate_cid("graft.base", &self.graft.base)?;
++        if self.graft.block == 0 {
++            return Err(Error::msg("graft.block must be non-zero"));
++        }
++
++        validate_address("contracts.factory", &self.contracts.factory)?;
++        let entity_address = self
++            .contracts
++            .factory_entity_id
++            .strip_prefix("0x")
++            .ok_or_else(|| Error::msg("contracts.factory_entity_id must start with 0x"))?;
++        if entity_address.len() != 40
++            || !entity_address.bytes().all(|byte| byte.is_ascii_hexdigit())
++            || !entity_address.eq_ignore_ascii_case(&self.contracts.factory)
++        {
++            return Err(Error::msg(
++                "contracts.factory_entity_id must encode contracts.factory",
++            ));
++        }
++        validate_address(
++            "contracts.nonfungible_position_manager",
++            &self.contracts.nonfungible_position_manager,
++        )?;
++        if self.contracts.factory == self.contracts.nonfungible_position_manager {
++            return Err(Error::msg("factory and position manager must differ"));
++        }
++
++        let starts = &self.initial_blocks;
++        if starts.module == 0
++            || starts.factory == 0
++            || starts.factory_creation == 0
++            || starts.nonfungible_position_manager == 0
++        {
++            return Err(Error::msg("all initial blocks must be non-zero"));
++        }
++        if starts.module != starts.factory || starts.factory_creation != starts.factory {
++            return Err(Error::msg(
++                "module, factory, and factory-creation initial blocks must match",
++            ));
++        }
++        if starts.nonfungible_position_manager < starts.module {
++            return Err(Error::msg(
++                "position-manager initial block cannot precede the module initial block",
++            ));
++        }
++
++        validate_address(
++            "pricing.wrapped_native_token",
++            &self.pricing.wrapped_native_token,
++        )?;
++        validate_address("pricing.usd_reference_pool", &self.pricing.usd_reference_pool)?;
++        validate_address(
++            "pricing.usd_reference_token",
++            &self.pricing.usd_reference_token,
++        )?;
++        if self.pricing.usd_reference_token_side > 1 {
++            return Err(Error::msg("pricing.usd_reference_token_side must be 0 or 1"));
++        }
++        self.pricing
++            .minimum_native_locked
++            .parse::<u64>()
++            .map_err(|_| Error::msg("pricing.minimum_native_locked must be a non-negative integer"))?;
++        validate_address_list("pricing.stablecoins", &self.pricing.stablecoins, false)?;
++        validate_address_list(
++            "pricing.whitelist_tokens",
++            &self.pricing.whitelist_tokens,
++            false,
++        )?;
++        if !self
++            .pricing
++            .whitelist_tokens
++            .contains(&self.pricing.wrapped_native_token)
++        {
++            return Err(Error::msg("wrapped native token must be whitelisted"));
++        }
++        if !self
++            .pricing
++            .whitelist_tokens
++            .contains(&self.pricing.usd_reference_token)
++        {
++            return Err(Error::msg("USD reference token must be whitelisted"));
++        }
++        if self.pricing.wrapped_native_token == self.pricing.usd_reference_token {
++            return Err(Error::msg(
++                "wrapped native token and USD reference token must differ",
++            ));
++        }
++
++        validate_address_list("filters.ignored_pools", &self.filters.ignored_pools, true)?;
++        validate_address_list(
++            "filters.swap_ignored_pools",
++            &self.filters.swap_ignored_pools,
++            true,
++        )?;
++        if self
++            .filters
++            .ignored_pools
++            .iter()
++            .any(|pool| self.filters.swap_ignored_pools.contains(pool))
++        {
++            return Err(Error::msg(
++                "ignored pools and swap-only ignored pools must not overlap",
++            ));
++        }
++        if self.filters.ignored_pools.contains(&self.pricing.usd_reference_pool)
++            || self
++                .filters
++                .swap_ignored_pools
++                .contains(&self.pricing.usd_reference_pool)
++        {
++            return Err(Error::msg("USD reference pool cannot be filtered"));
++        }
++
++        let mut metadata_addresses = BTreeSet::new();
++        for token in &self.static_token_metadata {
++            validate_address("static_token_metadata.address", &token.address)?;
++            if !metadata_addresses.insert(&token.address) {
++                return Err(Error::msg(format!(
++                    "duplicate static token metadata for `{}`",
++                    token.address
++                )));
++            }
++            if token.name.is_empty() || token.symbol.is_empty() || token.decimals >= 255 {
++                return Err(Error::msg(format!(
++                    "invalid static token metadata for `{}`",
++                    token.address
++                )));
++            }
++        }
++        Ok(())
++    }
++
++    pub fn factory_address(&self) -> Vec<u8> {
++        decode_address(&self.contracts.factory)
++    }
++
++    pub fn position_manager_address(&self) -> Vec<u8> {
++        decode_address(&self.contracts.nonfungible_position_manager)
++    }
++
++    pub fn is_whitelisted(&self, address: &str) -> bool {
++        self.pricing.whitelist_tokens.iter().any(|item| item == address)
++    }
++
++    pub fn is_stablecoin(&self, address: &str) -> bool {
++        self.pricing.stablecoins.iter().any(|item| item == address)
++    }
++
++    pub fn ignores_pool(&self, address: &str) -> bool {
++        self.filters.ignored_pools.iter().any(|item| item == address)
++    }
++
++    pub fn ignores_swap(&self, address: &str) -> bool {
++        self.ignores_pool(address)
++            || self
++                .filters
++                .swap_ignored_pools
++                .iter()
++                .any(|item| item == address)
++    }
++}
++
++struct Selector {
++    network: String,
++    sha256: String,
++}
++
++impl Selector {
++    fn parse(input: &str) -> Result<Self, Error> {
++        if input.is_empty() {
++            return Err(Error::msg("missing ChainConfig selector"));
++        }
++        let mut values = BTreeMap::new();
++        for pair in input.split(';') {
++            let (key, value) = pair
++                .split_once('=')
++                .ok_or_else(|| Error::msg(format!("malformed ChainConfig selector `{pair}`")))?;
++            if key.is_empty() || value.is_empty() {
++                return Err(Error::msg(format!("malformed ChainConfig selector `{pair}`")));
++            }
++            if values.insert(key, value).is_some() {
++                return Err(Error::msg(format!("duplicate ChainConfig selector key `{key}`")));
++            }
++        }
++
++        const KEYS: [&str; 3] = ["version", "network", "sha256"];
++        let unknown = values
++            .keys()
++            .filter(|key| !KEYS.contains(key))
++            .copied()
++            .collect::<Vec<_>>();
++        if !unknown.is_empty() {
++            return Err(Error::msg(format!(
++                "unknown ChainConfig selector key(s): {}",
++                unknown.join(", ")
++            )));
++        }
++        for key in KEYS {
++            if !values.contains_key(key) {
++                return Err(Error::msg(format!("missing ChainConfig selector key `{key}`")));
++            }
++        }
++        if values["version"] != "1" {
++            return Err(Error::msg(format!(
++                "unsupported ChainConfig selector version `{}`",
++                values["version"]
++            )));
++        }
++
++        let network = values["network"].to_string();
++        let sha256 = values["sha256"].to_string();
++        let expected = match network.as_str() {
++            "mainnet" => MAINNET_SHA256,
++            "base" => BASE_SHA256,
++            other => return Err(Error::msg(format!("unknown ChainConfig network `{other}`"))),
++        };
++        if sha256 != expected {
++            return Err(Error::msg(format!(
++                "unapproved ChainConfig digest `{sha256}` for `{network}`"
++            )));
++        }
++        Ok(Self { network, sha256 })
++    }
++}
++
++fn validate_cid(field: &str, value: &str) -> Result<(), Error> {
++    if value.len() != 46 || !value.starts_with("Qm") || !value.bytes().all(|byte| byte.is_ascii_alphanumeric()) {
++        return Err(Error::msg(format!("{field} must be a CIDv0 string")));
++    }
++    Ok(())
++}
++
++fn validate_address(field: &str, value: &str) -> Result<(), Error> {
++    if value.len() != 40
++        || !value.bytes().all(|byte| byte.is_ascii_hexdigit())
++        || value.bytes().any(|byte| byte.is_ascii_uppercase())
++    {
++        return Err(Error::msg(format!(
++            "{field} must be a lowercase 20-byte hex address without 0x"
++        )));
++    }
++    Ok(())
++}
++
++fn validate_address_list(field: &str, values: &[String], allow_empty: bool) -> Result<(), Error> {
++    if values.is_empty() && !allow_empty {
++        return Err(Error::msg(format!("{field} cannot be empty")));
++    }
++    let mut unique = BTreeSet::new();
++    for value in values {
++        validate_address(field, value)?;
++        if !unique.insert(value) {
++            return Err(Error::msg(format!("{field} contains duplicate `{value}`")));
++        }
++    }
++    Ok(())
++}
++
++fn decode_address(value: &str) -> Vec<u8> {
++    hex::decode(value).expect("validated ChainConfig address")
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    const MAINNET_PARAMS: &str = "version=1;network=mainnet;sha256=30f5caf9ee8906a8886dc103e55286b9d5b6dbd8784d1c97d21b9a38b266bb55";
++    const BASE_PARAMS: &str = "version=1;network=base;sha256=2eeed82547cea2d8e6c6adb9b3770bd8f8bbdde3b43ce4c7a5410325cf9b2832";
++
++    #[test]
++    fn loads_both_pinned_configs() {
++        let mainnet = ChainConfig::from_params(MAINNET_PARAMS).unwrap();
++        let base = ChainConfig::from_params(BASE_PARAMS).unwrap();
++        assert_eq!(mainnet.network, "mainnet");
++        assert_eq!(base.network, "base");
++        assert_ne!(mainnet.contracts.factory, base.contracts.factory);
++        assert_ne!(mainnet.pricing.wrapped_native_token, base.pricing.wrapped_native_token);
++
++        let dgd = hex::decode("e0b7927c4af23765cb51314a0e0521a9645f0e2a").unwrap();
++        assert_eq!(
++            crate::utils::get_static_uniswap_tokens(&mainnet, &dgd)
++                .unwrap()
++                .symbol,
++            "DGD"
++        );
++        assert!(crate::utils::get_static_uniswap_tokens(&base, &dgd).is_none());
++    }
++
++    #[test]
++    fn rejects_missing_unknown_duplicate_and_unapproved_selectors() {
++        for params in [
++            "",
++            "version=1;network=base",
++            "version=1;network=base;sha256=abc;extra=no",
++            "version=1;network=base;network=mainnet;sha256=abc",
++            "version=2;network=base;sha256=abc",
++            "version=1;network=unknown;sha256=abc",
++            "version=1;network=base;sha256=abc",
++        ] {
++            assert!(ChainConfig::from_params(params).is_err(), "accepted `{params}`");
++        }
++    }
++
++    #[test]
++    fn rejects_malformed_incomplete_and_inconsistent_json() {
++        assert!(ChainConfig::parse_and_validate("{}").is_err());
++        assert!(ChainConfig::parse_and_validate("not-json").is_err());
++
++        let raw = include_str!("../configs/base-v1.json");
++        let inconsistent = raw.replace("\"module\": 1371713", "\"module\": 1371712");
++        assert!(ChainConfig::parse_and_validate(&inconsistent).is_err());
++
++        let malformed_address = raw.replace(
++            "33128a8fc17869897dce68ed026d694621f6fdfd",
++            "0x33128a8fC17869897dcE68Ed026d694621f6FDfD",
++        );
++        assert!(ChainConfig::parse_and_validate(&malformed_address).is_err());
++    }
++
++    #[test]
++    fn pins_deployed_base_oddities() {
++        let base = ChainConfig::from_params(BASE_PARAMS).unwrap();
++        assert_eq!(base.pricing.minimum_native_locked, "1");
++        assert_eq!(
++            base.pricing.stablecoins,
++            ["b97ef9ef8734c71904d8002f8b6bc66dd9c48a6e"]
++        );
++        assert!(base.ignores_pool("8fe8d9bb8eeba3ed688069c3d6b556c9ca258248"));
++        assert!(base.ignores_swap("9663f2ca0454accad3e094448ea6f77443880454"));
++        assert!(base.static_token_metadata.is_empty());
++    }
++}
+diff --git a/src/db.rs b/src/db.rs
+index afbce34..320da68 100644
+--- a/src/db.rs
++++ b/src/db.rs
+@@ -12,0 +13 @@ use substreams_entity_change::tables::Tables;
++use crate::config::ChainConfig;
+@@ -41,2 +42,2 @@ pub fn bundle_store_eth_price_usd_bundle_entity_change(
+-pub fn factory_created_factory_entity_change(tables: &mut Tables) {
+-    let id = "0x1F98431c8aD98523631AE4a59f267346ea31F984";
++pub fn factory_created_factory_entity_change(config: &ChainConfig, tables: &mut Tables) {
++    let id = &config.contracts.factory_entity_id;
+@@ -59 +60 @@ pub fn factory_created_factory_entity_change(tables: &mut Tables) {
+-        .set("owner", &format!("0x{}", Hex(utils::ZERO_ADDRESS).to_string()));
++        .set("owner", &format!("0x{}", Hex(&[0u8; 20]).to_string()));
+@@ -62 +63,5 @@ pub fn factory_created_factory_entity_change(tables: &mut Tables) {
+-pub fn pool_created_factory_entity_change(tables: &mut Tables, pool_count_deltas: &Deltas<DeltaBigInt>) {
++pub fn pool_created_factory_entity_change(
++    config: &ChainConfig,
++    tables: &mut Tables,
++    pool_count_deltas: &Deltas<DeltaBigInt>,
++) {
+@@ -64 +69 @@ pub fn pool_created_factory_entity_change(tables: &mut Tables, pool_count_deltas
+-        let id = "0x1F98431c8aD98523631AE4a59f267346ea31F984".to_string();
++        let id = &config.contracts.factory_entity_id;
+@@ -69 +74,5 @@ pub fn pool_created_factory_entity_change(tables: &mut Tables, pool_count_deltas
+-pub fn tx_count_factory_entity_change(tables: &mut Tables, tx_count_deltas: &Deltas<DeltaBigInt>) {
++pub fn tx_count_factory_entity_change(
++    config: &ChainConfig,
++    tables: &mut Tables,
++    tx_count_deltas: &Deltas<DeltaBigInt>,
++) {
+@@ -72 +81 @@ pub fn tx_count_factory_entity_change(tables: &mut Tables, tx_count_deltas: &Del
+-            .update_row("Factory", "0x1F98431c8aD98523631AE4a59f267346ea31F984")
++            .update_row("Factory", &config.contracts.factory_entity_id)
+@@ -77 +86,5 @@ pub fn tx_count_factory_entity_change(tables: &mut Tables, tx_count_deltas: &Del
+-pub fn swap_volume_factory_entity_change(tables: &mut Tables, swaps_volume_deltas: &Deltas<DeltaBigDecimal>) {
++pub fn swap_volume_factory_entity_change(
++    config: &ChainConfig,
++    tables: &mut Tables,
++    swaps_volume_deltas: &Deltas<DeltaBigDecimal>,
++) {
+@@ -90 +103 @@ pub fn swap_volume_factory_entity_change(tables: &mut Tables, swaps_volume_delta
+-            .update_row("Factory", "0x1F98431c8aD98523631AE4a59f267346ea31F984")
++            .update_row("Factory", &config.contracts.factory_entity_id)
+@@ -95 +108,5 @@ pub fn swap_volume_factory_entity_change(tables: &mut Tables, swaps_volume_delta
+-pub fn tvl_factory_entity_change(tables: &mut Tables, derived_factory_tvl_deltas: &Deltas<DeltaBigDecimal>) {
++pub fn tvl_factory_entity_change(
++    config: &ChainConfig,
++    tables: &mut Tables,
++    derived_factory_tvl_deltas: &Deltas<DeltaBigDecimal>,
++) {
+@@ -107 +124 @@ pub fn tvl_factory_entity_change(tables: &mut Tables, derived_factory_tvl_deltas
+-            .update_row("Factory", "0x1F98431c8aD98523631AE4a59f267346ea31F984")
++            .update_row("Factory", &config.contracts.factory_entity_id)
+@@ -1079,0 +1097 @@ pub fn swaps_mints_burns_created_entity_change(
++    config: &ChainConfig,
+@@ -1123,0 +1142 @@ pub fn swaps_mints_burns_created_entity_change(
++                        config,
+diff --git a/src/filtering.rs b/src/filtering.rs
+index bf26dbf..08d268d 100644
+--- a/src/filtering.rs
++++ b/src/filtering.rs
+@@ -1,0 +2 @@ use crate::math::compute_price_from_tick_idx;
++use crate::config::ChainConfig;
+@@ -5 +5,0 @@ use crate::storage::uniswap_v3_pool::UniswapPoolStorage;
+-use crate::utils::NON_FUNGIBLE_POSITION_MANAGER;
+@@ -12,0 +13 @@ pub fn extract_pool_events_and_positions(
++    config: &ChainConfig,
+@@ -38 +39 @@ pub fn extract_pool_events_and_positions(
+-        if !pool.should_handle_swap() {
++        if !pool.should_handle_swap(config) {
+@@ -80,0 +82,2 @@ pub fn extract_pool_events_and_positions(
++                config,
++                block_number,
+@@ -85 +88 @@ pub fn extract_pool_events_and_positions(
+-        if !pool.should_handle_mint_and_burn() {
++        if !pool.should_handle_mint_and_burn(config) {
+@@ -155 +158,3 @@ pub fn extract_pool_events_and_positions(
+-            if position_manager_contract_call.address != NON_FUNGIBLE_POSITION_MANAGER {
++            if block_number < config.initial_blocks.nonfungible_position_manager
++                || position_manager_contract_call.address != config.position_manager_address()
++            {
+@@ -206,0 +212,2 @@ pub fn extract_pool_events_and_positions(
++                config,
++                block_number,
+@@ -211 +218 @@ pub fn extract_pool_events_and_positions(
+-        if !pool.should_handle_mint_and_burn() {
++        if !pool.should_handle_mint_and_burn(config) {
+@@ -266,0 +274,2 @@ pub fn extract_pool_events_and_positions(
++                config,
++                block_number,
+@@ -277,0 +287,2 @@ pub fn extract_pool_events_and_positions(
++                config,
++                block_number,
+@@ -297,0 +309 @@ pub fn extract_pool_liquidities(
++    config: &ChainConfig,
+@@ -313 +325 @@ pub fn extract_pool_liquidities(
+-        if !pool.should_handle_swap() {
++        if !pool.should_handle_swap(config) {
+@@ -328 +340 @@ pub fn extract_pool_liquidities(
+-        if !pool.should_handle_mint_and_burn() {
++        if !pool.should_handle_mint_and_burn(config) {
+@@ -343 +355 @@ pub fn extract_pool_liquidities(
+-        if !pool.should_handle_mint_and_burn() {
++        if !pool.should_handle_mint_and_burn(config) {
+@@ -360,0 +373 @@ pub fn extract_fee_growth_update(
++    config: &ChainConfig,
+@@ -368 +381 @@ pub fn extract_fee_growth_update(
+-        if !pool.should_handle_swap() {
++        if !pool.should_handle_swap(config) {
+@@ -373 +386 @@ pub fn extract_fee_growth_update(
+-        if !pool.should_handle_mint_and_burn() {
++        if !pool.should_handle_mint_and_burn(config) {
+@@ -378 +391 @@ pub fn extract_fee_growth_update(
+-        if !pool.should_handle_mint_and_burn() {
++        if !pool.should_handle_mint_and_burn(config) {
+@@ -449,0 +463,2 @@ fn extract_positions(
++    config: &ChainConfig,
++    block_number: u64,
+@@ -450,0 +466,3 @@ fn extract_positions(
++    if block_number < config.initial_blocks.nonfungible_position_manager {
++        return;
++    }
+@@ -452 +470 @@ fn extract_positions(
+-        if log.address != NON_FUNGIBLE_POSITION_MANAGER {
++        if log.address != config.position_manager_address() {
+diff --git a/src/lib.rs b/src/lib.rs
+index 29a231c..844a2ed 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -3,0 +4 @@ pub mod abi;
++pub mod config;
+@@ -26,2 +26,0 @@ use crate::pb::uniswap::{Erc20Token, Erc20Tokens, Pool, Pools};
+-use crate::price::WHITELIST_TOKENS;
+-use crate::utils::{ERROR_POOL, UNISWAP_V3_FACTORY};
+@@ -44 +43 @@ use substreams_ethereum::{pb::eth as ethpb, Event as EventTrait};
+-pub fn map_pools_created(block: Block) -> Result<Pools, Error> {
++pub fn map_pools_created(params: String, block: Block) -> Result<Pools, Error> {
+@@ -45,0 +45,2 @@ pub fn map_pools_created(block: Block) -> Result<Pools, Error> {
++    let config = config::ChainConfig::from_params(&params)?;
++    let factory = config.factory_address();
+@@ -49 +50 @@ pub fn map_pools_created(block: Block) -> Result<Pools, Error> {
+-            .events::<PoolCreated>(&[&UNISWAP_V3_FACTORY])
++            .events::<PoolCreated>(&[factory.as_slice()])
+@@ -53 +54 @@ pub fn map_pools_created(block: Block) -> Result<Pools, Error> {
+-                if event.pool == ERROR_POOL {
++                if config.ignores_pool(&Hex(&event.pool).to_string()) {
+@@ -71,2 +72,2 @@ pub fn map_pools_created(block: Block) -> Result<Pools, Error> {
+-                    ignore_pool: event.pool == ERROR_POOL,
+-                    token0: Some(match rpc::create_uniswap_token(&token0_address) {
++                    ignore_pool: config.ignores_pool(&Hex(&event.pool).to_string()),
++                    token0: Some(match rpc::create_uniswap_token(&config, &token0_address) {
+@@ -85 +86 @@ pub fn map_pools_created(block: Block) -> Result<Pools, Error> {
+-                    token1: Some(match rpc::create_uniswap_token(&token1_address) {
++                    token1: Some(match rpc::create_uniswap_token(&config, &token1_address) {
+@@ -135 +136,2 @@ pub fn store_pool_count(pools: Pools, store: StoreAddBigInt) {
+-pub fn map_tokens_whitelist_pools(pools: Pools) -> Result<Erc20Tokens, Error> {
++pub fn map_tokens_whitelist_pools(params: String, pools: Pools) -> Result<Erc20Tokens, Error> {
++    let config = config::ChainConfig::from_params(&params)?;
+@@ -142,2 +144,2 @@ pub fn map_tokens_whitelist_pools(pools: Pools) -> Result<Erc20Tokens, Error> {
+-        let token0_whitelisted = WHITELIST_TOKENS.contains(&token0.address.as_str());
+-        let token1_whitelisted = WHITELIST_TOKENS.contains(&token1.address.as_str());
++        let token0_whitelisted = config.is_whitelisted(&token0.address);
++        let token1_whitelisted = config.is_whitelisted(&token1.address);
+@@ -169 +171,6 @@ pub fn store_tokens_whitelist_pools(tokens: Erc20Tokens, output_append: StoreApp
+-pub fn map_extract_data_types(block: Block, pools_store: StoreGetProto<Pool>) -> Result<Events, Error> {
++pub fn map_extract_data_types(
++    params: String,
++    block: Block,
++    pools_store: StoreGetProto<Pool>,
++) -> Result<Events, Error> {
++    let config = config::ChainConfig::from_params(&params)?;
+@@ -200 +207,7 @@ pub fn map_extract_data_types(block: Block, pools_store: StoreGetProto<Pool>) ->
+-            filtering::extract_pool_liquidities(&mut pool_liquidities, log, &call_view.call.storage_changes, &pool);
++            filtering::extract_pool_liquidities(
++                &config,
++                &mut pool_liquidities,
++                log,
++                &call_view.call.storage_changes,
++                &pool,
++            );
+@@ -201,0 +215 @@ pub fn map_extract_data_types(block: Block, pools_store: StoreGetProto<Pool>) ->
++                &config,
+@@ -208,0 +223 @@ pub fn map_extract_data_types(block: Block, pools_store: StoreGetProto<Pool>) ->
++                &config,
+@@ -377 +392,2 @@ pub fn store_pool_liquidities(clock: Clock, events: Events, store: StoreSetBigIn
+-pub fn store_total_tx_counts(clock: Clock, events: Events, output: StoreAddBigInt) {
++pub fn store_total_tx_counts(params: String, clock: Clock, events: Events, output: StoreAddBigInt) {
++    let config = config::ChainConfig::from_params(&params).expect("invalid ChainConfig");
+@@ -383 +399 @@ pub fn store_total_tx_counts(clock: Clock, events: Events, output: StoreAddBigIn
+-    let factory_addr = Hex(UNISWAP_V3_FACTORY);
++    let factory_addr = &config.contracts.factory;
+@@ -417,0 +434 @@ pub fn store_swaps_volume(
++    params: String,
+@@ -424,0 +442 @@ pub fn store_swaps_volume(
++    let config = config::ChainConfig::from_params(&params).expect("invalid ChainConfig");
+@@ -483,0 +502 @@ pub fn store_swaps_volume(
++                    &config,
+@@ -653,0 +673 @@ pub fn store_eth_prices(
++    params: String,
+@@ -662,0 +683 @@ pub fn store_eth_prices(
++    let config = config::ChainConfig::from_params(&params).expect("invalid ChainConfig");
+@@ -689 +710 @@ pub fn store_eth_prices(
+-        let bundle_eth_price_usd = price::get_eth_price_in_usd(&prices_store, ord);
++        let bundle_eth_price_usd = price::get_eth_price_in_usd(&config, &prices_store, ord);
+@@ -692,0 +714 @@ pub fn store_eth_prices(
++            &config,
+@@ -706,0 +729 @@ pub fn store_eth_prices(
++            &config,
+@@ -793,0 +817 @@ pub fn store_derived_tvl(
++    params: String,
+@@ -800,0 +825 @@ pub fn store_derived_tvl(
++    let config = config::ChainConfig::from_params(&params).expect("invalid ChainConfig");
+@@ -851,0 +877 @@ pub fn store_derived_tvl(
++            &config,
+@@ -1239,0 +1266 @@ pub fn graph_out(
++    params: String,
+@@ -1263,0 +1291 @@ pub fn graph_out(
++    let config = config::ChainConfig::from_params(&params)?;
+@@ -1267,4 +1295,2 @@ pub fn graph_out(
+-    if clock.number == 12369621 {
+-        // FIXME: Hard-coded start block, how could we pull that from the manifest?
+-        // FIXME: ideally taken from the params of the module
+-        db::factory_created_factory_entity_change(&mut tables);
++    if clock.number == config.initial_blocks.factory_creation {
++        db::factory_created_factory_entity_change(&config, &mut tables);
+@@ -1278,4 +1304,4 @@ pub fn graph_out(
+-    db::pool_created_factory_entity_change(&mut tables, &pool_count_deltas);
+-    db::tx_count_factory_entity_change(&mut tables, &tx_count_deltas);
+-    db::swap_volume_factory_entity_change(&mut tables, &swaps_volume_deltas);
+-    db::tvl_factory_entity_change(&mut tables, &derived_factory_tvl_deltas);
++    db::pool_created_factory_entity_change(&config, &mut tables, &pool_count_deltas);
++    db::tx_count_factory_entity_change(&config, &mut tables, &tx_count_deltas);
++    db::swap_volume_factory_entity_change(&config, &mut tables, &swaps_volume_deltas);
++    db::tvl_factory_entity_change(&config, &mut tables, &derived_factory_tvl_deltas);
+@@ -1349 +1375,7 @@ pub fn graph_out(
+-    db::swaps_mints_burns_created_entity_change(&mut tables, &events.pool_events, tx_count_store, store_eth_prices);
++    db::swaps_mints_burns_created_entity_change(
++        &config,
++        &mut tables,
++        &events.pool_events,
++        tx_count_store,
++        store_eth_prices,
++    );
+diff --git a/src/pb/mod.rs b/src/pb/mod.rs
+index 1a4ec13..854d575 100644
+--- a/src/pb/mod.rs
++++ b/src/pb/mod.rs
+@@ -7 +7 @@ use crate::pb::uniswap::events::PositionEvent;
+-use crate::utils::ERROR_POOL;
++use crate::config::ChainConfig;
+@@ -10 +10 @@ use substreams::scalar::BigDecimal;
+-use substreams::{log, Hex};
++use substreams::log;
+@@ -42 +42 @@ impl Pool {
+-    pub fn should_handle_swap(&self) -> bool {
++    pub fn should_handle_swap(&self, config: &ChainConfig) -> bool {
+@@ -46 +46 @@ impl Pool {
+-        return &self.address != &Hex(ERROR_POOL).to_string();
++        return !config.ignores_swap(&self.address);
+@@ -49 +49 @@ impl Pool {
+-    pub fn should_handle_mint_and_burn(&self) -> bool {
++    pub fn should_handle_mint_and_burn(&self, config: &ChainConfig) -> bool {
+@@ -53 +53 @@ impl Pool {
+-        return &self.address != &Hex(ERROR_POOL).to_string();
++        return !config.ignores_pool(&self.address);
+diff --git a/src/price.rs b/src/price.rs
+index a88c912..d7da5c4 100644
+--- a/src/price.rs
++++ b/src/price.rs
+@@ -0,0 +1 @@
++use crate::config::ChainConfig;
+@@ -9,37 +9,0 @@ use substreams::store::{StoreGet, StoreGetBigDecimal, StoreGetBigInt, StoreGetPr
+-const USDC_WETH_03_POOL: &str = "8ad599c3a0ff1de082011efddc58f1908eb6e6d8";
+-const USDC_ADDRESS: &str = "a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
+-const WETH_ADDRESS: &str = "c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
+-
+-pub const STABLE_COINS: [&str; 6] = [
+-    "6b175474e89094c44da98b954eedeac495271d0f", // DAI
+-    "a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", // USDC
+-    "dac17f958d2ee523a2206206994597c13d831ec7", // USDT
+-    "0000000000085d4780b73119b644ae5ecd22b376", // TUSD
+-    "956f47f50a910163d8bf957cf5846d573e7f87ca", // FEI
+-    "4dd28568d05f09b02220b09c2cb307bfd837cb95", // PRINTS
+-];
+-
+-pub const WHITELIST_TOKENS: [&str; 21] = [
+-    "c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2", // WETH
+-    "6b175474e89094c44da98b954eedeac495271d0f", // DAI
+-    "a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", // USDC
+-    "dac17f958d2ee523a2206206994597c13d831ec7", // USDT
+-    "0000000000085d4780b73119b644ae5ecd22b376", // TUSD
+-    "2260fac5e5542a773aa44fbcfedf7c193bc2c599", // WBTC
+-    "5d3a536e4d6dbd6114cc1ead35777bab948e3643", // cDAI
+-    "39aa39c021dfbae8fac545936693ac917d5e7563", // cUSDC
+-    "86fadb80d8d2cff3c3680819e4da99c10232ba0f", // EBASE
+-    "57ab1ec28d129707052df4df418d58a2d46d5f51", // sUSD
+-    "9f8f72aa9304c8b593d555f12ef6589cc3a579a2", // MKR
+-    "c00e94cb662c3520282e6f5717214004a7f26888", // COMP
+-    "514910771af9ca656af840dff83e8264ecf986ca", // LINK
+-    "c011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f", // SNX
+-    "0bc529c00c6401aef6d220be8c6ea1667f6ad93e", // YFI
+-    "111111111117dc0aa78b770fa6a738034120c302", // 1INCH
+-    "df5e0e81dff6faf3a7e52ba697820c5e32d806a8", // yCurv
+-    "956f47f50a910163d8bf957cf5846d573e7f87ca", // FEI
+-    "7d1afa7b718fb893db30a3abc0cfc608aacfebb0", // MATIC
+-    "7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9", // AAVE
+-    "fe2e637202056d30016725477c5da089ab0a043a", // sETH2
+-];
+-
+@@ -73,0 +38 @@ pub fn find_eth_per_token(
++    config: &ChainConfig,
+@@ -84 +49 @@ pub fn find_eth_per_token(
+-    if token_address.eq(WETH_ADDRESS) {
++    if token_address.eq(&config.pricing.wrapped_native_token) {
+@@ -91 +56 @@ pub fn find_eth_per_token(
+-    if STABLE_COINS.contains(&token_address.as_str()) {
++    if config.is_stablecoin(token_address) {
+@@ -93 +58 @@ pub fn find_eth_per_token(
+-        let eth_price_usd = get_eth_price_in_usd(prices_store, ord);
++        let eth_price_usd = get_eth_price_in_usd(config, prices_store, ord);
+@@ -115 +80 @@ pub fn find_eth_per_token(
+-        let minimum_eth_locked = BigDecimal::from_str("52").unwrap();
++        let minimum_eth_locked = BigDecimal::from_str(&config.pricing.minimum_native_locked).unwrap();
+@@ -156 +121 @@ pub fn find_eth_per_token(
+-                    if token1.address.eq(WETH_ADDRESS) {
++                    if token1.address.eq(&config.pricing.wrapped_native_token) {
+@@ -163 +128,4 @@ pub fn find_eth_per_token(
+-                        match pool_liquidities_store.get_at(ord, format!("pair:{WETH_ADDRESS}:{token1_addr}")) {
++                        match pool_liquidities_store.get_at(
++                            ord,
++                            format!("pair:{}:{token1_addr}", config.pricing.wrapped_native_token),
++                        ) {
+@@ -179,2 +147,4 @@ pub fn find_eth_per_token(
+-                        token1_eth_price = match prices_store.get_at(ord, format!("pair:{WETH_ADDRESS}:{token1_addr}"))
+-                        {
++                        token1_eth_price = match prices_store.get_at(
++                            ord,
++                            format!("pair:{}:{token1_addr}", config.pricing.wrapped_native_token),
++                        ) {
+@@ -198 +168 @@ pub fn find_eth_per_token(
+-                        && (eth_locked.gt(&minimum_eth_locked) || WHITELIST_TOKENS.contains(&token0_addr.as_str()))
++                        && (eth_locked.gt(&minimum_eth_locked) || config.is_whitelisted(token0_addr))
+@@ -232 +202 @@ pub fn find_eth_per_token(
+-                    if token0.address.eq(WETH_ADDRESS) {
++                    if token0.address.eq(&config.pricing.wrapped_native_token) {
+@@ -238 +208,4 @@ pub fn find_eth_per_token(
+-                        match pool_liquidities_store.get_at(ord, format!("pair:{WETH_ADDRESS}:{token0_addr}")) {
++                        match pool_liquidities_store.get_at(
++                            ord,
++                            format!("pair:{}:{token0_addr}", config.pricing.wrapped_native_token),
++                        ) {
+@@ -254,2 +227,4 @@ pub fn find_eth_per_token(
+-                        token0_eth_price = match prices_store.get_at(ord, format!("pair:{WETH_ADDRESS}:{token0_addr}"))
+-                        {
++                        token0_eth_price = match prices_store.get_at(
++                            ord,
++                            format!("pair:{}:{token0_addr}", config.pricing.wrapped_native_token),
++                        ) {
+@@ -268 +243 @@ pub fn find_eth_per_token(
+-                        && (eth_locked.gt(&minimum_eth_locked) || WHITELIST_TOKENS.contains(&token1_addr.as_str()))
++                        && (eth_locked.gt(&minimum_eth_locked) || config.is_whitelisted(token1_addr))
+@@ -291,2 +266,11 @@ pub fn find_eth_per_token(
+-pub fn get_eth_price_in_usd(prices_store: &StoreGetBigDecimal, ordinal: u64) -> BigDecimal {
+-    let key = format!("pool:{}:{}:{}", USDC_WETH_03_POOL, USDC_ADDRESS, "token0");
++pub fn get_eth_price_in_usd(
++    config: &ChainConfig,
++    prices_store: &StoreGetBigDecimal,
++    ordinal: u64,
++) -> BigDecimal {
++    let key = format!(
++        "pool:{}:{}:token{}",
++        config.pricing.usd_reference_pool,
++        config.pricing.usd_reference_token,
++        config.pricing.usd_reference_token_side,
++    );
+diff --git a/src/rpc.rs b/src/rpc.rs
+index 13cbb10..5c0c324 100644
+--- a/src/rpc.rs
++++ b/src/rpc.rs
+@@ -0,0 +1 @@
++use crate::config::ChainConfig;
+@@ -2 +2,0 @@ use crate::{abi, eth, utils, Erc20Token};
+-use prost::Message;
+@@ -8 +8,2 @@ use substreams_ethereum::rpc::RpcBatch;
+-pub fn create_uniswap_token(token_address: &String) -> Option<Erc20Token> {
++pub fn create_uniswap_token(config: &ChainConfig, token_address: &String) -> Option<Erc20Token> {
++    let token_address_bytes = hex::decode(token_address).unwrap();
+@@ -31 +32 @@ pub fn create_uniswap_token(token_address: &String) -> Option<Erc20Token> {
+-        None => match utils::get_static_uniswap_tokens(token_address.encode_to_vec().as_slice()) {
++        None => match utils::get_static_uniswap_tokens(config, &token_address_bytes) {
+@@ -50 +51 @@ pub fn create_uniswap_token(token_address: &String) -> Option<Erc20Token> {
+-        None => match utils::get_static_uniswap_tokens(token_address.encode_to_vec().as_slice()) {
++        None => match utils::get_static_uniswap_tokens(config, &token_address_bytes) {
+@@ -68 +69 @@ pub fn create_uniswap_token(token_address: &String) -> Option<Erc20Token> {
+-        None => match utils::get_static_uniswap_tokens(token_address.encode_to_vec().as_slice()) {
++        None => match utils::get_static_uniswap_tokens(config, &token_address_bytes) {
+diff --git a/src/utils.rs b/src/utils.rs
+index 2c33c08..aa2b43b 100644
+--- a/src/utils.rs
++++ b/src/utils.rs
+@@ -1,0 +2 @@ use crate::ethpb::v2::TransactionTrace;
++use crate::config::ChainConfig;
+@@ -5 +6 @@ use crate::uniswap::events::Transaction;
+-use crate::{storage, Erc20Token, StorageChange, WHITELIST_TOKENS};
++use crate::{storage, Erc20Token, StorageChange};
+@@ -11 +12 @@ use substreams::store::StoreGet;
+-use substreams::{hex, key, log, Hex};
++use substreams::{key, log, Hex};
+@@ -13,12 +14 @@ use substreams::{hex, key, log, Hex};
+-pub const UNISWAP_V3_FACTORY: [u8; 20] = hex!("1f98431c8ad98523631ae4a59f267346ea31f984");
+-
+-pub const ZERO_ADDRESS: [u8; 20] = hex!("0000000000000000000000000000000000000000");
+-pub const NON_FUNGIBLE_POSITION_MANAGER: [u8; 20] = hex!("c36442b4a4522e871399cd717abdd847ab11fe88");
+-pub const ERROR_POOL: [u8; 20] = hex!("8fe8d9bb8eeba3ed688069c3d6b556c9ca258248");
+-
+-const DGD_TOKEN_ADDRESS: [u8; 20] = hex!("e0b7927c4af23765cb51314a0e0521a9645f0e2a");
+-const AAVE_TOKEN_ADDRESS: [u8; 20] = hex!("7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9");
+-const LIF_TOKEN_ADDRESS: [u8; 20] = hex!("eb9951021698b42e4399f9cbb6267aa35f82d59d");
+-const SVD_TOKEN_ADDRESS: [u8; 20] = hex!("bdeb4b83251fb146687fa19d1c660f99411eefe3");
+-const THEDAO_TOKEN_ADDRESS: [u8; 20] = hex!("bb9bc244d798123fde783fcc1c72d3bb8c189413");
+-const HPB_TOKEN_ADDRESS: [u8; 20] = hex!("38c6a68304cdefb9bec48bbfaaba5c5b47818bb2");
++pub const ZERO_ADDRESS: [u8; 20] = [0; 20];
+@@ -28,39 +18,11 @@ const HPB_TOKEN_ADDRESS: [u8; 20] = hex!("38c6a68304cdefb9bec48bbfaaba5c5b47818b
+-pub fn get_static_uniswap_tokens(token_address: &[u8]) -> Option<Erc20Token> {
+-    match token_address {
+-        x if x == DGD_TOKEN_ADDRESS => Some(Erc20Token {
+-            address: Hex(&DGD_TOKEN_ADDRESS).to_string(),
+-            name: "DGD".to_string(),
+-            symbol: "DGD".to_string(),
+-            decimals: 9,
+-            total_supply: "".to_string(), // subgraph doesn't check the total supply
+-            whitelist_pools: vec![],
+-        }),
+-        x if x == AAVE_TOKEN_ADDRESS => Some(Erc20Token {
+-            address: Hex(&AAVE_TOKEN_ADDRESS).to_string(),
+-            name: "Aave Token".to_string(),
+-            symbol: "AAVE".to_string(),
+-            decimals: 18,
+-            total_supply: "".to_string(), // subgraph doesn't check the total supply
+-            whitelist_pools: vec![],
+-        }),
+-        x if x == LIF_TOKEN_ADDRESS => Some(Erc20Token {
+-            address: Hex(&LIF_TOKEN_ADDRESS).to_string(),
+-            name: "LIF".to_string(),
+-            symbol: "LIF".to_string(),
+-            decimals: 18,
+-            total_supply: "".to_string(), // subgraph doesn't check the total supply
+-            whitelist_pools: vec![],
+-        }),
+-        x if x == SVD_TOKEN_ADDRESS => Some(Erc20Token {
+-            address: Hex(&SVD_TOKEN_ADDRESS).to_string(),
+-            name: "savedroid".to_string(),
+-            symbol: "SVD".to_string(),
+-            decimals: 18,
+-            total_supply: "".to_string(), // subgraph doesn't check the total supply
+-            whitelist_pools: vec![],
+-        }),
+-        x if x == THEDAO_TOKEN_ADDRESS => Some(Erc20Token {
+-            address: Hex(&THEDAO_TOKEN_ADDRESS).to_string(),
+-            name: "TheDAO".to_string(),
+-            symbol: "TheDAO".to_string(),
+-            decimals: 16,
++pub fn get_static_uniswap_tokens(config: &ChainConfig, token_address: &[u8]) -> Option<Erc20Token> {
++    let address = Hex(token_address).to_string();
++    config
++        .static_token_metadata
++        .iter()
++        .find(|token| token.address == address)
++        .map(|token| Erc20Token {
++            address,
++            name: token.name.clone(),
++            symbol: token.symbol.clone(),
++            decimals: token.decimals,
+@@ -69,11 +31 @@ pub fn get_static_uniswap_tokens(token_address: &[u8]) -> Option<Erc20Token> {
+-        }),
+-        x if x == HPB_TOKEN_ADDRESS => Some(Erc20Token {
+-            address: Hex(&HPB_TOKEN_ADDRESS).to_string(),
+-            name: "HPBCoin".to_string(),
+-            symbol: "HPB".to_string(),
+-            decimals: 18,
+-            total_supply: "".to_string(), // subgraph doesn't check the total supply
+-            whitelist_pools: vec![],
+-        }),
+-        _ => None,
+-    }
++        })
+@@ -129,0 +82 @@ pub fn get_tracked_amount_usd(
++    config: &ChainConfig,
+@@ -145 +98 @@ pub fn get_tracked_amount_usd(
+-    if WHITELIST_TOKENS.contains(&token0_id.as_str()) && WHITELIST_TOKENS.contains(&token1_id.as_str()) {
++    if config.is_whitelisted(token0_id) && config.is_whitelisted(token1_id) {
+@@ -153 +106 @@ pub fn get_tracked_amount_usd(
+-    if WHITELIST_TOKENS.contains(&token0_id.as_str()) && !WHITELIST_TOKENS.contains(&token1_id.as_str()) {
++    if config.is_whitelisted(token0_id) && !config.is_whitelisted(token1_id) {
+@@ -158 +111 @@ pub fn get_tracked_amount_usd(
+-    if !WHITELIST_TOKENS.contains(&token0_id.as_str()) && WHITELIST_TOKENS.contains(&token1_id.as_str()) {
++    if !config.is_whitelisted(token0_id) && config.is_whitelisted(token1_id) {
+@@ -166,0 +120 @@ pub fn get_adjusted_amounts(
++    config: &ChainConfig,
+@@ -196 +150 @@ pub fn get_adjusted_amounts(
+-    if WHITELIST_TOKENS.contains(&token0_addr.as_str()) && WHITELIST_TOKENS.contains(&token1_addr.as_str()) {
++    if config.is_whitelisted(token0_addr) && config.is_whitelisted(token1_addr) {
+@@ -200 +154 @@ pub fn get_adjusted_amounts(
+-    if WHITELIST_TOKENS.contains(&token0_addr.as_str()) && !WHITELIST_TOKENS.contains(&token1_addr.as_str()) {
++    if config.is_whitelisted(token0_addr) && !config.is_whitelisted(token1_addr) {
+@@ -207 +161 @@ pub fn get_adjusted_amounts(
+-    if !WHITELIST_TOKENS.contains(&token0_addr.as_str()) && WHITELIST_TOKENS.contains(&token1_addr.as_str()) {
++    if !config.is_whitelisted(token0_addr) && config.is_whitelisted(token1_addr) {

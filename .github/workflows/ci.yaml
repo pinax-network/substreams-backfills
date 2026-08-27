@@ -37,6 +37,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-ci.txt
+      - name: Install checksum-pinned validation dependencies
+        run: python3 -m pip install --require-hashes -r requirements-ci.txt
       - name: Fetch pinned V3 history mirror
         run: >-
           git fetch --no-tags origin
@@ -45,6 +52,11 @@ jobs:
         run: ./scripts/verify-uniswap-v3-import.sh
       - name: Test logical-contract expected refusals
         run: python3 -m unittest scripts/tests/test_uniswap_v3_logical_contract.py
+      - name: Verify versioned mainnet/Base ChainConfig contract
+        run: |
+          python3 scripts/build-uniswap-v3-chain-manifests.py --check
+          python3 scripts/verify-uniswap-v3-chain-config.py
+          python3 -m unittest scripts/tests/test_uniswap_v3_chain_config.py
       - uses: dtolnay/rust-toolchain@1.79
         with:
           targets: wasm32-unknown-unknown
@@ -68,11 +80,39 @@ jobs:
         run: |
           substreams pack -o "$RUNNER_TEMP/uniswap-v3-diagnostic.spkg" uniswap-v3/source/substreams.yaml
           python3 scripts/verify-uniswap-v3-diagnostic-package.py "$RUNNER_TEMP/uniswap-v3-diagnostic.spkg"
+      - name: Materialize configured runtime without changing the frozen import
+        run: ./scripts/materialize-uniswap-v3-chain-config.sh "$RUNNER_TEMP/uniswap-v3-configured"
+      - name: Test configured runtime on the host target
+        working-directory: ${{ runner.temp }}/uniswap-v3-configured
+        run: cargo test --locked --target x86_64-unknown-linux-gnu
+      - name: Build the one shared configured WASM
+        working-directory: ${{ runner.temp }}/uniswap-v3-configured
+        run: cargo build --locked --target wasm32-unknown-unknown --release
+      - name: Pack both configured diagnostic manifests and prove embedded WASM identity
+        working-directory: ${{ runner.temp }}/uniswap-v3-configured
+        run: |
+          substreams pack -o "$RUNNER_TEMP/uniswap-v3-mainnet-configured-diagnostic.spkg" substreams.mainnet.yaml
+          substreams pack -o "$RUNNER_TEMP/uniswap-v3-base-configured-diagnostic.spkg" substreams.base.yaml
+          python3 "$GITHUB_WORKSPACE/scripts/verify-uniswap-v3-chain-config.py" \
+            --root "$GITHUB_WORKSPACE" \
+            --runtime "$RUNNER_TEMP/uniswap-v3-configured" \
+            --mainnet-spkg "$RUNNER_TEMP/uniswap-v3-mainnet-configured-diagnostic.spkg" \
+            --base-spkg "$RUNNER_TEMP/uniswap-v3-base-configured-diagnostic.spkg" \
+            --evidence-out "$RUNNER_TEMP/uniswap-v3-configured-diagnostic-evidence.json"
       - name: Upload V3 diagnostic package
         uses: actions/upload-artifact@v4
         with:
           name: uniswap-v3-diagnostic-package
           path: ${{ runner.temp }}/uniswap-v3-diagnostic.spkg
+          if-no-files-found: error
+      - name: Upload configured V3 diagnostic packages and hash evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: uniswap-v3-configured-diagnostic-packages
+          path: |
+            ${{ runner.temp }}/uniswap-v3-mainnet-configured-diagnostic.spkg
+            ${{ runner.temp }}/uniswap-v3-base-configured-diagnostic.spkg
+            ${{ runner.temp }}/uniswap-v3-configured-diagnostic-evidence.json
           if-no-files-found: error
 
   uniswap-v3-matic-reference:

@@ -1,0 +1,334 @@
+{
+  "format_version": 1,
+  "family": "uniswap-v3-matic",
+  "deployment": {
+    "cid": "QmWqwrVtcTzZzbTLGLgiRSQzbZ7MTH53VwqK4AxXVmf7n3",
+    "chain": "matic",
+    "spec_version": "0.0.4",
+    "mapping_api_version": "0.0.7",
+    "factory": "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+    "start_block": 22757547,
+    "data_sources": [
+      "Factory"
+    ],
+    "templates": [
+      "Pool"
+    ],
+    "features": [
+      "nonFatalErrors",
+      "grafting"
+    ],
+    "position_manager": false,
+    "flash_handler": false
+  },
+  "artifact_lock": [
+    {
+      "role": "deployment",
+      "cid": "QmWqwrVtcTzZzbTLGLgiRSQzbZ7MTH53VwqK4AxXVmf7n3",
+      "source_bytes": 2808,
+      "source_sha256": "d237de8f7f49be8d34bf471b2b68352c4788677024545a01d0936261a12c6e57",
+      "vendored_path": "uniswap-v3-matic/reference/deployment.yaml",
+      "vendored_bytes": 2808,
+      "vendored_sha256": "d237de8f7f49be8d34bf471b2b68352c4788677024545a01d0936261a12c6e57",
+      "normalization": "identity"
+    },
+    {
+      "role": "schema",
+      "cid": "QmVYKvi799Cpg4WVXjhSWjRXNcNg4p1JQxj1WBdbcfHvoq",
+      "source_bytes": 13706,
+      "source_sha256": "d963e5191a31bca0bd45337963d30ca441bebdce919ea1ddb2409ecc352b8c99",
+      "vendored_path": "uniswap-v3-matic/reference/schema.graphql",
+      "vendored_bytes": 13706,
+      "vendored_sha256": "d963e5191a31bca0bd45337963d30ca441bebdce919ea1ddb2409ecc352b8c99",
+      "normalization": "identity"
+    },
+    {
+      "role": "factory_abi",
+      "cid": "QmTU8eKx6pCgtff6Uvc7srAwR8BPiM3jTMBw9ahrXBjRzY",
+      "source_bytes": 3703,
+      "source_sha256": "daa769db333fa28d331cc0d866a666ebb98c995a915cb44828a801608ab0d1c1",
+      "vendored_path": "uniswap-v3-matic/reference/abis/factory.json",
+      "vendored_bytes": 3704,
+      "vendored_sha256": "843b74a64e854b56b558883880baa71599c06287fad1b28f3de8ece12a804e41",
+      "normalization": "remove_one_trailing_lf"
+    },
+    {
+      "role": "erc20_abi",
+      "cid": "QmWPALJpvDK6AzWmj6HwGsyJDu9qGKUW6Hf5V4Ez4VYDpT",
+      "source_bytes": 3686,
+      "source_sha256": "0e9a73e67db3849bc36035ccfe697459bab96e4bedb57790bcef3ccf6863a60a",
+      "vendored_path": "uniswap-v3-matic/reference/abis/ERC20.json",
+      "vendored_bytes": 3687,
+      "vendored_sha256": "9f137eef51551ecf26d890eb8abdebd2c1329671cafe78e597548e732d400165",
+      "normalization": "remove_one_trailing_lf"
+    },
+    {
+      "role": "erc20_symbol_bytes_abi",
+      "cid": "QmbHnhUFZa6qqqRyubUYhXntox1TCBxqryaBM1iNGqVJzT",
+      "source_bytes": 270,
+      "source_sha256": "9ccb9b5d95394b2ffb4ced54cffa0c5ea282917f4eec36c121ce28c257965193",
+      "vendored_path": "uniswap-v3-matic/reference/abis/ERC20SymbolBytes.json",
+      "vendored_bytes": 271,
+      "vendored_sha256": "6e114ca21ff78fcae5364358aec454862cdcef2cebdb541752e45ee84d38ace9",
+      "normalization": "remove_one_trailing_lf"
+    },
+    {
+      "role": "erc20_name_bytes_abi",
+      "cid": "QmQCP6Pdp1MqpwRv2qoPHuUTwZGy7Q3eDHg4w5kzwE9mBj",
+      "source_bytes": 268,
+      "source_sha256": "b874c853ffa5309e4b7fbf4934c1efdb4fe31e1a65f7041e67f4a7f2258ffb77",
+      "vendored_path": "uniswap-v3-matic/reference/abis/ERC20NameBytes.json",
+      "vendored_bytes": 269,
+      "vendored_sha256": "f2931748c6851e1636b458030361de258db60441c353351e7eb4616c90039bce",
+      "normalization": "remove_one_trailing_lf"
+    },
+    {
+      "role": "pool_abi",
+      "cid": "QmULRc8Ac1J6YFy11z7JRpyThb6f7nmL5mMTQvN7LKj2Vy",
+      "source_bytes": 19634,
+      "source_sha256": "df8064cbe381e7a929aa4e1a658ce3617daed0e871883bf29ced54112fdfdbfd",
+      "vendored_path": "uniswap-v3-matic/reference/abis/pool.json",
+      "vendored_bytes": 19635,
+      "vendored_sha256": "a58c4d5b4714791fbbad12edf8bfc6b27803de272fed60a758f5a35b0d6605d7",
+      "normalization": "remove_one_trailing_lf"
+    },
+    {
+      "role": "factory_mapping_wasm",
+      "cid": "QmfTPwo33sLrKY9yReuoSnnBYTBUsFtTtkFWDDifCUWi1b",
+      "source_bytes": 63842,
+      "source_sha256": "3857fb5da3d58ff73451f2adf497bf362a8d90cc535f2506e198f8157e0f21e5",
+      "exports": [
+        "handlePoolCreated"
+      ]
+    },
+    {
+      "role": "pool_mapping_wasm",
+      "cid": "QmeLVc4JwBzQe7pC2P7wR6tKbSJ7Y2fNb2YuP6YL4Z53X5",
+      "source_bytes": 82750,
+      "source_sha256": "07eeeb830eeecfc9c409620d396a25c608c0389e989728f0be09407d2bf136b7",
+      "exports": [
+        "handleInitialize",
+        "handleSwap",
+        "handleMint",
+        "handleBurn",
+        "handleCollect"
+      ]
+    }
+  ],
+  "logical_contract": {
+    "entity_count": 16,
+    "logical_sha256": "614561ebeb2192742eeb68df2a62c1ccd202c3cdd2c6af14740e2b2dee260c2a",
+    "entities": [
+      "Bundle",
+      "Burn",
+      "Collect",
+      "Factory",
+      "Flash",
+      "Mint",
+      "Pool",
+      "PoolDayData",
+      "PoolHourData",
+      "Swap",
+      "Tick",
+      "Token",
+      "TokenDayData",
+      "TokenHourData",
+      "Transaction",
+      "UniswapDayData"
+    ],
+    "immutable_entities": [
+      "Burn",
+      "Collect",
+      "Flash",
+      "Mint",
+      "Swap",
+      "Transaction"
+    ],
+    "mutable_entities": [
+      "Bundle",
+      "Factory",
+      "Pool",
+      "PoolDayData",
+      "PoolHourData",
+      "Tick",
+      "Token",
+      "TokenDayData",
+      "TokenHourData",
+      "UniswapDayData"
+    ],
+    "qma8_entity_count": 20,
+    "qma8_logical_sha256": "6c801fc4c141c0ae12dbb937652f0dd49c9be5bd3b1b3c8e38bdb92fe6efec5d",
+    "missing_from_matic": [
+      "Position",
+      "PositionSnapshot",
+      "TickDayData",
+      "TickHourData"
+    ],
+    "field_differences": {
+      "Pool": {
+        "missing_from_matic": [
+          "feeGrowthGlobal0X128",
+          "feeGrowthGlobal1X128"
+        ],
+        "type_differences": {
+          "id": [
+            "Bytes!",
+            "ID!"
+          ]
+        }
+      },
+      "PoolDayData": {
+        "missing_from_matic": [
+          "feeGrowthGlobal0X128",
+          "feeGrowthGlobal1X128"
+        ]
+      },
+      "PoolHourData": {
+        "missing_from_matic": [
+          "feeGrowthGlobal0X128",
+          "feeGrowthGlobal1X128"
+        ]
+      },
+      "Tick": {
+        "missing_from_matic": [
+          "collectedFeesToken0",
+          "collectedFeesToken1",
+          "collectedFeesUSD",
+          "feeGrowthOutside0X128",
+          "feeGrowthOutside1X128",
+          "feesUSD",
+          "liquidityProviderCount",
+          "untrackedVolumeUSD",
+          "volumeToken0",
+          "volumeToken1",
+          "volumeUSD"
+        ],
+        "type_differences": {
+          "poolAddress": [
+            "Bytes!",
+            "String"
+          ]
+        }
+      },
+      "Token": {
+        "type_differences": {
+          "id": [
+            "Bytes!",
+            "ID!"
+          ]
+        }
+      }
+    }
+  },
+  "exact_source": {
+    "status": "exact_reproduction",
+    "repository": "https://github.com/Uniswap/v3-subgraph",
+    "earliest_exact_commit": "d07374a05719e68a10a339f79cdfbc048807cfdc",
+    "mainline_equivalent_commit": "4c9c672296eddbba7c0a442085e186e159d007d8",
+    "tree": "8f5cefd138068952bee909522a0f1d88fdc87b42",
+    "version_boundary": "The mapping bytes identify this exact tree but not a unique later version label; later unrelated commits can retain the same Matic inputs.",
+    "matched_evidence": [
+      "The generated Matic manifest is semantically exact after substituting each local build artifact with its computed IPFS CID.",
+      "Removing exactly 16 Graph CLI explicit immutable arguments from the deployed schema produces the source schema byte-for-byte.",
+      "All five build-stage ABI files produce the deployed IPFS payload hashes.",
+      "Both compiled mapping WASM files match their deployed IPFS objects byte-for-byte."
+    ],
+    "source_files": [
+      {
+        "path": "package.json",
+        "bytes": 859,
+        "sha256": "99d2537b1d1a16b5a840f0aac77e218e81f03e56b00033e29f4a11ebaeb7edc1",
+        "git_blob": "770bb3a2b6295c900c30c26e7ae4f98ebc4b70a3"
+      },
+      {
+        "path": "yarn.lock",
+        "bytes": 259451,
+        "sha256": "8a0c6247375285247671bc3cd2a1dc7304e642c7b4e599d837a789d59103a3e4",
+        "git_blob": "f529866dcb0954d06a8f50b2840b99c18418f138"
+      },
+      {
+        "path": "script/build.ts",
+        "bytes": 876,
+        "sha256": "3584f528f0323e49b1eb3749f0fd2c4e8d6d151e054552f4d2f817d314cdc8e9"
+      },
+      {
+        "path": "config/matic/chain.ts",
+        "bytes": 1702,
+        "sha256": "6d1ef3bfc88a03c6e21c1e683a9f9bfb3ee36dd2510dac59d182d7dcecdc21d5"
+      },
+      {
+        "path": "config/matic/config.json",
+        "bytes": 112,
+        "sha256": "fea563d0f13276a26ff54119401a321d65d35ae71cf4565d4b7b28ce892c9e07"
+      },
+      {
+        "path": "src/v3/schema.graphql",
+        "bytes": 13424,
+        "sha256": "c30aad6dc4e6b0f41168f9acaea889a3fca4bbccb17317e26e4f46bbd55775cd"
+      }
+    ],
+    "toolchain": {
+      "reference_node": "18.18.0",
+      "reference_corepack": "0.19.0",
+      "yarn": "1.22.22",
+      "graph_cli": "0.64.1",
+      "graph_ts": "0.38.1",
+      "assemblyscript_root": "0.19.23",
+      "assemblyscript_graph_ts_nested": "0.27.31"
+    },
+    "build": {
+      "commands": [
+        "corepack yarn install --frozen-lockfile --ignore-scripts",
+        "corepack yarn exec -- ts-node ./script/build.ts --network matic --subgraph-type v3",
+        "./node_modules/.bin/graph build v3-subgraph.yaml"
+      ],
+      "factory_wasm_bytes": 63842,
+      "factory_wasm_sha256": "3857fb5da3d58ff73451f2adf497bf362a8d90cc535f2506e198f8157e0f21e5",
+      "pool_wasm_bytes": 82750,
+      "pool_wasm_sha256": "07eeeb830eeecfc9c409620d396a25c608c0389e989728f0be09407d2bf136b7",
+      "result": "byte_exact_to_deployed_mapping_objects"
+    },
+    "schema_normalization": {
+      "source_bytes": 13424,
+      "source_sha256": "c30aad6dc4e6b0f41168f9acaea889a3fca4bbccb17317e26e4f46bbd55775cd",
+      "deployed_bytes": 13706,
+      "remove_explicit_immutable_arguments": 16
+    },
+    "earliest_exact_boundary": {
+      "pr259_factory_bytes": 62457,
+      "pr259_pool_bytes": 81342,
+      "post_compiler_fix_factory_bytes": 63728,
+      "post_compiler_fix_pool_bytes": 82638,
+      "whitelist_only_commit": "8e29284ffe40324ea23b83deb3e01ccb729e3d0f",
+      "whitelist_only_factory_bytes": 63837,
+      "whitelist_only_pool_bytes": 82746,
+      "exact_change": "Add Polygon USDT 0xc2132d05d31c914a87c6611c10748aeb04b58e8f to STABLE_COINS after it was added to WHITELIST_TOKENS."
+    },
+    "chain_configuration": {
+      "reference_token": "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
+      "stable_token_pool": "0xA374094527e1673A86dE625aa59517c5dE346d32",
+      "minimum_native_locked": "20000",
+      "whitelist_tokens": [
+        "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
+        "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619",
+        "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+        "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
+        "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+        "0xc2132d05d31c914a87c6611c10748aeb04b58e8f"
+      ],
+      "stable_coins": [
+        "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+        "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
+        "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+        "0xc2132d05d31c914a87c6611c10748aeb04b58e8f"
+      ],
+      "skip_pools": [],
+      "pool_mappings": [],
+      "static_token_definitions": []
+    }
+  },
+  "remaining_gates": [
+    "Refresh both 24-hour and same-series 72-hour net catch-up forecasts after the current Kan pod identity reaches 72 hours.",
+    "Complete the final comparison against the certified Qma8 family after issue 9."
+  ]
+}

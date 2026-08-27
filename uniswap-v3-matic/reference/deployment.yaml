@@ -1,0 +1,91 @@
+dataSources:
+  - kind: ethereum/contract
+    mapping:
+      abis:
+        - file:
+            /: /ipfs/QmTU8eKx6pCgtff6Uvc7srAwR8BPiM3jTMBw9ahrXBjRzY
+          name: Factory
+        - file:
+            /: /ipfs/QmWPALJpvDK6AzWmj6HwGsyJDu9qGKUW6Hf5V4Ez4VYDpT
+          name: ERC20
+        - file:
+            /: /ipfs/QmbHnhUFZa6qqqRyubUYhXntox1TCBxqryaBM1iNGqVJzT
+          name: ERC20SymbolBytes
+        - file:
+            /: /ipfs/QmQCP6Pdp1MqpwRv2qoPHuUTwZGy7Q3eDHg4w5kzwE9mBj
+          name: ERC20NameBytes
+        - file:
+            /: /ipfs/QmULRc8Ac1J6YFy11z7JRpyThb6f7nmL5mMTQvN7LKj2Vy
+          name: Pool
+      apiVersion: 0.0.7
+      entities:
+        - Pool
+        - Token
+      eventHandlers:
+        - event: >-
+            PoolCreated(indexed address,indexed address,indexed
+            uint24,int24,address)
+          handler: handlePoolCreated
+      file:
+        /: /ipfs/QmfTPwo33sLrKY9yReuoSnnBYTBUsFtTtkFWDDifCUWi1b
+      kind: ethereum/events
+      language: wasm/assemblyscript
+    name: Factory
+    network: matic
+    source:
+      abi: Factory
+      address: '0x1F98431c8aD98523631AE4a59f267346ea31F984'
+      startBlock: 22757547
+description: Uniswap is a decentralized protocol for automated token exchange on Ethereum.
+features:
+  - nonFatalErrors
+  - grafting
+repository: https://github.com/Uniswap/uniswap-v3-subgraph
+schema:
+  file:
+    /: /ipfs/QmVYKvi799Cpg4WVXjhSWjRXNcNg4p1JQxj1WBdbcfHvoq
+specVersion: 0.0.4
+templates:
+  - kind: ethereum/contract
+    mapping:
+      abis:
+        - file:
+            /: /ipfs/QmULRc8Ac1J6YFy11z7JRpyThb6f7nmL5mMTQvN7LKj2Vy
+          name: Pool
+        - file:
+            /: /ipfs/QmTU8eKx6pCgtff6Uvc7srAwR8BPiM3jTMBw9ahrXBjRzY
+          name: Factory
+        - file:
+            /: /ipfs/QmWPALJpvDK6AzWmj6HwGsyJDu9qGKUW6Hf5V4Ez4VYDpT
+          name: ERC20
+      apiVersion: 0.0.7
+      entities:
+        - Pool
+        - Token
+      eventHandlers:
+        - event: Initialize(uint160,int24)
+          handler: handleInitialize
+        - event: >-
+            Swap(indexed address,indexed
+            address,int256,int256,uint160,uint128,int24)
+          handler: handleSwap
+        - event: >-
+            Mint(address,indexed address,indexed int24,indexed
+            int24,uint128,uint256,uint256)
+          handler: handleMint
+        - event: >-
+            Burn(indexed address,indexed int24,indexed
+            int24,uint128,uint256,uint256)
+          handler: handleBurn
+        - event: >-
+            Collect(indexed address,address,indexed int24,indexed
+            int24,uint128,uint128)
+          handler: handleCollect
+      file:
+        /: /ipfs/QmeLVc4JwBzQe7pC2P7wR6tKbSJ7Y2fNb2YuP6YL4Z53X5
+      kind: ethereum/events
+      language: wasm/assemblyscript
+    name: Pool
+    network: matic
+    source:
+      abi: Pool

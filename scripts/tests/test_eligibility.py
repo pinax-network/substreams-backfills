@@ -38,7 +38,7 @@ def binding() -> dict:
         "chain": "bsc",
         "eligibility": {
             "policy": "graph-node-net-catchup-v1",
-            "required_clusters": ["riv-dev1", "kan-subgraphs-a"],
+            "required_clusters": ["riv-subgraphs-a", "kan-subgraphs-a"],
             "latest": {
                 "decision": "indeterminate",
                 "reason": "no_fresh_evidence",
@@ -159,7 +159,7 @@ class EligibilityTest(unittest.TestCase):
     def test_both_windows_above_threshold_are_eligible(self) -> None:
         evidence = self.build(
             [
-                cluster("riv-dev1", [healthy_copy("riv/copy")]),
+                cluster("riv-subgraphs-a", [healthy_copy("riv/copy")]),
                 cluster("kan-subgraphs-a", blockers=[blocker()]),
             ]
         )
@@ -170,7 +170,7 @@ class EligibilityTest(unittest.TestCase):
     def test_exactly_28_days_does_not_qualify(self) -> None:
         evidence = self.build(
             [
-                cluster("riv-dev1", [healthy_copy("riv/copy", lag=2_800)]),
+                cluster("riv-subgraphs-a", [healthy_copy("riv/copy", lag=2_800)]),
                 cluster("kan-subgraphs-a", blockers=[blocker()]),
             ]
         )
@@ -179,7 +179,7 @@ class EligibilityTest(unittest.TestCase):
     def test_either_fast_window_keeps_native_sync(self) -> None:
         evidence = self.build(
             [
-                cluster("riv-dev1", [healthy_copy("riv/copy", net_24h=150, net_72h=90)]),
+                cluster("riv-subgraphs-a", [healthy_copy("riv/copy", net_24h=150, net_72h=90)]),
                 cluster("kan-subgraphs-a", blockers=[blocker()]),
             ]
         )
@@ -188,7 +188,7 @@ class EligibilityTest(unittest.TestCase):
     def test_non_positive_rates_are_eligible(self) -> None:
         evidence = self.build(
             [
-                cluster("riv-dev1", [healthy_copy("riv/copy", net_24h=0, net_72h=-10)]),
+                cluster("riv-subgraphs-a", [healthy_copy("riv/copy", net_24h=0, net_72h=-10)]),
                 cluster("kan-subgraphs-a", blockers=[blocker()]),
             ]
         )
@@ -203,7 +203,7 @@ class EligibilityTest(unittest.TestCase):
     def test_fastest_copy_across_clusters_wins(self) -> None:
         evidence = self.build(
             [
-                cluster("riv-dev1", [healthy_copy("riv/slow", net_24h=50, net_72h=50)]),
+                cluster("riv-subgraphs-a", [healthy_copy("riv/slow", net_24h=50, net_72h=50)]),
                 cluster("kan-subgraphs-a", [healthy_copy("kan/fast", net_24h=200, net_72h=200)]),
             ]
         )
@@ -213,7 +213,7 @@ class EligibilityTest(unittest.TestCase):
     def test_synced_healthy_copy_is_complete(self) -> None:
         evidence = self.build(
             [
-                cluster("riv-dev1", [healthy_copy("riv/synced", synced=True)]),
+                cluster("riv-subgraphs-a", [healthy_copy("riv/synced", synced=True)]),
                 cluster("kan-subgraphs-a", blockers=[blocker()]),
             ]
         )
@@ -224,16 +224,42 @@ class EligibilityTest(unittest.TestCase):
         failed["current"]["observed_at"] = timestamp(MEASURED_AT - timedelta(days=30))
         evidence = self.build(
             [
-                cluster("riv-dev1", [failed, healthy_copy("riv/healthy")]),
+                cluster("riv-subgraphs-a", [failed, healthy_copy("riv/healthy")]),
                 cluster("kan-subgraphs-a", blockers=[blocker()]),
             ]
         )
         self.assertEqual(evidence["summary"]["decision"], "eligible")
 
+    def test_failed_copy_in_other_cluster_does_not_poison_healthy_copy(self) -> None:
+        evidence = self.build(
+            [
+                cluster(
+                    "riv-subgraphs-a",
+                    [healthy_copy("riv/failed", failed=True)],
+                ),
+                cluster("kan-subgraphs-a", [healthy_copy("kan/healthy")]),
+            ]
+        )
+        self.assertEqual(evidence["summary"]["decision"], "eligible")
+        self.assertEqual(evidence["summary"]["fastest_24h"]["copy_id"], "kan/healthy")
+
+    def test_stopped_copy_in_other_cluster_does_not_poison_healthy_copy(self) -> None:
+        stopped = healthy_copy("riv/stopped")
+        stopped["current"].update({"active": False, "status": "stopped"})
+        stopped["windows"] = {}
+        evidence = self.build(
+            [
+                cluster("riv-subgraphs-a", [stopped]),
+                cluster("kan-subgraphs-a", [healthy_copy("kan/healthy")]),
+            ]
+        )
+        self.assertEqual(evidence["summary"]["decision"], "eligible")
+        self.assertEqual(evidence["summary"]["fastest_72h"]["copy_id"], "kan/healthy")
+
     def test_failed_only_copy_does_not_qualify(self) -> None:
         evidence = self.build(
             [
-                cluster("riv-dev1", [healthy_copy("riv/failed", failed=True)]),
+                cluster("riv-subgraphs-a", [healthy_copy("riv/failed", failed=True)]),
                 cluster("kan-subgraphs-a", blockers=[blocker()]),
             ]
         )
@@ -243,7 +269,7 @@ class EligibilityTest(unittest.TestCase):
     def test_proven_structural_blockers_are_eligible(self) -> None:
         evidence = self.build(
             [
-                cluster("riv-dev1", blockers=[blocker("missing_graft_base")]),
+                cluster("riv-subgraphs-a", blockers=[blocker("missing_graft_base")]),
                 cluster("kan-subgraphs-a", blockers=[blocker("missing_graft_base")]),
             ]
         )
@@ -255,7 +281,7 @@ class EligibilityTest(unittest.TestCase):
         stale_blocker["observed_at"] = timestamp(MEASURED_AT - timedelta(seconds=601))
         evidence = self.build(
             [
-                cluster("riv-dev1", blockers=[stale_blocker]),
+                cluster("riv-subgraphs-a", blockers=[stale_blocker]),
                 cluster("kan-subgraphs-a", blockers=[blocker()]),
             ]
         )
@@ -265,7 +291,21 @@ class EligibilityTest(unittest.TestCase):
     def test_healthy_copy_conflicting_with_structural_absence_is_indeterminate(self) -> None:
         evidence = self.build(
             [
-                cluster("riv-dev1", [healthy_copy("riv/copy")], blockers=[blocker()]),
+                cluster("riv-subgraphs-a", [healthy_copy("riv/copy")], blockers=[blocker()]),
+                cluster("kan-subgraphs-a", blockers=[blocker()]),
+            ]
+        )
+        self.assertEqual(evidence["summary"]["decision"], "indeterminate")
+        self.assertEqual(evidence["summary"]["reason"], "conflicting_identity")
+
+    def test_failed_attached_copy_conflicts_with_missing_version_claim(self) -> None:
+        evidence = self.build(
+            [
+                cluster(
+                    "riv-subgraphs-a",
+                    [healthy_copy("riv/failed", failed=True)],
+                    blockers=[blocker("missing_attached_version")],
+                ),
                 cluster("kan-subgraphs-a", blockers=[blocker()]),
             ]
         )
@@ -273,14 +313,14 @@ class EligibilityTest(unittest.TestCase):
         self.assertEqual(evidence["summary"]["reason"], "conflicting_identity")
 
     def test_missing_cluster_is_indeterminate(self) -> None:
-        evidence = self.build([cluster("riv-dev1", [healthy_copy("riv/copy")])])
+        evidence = self.build([cluster("riv-subgraphs-a", [healthy_copy("riv/copy")])])
         self.assertEqual(evidence["summary"]["decision"], "indeterminate")
         self.assertEqual(evidence["summary"]["reason"], "missing_required_cluster")
 
     def test_stale_window_is_indeterminate(self) -> None:
         evidence = self.build(
             [
-                cluster("riv-dev1", [healthy_copy("riv/copy", stale_window=True)]),
+                cluster("riv-subgraphs-a", [healthy_copy("riv/copy", stale_window=True)]),
                 cluster("kan-subgraphs-a", blockers=[blocker()]),
             ]
         )
@@ -291,14 +331,14 @@ class EligibilityTest(unittest.TestCase):
         item["windows"]["24h"]["start"]["deployment_head"] = 99_000
         item["windows"]["24h"]["end"]["deployment_head"] = 98_000
         evidence = self.build(
-            [cluster("riv-dev1", [item]), cluster("kan-subgraphs-a", blockers=[blocker()])]
+            [cluster("riv-subgraphs-a", [item]), cluster("kan-subgraphs-a", blockers=[blocker()])]
         )
         self.assertEqual(evidence["summary"]["reason"], "head_regression")
 
     def test_calculation_tampering_is_rejected(self) -> None:
         evidence = self.build(
             [
-                cluster("riv-dev1", [healthy_copy("riv/copy")]),
+                cluster("riv-subgraphs-a", [healthy_copy("riv/copy")]),
                 cluster("kan-subgraphs-a", blockers=[blocker()]),
             ]
         )
@@ -310,7 +350,7 @@ class EligibilityTest(unittest.TestCase):
     def test_binding_digest_pins_exact_evidence_bytes(self) -> None:
         evidence = self.build(
             [
-                cluster("riv-dev1", [healthy_copy("riv/copy")]),
+                cluster("riv-subgraphs-a", [healthy_copy("riv/copy")]),
                 cluster("kan-subgraphs-a", blockers=[blocker()]),
             ]
         )
@@ -352,7 +392,7 @@ class EligibilityTest(unittest.TestCase):
     def test_source_provenance_is_required(self) -> None:
         raw = measurements(
             [
-                cluster("riv-dev1", [healthy_copy("riv/copy")]),
+                cluster("riv-subgraphs-a", [healthy_copy("riv/copy")]),
                 cluster("kan-subgraphs-a", blockers=[blocker()]),
             ]
         )
@@ -363,7 +403,7 @@ class EligibilityTest(unittest.TestCase):
     def test_action_gate_expires_without_mutating_history(self) -> None:
         evidence = self.build(
             [
-                cluster("riv-dev1", [healthy_copy("riv/copy")]),
+                cluster("riv-subgraphs-a", [healthy_copy("riv/copy")]),
                 cluster("kan-subgraphs-a", blockers=[blocker()]),
             ]
         )

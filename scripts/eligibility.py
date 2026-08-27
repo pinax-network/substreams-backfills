@@ -373,7 +373,7 @@ def build_evidence(
     conditions: list[str] = []
     healthy_seen = False
     synced_seen = False
-    structurally_accounted: dict[str, bool] = {}
+    structural_proof: dict[str, bool] = {}
     blocker_types: list[str] = []
     copy_ids: set[str] = set()
 
@@ -390,6 +390,7 @@ def build_evidence(
         blockers = _list(cluster.get("structural_blockers"), f"clusters[{cluster_index}].structural_blockers")
         allowed_blockers = set(policy["structural_blockers"])
         structural = False
+        cluster_blocker_types: list[str] = []
         for blocker_index, blocker_value in enumerate(blockers):
             blocker = _mapping(blocker_value, f"clusters[{cluster_index}].structural_blockers[{blocker_index}]")
             if set(blocker) != {"type", "observed_at", "source", "details"}:
@@ -404,9 +405,11 @@ def build_evidence(
             _string(blocker.get("details"), "structural blocker details")
             structural = True
             blocker_types.append(blocker_type)
-        structurally_accounted[cluster_name] = structural
+            cluster_blocker_types.append(blocker_type)
+        structural_proof[cluster_name] = structural
 
         cluster_has_healthy = False
+        cluster_has_attached = False
         for copy_index, copy_value in enumerate(_list(cluster.get("copies"), f"clusters[{cluster_index}].copies")):
             copy_item = _mapping(copy_value, f"clusters[{cluster_index}].copies[{copy_index}]")
             if set(copy_item) != {"copy_id", "selector", "current", "windows"}:
@@ -434,6 +437,7 @@ def build_evidence(
                     raise EligibilityError(f"copy {copy_id}.current.{boolean_field} must be boolean")
             _string(current.get("health"), f"copy {copy_id}.current.health")
             _string(current.get("status"), f"copy {copy_id}.current.status")
+            cluster_has_attached = cluster_has_attached or current.get("attached") is True
             for head_field in optional_current:
                 if head_field in current and current[head_field] is not None:
                     _integer(current[head_field], f"copy {copy_id}.current.{head_field}", minimum=0)
@@ -470,15 +474,18 @@ def build_evidence(
         if cluster_has_healthy:
             if structural:
                 conditions.append("conflicting_identity")
-            structurally_accounted[cluster_name] = True
+        elif cluster_has_attached and "missing_attached_version" in cluster_blocker_types:
+            conditions.append("conflicting_identity")
 
     if len(cluster_names) != len(set(cluster_names)):
         raise EligibilityError("evidence contains duplicate cluster entries")
     if set(cluster_names) != set(required_clusters):
         conditions.append("missing_required_cluster")
-    for cluster_name in required_clusters:
-        if not structurally_accounted.get(cluster_name, False):
-            conditions.append("no_healthy_copy")
+    if not healthy_seen and any(
+        not structural_proof.get(cluster_name, False)
+        for cluster_name in required_clusters
+    ):
+        conditions.append("no_healthy_copy")
 
     if healthy_seen and not metric_queries:
         raise EligibilityError("healthy-copy evidence must retain VictoriaMetrics queries")

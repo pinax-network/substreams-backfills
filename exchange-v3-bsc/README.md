@@ -12,7 +12,7 @@ block 26,931,961.
 
 ## Immutable target and source baseline
 
-`reference/` vendors the exact deployed IPFS manifest, schema, seven ABI objects, and
+`reference/` vendors the exact deployed IPFS manifest, schema, six ABI objects, and
 three mapping binaries. `layout-profile-v1.json` records the target-specific handler,
 entity, fee, position, aggregate, pricing, and metadata contract needed for a later
 implementation gap.

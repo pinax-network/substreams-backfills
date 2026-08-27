@@ -55,6 +55,11 @@
     "native_reducer_and_loader": "pinax-network/substreams-graph-node-backfill",
     "kubernetes_workflows": "pinax-network/k8s-subgraphs"
   },
+  "integration_constraints": {
+    "cargo": "The imported project remains excluded from the root workspace and retains every original lockfile.",
+    "generated_protobuf": "Substreams CLI v1.20.3 computes relocation-sensitive generated-state metadata. Monorepo CI preserves the committed source tree and mirrors the authoritative source parity workflow instead of regenerating bindings from the moved path.",
+    "host_builds": "Host-built WASM and SPKG files prove behavior and cache boundaries but never replace the frozen release bytes."
+  },
   "retirement_gates": [
     "mirror and lock the v0.1.0 event package",
     "mirror and lock the v0.4.1 NUL-audit release package",

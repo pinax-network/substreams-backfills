@@ -39,10 +39,6 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.90.0
         with:
           targets: wasm32-unknown-unknown
-      - name: Install checksum-pinned Buf CLI
-        uses: bufbuild/buf-setup-action@a47c93e0b1648d5651a065437926377d060baa99
-        with:
-          version: 1.72.0
       - name: Install checksum-pinned Substreams CLI
         run: |
           curl -fsSL https://github.com/streamingfast/substreams/releases/download/v1.20.3/substreams_linux_x86_64.tar.gz -o /tmp/substreams.tar.gz
@@ -51,9 +47,15 @@ jobs:
       - name: Run offline parity fixtures
         working-directory: uniswap-v4
         run: ./scripts/offline-parity-ci.sh "$RUNNER_TEMP/uniswap-v4-parity"
-      - name: Validate imported source and cache boundaries
+      - name: Check imported source formatting
         working-directory: uniswap-v4
-        run: make validate
+        run: cargo fmt --all --check
+      - name: Run imported source strict lints
+        working-directory: uniswap-v4
+        run: cargo clippy --locked --all-targets -- -D warnings
+      - name: Validate imported Store packages and cache boundaries
+        working-directory: uniswap-v4
+        run: make stores-validate
       - name: Verify frozen production packages
         working-directory: uniswap-v4
         run: make release-packages RELEASE_DIST="$RUNNER_TEMP/uniswap-v4-release"

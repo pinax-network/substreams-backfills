@@ -42,7 +42,7 @@ it is not a non-positive rate.
 
 ## Fastest healthy copy rule
 
-Every target covers both `riv-dev1` and `kan-subgraphs-a`. Evidence must account
+Every target covers both `riv-subgraphs-a` and `kan-subgraphs-a`. Evidence must account
 for each cluster by recording either:
 
 - every current copy of the deployment; or
@@ -52,6 +52,17 @@ A viable copy is active, attached, healthy, not failed, and currently indexing.
 Failed and stopped duplicates never make a target eligible. The target decision
 uses the lowest 24-hour ETA and lowest 72-hour ETA across all viable copies;
 those minima may belong to different copies.
+
+The canonical Riv identity is the production and VictoriaMetrics label
+`riv-subgraphs-a`. Do not substitute the legacy `riv-dev1` name or the
+`riv-dev1-sa` kubeconfig context: the latter currently reaches a different
+cluster with no subgraph namespaces.
+
+When at least one viable copy exists, fully inventoried failed or stopped copies
+in another required cluster are accounted but excluded from the calculation.
+They do not require a false missing-version/graft claim and cannot override the
+fastest healthy copy. If no viable copy exists anywhere, fresh structural proof
+is still required from every cluster before the target can be eligible.
 
 Decision precedence is:
 

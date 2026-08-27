@@ -7,7 +7,7 @@ note: kan sgd3 died disk-full ~34M blocks behind (matic shard expanded 4Ti->4.5T
 milestone: M4
 eligibility:
   policy: graph-node-net-catchup-v1
-  required_clusters: [riv-dev1, kan-subgraphs-a]
+  required_clusters: [riv-subgraphs-a, kan-subgraphs-a]
   latest:
     decision: indeterminate
     reason: no_fresh_evidence

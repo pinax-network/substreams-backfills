@@ -14,7 +14,7 @@ placement:
 milestone: M3   # same spkg as mainnet, params-only rebind
 eligibility:
   policy: graph-node-net-catchup-v1
-  required_clusters: [riv-dev1, kan-subgraphs-a]
+  required_clusters: [riv-subgraphs-a, kan-subgraphs-a]
   latest:
     decision: indeterminate
     reason: no_fresh_evidence

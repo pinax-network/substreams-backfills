@@ -83,7 +83,10 @@
       "required": ["cluster", "accounted", "copies", "structural_blockers"],
       "properties": {
         "cluster": {"type": "string"},
-        "accounted": {"type": "boolean"},
+        "accounted": {
+          "type": "boolean",
+          "description": "True only when the read-only inventory records every current deployment copy in this cluster or proves an allowed structural absence. It does not mean the cluster has a healthy copy."
+        },
         "copies": {"type": "array", "items": {"$ref": "#/$defs/copy"}},
         "structural_blockers": {
           "type": "array",

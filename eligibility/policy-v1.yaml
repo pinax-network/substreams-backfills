@@ -9,7 +9,7 @@ freshness:
   implementation-start: 86400
   compute-or-load-start: 3600
 required_clusters:
-  - riv-dev1
+  - riv-subgraphs-a
   - kan-subgraphs-a
 healthy_copy:
   health: healthy

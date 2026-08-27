@@ -76,9 +76,15 @@ class UniswapV3MaticTargetTest(unittest.TestCase):
         schema.write_text(schema.read_text().replace("type Position ", "type PositionDrift ", 1))
         self.assertNotEqual(self.verify().returncode, 0)
 
-    def test_unreproduced_source_cannot_be_promoted(self) -> None:
+    def test_exact_source_status_drift_is_rejected(self) -> None:
         lock = self.load_lock()
-        lock["source_candidate"]["status"] = "exact"
+        lock["exact_source"]["status"] = "candidate"
+        self.write_lock(lock)
+        self.assertNotEqual(self.verify().returncode, 0)
+
+    def test_exact_source_output_drift_is_rejected(self) -> None:
+        lock = self.load_lock()
+        lock["exact_source"]["build"]["factory_wasm_sha256"] = "0" * 64
         self.write_lock(lock)
         self.assertNotEqual(self.verify().returncode, 0)
 

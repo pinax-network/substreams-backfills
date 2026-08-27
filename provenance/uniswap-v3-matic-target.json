@@ -220,19 +220,90 @@
       }
     }
   },
-  "source_candidate": {
+  "exact_source": {
+    "status": "exact_reproduction",
     "repository": "https://github.com/Uniswap/v3-subgraph",
-    "pull_request": 259,
-    "branch_commit": "934da9bcc901f22c19471c5d27a46123ea22a75d",
-    "merge_commit": "61543353151ad5f4db552a10eb120522aedfb9fc",
-    "tree": "25dc5b93eab5464f197edd7479e2896ce85585df",
-    "status": "candidate_not_exact_mapping_reproduction",
+    "earliest_exact_commit": "d07374a05719e68a10a339f79cdfbc048807cfdc",
+    "mainline_equivalent_commit": "4c9c672296eddbba7c0a442085e186e159d007d8",
+    "tree": "8f5cefd138068952bee909522a0f1d88fdc87b42",
+    "version_boundary": "The mapping bytes identify this exact tree but not a unique later version label; later unrelated commits can retain the same Matic inputs.",
     "matched_evidence": [
-      "The generated Matic manifest has the exact network, factory, start block, data-source/template shape, handlers, and ABI paths.",
-      "Removing Graph CLI's explicit immutable directives from the deployed schema produces the candidate source schema byte-for-byte.",
-      "All five deployed ABI bytes match the candidate tree after the deploy-time trailing-LF normalization.",
-      "The deployed WASM name section contains the candidate refactor paths src/common/backfill and src/v3/mappings."
+      "The generated Matic manifest is semantically exact after substituting each local build artifact with its computed IPFS CID.",
+      "Removing exactly 16 Graph CLI explicit immutable arguments from the deployed schema produces the source schema byte-for-byte.",
+      "All five build-stage ABI files produce the deployed IPFS payload hashes.",
+      "Both compiled mapping WASM files match their deployed IPFS objects byte-for-byte."
     ],
+    "source_files": [
+      {
+        "path": "package.json",
+        "bytes": 859,
+        "sha256": "99d2537b1d1a16b5a840f0aac77e218e81f03e56b00033e29f4a11ebaeb7edc1",
+        "git_blob": "770bb3a2b6295c900c30c26e7ae4f98ebc4b70a3"
+      },
+      {
+        "path": "yarn.lock",
+        "bytes": 259451,
+        "sha256": "8a0c6247375285247671bc3cd2a1dc7304e642c7b4e599d837a789d59103a3e4",
+        "git_blob": "f529866dcb0954d06a8f50b2840b99c18418f138"
+      },
+      {
+        "path": "script/build.ts",
+        "bytes": 876,
+        "sha256": "3584f528f0323e49b1eb3749f0fd2c4e8d6d151e054552f4d2f817d314cdc8e9"
+      },
+      {
+        "path": "config/matic/chain.ts",
+        "bytes": 1702,
+        "sha256": "6d1ef3bfc88a03c6e21c1e683a9f9bfb3ee36dd2510dac59d182d7dcecdc21d5"
+      },
+      {
+        "path": "config/matic/config.json",
+        "bytes": 112,
+        "sha256": "fea563d0f13276a26ff54119401a321d65d35ae71cf4565d4b7b28ce892c9e07"
+      },
+      {
+        "path": "src/v3/schema.graphql",
+        "bytes": 13424,
+        "sha256": "c30aad6dc4e6b0f41168f9acaea889a3fca4bbccb17317e26e4f46bbd55775cd"
+      }
+    ],
+    "toolchain": {
+      "reference_node": "18.18.0",
+      "reference_corepack": "0.19.0",
+      "yarn": "1.22.22",
+      "graph_cli": "0.64.1",
+      "graph_ts": "0.38.1",
+      "assemblyscript_root": "0.19.23",
+      "assemblyscript_graph_ts_nested": "0.27.31"
+    },
+    "build": {
+      "commands": [
+        "corepack yarn install --frozen-lockfile --ignore-scripts",
+        "corepack yarn exec -- ts-node ./script/build.ts --network matic --subgraph-type v3",
+        "./node_modules/.bin/graph build v3-subgraph.yaml"
+      ],
+      "factory_wasm_bytes": 63842,
+      "factory_wasm_sha256": "3857fb5da3d58ff73451f2adf497bf362a8d90cc535f2506e198f8157e0f21e5",
+      "pool_wasm_bytes": 82750,
+      "pool_wasm_sha256": "07eeeb830eeecfc9c409620d396a25c608c0389e989728f0be09407d2bf136b7",
+      "result": "byte_exact_to_deployed_mapping_objects"
+    },
+    "schema_normalization": {
+      "source_bytes": 13424,
+      "source_sha256": "c30aad6dc4e6b0f41168f9acaea889a3fca4bbccb17317e26e4f46bbd55775cd",
+      "deployed_bytes": 13706,
+      "remove_explicit_immutable_arguments": 16
+    },
+    "earliest_exact_boundary": {
+      "pr259_factory_bytes": 62457,
+      "pr259_pool_bytes": 81342,
+      "post_compiler_fix_factory_bytes": 63728,
+      "post_compiler_fix_pool_bytes": 82638,
+      "whitelist_only_commit": "8e29284ffe40324ea23b83deb3e01ccb729e3d0f",
+      "whitelist_only_factory_bytes": 63837,
+      "whitelist_only_pool_bytes": 82746,
+      "exact_change": "Add Polygon USDT 0xc2132d05d31c914a87c6611c10748aeb04b58e8f to STABLE_COINS after it was added to WHITELIST_TOKENS."
+    },
     "chain_configuration": {
       "reference_token": "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
       "stable_token_pool": "0xA374094527e1673A86dE625aa59517c5dE346d32",
@@ -241,28 +312,22 @@
         "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
         "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619",
         "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
-        "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063"
+        "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
+        "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+        "0xc2132d05d31c914a87c6611c10748aeb04b58e8f"
       ],
       "stable_coins": [
         "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
-        "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063"
+        "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
+        "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+        "0xc2132d05d31c914a87c6611c10748aeb04b58e8f"
       ],
       "skip_pools": [],
       "pool_mappings": [],
       "static_token_definitions": []
-    },
-    "locked_build_probe": {
-      "graph_cli": "0.64.1",
-      "assemblyscript": "0.19.10",
-      "factory_wasm_bytes": 62457,
-      "factory_wasm_sha256": "9dd53c9ca951a65b61f779bffa00a196f09958e11331a43f2909b121879825ed",
-      "pool_wasm_bytes": 81342,
-      "pool_wasm_sha256": "992396fea95def01531500cb7bde3ee055372de9e13ca62ba8469f592bbf28b4",
-      "result": "does_not_match_deployed_mapping_bytes"
     }
   },
   "remaining_gates": [
-    "Identify or reproduce the exact source/compiler input that yields both deployed mapping WASM hashes; do not promote the structural candidate to an exact source pin before that succeeds.",
     "Refresh both 24-hour and same-series 72-hour net catch-up forecasts after the current Kan pod identity reaches 72 hours.",
     "Complete the final comparison against the certified Qma8 family after issue 9."
   ]

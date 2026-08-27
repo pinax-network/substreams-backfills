@@ -16,7 +16,9 @@ import yaml
 LOCK_PATH = Path("provenance/uniswap-v3-matic-target.json")
 EXPECTED_DEPLOYMENT = "QmWqwrVtcTzZzbTLGLgiRSQzbZ7MTH53VwqK4AxXVmf7n3"
 EXPECTED_SCHEMA = "QmVYKvi799Cpg4WVXjhSWjRXNcNg4p1JQxj1WBdbcfHvoq"
-EXPECTED_SOURCE_STATUS = "candidate_not_exact_mapping_reproduction"
+EXPECTED_SOURCE_STATUS = "exact_reproduction"
+EXPECTED_SOURCE_COMMIT = "d07374a05719e68a10a339f79cdfbc048807cfdc"
+EXPECTED_SOURCE_TREE = "8f5cefd138068952bee909522a0f1d88fdc87b42"
 
 
 def fail(message: str) -> None:
@@ -326,28 +328,139 @@ def verify_schema(root: Path, lock: dict[str, object], artifacts: dict[str, dict
         fail("Matic field/type gap list drift")
 
 
-def verify_source_boundary(lock: dict[str, object], artifacts: dict[str, dict[str, object]]) -> None:
-    candidate = lock.get("source_candidate")
-    if not isinstance(candidate, dict):
-        fail("source_candidate must be an object")
-    if candidate.get("status") != EXPECTED_SOURCE_STATUS:
-        fail("source candidate must remain explicitly unproven until mapping bytes reproduce")
-    probe = candidate.get("locked_build_probe")
-    if not isinstance(probe, dict) or probe.get("result") != "does_not_match_deployed_mapping_bytes":
-        fail("source build-probe boundary drift")
-    if probe.get("factory_wasm_sha256") == artifacts["factory_mapping_wasm"]["source_sha256"]:
-        fail("Factory build probe unexpectedly matches; update and review the source pin")
-    if probe.get("pool_wasm_sha256") == artifacts["pool_mapping_wasm"]["source_sha256"]:
-        fail("Pool build probe unexpectedly matches; update and review the source pin")
-    for key in ("branch_commit", "merge_commit", "tree"):
-        if not re.fullmatch(r"[0-9a-f]{40}", str(candidate.get(key, ""))):
-            fail(f"invalid source candidate {key}")
+def verify_source_pin(lock: dict[str, object], artifacts: dict[str, dict[str, object]]) -> None:
+    source = lock.get("exact_source")
+    if not isinstance(source, dict):
+        fail("exact_source must be an object")
+    if source.get("status") != EXPECTED_SOURCE_STATUS:
+        fail("Matic source must remain bound to the exact reproduction")
+    if source.get("repository") != "https://github.com/Uniswap/v3-subgraph":
+        fail("exact source repository drift")
+    if source.get("earliest_exact_commit") != EXPECTED_SOURCE_COMMIT:
+        fail("earliest exact source commit drift")
+    if source.get("tree") != EXPECTED_SOURCE_TREE:
+        fail("exact source tree drift")
+    for key in ("earliest_exact_commit", "mainline_equivalent_commit", "tree"):
+        if not re.fullmatch(r"[0-9a-f]{40}", str(source.get(key, ""))):
+            fail(f"invalid exact source {key}")
+
+    build = source.get("build")
+    if not isinstance(build, dict) or build.get("result") != "byte_exact_to_deployed_mapping_objects":
+        fail("exact source build result drift")
+    for prefix, role in (
+        ("factory", "factory_mapping_wasm"),
+        ("pool", "pool_mapping_wasm"),
+    ):
+        if build.get(f"{prefix}_wasm_bytes") != artifacts[role]["source_bytes"]:
+            fail(f"{prefix} exact source byte count drift")
+        if build.get(f"{prefix}_wasm_sha256") != artifacts[role]["source_sha256"]:
+            fail(f"{prefix} exact source digest drift")
+
+    toolchain = source.get("toolchain")
+    if toolchain != {
+        "reference_node": "18.18.0",
+        "reference_corepack": "0.19.0",
+        "yarn": "1.22.22",
+        "graph_cli": "0.64.1",
+        "graph_ts": "0.38.1",
+        "assemblyscript_root": "0.19.23",
+        "assemblyscript_graph_ts_nested": "0.27.31",
+    }:
+        fail("exact source toolchain drift")
+
+    source_files = source.get("source_files")
+    if not isinstance(source_files, list) or len(source_files) != 6:
+        fail("exact source file lock drift")
+    if {entry.get("path") for entry in source_files if isinstance(entry, dict)} != {
+        "package.json",
+        "yarn.lock",
+        "script/build.ts",
+        "config/matic/chain.ts",
+        "config/matic/config.json",
+        "src/v3/schema.graphql",
+    }:
+        fail("exact source file inventory drift")
     remaining = lock.get("remaining_gates")
-    if not isinstance(remaining, list) or len(remaining) != 3:
+    if not isinstance(remaining, list) or len(remaining) != 2:
         fail("remaining Matic gates must stay explicit")
 
 
-def verify(root: Path, lock_path: Path) -> None:
+def manifest_semantic_shape(value: object) -> object:
+    if isinstance(value, dict):
+        return {
+            key: "<content-addressed-artifact>" if key == "file" else manifest_semantic_shape(item)
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [manifest_semantic_shape(item) for item in value]
+    return value
+
+
+def verify_exact_source_build(
+    root: Path,
+    source_root: Path,
+    lock: dict[str, object],
+    artifacts: dict[str, dict[str, object]],
+) -> None:
+    source = lock["exact_source"]
+    deployed_manifest = yaml.safe_load(
+        (root / str(artifacts["deployment"]["vendored_path"])).read_text()
+    )
+    built_manifest = yaml.safe_load((source_root / "build/subgraph.yaml").read_text())
+    if manifest_semantic_shape(built_manifest) != manifest_semantic_shape(deployed_manifest):
+        fail("exact source generated manifest is not semantically identical to the deployment")
+
+    deployed_schema = (root / str(artifacts["schema"]["vendored_path"])).read_bytes()
+    normalized_schema, replacements = re.subn(
+        rb"@entity\(immutable: (?:true|false)\)", b"@entity", deployed_schema
+    )
+    normalization = source["schema_normalization"]
+    if replacements != normalization["remove_explicit_immutable_arguments"]:
+        fail("deployed schema immutable-argument normalization drift")
+    if len(normalized_schema) != normalization["source_bytes"]:
+        fail("normalized exact source schema byte count drift")
+    if sha256(normalized_schema) != normalization["source_sha256"]:
+        fail("normalized exact source schema digest drift")
+    for schema_path in ("src/v3/schema.graphql", "build/schema.graphql"):
+        if (source_root / schema_path).read_bytes() != normalized_schema:
+            fail(f"exact source schema mismatch: {schema_path}")
+
+    built_artifacts = {
+        "factory_abi": "build/Factory/abis/factory.json",
+        "erc20_abi": "build/Factory/abis/ERC20.json",
+        "erc20_symbol_bytes_abi": "build/Factory/abis/ERC20SymbolBytes.json",
+        "erc20_name_bytes_abi": "build/Factory/abis/ERC20NameBytes.json",
+        "pool_abi": "build/Factory/abis/pool.json",
+        "factory_mapping_wasm": "build/Factory/Factory.wasm",
+        "pool_mapping_wasm": "build/templates/Pool/Pool.wasm",
+    }
+    for role, relative_path in built_artifacts.items():
+        payload = (source_root / relative_path).read_bytes()
+        if len(payload) != artifacts[role]["source_bytes"]:
+            fail(f"exact source build byte count drift for {role}")
+        if sha256(payload) != artifacts[role]["source_sha256"]:
+            fail(f"exact source build digest drift for {role}")
+
+    installed_versions = {
+        "graph_cli": load_json(source_root / "node_modules/@graphprotocol/graph-cli/package.json")[
+            "version"
+        ],
+        "graph_ts": load_json(source_root / "node_modules/@graphprotocol/graph-ts/package.json")[
+            "version"
+        ],
+        "assemblyscript_root": load_json(source_root / "node_modules/assemblyscript/package.json")[
+            "version"
+        ],
+        "assemblyscript_graph_ts_nested": load_json(
+            source_root / "node_modules/@graphprotocol/graph-ts/node_modules/assemblyscript/package.json"
+        )["version"],
+    }
+    for key, value in installed_versions.items():
+        if value != source["toolchain"][key]:
+            fail(f"installed exact source toolchain drift: {key}")
+
+
+def verify(root: Path, lock_path: Path, exact_source_root: Path | None = None) -> None:
     lock = load_json(root / lock_path)
     if not isinstance(lock, dict) or lock.get("format_version") != 1:
         fail("unsupported Matic target lock")
@@ -357,22 +470,25 @@ def verify(root: Path, lock_path: Path) -> None:
     artifacts = verify_artifact_lock(root, lock)
     verify_manifest(root, lock, artifacts)
     verify_schema(root, lock, artifacts)
-    verify_source_boundary(lock, artifacts)
+    verify_source_pin(lock, artifacts)
+    if exact_source_root is not None:
+        verify_exact_source_build(root, exact_source_root.resolve(), lock, artifacts)
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", type=Path, default=Path("."))
     parser.add_argument("--lock", type=Path, default=LOCK_PATH)
+    parser.add_argument("--exact-source-root", type=Path)
     args = parser.parse_args()
     try:
-        verify(args.root.resolve(), args.lock)
+        verify(args.root.resolve(), args.lock, args.exact_source_root)
     except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError, yaml.YAMLError) as error:
         print(f"Uniswap V3 Matic target verification failed: {error}", file=sys.stderr)
         return 1
     print(
         "verified immutable Matic deployment/schema/ABI artifacts, exact manifest shape, "
-        "16-entity gap contract, mapping pins, and the deliberately unproven source boundary"
+        "16-entity gap contract, and the exact source/toolchain reproduction"
     )
     return 0
 

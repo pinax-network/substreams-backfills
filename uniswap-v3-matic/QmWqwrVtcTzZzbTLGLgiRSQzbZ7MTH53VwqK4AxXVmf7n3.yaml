@@ -8,7 +8,7 @@ milestone: M4
 target_reference:
   provenance: provenance/uniswap-v3-matic-target.json
   deployment_manifest: uniswap-v3-matic/reference/deployment.yaml
-  status: immutable_target_pinned_source_candidate_unproven
+  status: immutable_target_and_exact_source_pinned
 eligibility:
   policy: graph-node-net-catchup-v1
   required_clusters: [riv-subgraphs-a, kan-subgraphs-a]

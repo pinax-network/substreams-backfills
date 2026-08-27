@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
-members = ["common", "uniswap-v3"]
-exclude = ["uniswap-v4"]
+members = ["common"]
+exclude = ["uniswap-v3/source", "uniswap-v4"]
 
 [workspace.package]
 edition = "2021"

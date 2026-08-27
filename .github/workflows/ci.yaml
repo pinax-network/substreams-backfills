@@ -29,6 +29,30 @@ jobs:
       - name: Test eligibility decisions and freshness gates
         run: python3 -m unittest discover -s scripts/tests -p 'test_*.py'
 
+  uniswap-v3-reference:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Fetch pinned V3 history mirror
+        run: >-
+          git fetch --no-tags origin
+          refs/heads/upstream/uniswap-v3-qma8a81t-parity:refs/remotes/origin/upstream/uniswap-v3-qma8a81t-parity
+      - name: Verify isolated history mirror and exact source import
+        run: ./scripts/verify-uniswap-v3-import.sh
+      - name: Test logical-contract expected refusals
+        run: python3 -m unittest scripts/tests/test_uniswap_v3_logical_contract.py
+      - uses: dtolnay/rust-toolchain@1.79
+        with:
+          targets: wasm32-unknown-unknown
+      - name: Test imported source on the host target
+        working-directory: uniswap-v3/source
+        run: cargo test --locked --target x86_64-unknown-linux-gnu
+      - name: Build imported source for Substreams WASM
+        working-directory: uniswap-v3/source
+        run: cargo build --locked --target wasm32-unknown-unknown --release
+
   uniswap-v4-reference:
     runs-on: ubuntu-latest
     steps:

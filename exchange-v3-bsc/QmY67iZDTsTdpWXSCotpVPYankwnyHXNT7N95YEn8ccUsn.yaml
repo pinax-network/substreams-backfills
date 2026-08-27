@@ -6,7 +6,7 @@ market_qpd: 1900000
 signal_grt: 14324
 competitors: 2   # ellipfra 112k + 7k straggler
 note: offchain sync also running (riv sgd5281 bsc_fast + kan sgd5305)
-milestone: M4
+milestone: M6
 eligibility:
   policy: graph-node-net-catchup-v1
   required_clusters: [riv-subgraphs-a, kan-subgraphs-a]

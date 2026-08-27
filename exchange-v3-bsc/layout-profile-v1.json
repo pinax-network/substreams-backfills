@@ -1,0 +1,307 @@
+{
+  "format_version": 1,
+  "profile_id": "exchange-v3-bsc-QmY67iZD",
+  "status": "immutable_target_and_exact_source_contract_only",
+  "runtime_parity": false,
+  "eligibility_decision": "awaiting_same_pod_72_hour_evidence",
+  "family": "exchange-v3-bsc",
+  "chain": "bsc",
+  "deployment": {
+    "cid": "QmY67iZDTsTdpWXSCotpVPYankwnyHXNT7N95YEn8ccUsn",
+    "spec_version": "0.0.2",
+    "mapping_api_version": "0.0.4",
+    "module_initial_block": 26931961,
+    "graft": null,
+    "features": [
+      "nonFatalErrors"
+    ]
+  },
+  "components": [
+    {
+      "kind": "data_source",
+      "name": "Factory",
+      "address": "0x0bfbcf9fa4f9c56b0f40a671ad40e0805a091865",
+      "start_block": 26956207,
+      "mapping_cid": "QmdhxLJ6M6UoXPMS2myJtD8wyxJcXeWawX3kRDTojsozK3",
+      "handlers": [
+        {
+          "name": "handlePoolCreated",
+          "signature": "PoolCreated(address,address,uint24,int24,address)",
+          "topic0": "0x783cca1c0412dd0d695e784568c96da2e9c22ff989357a2e8b1d9b2b4e6b7118"
+        }
+      ]
+    },
+    {
+      "kind": "data_source",
+      "name": "NonfungiblePositionManager",
+      "address": "0x46a15b0b27311cedf172ab29e4f4766fbe7f4364",
+      "start_block": 26931961,
+      "mapping_cid": "QmVfHnKzZii6yom6Pt5Ao49oAyhGdJsnDs9dc6hPV8S9LC",
+      "handlers": [
+        {
+          "name": "handleIncreaseLiquidity",
+          "signature": "IncreaseLiquidity(uint256,uint128,uint256,uint256)",
+          "topic0": "0x3067048beee31b25b2f1681f88dac838c8bba36af25bfb2b7cf7473a5847e35f"
+        },
+        {
+          "name": "handleDecreaseLiquidity",
+          "signature": "DecreaseLiquidity(uint256,uint128,uint256,uint256)",
+          "topic0": "0x26f6a048ee9138f2c0ce266f322cb99228e8d619ae2bff30c67f8dcf9d2377b4"
+        },
+        {
+          "name": "handleCollect",
+          "signature": "Collect(uint256,address,uint256,uint256)",
+          "topic0": "0x40d0efd1a53d60ecbf40971b9daf7dc90178c3aadc7aab1765632738fa8b8f01"
+        },
+        {
+          "name": "handleTransfer",
+          "signature": "Transfer(address,address,uint256)",
+          "topic0": "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+        }
+      ]
+    },
+    {
+      "kind": "template",
+      "name": "Pool",
+      "created_by": "Factory.handlePoolCreated",
+      "mapping_cid": "QmcRScUVN8cN53U5o93vuEApFYg8JhfYHu6TaGLEtAYfr6",
+      "handlers": [
+        {
+          "name": "handleInitialize",
+          "signature": "Initialize(uint160,int24)",
+          "topic0": "0x98636036cb66a9c19a37435efc1e90142190214e8abeb821bdba3f2990dd4c95"
+        },
+        {
+          "name": "handleSwap",
+          "signature": "Swap(address,address,int256,int256,uint160,uint128,int24,uint128,uint128)",
+          "topic0": "0x19b47279256b2a23a1665c810c8d55a1758940ee09377d4f8d26497a3577dc83"
+        },
+        {
+          "name": "handleMint",
+          "signature": "Mint(address,address,int24,int24,uint128,uint256,uint256)",
+          "topic0": "0x7a53080ba414158be7ec69b987b5fb7d07dee101fe85488f0853ae16239d0bde"
+        },
+        {
+          "name": "handleBurn",
+          "signature": "Burn(address,int24,int24,uint128,uint256,uint256)",
+          "topic0": "0x0c396cd989a39f4459b5fa1aed6a9a8dcdbc45908acfd67e028cd568da98982c"
+        },
+        {
+          "name": "handleFlash",
+          "signature": "Flash(address,address,uint256,uint256,uint256,uint256)",
+          "topic0": "0xbdbdb71d7860376ba52b25a5028beea23581364a40522f6bcfb86bb1f2dca633"
+        },
+        {
+          "name": "handleCollect",
+          "signature": "Collect(address,address,int24,int24,uint128,uint128)",
+          "topic0": "0x70935338e69775456a85ddef226c395fb668b63fa0115f5f20610b388e6ca9c0"
+        },
+        {
+          "name": "handleCollectProtocol",
+          "signature": "CollectProtocol(address,address,uint128,uint128)",
+          "topic0": "0x596b573906218d3411850b26a6b437d6c4522fdb43d2d2386263f86d50b8b151"
+        }
+      ]
+    }
+  ],
+  "pool_creation": {
+    "pool_id": "lowercase_pool_address_hex",
+    "token_ids": "lowercase_token_address_hex",
+    "factory_entity_id": "factory_address",
+    "bundle_entity_id": "1",
+    "fee_tier_source": "PoolCreated.fee",
+    "dynamic_pool_template_created": true,
+    "missing_token_decimals_behavior": "return_without_pool_token_or_factory_saves"
+  },
+  "fee_and_protocol": {
+    "tick_spacing_by_fee_tier": {
+      "100": 1,
+      "500": 10,
+      "2500": 50,
+      "10000": 200
+    },
+    "default_packed_fee_protocol_by_fee_tier": {
+      "100": 216272100,
+      "500": 222825800,
+      "2500": 209718400,
+      "10000": 209718400,
+      "fallback": 209718400
+    },
+    "swap_protocol_fee_inputs": [
+      "protocolFeesToken0",
+      "protocolFeesToken1"
+    ],
+    "swap_amount_fee_usd": "combined_adjusted_protocol_fee_usd",
+    "protocol_fee_aggregates": [
+      "Factory.totalProtocolFeesETH",
+      "Factory.totalProtocolFeesUSD",
+      "Pool.protocolFeesUSD",
+      "Token.protocolFeesUSD",
+      "PancakeDayData.protocolFeesUSD",
+      "PoolDayData.protocolFeesUSD",
+      "PoolHourData.protocolFeesUSD",
+      "TokenDayData.protocolFeesUSD",
+      "TokenHourData.protocolFeesUSD"
+    ],
+    "collect_protocol_behavior": "subtract_amounts_from_pool_and_token_tvl_increment_tx_counts_without_event_entity",
+    "flash_behavior": "refresh_pool_fee_growth_globals_only"
+  },
+  "positions": {
+    "position_id": "decimal_token_id_string",
+    "lazy_source": "NonfungiblePositionManager.try_positions",
+    "pool_source": "Factory.getPool_token0_token1_fee",
+    "initial_owner": "zero_address_until_transfer",
+    "transfer_updates_owner": true,
+    "burn_delete": false,
+    "snapshot_id": "position_id_hash_block_number",
+    "snapshot_written_by": [
+      "IncreaseLiquidity",
+      "DecreaseLiquidity",
+      "Collect",
+      "Transfer"
+    ],
+    "fee_growth_refreshed_by": [
+      "IncreaseLiquidity",
+      "DecreaseLiquidity",
+      "Collect"
+    ],
+    "source_compatibility_quirk": "position_manager_collect_adds_amount0_to_both_collected_fee_token_fields"
+  },
+  "entity_layout": {
+    "entity_count": 20,
+    "all_entities_mutable": true,
+    "immutable_entities": [],
+    "entities": [
+      "Bundle",
+      "Burn",
+      "Collect",
+      "Factory",
+      "Flash",
+      "Mint",
+      "PancakeDayData",
+      "Pool",
+      "PoolDayData",
+      "PoolHourData",
+      "Position",
+      "PositionSnapshot",
+      "Swap",
+      "Tick",
+      "TickDayData",
+      "TickHourData",
+      "Token",
+      "TokenDayData",
+      "TokenHourData",
+      "Transaction"
+    ]
+  },
+  "aggregates": {
+    "swap_amounts": "absolute_token_deltas",
+    "tracked_volume_divisor": 2,
+    "untracked_volume_divisor": 2,
+    "lp_fee_formula": "tracked_swap_volume_times_pool_fee_tier_div_1000000",
+    "protocol_fee_formula": "adjusted_event_protocol_fee_amounts",
+    "intervals": [
+      "pancake_day",
+      "pool_day",
+      "pool_hour",
+      "token_day",
+      "token_hour",
+      "tick_day",
+      "tick_hour"
+    ],
+    "tick_crossing_update_cap": 100,
+    "pool_collect_tvl_change": "none_to_avoid_double_counting_burn",
+    "pool_collect_protocol_tvl_change": "subtract_collected_protocol_amounts"
+  },
+  "pricing": {
+    "wrapped_native_address": "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c",
+    "stablecoin_wrapped_native_pool": "0x36696169c63e42cd08ce11f5deebbcebae652050",
+    "stablecoin_is_token0": true,
+    "minimum_native_locked": "10",
+    "stablecoin_addresses": [
+      "0x55d398326f99059ff775485246999027b3197955",
+      "0xe9e7cea3dedca5984780bafc599bd69add087d56",
+      "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d"
+    ],
+    "whitelist_tokens": [
+      "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c",
+      "0x55d398326f99059ff775485246999027b3197955",
+      "0xe9e7cea3dedca5984780bafc599bd69add087d56",
+      "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d",
+      "0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c",
+      "0x2170ed0880ac9a755fd29b2688956bd959f933f8",
+      "0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82"
+    ],
+    "static_token_definitions": [],
+    "pools_to_skip": [],
+    "pool_mappings": []
+  },
+  "metadata": {
+    "symbol_and_name_fallback": "string_then_bytes32_then_static_definition_then_unknown",
+    "static_definitions_enabled": false,
+    "total_supply_call": true,
+    "decimals_call": "uint8_with_static_definition_fallback",
+    "null_bytes32_sentinel_handling": true
+  },
+  "frozen_uniswap_v3_static_gap": {
+    "entity_rename": {
+      "UniswapDayData": "PancakeDayData"
+    },
+    "immutable_in_uniswap_but_mutable_in_exchange": [
+      "Burn",
+      "Mint",
+      "Swap",
+      "Transaction"
+    ],
+    "extra_exchange_fields": {
+      "Factory": [
+        "totalProtocolFeesETH",
+        "totalProtocolFeesUSD"
+      ],
+      "Pool": [
+        "feeProtocol",
+        "protocolFeesUSD",
+        "totalValueLockedETHUntracked"
+      ],
+      "PoolDayData": [
+        "protocolFeesUSD"
+      ],
+      "PoolHourData": [
+        "protocolFeesUSD"
+      ],
+      "Swap": [
+        "amountFeeUSD"
+      ],
+      "Token": [
+        "derivedUSD",
+        "protocolFeesUSD",
+        "tokenHourData"
+      ],
+      "TokenDayData": [
+        "protocolFeesUSD"
+      ],
+      "TokenHourData": [
+        "protocolFeesUSD"
+      ]
+    },
+    "scope": "static_schema_and_exact_source_semantics_pending_certified_runtime_gap"
+  },
+  "required_target_changes": [
+    "profile_driven_legacy_spec_0_0_2_physical_schema_and_metadata_support",
+    "bsc_factory_position_manager_and_dynamic_pool_component_routing",
+    "pancake_swap_decoder_with_two_protocol_fee_amounts",
+    "packed_fee_protocol_defaults_and_collect_protocol_semantics",
+    "all_mutable_twenty_entity_layout_and_pancake_day_aggregate",
+    "protocol_fee_fields_aggregates_and_source_compatibility_quirks",
+    "bsc_pricing_stable_pool_whitelist_and_minimum_liquidity_configuration",
+    "target_specific_packages_module_hashes_and_initial_blocks",
+    "bsc_canonical_event_metadata_and_reducer_fixtures",
+    "exact_graph_node_schema_poi_vid_and_postgresql_parity_certification"
+  ],
+  "remaining_gates": [
+    "fresh_24_hour_and_same_pod_72_hour_graph_node_catchup_forecasts_both_greater_than_28_days",
+    "generic_loader_legacy_spec_0_0_2_physical_schema_and_metadata_proof",
+    "certified_uniswap_v3_runtime_functional_gap_after_issues_5_and_9",
+    "paused_restore_differential_validation_and_separate_operational_activation_approval"
+  ]
+}

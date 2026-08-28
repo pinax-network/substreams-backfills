@@ -27,9 +27,9 @@ ANCESTRY = importlib.util.module_from_spec(ANCESTRY_SPEC)
 ANCESTRY_SPEC.loader.exec_module(ANCESTRY)
 
 
-CONTRACT_VERSION = "uniswap-v3-writer-compatibility/v2"
+CONTRACT_VERSION = "uniswap-v3-writer-compatibility/v3"
 CONTRACT_PATH = Path(
-    "uniswap-v3/graft-ancestry/v1/writer-compatibility.json"
+    "uniswap-v3/graft-ancestry/v2/writer-compatibility.json"
 )
 WABT_VERSION = "1.0.35"
 WABT_LINUX_ARCHIVE = {
@@ -435,6 +435,7 @@ class WatFunction:
     name: str
     start_line: int
     lines: tuple[str, ...]
+    function_index: int | None = None
 
     @property
     def payload(self) -> bytes:
@@ -511,6 +512,7 @@ def decode_wat_string(value: str) -> bytes:
 DATA_RE = re.compile(r'^  \(data \$\S+ \(i32\.const (\d+)\) "(.*)"\)\)?$')
 MEMORY_RE = re.compile(r"^  \(memory \$\S+ (\d+)(?: \d+)?\)$")
 FUNCTION_RE = re.compile(r"^  \(func \$([^\s]+)")
+FUNCTION_IMPORT_RE = re.compile(r'^  \(import "[^"]+" "[^"]+" \(func \$[^\s\)]+')
 EXPORT_RE = re.compile(r'^  \(export "([^"]+)" \(func \$([^\s\)]+)\)\)$')
 I32_CONST_RE = re.compile(r"^\s*i32\.const (-?\d+)$")
 CALL_RE = re.compile(r"\bcall \$([^\s\)]+)")
@@ -563,6 +565,10 @@ def parse_wat(
         memory[offset : offset + len(payload)] = payload
 
     functions: dict[str, WatFunction] = {}
+    function_import_count = sum(
+        FUNCTION_IMPORT_RE.match(line) is not None for line in lines
+    )
+    defined_function_count = 0
     index = 0
     while index < len(lines):
         match = FUNCTION_RE.match(lines[index])
@@ -582,7 +588,13 @@ def parse_wat(
         require(balance == 0, f"unterminated WAT function {match.group(1)}")
         name = match.group(1)
         require(name not in functions, f"duplicate WAT function name {name}")
-        functions[name] = WatFunction(name, start + 1, tuple(body))
+        functions[name] = WatFunction(
+            name,
+            start + 1,
+            tuple(body),
+            function_import_count + defined_function_count,
+        )
+        defined_function_count += 1
     require(functions, "WAT contains no named functions")
 
     exports: dict[str, str] = {}
@@ -999,6 +1011,7 @@ def handler_record(function: WatFunction, memory: bytearray) -> dict[str, object
     normalized_calls = normalized_call_sequence(function)
     return {
         "function": function.name,
+        "wat_function_index": function.function_index,
         "body_sha256": sha256_bytes(function.payload),
         "normalized_body_sha256": sha256_bytes(
             normalized_function_payload(function, memory)
@@ -1033,6 +1046,15 @@ def analyze_mapping(
     )
     wat = wat_payload.decode("utf-8")
     memory, functions, indirect_targets, exports = parse_wat(wat)
+    require(
+        sum(FUNCTION_IMPORT_RE.match(line) is not None for line in wat.splitlines())
+        == mapping["function_import_count"],
+        f"WAT/raw function import count drift for {cid}",
+    )
+    require(
+        len(functions) == mapping["defined_function_count"],
+        f"WAT/raw defined function count drift for {cid}",
+    )
     callsites = extract_store_set_callsites(functions, memory)
     require_fixed_callsites(callsites, str(cid))
     store_import_marker = f'(import "index" "store.set" (func ${STORE_SET_CALL}'
@@ -1070,8 +1092,15 @@ def analyze_mapping(
 
     handlers: dict[str, object] = {}
     registered_export_targets: dict[str, str] = {}
-    for handler in mapping["registered_handler_exports"]:
+    numeric_export_bindings = mapping[
+        "registered_handler_export_function_indices"
+    ]
+    for handler, raw_function_index in numeric_export_bindings.items():
         function = resolve_handler(functions, exports, handler)
+        require(
+            function.function_index == raw_function_index,
+            f"raw WASM/WAT function index drift for {cid} {handler}",
+        )
         handlers[handler] = handler_record(function, memory)
         registered_export_targets[handler] = function.name
 
@@ -1084,6 +1113,7 @@ def analyze_mapping(
             "sha256": artifact["sha256"],
             "wat_sha256": wat_sha256,
             "registered_handlers": handlers,
+            "registered_handler_export_function_indices": numeric_export_bindings,
             "registered_handler_export_targets": registered_export_targets,
             "store_set_callsite_count": len(callsites),
             "store_set_import_count": store_import_count,
@@ -2832,14 +2862,19 @@ def build_contract(root: Path, wasm2wat: Path | None = None) -> dict[str, object
     )
     segment_writer_diffs = build_segment_writer_diffs(segment_writer_contracts)
     return {
-        "format_version": 2,
+        "format_version": 3,
         "contract_version": CONTRACT_VERSION,
         "ancestry_contract": {
             "path": ANCESTRY.CONTRACT_PATH.as_posix(),
             "sha256": sha256_bytes(ancestry_contract_path.read_bytes()),
+            "format_version": ancestry["format_version"],
             "contract_version": ancestry["contract_version"],
             "artifact_count": len(ancestry["artifacts"]),
             "mapping_count": len(ancestry["mapping_writer_inventories"]),
+            "registered_handler_binding_count": sum(
+                len(mapping["registered_handler_export_function_indices"])
+                for mapping in ancestry["mapping_writer_inventories"]
+            ),
         },
         "toolchain": {
             "name": "WABT wasm2wat",
@@ -2935,6 +2970,7 @@ def build_contract(root: Path, wasm2wat: Path | None = None) -> dict[str, object
         "segment_writer_diffs": segment_writer_diffs,
         "required_absence_certifications": absence,
         "truth_boundary": {
+            "registered_handler_export_binding_chain_complete": True,
             "wabt_analysis_ci_recomputed": True,
             "global_store_set_callsite_closure_complete": True,
             "constant_store_set_target_inventory_complete": True,
@@ -2989,6 +3025,41 @@ TOP_LEVEL_KEYS = {
     "truth_boundary",
 }
 
+WRITER_TRUE_FLAGS = (
+    "registered_handler_export_binding_chain_complete",
+    "wabt_analysis_ci_recomputed",
+    "global_store_set_callsite_closure_complete",
+    "constant_store_set_target_inventory_complete",
+    "npm_collect_and_pool_flash_conservative_writer_closure_complete",
+    "required_absence_static_certified",
+    "factory_static_writer_observations_digest_bound",
+    "pool_static_writer_observations_digest_bound",
+    "factory_pool_profile_axis_catalog_digest_bound",
+    "factory_pool_critical_writer_observations_bound",
+    "segment_writer_contracts_complete",
+    "segment_writer_diff_complete",
+    "source_binding_inventory_complete",
+)
+
+WRITER_FALSE_FLAGS = (
+    "field_writer_audit_complete",
+    "npm_collect_and_pool_flash_reachability_complete",
+    "factory_static_writer_provenance_complete",
+    "pool_static_writer_provenance_complete",
+    "factory_pool_profile_axis_bindings_complete",
+    "factory_pool_full_field_writer_semantics_complete",
+    "full_handler_semantics_complete",
+    "runtime_population_complete",
+    "boundary_state_continuity_complete",
+    "logical_oracle_complete",
+    "physical_parity_complete",
+    "poi_parity_complete",
+    "target_graph_node_runtime_identity_bound",
+    "segment_execution_models_decided",
+    "backfill_ready",
+    "production_ready",
+)
+
 
 def validate_internal_contract(
     contract: object,
@@ -2998,15 +3069,25 @@ def validate_internal_contract(
     root = root.resolve()
     ancestry = verified_ancestry or ANCESTRY.verify(root)
     contract = ANCESTRY.exact_keys(contract, TOP_LEVEL_KEYS, "writer contract")
-    require(contract["format_version"] == 2, "writer format version drift")
+    require(contract["format_version"] == 3, "writer format version drift")
     require(contract["contract_version"] == CONTRACT_VERSION, "writer contract version drift")
+    require(
+        ancestry["format_version"] == 2
+        and ancestry["contract_version"] == "uniswap-v3-graft-ancestry/v2",
+        "writer requires immutable ancestry contract v2",
+    )
     ancestry_path = root / ANCESTRY.CONTRACT_PATH
     expected_ancestry_metadata = {
         "path": ANCESTRY.CONTRACT_PATH.as_posix(),
         "sha256": sha256_bytes(ancestry_path.read_bytes()),
+        "format_version": ancestry["format_version"],
         "contract_version": ancestry["contract_version"],
         "artifact_count": len(ancestry["artifacts"]),
         "mapping_count": len(ancestry["mapping_writer_inventories"]),
+        "registered_handler_binding_count": sum(
+            len(mapping["registered_handler_export_function_indices"])
+            for mapping in ancestry["mapping_writer_inventories"]
+        ),
     }
     require(
         contract["ancestry_contract"] == expected_ancestry_metadata,
@@ -3028,16 +3109,38 @@ def validate_internal_contract(
     require(isinstance(mappings, list) and len(mappings) == 20, "writer mapping analyses malformed")
     mapping_by_cid = {mapping["cid"]: mapping for mapping in mappings}
     require(len(mapping_by_cid) == 20, "writer mapping analysis CID closure drift")
+    ancestry_mapping_by_cid = {
+        mapping["cid"]: mapping
+        for mapping in ancestry["mapping_writer_inventories"]
+    }
+    require(
+        set(mapping_by_cid) == set(ancestry_mapping_by_cid),
+        "writer mapping analysis CID closure drift from ancestry",
+    )
+    numeric_binding_count = 0
     for mapping in mappings:
+        expected_numeric_bindings = ancestry_mapping_by_cid[mapping["cid"]][
+            "registered_handler_export_function_indices"
+        ]
+        numeric_bindings = mapping[
+            "registered_handler_export_function_indices"
+        ]
+        require(
+            numeric_bindings == expected_numeric_bindings,
+            "writer raw WASM numeric handler binding drift from ancestry",
+        )
+        numeric_binding_count += len(numeric_bindings)
         export_targets = mapping["registered_handler_export_targets"]
         registered_handlers = mapping["registered_handlers"]
         require(
-            set(export_targets) == set(registered_handlers)
+            set(numeric_bindings) == set(export_targets) == set(registered_handlers)
             and all(
                 registered_handlers[handler]["function"] == target
+                and registered_handlers[handler]["wat_function_index"]
+                == numeric_bindings[handler]
                 for handler, target in export_targets.items()
             ),
-            "writer handler evidence is not rooted at its exact WAT export target",
+            "writer handler evidence is not rooted at its raw numeric and exact WAT export targets",
         )
         require(mapping["store_set_import_count"] == 1, "writer store.set import drift")
         require(
@@ -3090,6 +3193,7 @@ def validate_internal_contract(
             and mapping["call_indirect_target_closure_store_set_targets"] == [],
             "writer indirect-call table target reaches a store writer",
         )
+    require(numeric_binding_count == 70, "writer numeric handler binding closure drift")
     all_sites = [site for mapping in mappings for site in mapping["store_set_callsites"]]
     require(len(all_sites) == 162, "writer retained callsite count drift")
     require(
@@ -3537,41 +3641,15 @@ def validate_internal_contract(
     expected_files = graph_node_source_evidence()["files"]
     require(source["files"] == expected_files, "graph-node source evidence drift")
 
-    truth = contract["truth_boundary"]
-    for field in (
-        "wabt_analysis_ci_recomputed",
-        "global_store_set_callsite_closure_complete",
-        "constant_store_set_target_inventory_complete",
-        "npm_collect_and_pool_flash_conservative_writer_closure_complete",
-        "required_absence_static_certified",
-        "factory_static_writer_observations_digest_bound",
-        "pool_static_writer_observations_digest_bound",
-        "factory_pool_profile_axis_catalog_digest_bound",
-        "factory_pool_critical_writer_observations_bound",
-        "segment_writer_contracts_complete",
-        "segment_writer_diff_complete",
-        "source_binding_inventory_complete",
-    ):
-        require(truth.get(field) is True, f"writer proved evidence flag drift: {field}")
-    for field in (
-        "field_writer_audit_complete",
-        "npm_collect_and_pool_flash_reachability_complete",
-        "factory_static_writer_provenance_complete",
-        "pool_static_writer_provenance_complete",
-        "factory_pool_profile_axis_bindings_complete",
-        "factory_pool_full_field_writer_semantics_complete",
-        "full_handler_semantics_complete",
-        "runtime_population_complete",
-        "boundary_state_continuity_complete",
-        "logical_oracle_complete",
-        "physical_parity_complete",
-        "poi_parity_complete",
-        "target_graph_node_runtime_identity_bound",
-        "segment_execution_models_decided",
-        "backfill_ready",
-        "production_ready",
-    ):
-        require(truth.get(field) is False, f"unproved writer promotion claim: {field}")
+    truth = ANCESTRY.exact_keys(
+        contract["truth_boundary"],
+        set(WRITER_TRUE_FLAGS) | set(WRITER_FALSE_FLAGS),
+        "writer truth_boundary",
+    )
+    for field in WRITER_TRUE_FLAGS:
+        require(truth[field] is True, f"writer proved evidence flag drift: {field}")
+    for field in WRITER_FALSE_FLAGS:
+        require(truth[field] is False, f"unproved writer promotion claim: {field}")
     return contract
 
 

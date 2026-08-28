@@ -47,11 +47,17 @@ class UniswapV3WriterSemanticsTest(unittest.TestCase):
         self.assertEqual(closure["indirect_store_set_reference_count"], 0)
         self.assertEqual(len(self.contract["npm_semantic_profiles"]), 5)
         self.assertEqual(len(self.contract["segments"]), 8)
-        self.assertEqual(self.contract["format_version"], 2)
+        self.assertEqual(self.contract["format_version"], 3)
         self.assertEqual(
             self.contract["contract_version"],
-            "uniswap-v3-writer-compatibility/v2",
+            "uniswap-v3-writer-compatibility/v3",
         )
+        ancestry = MODULE.ANCESTRY.verify(REPOSITORY)
+        ancestry_mappings = {
+            mapping["cid"]: mapping
+            for mapping in ancestry["mapping_writer_inventories"]
+        }
+        numeric_binding_count = 0
         for mapping in self.contract["mapping_analyses"]:
             self.assertEqual(mapping["store_set_import_count"], 1)
             self.assertEqual(
@@ -60,6 +66,33 @@ class UniswapV3WriterSemanticsTest(unittest.TestCase):
             )
             for site in mapping["store_set_callsites"]:
                 self.assertTrue(site["target_argument_shape"].startswith("i32.const"))
+            numeric = mapping["registered_handler_export_function_indices"]
+            self.assertEqual(
+                numeric,
+                ancestry_mappings[mapping["cid"]][
+                    "registered_handler_export_function_indices"
+                ],
+            )
+            self.assertEqual(
+                set(numeric), set(mapping["registered_handler_export_targets"])
+            )
+            self.assertEqual(set(numeric), set(mapping["registered_handlers"]))
+            for handler, function_index in numeric.items():
+                record = mapping["registered_handlers"][handler]
+                self.assertEqual(record["wat_function_index"], function_index)
+                self.assertEqual(
+                    record["function"],
+                    mapping["registered_handler_export_targets"][handler],
+                )
+                self.assertRegex(record["body_sha256"], r"^[0-9a-f]{64}$")
+            numeric_binding_count += len(numeric)
+        self.assertEqual(numeric_binding_count, 70)
+        self.assertEqual(
+            self.contract["ancestry_contract"][
+                "registered_handler_binding_count"
+            ],
+            70,
+        )
 
     def test_factory_pool_profiles_source_bindings_and_segment_diffs_are_closed(self) -> None:
         factory = self.contract["factory_writer_contract"]
@@ -145,7 +178,7 @@ class UniswapV3WriterSemanticsTest(unittest.TestCase):
                 MODULE.canonical_sha256(segment["semantic_contract"]),
             )
 
-    def test_v2_writer_contract_mutations_fail_closed(self) -> None:
+    def test_v3_writer_contract_mutations_fail_closed(self) -> None:
         def pool_tick_zero(contract) -> None:
             contract["factory_writer_contract"]["mapping_bindings"][0][
                 "pool_tick_write"
@@ -205,6 +238,13 @@ class UniswapV3WriterSemanticsTest(unittest.TestCase):
             mapping["registered_handler_export_targets"][handlers[0]] = mapping[
                 "registered_handler_export_targets"
             ][handlers[1]]
+
+        def numeric_export_link_drift(contract) -> None:
+            mapping = contract["mapping_analyses"][0]
+            handler = next(
+                iter(mapping["registered_handler_export_function_indices"])
+            )
+            mapping["registered_handler_export_function_indices"][handler] += 1
 
         def rehashed_segment_threshold_drift(contract) -> None:
             segment = contract["segment_writer_contracts"][0]
@@ -295,6 +335,14 @@ class UniswapV3WriterSemanticsTest(unittest.TestCase):
         def ancestry_metadata_drift(contract) -> None:
             contract["ancestry_contract"]["sha256"] = "0" * 64
 
+        def ancestry_format_version_drift(contract) -> None:
+            contract["ancestry_contract"]["format_version"] = 1
+
+        def ancestry_handler_count_drift(contract) -> None:
+            contract["ancestry_contract"][
+                "registered_handler_binding_count"
+            ] -= 1
+
         def dormant_pool_helper_claim(contract) -> None:
             binding = contract["pool_writer_contract"]["mapping_bindings"][0]
             binding["fee_spacing_evidence"][
@@ -312,6 +360,7 @@ class UniswapV3WriterSemanticsTest(unittest.TestCase):
             missing_segment_diff,
             segment_hash_drift,
             export_retarget,
+            numeric_export_link_drift,
             rehashed_segment_threshold_drift,
             rehashed_segment_identity_drift,
             rehashed_segment_cid_drift,
@@ -319,6 +368,8 @@ class UniswapV3WriterSemanticsTest(unittest.TestCase):
             self_referential_segment_layers,
             fabricated_full_source_tuple,
             ancestry_metadata_drift,
+            ancestry_format_version_drift,
+            ancestry_handler_count_drift,
             dormant_pool_helper_claim,
         ):
             with self.subTest(mutate=mutate.__name__):
@@ -525,6 +576,7 @@ class UniswapV3WriterSemanticsTest(unittest.TestCase):
         _, functions, _, exports = MODULE.parse_wat(wat)
         resolved = MODULE.resolve_handler(functions, exports, "handleSwap")
         self.assertEqual(resolved.name, "retargeted")
+        self.assertEqual(resolved.function_index, 1)
         self.assertNotEqual(resolved.name, "src/mappings/core/handleSwap")
 
     def test_factory_lexical_tail_after_return_is_not_promoted_to_proof(self) -> None:

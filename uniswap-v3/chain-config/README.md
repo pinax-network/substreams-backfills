@@ -55,8 +55,14 @@ byte-identical to the shared build and to the other package. Substreams
 execution-module hashes are recorded separately: they are expected to differ
 because `params` and `initialBlock` are inputs to those hashes.
 
-CI artifacts and their hashes are diagnostic evidence only. This change does
-not freeze a production package.
+CI artifacts and their hashes are diagnostic evidence only. CI now combines
+the raw imported mainnet package and both configured packages into a
+controlled-build candidate manifest. The manifest binds the actual pull-request
+head (or push) commit, repository/import trees, config/overlay/target-schema
+digests, package and embedded-WASM hashes, every module execution hash, and the
+observed toolchain/platform. Its trust boundary remains explicitly false for
+promotion, authoritative Graph reference, physical/PoI parity, and production
+pinning. This does not freeze a production package.
 
 ## Reproduce locally
 
@@ -72,12 +78,44 @@ runtime_dir=$(mktemp -d /tmp/uniswap-v3-configured.XXXXXX)
 Build and pack from that materialized directory. Never apply the overlay in
 place to `uniswap-v3/source/`.
 
+## Fixed-range mainnet comparison
+
+The sibling
+[`mainnet-chain-config-parity-v1.json`](../fixtures/mainnet-chain-config-parity-v1.json)
+profile covers `[12,369,621, 12,370,674)`, including the configured
+position-manager boundary at `12,369,651` and the historical first-mints smoke
+slice at `12,370,624`. The old smoke output was not retained and is range
+selection context only.
+
+`scripts/run-uniswap-v3-mainnet-chain-config-parity.sh` is the exact-revision,
+operator-only execution contract. It builds the raw and configured packages in
+a disposable detached worktree and captures every Ethereum mainnet block hash
+and timestamp in the range before and after both streams. The
+checksum-authorized Substreams v1.20.3 CLI is used only for `pack` and `info`.
+A repository-owned Go 1.26.5 client makes one direct protocol-v3 request per
+package and records every block response, including explicit zero-byte
+`graph_out` payloads. It accepts completion only after all 1,053 sequential
+records and a clean EOF; missing outputs are never reconstructed.
+
+Each invocation sidecar binds its package, exact source revision, source-built
+client identity, sanitized request, endpoint, session, completion clocks, and
+raw stdout/stderr hashes. The verifier cross-checks both streams against the
+unchanged full-range RPC maps and compares exact ordered protobuf bytes. Every
+candidate payload is scanned for all supplied secrets before exclusive
+publication, immutable output paths cannot be reused, and the private evidence
+directory must live outside the repository. These are local provenance records,
+not signed remote attestations. See
+[`PARITY.md`](../PARITY.md) for the invocation and the exact evidence boundary.
+
 ## Evidence boundary
 
-This architecture and its offline/package tests are complete. Issue #12 must
-remain open until the separately controlled gates are complete:
+This architecture, offline verifier, and controlled-build candidate machinery
+are complete. This repository change does not run the live range. Issue #12
+must remain open until the separately controlled gates are complete:
 
 - fixed-range mainnet logical parity against the imported baseline;
+- implementation and authoritative coverage for the currently absent
+  `Collect` and `Flash` entity rows;
 - Base Firehose/reference ranges covering creation, positions, active pools,
   pricing, and aggregate windows;
 - a controlled production build and immutable package/module provenance;

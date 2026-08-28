@@ -8,6 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -39,15 +41,22 @@ jobs:
 
   uniswap-v3-reference:
     runs-on: ubuntu-latest
+    env:
+      SOURCE_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: requirements-ci.txt
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.26.5"
+          cache-dependency-path: scripts/parity-client/go.sum
       - name: Install checksum-pinned validation dependencies
         run: python3 -m pip install --require-hashes -r requirements-ci.txt
       - name: Fetch pinned V3 history mirror
@@ -63,6 +72,23 @@ jobs:
           python3 scripts/build-uniswap-v3-chain-manifests.py --check
           python3 scripts/verify-uniswap-v3-chain-config.py
           python3 -m unittest scripts/tests/test_uniswap_v3_chain_config.py
+          python3 -m unittest scripts/tests/test_uniswap_v3_mainnet_chain_config_parity.py
+          python3 -m unittest scripts/tests/test_uniswap_v3_mainnet_parity_capture.py
+          python3 -m unittest scripts/tests/test_uniswap_v3_mainnet_parity_candidate.py
+          python3 -m unittest scripts/tests/test_uniswap_v3_mainnet_parity_runner.py
+      - name: Test and build the source-pinned protocol-v3 parity client
+        working-directory: scripts/parity-client
+        run: |
+          test "$(go env GOVERSION)" = "go1.26.5"
+          GOTOOLCHAIN=local go mod verify
+          GOTOOLCHAIN=local go test -mod=readonly ./...
+          GOTOOLCHAIN=local go vet -mod=readonly ./...
+          if GOTOOLCHAIN=local go list -mod=readonly -deps ./... | grep -F 'services-control-plane'; then
+            echo "private services-control-plane replacement entered the runtime dependency graph" >&2
+            exit 1
+          fi
+          CGO_ENABLED=0 GOTOOLCHAIN=local go build -mod=readonly -trimpath -buildvcs=false -ldflags=-buildid= -o "$RUNNER_TEMP/uniswap-v3-parity-client" .
+          test "$("$RUNNER_TEMP/uniswap-v3-parity-client" --version)" = "uniswap-v3-mainnet-parity-client-v1 (protocol v3; upstream v1.20.3 cc555bd4e325b65ac3f95dfde4655076f88d4a0a)"
       - uses: dtolnay/rust-toolchain@1.79
         with:
           targets: wasm32-unknown-unknown
@@ -71,6 +97,7 @@ jobs:
           curl -fsSL https://github.com/streamingfast/substreams/releases/download/v1.20.3/substreams_linux_x86_64.tar.gz -o /tmp/substreams.tar.gz
           echo "90c71d04a75490efdf0493254a8563c3555690e622b3c6ade5100c0c773f8675  /tmp/substreams.tar.gz" | sha256sum -c -
           sudo tar -xzf /tmp/substreams.tar.gz -C /usr/local/bin substreams
+          test "$(substreams --version)" = "substreams version 1.20.3 (Commit cc555bd, Commit Date 2026-07-31T14:30:54Z)"
       - name: Test imported source on the host target
         working-directory: uniswap-v3/source
         run: cargo test --locked --target x86_64-unknown-linux-gnu
@@ -105,6 +132,21 @@ jobs:
             --mainnet-spkg "$RUNNER_TEMP/uniswap-v3-mainnet-configured-diagnostic.spkg" \
             --base-spkg "$RUNNER_TEMP/uniswap-v3-base-configured-diagnostic.spkg" \
             --evidence-out "$RUNNER_TEMP/uniswap-v3-configured-diagnostic-evidence.json"
+      - name: Test the parity client against all three real controlled-build packages
+        working-directory: scripts/parity-client
+        env:
+          UNISWAP_V3_PARITY_REAL_PACKAGES: ${{ runner.temp }}/uniswap-v3-diagnostic.spkg:${{ runner.temp }}/uniswap-v3-mainnet-configured-diagnostic.spkg:${{ runner.temp }}/uniswap-v3-base-configured-diagnostic.spkg
+        run: GOTOOLCHAIN=local go test -mod=readonly ./...
+      - name: Record a controlled-build candidate without promoting it
+        run: |
+          python3 scripts/build-uniswap-v3-mainnet-parity-candidate.py \
+            --source-revision "$SOURCE_REVISION" \
+            --profile uniswap-v3/fixtures/mainnet-chain-config-parity-v1.json \
+            --baseline-spkg "$RUNNER_TEMP/uniswap-v3-diagnostic.spkg" \
+            --mainnet-spkg "$RUNNER_TEMP/uniswap-v3-mainnet-configured-diagnostic.spkg" \
+            --base-spkg "$RUNNER_TEMP/uniswap-v3-base-configured-diagnostic.spkg" \
+            --capture-client "$RUNNER_TEMP/uniswap-v3-parity-client" \
+            --output "$RUNNER_TEMP/uniswap-v3-controlled-build-candidate.json"
       - name: Upload V3 diagnostic package
         uses: actions/upload-artifact@v4
         with:
@@ -119,6 +161,18 @@ jobs:
             ${{ runner.temp }}/uniswap-v3-mainnet-configured-diagnostic.spkg
             ${{ runner.temp }}/uniswap-v3-base-configured-diagnostic.spkg
             ${{ runner.temp }}/uniswap-v3-configured-diagnostic-evidence.json
+          if-no-files-found: error
+      - name: Upload the V3 controlled-build candidate bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: uniswap-v3-controlled-build-candidate
+          path: |
+            ${{ runner.temp }}/uniswap-v3-diagnostic.spkg
+            ${{ runner.temp }}/uniswap-v3-mainnet-configured-diagnostic.spkg
+            ${{ runner.temp }}/uniswap-v3-base-configured-diagnostic.spkg
+            ${{ runner.temp }}/uniswap-v3-configured-diagnostic-evidence.json
+            ${{ runner.temp }}/uniswap-v3-controlled-build-candidate.json
+            ${{ runner.temp }}/uniswap-v3-parity-client
           if-no-files-found: error
 
   uniswap-v3-matic-reference:

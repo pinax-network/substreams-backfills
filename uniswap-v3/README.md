@@ -65,6 +65,15 @@ Complete artifact lineage does not prove inherited store-state continuity;
 boundary continuity remains false, and the historical mapping differences
 still forbid replaying the current writer from origin.
 
+The sibling [`segment-writer-matrix/`](segment-writer-matrix/README.md)
+contract projects those exact retained artifacts and writer-v3 observations
+into eight segment-specific handler/entity/field matrices and all 28 pairwise
+artifact, provenance, and reviewed-semantic diffs. It recomputes conservative
+writer reachability for all 80 segment handlers, but does not promote named
+setter candidates to complete field semantics. No entity is yet certified
+required-nonempty, both possible execution models remain ineligible, and all
+boundary, oracle, parity, backfill, and production gates stay false.
+
 The sibling [`oracle/`](oracle/README.md) contract retains deployment-scoped
 current-head responses and the asymmetric graft-boundary discovery result:
 mainnet history was queryable without canonical block hashes, while Base

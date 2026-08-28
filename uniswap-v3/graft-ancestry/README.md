@@ -274,8 +274,10 @@ With `requirements-ci.txt` installed, run:
 python3 scripts/verify-uniswap-v3-graft-ancestry.py
 wasm2wat --version # must print 1.0.35
 python3 scripts/verify-uniswap-v3-writer-semantics.py
+python3 scripts/verify-uniswap-v3-segment-writer-matrix.py
 python3 -m unittest scripts/tests/test_uniswap_v3_graft_ancestry.py
 python3 -m unittest scripts/tests/test_uniswap_v3_writer_semantics.py
+python3 -m unittest scripts/tests/test_uniswap_v3_segment_writer_matrix.py
 ```
 
 `--write-contract` deterministically regenerates `v2/contract.json` from the
@@ -284,6 +286,12 @@ fails if an artifact no longer matches its CID or if manifest reference closure
 changes. The writer verifier's same flag regenerates
 `v2/writer-compatibility.json`, but only after every retained mapping reproduces
 its WAT digest and every writer/profile invariant passes.
+
+The separately versioned
+[`segment-writer-matrix/`](../segment-writer-matrix/README.md) contract binds
+these immutable v2/v3 inputs into segment-specific handler/entity/field
+provenance and pairwise semantic surfaces without changing either source
+contract.
 
 ## Truth boundary
 

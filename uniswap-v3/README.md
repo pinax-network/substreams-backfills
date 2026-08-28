@@ -65,6 +65,20 @@ It is excluded from the WASM target, so the writer WASM and 23-module packages
 remain byte-identical. It does not implement Transaction entity side effects,
 Substreams stores, live calls, `graph_out`, or any promotion gate.
 
+The fourth sibling [`flash-reducer/`](flash-reducer/README.md) overlay models
+only the reviewed Pool Flash state transition on the host. Its ordered
+PoolCreated/Flash envelope and creation-ordinal membership are diagnostic input
+conventions, not Graph Node dynamic-datasource stage order or block-scoped
+activation. It makes no same-path or cross-component order claim. The reducer
+performs the two exact fee-growth calls sequentially and emits one atomic Pool
+update only after both uint256 results decode. Its fatal rollback covers only
+diagnostic Pool/membership state, not VID, PoI, persisted data sources, error
+streams, or physical transactions. It produces no Flash, Transaction, or
+aggregate rows and is excluded from the WASM target, so it cannot change either
+diagnostic package. It binds the Graph Node v0.44 execution-order supplement,
+while all implementation, runtime, continuity, parity, production, and
+backfill gates remain false.
+
 The sibling [`graft-ancestry/`](graft-ancestry/README.md) ancestry v2 contract
 retains all eight mainnet/Base history segments and reuses the exact immutable
 38-object v1 artifact closure. It makes the graft-block ownership rule

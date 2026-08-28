@@ -1,0 +1,183 @@
+{
+  "format_version": 1,
+  "contract_version": "uniswap-v3-flash-reducer/v1",
+  "mode": "host-diagnostic-only",
+  "source_writer_contract": {
+    "path": "uniswap-v3/graft-ancestry/v2/writer-compatibility.json",
+    "contract_version": "uniswap-v3-writer-compatibility/v3",
+    "sha256": "259481724561d5aa725c17f90b5a19ea93ad6f7cd6074cf2cb8a8661c39f81c4"
+  },
+  "source_segment_profiles": {
+    "path": "uniswap-v3/writer-runtime/segment-profiles-v1.json",
+    "contract_version": "uniswap-v3-writer-runtime-segment-profiles/v1",
+    "sha256": "2b6635c061a7a0bfce39430c71c41dacc1567f095fe41134e890a697aa27f823"
+  },
+  "source_writer_runtime": {
+    "path": "uniswap-v3/writer-runtime/contract-v1.json",
+    "contract_version": "uniswap-v3-writer-runtime/v1",
+    "sha256": "765806bf19fca7695ef4d97f557593e4f791759589fe55c20f18c6523a5d07ca",
+    "writer_descriptor_sha256": "22b899f9eeffc8dcfb608eea7ab93884a1756897aba62dc7107507c50a4ac3f0"
+  },
+  "source_execution_order_contract": {
+    "path": "uniswap-v3/execution-order/v1/contract.json",
+    "contract_version": "uniswap-v3-execution-order/v1",
+    "raw_sha256": "241e970cfcec4d76610b29a10141d3bff2512d80454a6308594f3db23621cde2"
+  },
+  "network_contracts": [
+    {
+      "network": "mainnet",
+      "factory": "1f98431c8ad98523631ae4a59f267346ea31f984",
+      "runtime_start_block": 12369621
+    },
+    {
+      "network": "base",
+      "factory": "33128a8fc17869897dce68ed026d694621f6fdfd",
+      "runtime_start_block": 1371679
+    }
+  ],
+  "execution_contract": {
+    "event_order": "diagnostic input convention: ordinal and block_log_index strictly increase within the supplied PoolCreated/Flash envelope",
+    "block_context": "immutable network, number, and optional hash; number must match every ordered event",
+    "producer_corruption": "reject before event execution and before applying segment nonfatal policy",
+    "membership": "diagnostic creation-ordinal input convention: an earlier supplied PoolCreated marks membership for a later supplied Flash; this does not model Graph Node block-scoped activation",
+    "graph_node_order_scope": "does not model Graph Node dynamic-datasource stage order, breadth-first whole-block replay, or block-scoped activation; no same-path or cross-component order claim",
+    "factory_rejected_pool": "8fe8d9bb8eeba3ed688069c3d6b556c9ca258248",
+    "pool_load": "load Pool by the Flash event address from diagnostic envelope-current reducer state",
+    "call_scope": "post-block state at the exact block hash when present or block number otherwise; never log-ordinal state",
+    "call_cache": "none; every active Flash attempts its own fee0 then fee1 calls",
+    "fee_growth_0_calldata": "f3058399",
+    "fee_growth_1_calldata": "46141319",
+    "call_order": "feeGrowthGlobal0X128 first; only after success feeGrowthGlobal1X128",
+    "abi_decode": "exactly one 32-byte big-endian uint256 return value",
+    "atomicity": "set both Pool fee-growth fields and save one Pool update only after both calls decode",
+    "missing_pool": "diagnostic reducer error before either contract call",
+    "first_call_failure": "stop the diagnostic Flash reduction; do not attempt fee1; emit no Pool update",
+    "second_call_failure": "both calls attempted; discard fee0 scratch; emit no Pool update",
+    "fatal_error": "discard diagnostic Pool and membership changes from this reducer block and stop; excludes Graph Node VID, PoI, persisted-data-source, deterministic-error-stream, and physical transaction semantics",
+    "nonfatal_error": "discard only the failing Flash scratch and continue with later events in the diagnostic envelope",
+    "event_fields": "sender, recipient, amount0, amount1, paid0, and paid1 are decoded upstream and ignored",
+    "flash_specific_guards": [],
+    "inapplicable_guards": [
+      "npm block 14317993",
+      "npm excluded pool 8fe8d9bb8eeba3ed688069c3d6b556c9ca258248",
+      "swap-only excluded pool 9663f2ca0454accad3e094448ea6f77443880454"
+    ],
+    "emitted_row_types": [
+      "Pool"
+    ],
+    "synthetic_row_types": []
+  },
+  "segments": [
+    {
+      "network": "mainnet",
+      "start_block_inclusive": 12369621,
+      "end_block_inclusive": 13450880,
+      "deployment": "Qme66ZNMxSdCQKzaDuvS381whCVYCQjf637sGZCqJHAWHB",
+      "segment_id": "mainnet:Qme66ZNMxSdCQKzaDuvS381whCVYCQjf637sGZCqJHAWHB",
+      "semantic_contract_sha256": "4839ecce0391345e412ccde53a12d6d243cafd3d6a99e9072f8f1d2020b802ff",
+      "pool_mapping_cid": "QmWuomVAQCdEXdCRavcsmRz4BNqPx2nppqe8S6AXid66xw",
+      "pool_profile_id": "legacy-mainnet-root",
+      "nonfatal_errors": false
+    },
+    {
+      "network": "mainnet",
+      "start_block_inclusive": 13450881,
+      "end_block_inclusive": 13498328,
+      "deployment": "QmRvEgUpbjVV326W2zPvxWimzQwcDREfjejUdFn2L92qry",
+      "segment_id": "mainnet:QmRvEgUpbjVV326W2zPvxWimzQwcDREfjejUdFn2L92qry",
+      "semantic_contract_sha256": "b344c20468dc56e3a6a4d32cf785de598f816270edbad4e5a7e979d6d5428a3c",
+      "pool_mapping_cid": "QmYQRHstsSS7mntgKNSot74qN2dpuyFEtd1DddPmnqWC65",
+      "pool_profile_id": "legacy-mainnet-qmrv",
+      "nonfatal_errors": false
+    },
+    {
+      "network": "mainnet",
+      "start_block_inclusive": 13498329,
+      "end_block_inclusive": 13591197,
+      "deployment": "QmS13421u6qsbVdBCrZhdRaZw2wH67drwF3urmueJvvJ5P",
+      "segment_id": "mainnet:QmS13421u6qsbVdBCrZhdRaZw2wH67drwF3urmueJvvJ5P",
+      "semantic_contract_sha256": "cc0894a0822321f296585430bb93f705903494b832e56a20b858994c6f7052d0",
+      "pool_mapping_cid": "QmeNbEMUnaaPpmpLaUVBJfFWRCN5SxG8xPG5eDNoXEGdbW",
+      "pool_profile_id": "legacy-mainnet-stable",
+      "nonfatal_errors": false
+    },
+    {
+      "network": "mainnet",
+      "start_block_inclusive": 13591198,
+      "end_block_inclusive": 13605860,
+      "deployment": "QmSLHXCZBNKVtJRrWiEAF1yRQNPqAFptBsAcLdXQPsubSX",
+      "segment_id": "mainnet:QmSLHXCZBNKVtJRrWiEAF1yRQNPqAFptBsAcLdXQPsubSX",
+      "semantic_contract_sha256": "9b890298b85194fb05123b7a0c5836feb63d2224c845f6714183d8588882d85a",
+      "pool_mapping_cid": "Qmaydei2ScE7JptBTPgSfkf6PFxEZpLn39gEXYqrBZhsv8",
+      "pool_profile_id": "legacy-mainnet-stable-fee-tier-1",
+      "nonfatal_errors": false
+    },
+    {
+      "network": "mainnet",
+      "start_block_inclusive": 13605861,
+      "end_block_inclusive": 19470000,
+      "deployment": "QmZeCuoZeadgHkGwLwMeguyqUKz1WPWQYKcKyMCeQqGhsF",
+      "segment_id": "mainnet:QmZeCuoZeadgHkGwLwMeguyqUKz1WPWQYKcKyMCeQqGhsF",
+      "semantic_contract_sha256": "83e4269b0582acfec8d1f868c59c6a71e362554ee41ecab4a7ccfbab87888815",
+      "pool_mapping_cid": "QmadCQv7VPgNXhQTNkcDyzmiWZpWexynUH4XuuaMrsAbJY",
+      "pool_profile_id": "legacy-mainnet-stable-fee-tier-100",
+      "nonfatal_errors": false
+    },
+    {
+      "network": "mainnet",
+      "start_block_inclusive": 19470001,
+      "end_block_inclusive": null,
+      "deployment": "QmTZ8ejXJxRo7vDBS4uwqBeGoxLSWbhaA7oXa1RvxunLy7",
+      "segment_id": "mainnet:QmTZ8ejXJxRo7vDBS4uwqBeGoxLSWbhaA7oXa1RvxunLy7",
+      "semantic_contract_sha256": "0b2a208cc7ff5cbced29818ddb4fddabfa236393fc289686a87a48e8c309b754",
+      "pool_mapping_cid": "QmSaGgPnyhStviGQSGTokQYRgVqLFNvnGWfnv8tSfuvpWD",
+      "pool_profile_id": "modern-mainnet",
+      "nonfatal_errors": true
+    },
+    {
+      "network": "base",
+      "start_block_inclusive": 1371679,
+      "end_block_inclusive": 19852000,
+      "deployment": "QmPWDTWRfS8XewMJhxXoQiZX6RkrUMYH7BFnnB846v6wzR",
+      "segment_id": "base:QmPWDTWRfS8XewMJhxXoQiZX6RkrUMYH7BFnnB846v6wzR",
+      "semantic_contract_sha256": "03d3fdaeecacfbb4aae325a1021117ddc6c3baf48d9589af69d0f3db7cdfab20",
+      "pool_mapping_cid": "QmZPiDeH1j95mozzb5AjKCHn6zgpnhMu77kNAitPbi4Vt3",
+      "pool_profile_id": "legacy-base-root",
+      "nonfatal_errors": true
+    },
+    {
+      "network": "base",
+      "start_block_inclusive": 19852001,
+      "end_block_inclusive": null,
+      "deployment": "Qmb4VUcAY9LsVgeCuCCMs7X1XrkbRcaiuAbSK8SqhmsAfP",
+      "segment_id": "base:Qmb4VUcAY9LsVgeCuCCMs7X1XrkbRcaiuAbSK8SqhmsAfP",
+      "semantic_contract_sha256": "5dd72427adcb71c3e4fd249dc4371005fb372875f236fb90439adf5fe9d7398b",
+      "pool_mapping_cid": "QmPZCHE1URf4oviX7Tbrkw3aMENo1qAeEGa1AS2gMumG7P",
+      "pool_profile_id": "modern-base",
+      "nonfatal_errors": true
+    }
+  ],
+  "truth_boundary": {
+    "backfill_ready": false,
+    "boundary_state_continuity_complete": false,
+    "combined_handler_order_implemented": false,
+    "cross_component_order_proven": false,
+    "diagnostic_only": true,
+    "dynamic_datasource_stage_order_implemented": false,
+    "full_pool_handler_semantics": false,
+    "graph_node_execution_order_supplement_bound": true,
+    "graph_out_replaced": false,
+    "live_rpc_added": false,
+    "logical_oracle_complete": false,
+    "physical_parity_complete": false,
+    "poi_parity_complete": false,
+    "production_ready": false,
+    "rpc_trigger_binding_complete": false,
+    "runtime_consumes_execution_order_contract": false,
+    "runtime_population_complete": false,
+    "same_path_order_machine_proven": false,
+    "stores_added": false,
+    "substreams_handler_added": false,
+    "target_runtime_identity_bound": false
+  }
+}

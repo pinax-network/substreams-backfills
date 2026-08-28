@@ -173,6 +173,131 @@ class UniswapV3WriterSemanticsTest(unittest.TestCase):
             with self.assertRaisesRegex(MODULE.VerificationError, "indirect"):
                 MODULE.verify(REPOSITORY, Path(temporary) / "writer-compatibility.json")
 
+    def test_call_indirect_writer_is_in_the_conservative_handler_closure(self) -> None:
+        memory = bytearray(65_536)
+        pointer = 64
+        value = "Position"
+        encoded = value.encode("utf-16le")
+        struct.pack_into("<I", memory, pointer, len(value))
+        memory[pointer + 4 : pointer + 4 + len(encoded)] = encoded
+        handler = MODULE.WatFunction(
+            "synthetic/handleCollect",
+            1,
+            (
+                "  (func $synthetic/handleCollect (param $p0 i32)",
+                "    i32.const 1",
+                "    call_indirect $0 (type $t0))",
+            ),
+        )
+        writer = MODULE.WatFunction(
+            "synthetic/table-writer",
+            4,
+            (
+                "  (func $synthetic/table-writer (param $p0 i32) (param $p1 i32)",
+                f"    i32.const {pointer}",
+                "    local.get $p0",
+                "    call $~lib/@graphprotocol/graph-ts/index/Value#toString",
+                "    local.get $p1",
+                f"    call ${MODULE.STORE_SET_CALL})",
+            ),
+        )
+        functions = {handler.name: handler, writer.name: writer}
+        analysis = {
+            "store_set_callsites": MODULE.extract_store_set_callsites(
+                functions, memory
+            ),
+            "call_indirect_table_targets": [writer.name],
+        }
+        reachability = MODULE.critical_reachability(
+            analysis, functions, "handleCollect"
+        )
+        self.assertEqual(reachability["reachable_function_count"], 2)
+        self.assertEqual(
+            reachability["conservative_call_indirect_table_targets"],
+            [writer.name],
+        )
+        self.assertEqual(
+            reachability["reachable_store_set_targets"], ["Position"]
+        )
+
+    def test_indirect_table_imports_and_mutation_are_rejected(self) -> None:
+        imported = '(import "env" "table" (table $0 2 funcref))'
+        with self.assertRaisesRegex(MODULE.VerificationError, "imports"):
+            MODULE.verify_closed_indirect_table(
+                imported,
+                1,
+                ("synthetic/table-target",),
+                "synthetic",
+            )
+
+        for instruction in MODULE.TABLE_MUTATION_INSTRUCTIONS:
+            with self.subTest(instruction=instruction):
+                wat = f"  (table $0 2 funcref)\n    {instruction}"
+                with self.assertRaisesRegex(MODULE.VerificationError, "mutable"):
+                    MODULE.verify_closed_indirect_table(
+                        wat,
+                        1,
+                        ("synthetic/table-target",),
+                        "synthetic",
+                    )
+
+        with self.assertRaisesRegex(MODULE.VerificationError, "call_ref"):
+            MODULE.verify_closed_indirect_table(
+                "    call_ref $t0",
+                0,
+                (),
+                "synthetic",
+            )
+
+    def test_historical_guard_requires_block_load_comparison_and_early_return(self) -> None:
+        old_prefix = [
+            "    local.get $p0",
+            "    i32.load offset=16",
+            "    i32.load offset=28",
+            f"    i32.const {MODULE.HISTORICAL_GUARD_BLOCK}",
+            "    call $~lib/@graphprotocol/graph-ts/index/ByteArray.fromI32",
+            "    call $~lib/@graphprotocol/graph-ts/index/BigInt#equals",
+            "    if $I0",
+            "      return",
+            "    end",
+        ]
+
+        def function(prefix: list[str]) -> object:
+            return MODULE.WatFunction(
+                "synthetic/handleIncreaseLiquidity",
+                1,
+                tuple(
+                    [
+                        "  (func $synthetic/handleIncreaseLiquidity (param $p0 i32)",
+                        "    (local $l1 i32)",
+                    ]
+                    + prefix
+                    + ["    nop)"]
+                ),
+            )
+
+        proof = MODULE.historical_guard_proof(function(old_prefix))
+        self.assertIsNotNone(proof)
+        assert proof is not None
+        self.assertEqual(proof["block_number_load_offset"], 28)
+        self.assertTrue(proof["conditional_early_return"])
+
+        broken_prefixes = []
+        for index, replacement in (
+            (2, "    i32.load offset=24"),
+            (5, "    drop"),
+            (7, "      nop"),
+        ):
+            candidate = old_prefix.copy()
+            candidate[index] = replacement
+            broken_prefixes.append(candidate)
+        for prefix in broken_prefixes:
+            with self.subTest(prefix=prefix):
+                with self.assertRaisesRegex(
+                    MODULE.VerificationError, "historical guard"
+                ):
+                    MODULE.historical_guard_proof(function(prefix))
+
     def test_collect_or_flash_reachability_drift_is_rejected(self) -> None:
         for collection, reachability_key in (
             ("npm_semantic_profiles", "collect_reachability"),

@@ -74,7 +74,26 @@ GRAPH_NODE_FILES = (
         "chain/ethereum/src/trigger.rs",
         "6b31d65fa9c0289d76a5bb7d812965e51e26054bb4fad417aa641843c531700f",
         ["364-403"],
-        "Ethereum log triggers are ordered by global log index",
+        "EthereumTrigger ordering compares log triggers by global log index",
+    ),
+    (
+        "graph/src/blockchain/block_stream.rs",
+        "8e4004884534c18054cb7ccd30b9eb675cbc956a3f651041e546ccca31fb0933",
+        ["248-255", "293-296"],
+        "block trigger data is sorted before execution and re-sorted after extension",
+    ),
+    (
+        "core/src/subgraph/inputs.rs",
+        "22a2ee4a8ef0b7ef4cca52115b505c41ff5ee917621645fa48e0971e712ff278",
+        ["79-85"],
+        "the nonFatalErrors feature selects nonfatal instead of fatal deterministic-error policy",
+    ),
+    (
+        "core/src/subgraph/runner/mod.rs",
+        "bb5623ed45b51ad99c783069ea4344c08a69e826016951a8b6282f3685e4b026",
+        ["721-787", "726-736", "755-768", "773-787"],
+        "fatal errors retain only proof-of-indexing changes then stop, while "
+        "nonfatal mode preserves successful entity modifications",
     ),
 )
 
@@ -251,9 +270,26 @@ MEMORY_RE = re.compile(r"^  \(memory \$\S+ (\d+)(?: \d+)?\)$")
 FUNCTION_RE = re.compile(r"^  \(func \$([^\s]+)")
 I32_CONST_RE = re.compile(r"^\s*i32\.const (-?\d+)$")
 CALL_RE = re.compile(r"\bcall \$([^\s\)]+)")
+ELEMENT_RE = re.compile(
+    r"^\s*\(elem(?:\s+\$[^\s\)]+)?\s+\(i32\.const\s+-?\d+\)\s+func"
+    r"((?:\s+\$[^\s\)]+)+)\)$"
+)
+LOCAL_TABLE_RE = re.compile(
+    r"^\s*\(table\s+\$[^\s\)]+\s+\d+(?:\s+\d+)?\s+funcref\)$"
+)
+TABLE_MUTATION_INSTRUCTIONS = (
+    "table.set",
+    "table.init",
+    "table.fill",
+    "table.grow",
+    "table.copy",
+    "elem.drop",
+)
 
 
-def parse_wat(wat: str) -> tuple[bytearray, dict[str, WatFunction]]:
+def parse_wat(
+    wat: str,
+) -> tuple[bytearray, dict[str, WatFunction], tuple[str, ...]]:
     lines = wat.splitlines()
     data_segments: list[tuple[int, bytes]] = []
     for line in lines:
@@ -296,7 +332,27 @@ def parse_wat(wat: str) -> tuple[bytearray, dict[str, WatFunction]]:
         require(name not in functions, f"duplicate WAT function name {name}")
         functions[name] = WatFunction(name, start + 1, tuple(body))
     require(functions, "WAT contains no named functions")
-    return memory, functions
+
+    indirect_targets: list[str] = []
+    for line in lines:
+        if not line.lstrip().startswith("(elem"):
+            require("ref.func" not in line, "unsupported ref.func table initializer")
+            continue
+        match = ELEMENT_RE.fullmatch(line)
+        require(match is not None, f"unsupported WAT element segment: {line.strip()}")
+        indirect_targets.extend(
+            token.removeprefix("$") for token in match.group(1).split()
+        )
+    require(
+        len(indirect_targets) == len(set(indirect_targets)),
+        "duplicate indirect-call table target",
+    )
+    missing_targets = sorted(set(indirect_targets).difference(functions))
+    require(
+        not missing_targets,
+        f"indirect-call table targets do not resolve to local functions: {missing_targets}",
+    )
+    return memory, functions, tuple(sorted(indirect_targets))
 
 
 def decode_assemblyscript_string(memory: bytearray, pointer: int) -> str | None:
@@ -448,8 +504,62 @@ def require_fixed_callsites(callsites: list[dict[str, object]], field: str) -> N
     require(not dynamic, f"{field} has dynamic store.set targets: {dynamic}")
 
 
+def verify_closed_indirect_table(
+    wat: str,
+    call_indirect_count: int,
+    indirect_targets: tuple[str, ...],
+    field: str,
+) -> dict[str, int]:
+    wat_lines = wat.splitlines()
+    imported_table_count = sum(
+        line.lstrip().startswith("(import ") and "(table " in line
+        for line in wat_lines
+    )
+    exported_table_count = sum(
+        line.lstrip().startswith("(export ") and "(table " in line
+        for line in wat_lines
+    )
+    local_table_count = sum(
+        LOCAL_TABLE_RE.fullmatch(line) is not None for line in wat_lines
+    )
+    table_mutation_count = sum(
+        wat.count(instruction) for instruction in TABLE_MUTATION_INSTRUCTIONS
+    )
+    call_ref_count = wat.count("call_ref")
+    require(call_ref_count == 0, f"{field} uses unsupported call_ref dispatch")
+    require(
+        call_indirect_count == 0 or imported_table_count == 0,
+        f"{field} imports an indirect-call table",
+    )
+    require(
+        call_indirect_count == 0 or exported_table_count == 0,
+        f"{field} exports an indirect-call table",
+    )
+    require(
+        call_indirect_count == 0 or table_mutation_count == 0,
+        f"{field} has mutable indirect-call table state",
+    )
+    require(
+        call_indirect_count == 0 or indirect_targets,
+        f"{field} has call_indirect without a closed local table target inventory",
+    )
+    require(
+        call_indirect_count == 0 or local_table_count == 1,
+        f"{field} indirect-call target inventory is not bound to one local table",
+    )
+    return {
+        "call_indirect_local_table_count": local_table_count,
+        "call_indirect_imported_table_count": imported_table_count,
+        "call_indirect_exported_table_count": exported_table_count,
+        "call_indirect_table_mutation_instruction_count": table_mutation_count,
+        "unsupported_call_ref_instruction_count": call_ref_count,
+    }
+
+
 def reachable_functions(
-    functions: dict[str, WatFunction], root: WatFunction
+    functions: dict[str, WatFunction],
+    root: WatFunction,
+    indirect_targets: tuple[str, ...] = (),
 ) -> set[str]:
     seen: set[str] = set()
     pending = [root.name]
@@ -461,7 +571,84 @@ def reachable_functions(
         pending.extend(
             call for call in function_calls(functions[name]) if call in functions
         )
+        if any("call_indirect" in line for line in functions[name].lines):
+            pending.extend(indirect_targets)
     return seen
+
+
+def historical_guard_proof(function: WatFunction) -> dict[str, object] | None:
+    instructions = [
+        line.strip()
+        for line in function.lines[1:]
+        if not line.strip().startswith("(local ")
+    ]
+    guard_instruction = f"i32.const {HISTORICAL_GUARD_BLOCK}"
+    guard_count = instructions.count(guard_instruction)
+    if guard_count == 0:
+        return None
+    require(guard_count == 1, f"{function.name} historical guard literal count drift")
+    require(
+        "(param $p0 i32)" in function.lines[0],
+        f"{function.name} historical guard event parameter drift",
+    )
+    shared_prefix = [
+        "local.get $p0",
+        "i32.load offset=16",
+        "i32.load offset=28",
+        guard_instruction,
+    ]
+    models = (
+        (
+            "old-codegen-byte-array-equality",
+            [
+                "call $~lib/@graphprotocol/graph-ts/index/ByteArray.fromI32",
+                "call $~lib/@graphprotocol/graph-ts/index/BigInt#equals",
+            ],
+            [],
+        ),
+        (
+            "modern-big-int-compare-equals-zero",
+            [
+                "call $~lib/@graphprotocol/graph-ts/common/numbers/BigInt.fromI32",
+                "call $~lib/@graphprotocol/graph-ts/common/numbers/BigInt.compare",
+            ],
+            ["i32.eqz"],
+        ),
+    )
+    for comparison_model, comparison_calls, condition_instructions in models:
+        prefix = shared_prefix + comparison_calls + condition_instructions
+        if instructions[: len(prefix)] != prefix:
+            continue
+        tail = instructions[len(prefix) : len(prefix) + 3]
+        require(
+            len(tail) == 3
+            and re.fullmatch(r"if \$[^\s]+", tail[0]) is not None
+            and tail[1:] == ["return", "end"],
+            f"{function.name} historical guard is not a conditional early return",
+        )
+        proved_prefix = prefix + tail
+        return {
+            "handler_function": function.name,
+            "event_parameter": "$p0",
+            "event_block_pointer_load_offset": 16,
+            "block_number_load_offset": 28,
+            "block": HISTORICAL_GUARD_BLOCK,
+            "comparison_model": comparison_model,
+            "comparison_calls": [
+                item.removeprefix("call $") for item in comparison_calls
+            ],
+            "condition_instructions": condition_instructions,
+            "conditional_instruction": tail[0],
+            "conditional_early_return": True,
+            "instruction_prefix_sha256": sha256_bytes(
+                ("\n".join(proved_prefix) + "\n").encode("utf-8")
+            ),
+            "wat_start_line": function.start_line,
+        }
+    raise VerificationError(
+        f"{function.name} historical guard literal is not bound to "
+        "event.block.number equality and a conditional early return"
+    )
 
 
 def handler_record(function: WatFunction, memory: bytearray) -> dict[str, object]:
@@ -502,7 +689,7 @@ def analyze_mapping(
         f"WAT SHA-256 drift for {cid}",
     )
     wat = wat_payload.decode("utf-8")
-    memory, functions = parse_wat(wat)
+    memory, functions, indirect_targets = parse_wat(wat)
     callsites = extract_store_set_callsites(functions, memory)
     require_fixed_callsites(callsites, str(cid))
     store_import_marker = f'(import "index" "store.set" (func ${STORE_SET_CALL}'
@@ -515,6 +702,28 @@ def analyze_mapping(
         and STORE_SET_CALL in line
     )
     require(indirect_store_references == 0, f"{cid} has an indirect store.set reference")
+    call_indirect_count = sum(
+        line.count("call_indirect")
+        for function in functions.values()
+        for line in function.lines
+    )
+    table_evidence = verify_closed_indirect_table(
+        wat,
+        call_indirect_count,
+        indirect_targets,
+        str(cid),
+    )
+
+    indirect_target_closure: set[str] = set()
+    for target in indirect_targets:
+        indirect_target_closure.update(
+            reachable_functions(functions, functions[target], indirect_targets)
+        )
+    indirect_target_sites = [
+        item
+        for item in callsites
+        if item["function"] in indirect_target_closure
+    ]
 
     handlers: dict[str, object] = {}
     for handler in mapping["registered_handler_exports"]:
@@ -536,7 +745,19 @@ def analyze_mapping(
             "fixed_store_set_targets": targets,
             "dynamic_store_set_target_count": 0,
             "indirect_store_set_reference_count": indirect_store_references,
-            "call_indirect_instruction_count": wat.count("call_indirect"),
+            "call_indirect_instruction_count": call_indirect_count,
+            "call_indirect_table_target_count": len(indirect_targets),
+            "call_indirect_table_targets": list(indirect_targets),
+            **table_evidence,
+            "call_indirect_target_closure_function_count": len(
+                indirect_target_closure
+            ),
+            "call_indirect_target_closure_store_set_site_ids": [
+                item["site_id"] for item in indirect_target_sites
+            ],
+            "call_indirect_target_closure_store_set_targets": sorted(
+                {item["target"] for item in indirect_target_sites}
+            ),
         },
         functions,
         memory,
@@ -549,7 +770,13 @@ def critical_reachability(
     handler_name: str,
 ) -> dict[str, object]:
     handler = resolve_handler(functions, handler_name)
-    reachable = reachable_functions(functions, handler)
+    indirect_targets = tuple(analysis["call_indirect_table_targets"])
+    reachable = reachable_functions(functions, handler, indirect_targets)
+    reachable_call_indirect_count = sum(
+        line.count("call_indirect")
+        for name in reachable
+        for line in functions[name].lines
+    )
     sites = [
         item
         for item in analysis["store_set_callsites"]
@@ -559,6 +786,10 @@ def critical_reachability(
         "handler": handler_name,
         "handler_function": handler.name,
         "reachable_function_count": len(reachable),
+        "reachable_call_indirect_instruction_count": reachable_call_indirect_count,
+        "conservative_call_indirect_table_targets": (
+            list(indirect_targets) if reachable_call_indirect_count else []
+        ),
         "reachable_store_set_site_ids": [item["site_id"] for item in sites],
         "reachable_store_set_targets": sorted({item["target"] for item in sites}),
         "dynamic_reachable_store_set_target_count": sum(
@@ -567,20 +798,18 @@ def critical_reachability(
     }
 
 
-def observed_guard_handlers(
+def observed_guard_proofs(
     mapping_cid: str,
     functions: dict[str, WatFunction],
-) -> list[str]:
+) -> list[dict[str, object]]:
     del mapping_cid
-    result = []
+    result: list[dict[str, object]] = []
     for handler in NPM_HANDLERS:
         function = resolve_handler(functions, handler)
-        if any(
-            line.strip() == f"i32.const {HISTORICAL_GUARD_BLOCK}"
-            for line in function.lines
-        ):
-            result.append(handler)
-    return sorted(result)
+        proof = historical_guard_proof(function)
+        if proof is not None:
+            result.append({"handler": handler, **proof})
+    return sorted(result, key=lambda item: str(item["handler"]))
 
 
 def verify_npm_profile_evidence(
@@ -591,12 +820,17 @@ def verify_npm_profile_evidence(
     memory: bytearray,
 ) -> dict[str, object]:
     expected = PROFILE_DEFINITIONS[profile_id]
-    guards = observed_guard_handlers(cid, functions)
+    guard_proofs = observed_guard_proofs(cid, functions)
+    guards = [str(item["handler"]) for item in guard_proofs]
     require(guards == expected["block_guard_handlers"], f"{cid} block guard profile drift")
     pool_guards = []
     for handler in NPM_HANDLERS:
         handler_function = resolve_handler(functions, handler)
-        reachable = reachable_functions(functions, handler_function)
+        reachable = reachable_functions(
+            functions,
+            handler_function,
+            tuple(analysis["call_indirect_table_targets"]),
+        )
         if any(
             EXCLUDED_POOL in function_static_strings(functions[name], memory)
             for name in reachable
@@ -708,6 +942,7 @@ def verify_npm_profile_evidence(
             "increase_decrease_token_missing_policy"
         ],
         "block_guard_handlers": guards,
+        "block_guard_proofs": guard_proofs,
         "excluded_pool": EXCLUDED_POOL,
         "excluded_pool_handlers": pool_guards,
         "fee_refresh_handlers": [
@@ -1042,6 +1277,7 @@ def build_contract(root: Path, wasm2wat: Path | None = None) -> dict[str, object
                     "historical_guard": {
                         "block": HISTORICAL_GUARD_BLOCK,
                         "present_in_mapping": guard_present,
+                        "handler_proofs": profile["block_guard_proofs"],
                         "block_in_segment": block_in_segment,
                         "effective_in_segment": guard_present and block_in_segment,
                     },
@@ -1200,6 +1436,8 @@ def validate_internal_contract(contract: object) -> dict[str, object]:
 
     mappings = contract["mapping_analyses"]
     require(isinstance(mappings, list) and len(mappings) == 20, "writer mapping analyses malformed")
+    mapping_by_cid = {mapping["cid"]: mapping for mapping in mappings}
+    require(len(mapping_by_cid) == 20, "writer mapping analysis CID closure drift")
     for mapping in mappings:
         require(mapping["store_set_import_count"] == 1, "writer store.set import drift")
         require(
@@ -1214,6 +1452,43 @@ def validate_internal_contract(contract: object) -> dict[str, object]:
         require(
             mapping["indirect_store_set_reference_count"] == 0,
             "writer per-mapping indirect target detected",
+        )
+        require(
+            mapping["call_indirect_table_target_count"]
+            == len(mapping["call_indirect_table_targets"]),
+            "writer indirect-call table target count drift",
+        )
+        require(
+            mapping["unsupported_call_ref_instruction_count"] == 0,
+            "writer unsupported call_ref dispatch detected",
+        )
+        require(
+            mapping["call_indirect_instruction_count"] == 0
+            or (
+                mapping["call_indirect_imported_table_count"] == 0
+                and mapping["call_indirect_exported_table_count"] == 0
+            ),
+            "writer indirect-call table ownership drift",
+        )
+        require(
+            mapping["call_indirect_instruction_count"] == 0
+            or mapping["call_indirect_table_mutation_instruction_count"] == 0,
+            "writer mutable indirect-call table detected",
+        )
+        require(
+            mapping["call_indirect_instruction_count"] == 0
+            or mapping["call_indirect_table_targets"],
+            "writer indirect-call target closure is unproved",
+        )
+        require(
+            mapping["call_indirect_instruction_count"] == 0
+            or mapping["call_indirect_local_table_count"] == 1,
+            "writer indirect-call local table closure drift",
+        )
+        require(
+            mapping["call_indirect_target_closure_store_set_site_ids"] == []
+            and mapping["call_indirect_target_closure_store_set_targets"] == [],
+            "writer indirect-call table target reaches a store writer",
         )
     all_sites = [site for mapping in mappings for site in mapping["store_set_callsites"]]
     require(len(all_sites) == 162, "writer retained callsite count drift")
@@ -1233,6 +1508,7 @@ def validate_internal_contract(contract: object) -> dict[str, object]:
     require(len(profiles) == 5, "writer semantic profile count drift")
     require(len(contract["segments"]) == 8, "writer segment count drift")
     profile_ids = {item["profile_id"] for item in profiles}
+    profile_evidence_by_mapping: dict[str, dict[str, object]] = {}
     require(profile_ids == set(PROFILE_DEFINITIONS), "writer semantic profile identity drift")
     for profile in profiles:
         profile_id = profile["profile_id"]
@@ -1254,7 +1530,33 @@ def validate_internal_contract(contract: object) -> dict[str, object]:
             "writer semantic profile overclaim",
         )
         for evidence in profile["mapping_evidence"]:
+            profile_evidence_by_mapping[evidence["mapping_cid"]] = evidence
+            proofs = evidence["block_guard_proofs"]
+            require(
+                evidence["block_guard_handlers"]
+                == [item["handler"] for item in proofs],
+                "writer historical guard proof inventory drift",
+            )
+            for proof in proofs:
+                require(
+                    proof["block"] == HISTORICAL_GUARD_BLOCK
+                    and proof["event_parameter"] == "$p0"
+                    and proof["event_block_pointer_load_offset"] == 16
+                    and proof["block_number_load_offset"] == 28
+                    and proof["conditional_early_return"] is True,
+                    "writer historical guard effectiveness is unproved",
+                )
             reachability = evidence["collect_reachability"]
+            analysis = mapping_by_cid[evidence["mapping_cid"]]
+            require(
+                reachability["conservative_call_indirect_table_targets"]
+                == (
+                    analysis["call_indirect_table_targets"]
+                    if reachability["reachable_call_indirect_instruction_count"]
+                    else []
+                ),
+                "writer Collect indirect-call closure drift",
+            )
             require(
                 reachability["reachable_store_set_targets"]
                 == ["Position", "PositionSnapshot", "Transaction"],
@@ -1274,6 +1576,16 @@ def validate_internal_contract(contract: object) -> dict[str, object]:
     )
     for evidence in contract["pool_flash_evidence"]:
         reachability = evidence["reachable_writers"]
+        analysis = mapping_by_cid[evidence["mapping_cid"]]
+        require(
+            reachability["conservative_call_indirect_table_targets"]
+            == (
+                analysis["call_indirect_table_targets"]
+                if reachability["reachable_call_indirect_instruction_count"]
+                else []
+            ),
+            "writer Flash indirect-call closure drift",
+        )
         require(
             reachability["reachable_store_set_targets"] == ["Pool"],
             "writer Flash reachability drift",
@@ -1306,6 +1618,14 @@ def validate_internal_contract(contract: object) -> dict[str, object]:
         )
         guard = segment["historical_guard"]
         require(guard["block"] == HISTORICAL_GUARD_BLOCK, "writer guard block drift")
+        expected_guard_proofs = profile_evidence_by_mapping[segment["npm_mapping_cid"]][
+            "block_guard_proofs"
+        ]
+        require(
+            guard["handler_proofs"] == expected_guard_proofs
+            and guard["present_in_mapping"] is bool(expected_guard_proofs),
+            "writer segment historical guard proof drift",
+        )
         require(
             guard["effective_in_segment"]
             is (guard["present_in_mapping"] and guard["block_in_segment"]),

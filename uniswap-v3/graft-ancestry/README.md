@@ -47,6 +47,14 @@ zero dynamic or indirect targets. The WAT output SHA-256, handler bodies,
 normalized cross-chain bodies, call sequences, and callsite locations are
 retained in `writer-compatibility.json`.
 
+Six modern mappings contain one `call_indirect` instruction. For each, the
+verifier rejects imported/exported tables and every table mutation opcode,
+parses the complete element target inventory, and conservatively adds every
+table target to any handler closure that can execute `call_indirect`. The only
+target is the local `Value#displayData` callback, whose transitive closure has
+no `store.set` callsite. A synthetic regression test proves that an indirect
+target containing a writer is included in critical handler reachability.
+
 That complete callsite closure certifies static writer absence for `Collect`,
 `Flash`, and `TickHourData` across the retained mainnet and Base ancestry. It
 does **not** certify that those tables are empty in a live store: runtime
@@ -63,7 +71,10 @@ changes rather than projecting the current mappings backward:
 - the following three mainnet epochs do not accumulate collected fees at all;
 - the current mainnet and both Base position-manager mappings use the deployed
   amount0-to-both-fields behavior; the block 14,317,993 guard exists in current
-  mainnet and both Base epochs, but not in the older mainnet epochs;
+  mainnet and both Base epochs, but not in the older mainnet epochs. Guard
+  presence requires the handler's opening instructions to load
+  `event.block.number`, compare it for equality with 14,317,993, and return from
+  the matching conditional branch;
 - mainnet block 14,317,993 belongs to the older unguarded `QmZe`/`QmYwx`
   interval, so replaying current `QmWx` code from origin would be wrong;
 - every Pool epoch refreshes the two fee-growth fields on Flash and saves Pool,
@@ -115,21 +126,26 @@ blob URLs, relevant line anchors, and these full-file SHA-256 values:
 | `graph/src/components/subgraph/instance.rs` | `e55bda1854ea60b10729b56b2e1b524bbc76aaa02a4d3256424b1631968de504` |
 | `core/src/subgraph/trigger_processor.rs` | `5cdce1e42627e45d8520d5e8d938a1eb13f142c245d72d5bfb098d94e7cb2905` |
 | `chain/ethereum/src/trigger.rs` | `6b31d65fa9c0289d76a5bb7d812965e51e26054bb4fad417aa641843c531700f` |
+| `graph/src/blockchain/block_stream.rs` | `8e4004884534c18054cb7ccd30b9eb675cbc956a3f651041e546ccca31fb0933` |
+| `core/src/subgraph/inputs.rs` | `22a2ee4a8ef0b7ef4cca52115b505c41ff5ee917621645fa48e0971e712ff278` |
+| `core/src/subgraph/runner/mod.rs` | `bb5623ed45b51ad99c783069ea4344c08a69e826016951a8b6282f3685e4b026` |
 
-This source orders Ethereum log triggers by global log index, but contract
-calls receive the trigger block pointer and read block-level post-state. The
-adapter uses an EIP-1898 block hash when supported and otherwise falls back to
-the block number, which is not fork/hash-bound. This is deliberately distinct
-from intra-block handler order.
+The pinned Ethereum trigger comparator orders logs by global log index, and the
+block-stream source proves that Graph Node actually invokes the sort before
+execution. Contract calls receive the trigger block pointer and read block-level
+post-state. The adapter uses an EIP-1898 block hash when supported and otherwise
+falls back to the block number, which is not fork/hash-bound. This is
+deliberately distinct from intra-block handler order.
 
 The first five mainnet segments do not enable `nonFatalErrors`; current mainnet
 and both Base segments do. Under the pinned source model, a deterministic trap
 discards the failing handler's created data sources and entity-cache changes and
-records a deterministic proof-of-indexing event. With `nonFatalErrors`, other
-successful handlers continue; without it, the deployment fails at that block.
-This is source compatibility evidence only. The exact Graph Node binary/source
-identity used by each target deployment is still unbound, so runtime behavior
-and PoI parity remain oracle gates.
+records a deterministic proof-of-indexing event. The feature-selection and
+runner source locks prove that `nonFatalErrors` preserves other successful
+entity modifications, while fatal mode retains only proof-of-indexing changes,
+transacts, and stops the deployment. This is source compatibility evidence
+only. The exact Graph Node binary/source identity used by each target deployment
+is still unbound, so runtime behavior and PoI parity remain oracle gates.
 
 ## Verify or regenerate
 

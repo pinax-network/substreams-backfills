@@ -89,13 +89,44 @@
         "sha256": "e55bda1854ea60b10729b56b2e1b524bbc76aaa02a4d3256424b1631968de504"
       },
       {
-        "claim": "Ethereum log triggers are ordered by global log index",
+        "claim": "EthereumTrigger ordering compares log triggers by global log index",
         "immutable_url": "https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/chain/ethereum/src/trigger.rs",
         "path": "chain/ethereum/src/trigger.rs",
         "relevant_lines": [
           "364-403"
         ],
         "sha256": "6b31d65fa9c0289d76a5bb7d812965e51e26054bb4fad417aa641843c531700f"
+      },
+      {
+        "claim": "block trigger data is sorted before execution and re-sorted after extension",
+        "immutable_url": "https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/graph/src/blockchain/block_stream.rs",
+        "path": "graph/src/blockchain/block_stream.rs",
+        "relevant_lines": [
+          "248-255",
+          "293-296"
+        ],
+        "sha256": "8e4004884534c18054cb7ccd30b9eb675cbc956a3f651041e546ccca31fb0933"
+      },
+      {
+        "claim": "the nonFatalErrors feature selects nonfatal instead of fatal deterministic-error policy",
+        "immutable_url": "https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/core/src/subgraph/inputs.rs",
+        "path": "core/src/subgraph/inputs.rs",
+        "relevant_lines": [
+          "79-85"
+        ],
+        "sha256": "22a2ee4a8ef0b7ef4cca52115b505c41ff5ee917621645fa48e0971e712ff278"
+      },
+      {
+        "claim": "fatal errors retain only proof-of-indexing changes then stop, while nonfatal mode preserves successful entity modifications",
+        "immutable_url": "https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/core/src/subgraph/runner/mod.rs",
+        "path": "core/src/subgraph/runner/mod.rs",
+        "relevant_lines": [
+          "721-787",
+          "726-736",
+          "755-768",
+          "773-787"
+        ],
+        "sha256": "bb5623ed45b51ad99c783069ea4344c08a69e826016951a8b6282f3685e4b026"
       }
     ],
     "source_model": {
@@ -202,7 +233,18 @@
   "mapping_analyses": [
     {
       "bytes": 76545,
+      "call_indirect_exported_table_count": 0,
+      "call_indirect_imported_table_count": 0,
       "call_indirect_instruction_count": 1,
+      "call_indirect_local_table_count": 1,
+      "call_indirect_table_mutation_instruction_count": 0,
+      "call_indirect_table_target_count": 1,
+      "call_indirect_table_targets": [
+        "~lib/@graphprotocol/graph-ts/common/value/Value#displayData~anonymous|0"
+      ],
+      "call_indirect_target_closure_function_count": 16,
+      "call_indirect_target_closure_store_set_site_ids": [],
+      "call_indirect_target_closure_store_set_targets": [],
       "cid": "QmPZCHE1URf4oviX7Tbrkw3aMENo1qAeEGa1AS2gMumG7P",
       "component": "Pool",
       "dynamic_store_set_target_count": 0,
@@ -491,11 +533,23 @@
         }
       ],
       "store_set_import_count": 1,
+      "unsupported_call_ref_instruction_count": 0,
       "wat_sha256": "bd42b64aeaaf677018c11fe779179ecb81d7c4125fa0b846134bb0e0a6059ad1"
     },
     {
       "bytes": 48657,
+      "call_indirect_exported_table_count": 0,
+      "call_indirect_imported_table_count": 0,
       "call_indirect_instruction_count": 1,
+      "call_indirect_local_table_count": 1,
+      "call_indirect_table_mutation_instruction_count": 0,
+      "call_indirect_table_target_count": 1,
+      "call_indirect_table_targets": [
+        "~lib/@graphprotocol/graph-ts/common/value/Value#displayData~anonymous|0"
+      ],
+      "call_indirect_target_closure_function_count": 16,
+      "call_indirect_target_closure_store_set_site_ids": [],
+      "call_indirect_target_closure_store_set_targets": [],
       "cid": "QmPjhEuGqknJJ2LfJCi6XTLFLtiymYfZAtjTLfkmJJGMEj",
       "component": "NonfungiblePositionManager",
       "dynamic_store_set_target_count": 0,
@@ -591,11 +645,23 @@
         }
       ],
       "store_set_import_count": 1,
+      "unsupported_call_ref_instruction_count": 0,
       "wat_sha256": "2ca2b971161bb406b60ddf8d0d486ee02c3599dedb72c3c9c9dad9f6e63dd8ca"
     },
     {
       "bytes": 78047,
+      "call_indirect_exported_table_count": 0,
+      "call_indirect_imported_table_count": 0,
       "call_indirect_instruction_count": 1,
+      "call_indirect_local_table_count": 1,
+      "call_indirect_table_mutation_instruction_count": 0,
+      "call_indirect_table_target_count": 1,
+      "call_indirect_table_targets": [
+        "~lib/@graphprotocol/graph-ts/common/value/Value#displayData~anonymous|0"
+      ],
+      "call_indirect_target_closure_function_count": 16,
+      "call_indirect_target_closure_store_set_site_ids": [],
+      "call_indirect_target_closure_store_set_targets": [],
       "cid": "QmSaGgPnyhStviGQSGTokQYRgVqLFNvnGWfnv8tSfuvpWD",
       "component": "Pool",
       "dynamic_store_set_target_count": 0,
@@ -884,11 +950,23 @@
         }
       ],
       "store_set_import_count": 1,
+      "unsupported_call_ref_instruction_count": 0,
       "wat_sha256": "8454917398ef7a3b8f965a7e40e5b7a1d8cf7879e898490aeabe15726c3d4281"
     },
     {
       "bytes": 23945,
+      "call_indirect_exported_table_count": 1,
+      "call_indirect_imported_table_count": 0,
       "call_indirect_instruction_count": 0,
+      "call_indirect_local_table_count": 1,
+      "call_indirect_table_mutation_instruction_count": 0,
+      "call_indirect_table_target_count": 1,
+      "call_indirect_table_targets": [
+        "null"
+      ],
+      "call_indirect_target_closure_function_count": 1,
+      "call_indirect_target_closure_store_set_site_ids": [],
+      "call_indirect_target_closure_store_set_targets": [],
       "cid": "QmT8CKmLDFFCgwYnubFhKXUsuer5rfJKPT4PrCsv9tTwjV",
       "component": "Factory",
       "dynamic_store_set_target_count": 0,
@@ -968,11 +1046,23 @@
         }
       ],
       "store_set_import_count": 1,
+      "unsupported_call_ref_instruction_count": 0,
       "wat_sha256": "4263d51999d58769c06bef6da1aed4c24c1c846f4b0aaed9142bf3bd912ecf9b"
     },
     {
       "bytes": 21108,
+      "call_indirect_exported_table_count": 1,
+      "call_indirect_imported_table_count": 0,
       "call_indirect_instruction_count": 0,
+      "call_indirect_local_table_count": 1,
+      "call_indirect_table_mutation_instruction_count": 0,
+      "call_indirect_table_target_count": 1,
+      "call_indirect_table_targets": [
+        "null"
+      ],
+      "call_indirect_target_closure_function_count": 1,
+      "call_indirect_target_closure_store_set_site_ids": [],
+      "call_indirect_target_closure_store_set_targets": [],
       "cid": "QmUN4pxwjMTfNem7rf1sKNFNHDsfzpbcTP93RxPAczgkvj",
       "component": "Factory",
       "dynamic_store_set_target_count": 0,
@@ -1052,11 +1142,23 @@
         }
       ],
       "store_set_import_count": 1,
+      "unsupported_call_ref_instruction_count": 0,
       "wat_sha256": "c2e7425784b498481ee8a822be18b59edd7aa6dd27712d8d093696cf0b8b1684"
     },
     {
       "bytes": 20876,
+      "call_indirect_exported_table_count": 1,
+      "call_indirect_imported_table_count": 0,
       "call_indirect_instruction_count": 0,
+      "call_indirect_local_table_count": 1,
+      "call_indirect_table_mutation_instruction_count": 0,
+      "call_indirect_table_target_count": 1,
+      "call_indirect_table_targets": [
+        "null"
+      ],
+      "call_indirect_target_closure_function_count": 1,
+      "call_indirect_target_closure_store_set_site_ids": [],
+      "call_indirect_target_closure_store_set_targets": [],
       "cid": "QmUk7jc3c8joQBrrcTz2ZEVDKcg1P12G2nFtuNqiikDQLJ",
       "component": "NonfungiblePositionManager",
       "dynamic_store_set_target_count": 0,
@@ -1152,11 +1254,23 @@
         }
       ],
       "store_set_import_count": 1,
+      "unsupported_call_ref_instruction_count": 0,
       "wat_sha256": "4370c99e82c40e311a7a3d9c23ff0a61ed0dfd04feb9d737727308400ce03d12"
     },
     {
       "bytes": 23850,
+      "call_indirect_exported_table_count": 1,
+      "call_indirect_imported_table_count": 0,
       "call_indirect_instruction_count": 0,
+      "call_indirect_local_table_count": 1,
+      "call_indirect_table_mutation_instruction_count": 0,
+      "call_indirect_table_target_count": 1,
+      "call_indirect_table_targets": [
+        "null"
+      ],
+      "call_indirect_target_closure_function_count": 1,
+      "call_indirect_target_closure_store_set_site_ids": [],
+      "call_indirect_target_closure_store_set_targets": [],
       "cid": "QmUu9rnGvUiBbF9pLnuJQab1wHXqjooo3bY5cZDVTyQQgr",
       "component": "Factory",
       "dynamic_store_set_target_count": 0,
@@ -1236,11 +1350,23 @@
         }
       ],
       "store_set_import_count": 1,
+      "unsupported_call_ref_instruction_count": 0,
       "wat_sha256": "1fbcd7b7305dd0e0eb2e9de2e64ecb023e9aa5abe29f7562be4dad72bf561f4d"
     },
     {
       "bytes": 40813,
+      "call_indirect_exported_table_count": 1,
+      "call_indirect_imported_table_count": 0,
       "call_indirect_instruction_count": 0,
+      "call_indirect_local_table_count": 1,
+      "call_indirect_table_mutation_instruction_count": 0,
+      "call_indirect_table_target_count": 1,
+      "call_indirect_table_targets": [
+        "null"
+      ],
+      "call_indirect_target_closure_function_count": 1,
+      "call_indirect_target_closure_store_set_site_ids": [],
+      "call_indirect_target_closure_store_set_targets": [],
       "cid": "QmWuomVAQCdEXdCRavcsmRz4BNqPx2nppqe8S6AXid66xw",
       "component": "Pool",
       "dynamic_store_set_target_count": 0,
@@ -1514,11 +1640,23 @@
         }
       ],
       "store_set_import_count": 1,
+      "unsupported_call_ref_instruction_count": 0,
       "wat_sha256": "5e8f6e0c96992afee37669c053b8940355e09e18741e53089838fb1c11924666"
     },
     {
       "bytes": 48593,
+      "call_indirect_exported_table_count": 0,
+      "call_indirect_imported_table_count": 0,
       "call_indirect_instruction_count": 1,
+      "call_indirect_local_table_count": 1,
+      "call_indirect_table_mutation_instruction_count": 0,
+      "call_indirect_table_target_count": 1,
+      "call_indirect_table_targets": [
+        "~lib/@graphprotocol/graph-ts/common/value/Value#displayData~anonymous|0"
+      ],
+      "call_indirect_target_closure_function_count": 16,
+      "call_indirect_target_closure_store_set_site_ids": [],
+      "call_indirect_target_closure_store_set_targets": [],
       "cid": "QmWxG1yzdQmp4pRDiqKvTZyRrrrZPRUTza6xznjR1wu1sD",
       "component": "NonfungiblePositionManager",
       "dynamic_store_set_target_count": 0,
@@ -1614,11 +1752,23 @@
         }
       ],
       "store_set_import_count": 1,
+      "unsupported_call_ref_instruction_count": 0,
       "wat_sha256": "6febde6b56e441b694f1708821a5e507f766ddfac3056a8efbce026826a9dced"
     },
     {
       "bytes": 50679,
+      "call_indirect_exported_table_count": 0,
+      "call_indirect_imported_table_count": 0,
       "call_indirect_instruction_count": 1,
+      "call_indirect_local_table_count": 1,
+      "call_indirect_table_mutation_instruction_count": 0,
+      "call_indirect_table_target_count": 1,
+      "call_indirect_table_targets": [
+        "~lib/@graphprotocol/graph-ts/common/value/Value#displayData~anonymous|0"
+      ],
+      "call_indirect_target_closure_function_count": 15,
+      "call_indirect_target_closure_store_set_site_ids": [],
+      "call_indirect_target_closure_store_set_targets": [],
       "cid": "QmXFDgK3qLnmsLFcPWobXbdnqV9gESL9BvYY29si4vpTjr",
       "component": "Factory",
       "dynamic_store_set_target_count": 0,
@@ -1701,11 +1851,23 @@
         }
       ],
       "store_set_import_count": 1,
+      "unsupported_call_ref_instruction_count": 0,
       "wat_sha256": "ea8185d6d94ff68dbb041684f29d23d528c6784a3396542657f9708d73d70972"
     },
     {
       "bytes": 40954,
+      "call_indirect_exported_table_count": 1,
+      "call_indirect_imported_table_count": 0,
       "call_indirect_instruction_count": 0,
+      "call_indirect_local_table_count": 1,
+      "call_indirect_table_mutation_instruction_count": 0,
+      "call_indirect_table_target_count": 1,
+      "call_indirect_table_targets": [
+        "null"
+      ],
+      "call_indirect_target_closure_function_count": 1,
+      "call_indirect_target_closure_store_set_site_ids": [],
+      "call_indirect_target_closure_store_set_targets": [],
       "cid": "QmYQRHstsSS7mntgKNSot74qN2dpuyFEtd1DddPmnqWC65",
       "component": "Pool",
       "dynamic_store_set_target_count": 0,
@@ -1979,11 +2141,23 @@
         }
       ],
       "store_set_import_count": 1,
+      "unsupported_call_ref_instruction_count": 0,
       "wat_sha256": "84dc181907baec30b5770fe5f8cdc61062b002989eb09f218963fd1995209aae"
     },
     {
       "bytes": 20794,
+      "call_indirect_exported_table_count": 1,
+      "call_indirect_imported_table_count": 0,
       "call_indirect_instruction_count": 0,
+      "call_indirect_local_table_count": 1,
+      "call_indirect_table_mutation_instruction_count": 0,
+      "call_indirect_table_target_count": 1,
+      "call_indirect_table_targets": [
+        "null"
+      ],
+      "call_indirect_target_closure_function_count": 1,
+      "call_indirect_target_closure_store_set_site_ids": [],
+      "call_indirect_target_closure_store_set_targets": [],
       "cid": "QmYWR79pUmVbQ42JkvB24D6AKCGtdo4UG78ZSewmFxwQdR",
       "component": "NonfungiblePositionManager",
       "dynamic_store_set_target_count": 0,
@@ -2079,11 +2253,23 @@
         }
       ],
       "store_set_import_count": 1,
+      "unsupported_call_ref_instruction_count": 0,
       "wat_sha256": "93cf89c0ac5f8af930c4a4a1b273a6831dced3247104db4585b6d6284da789a2"
     },
     {
       "bytes": 20604,
+      "call_indirect_exported_table_count": 1,
+      "call_indirect_imported_table_count": 0,
       "call_indirect_instruction_count": 0,
+      "call_indirect_local_table_count": 1,
+      "call_indirect_table_mutation_instruction_count": 0,
+      "call_indirect_table_target_count": 1,
+      "call_indirect_table_targets": [
+        "null"
+      ],
+      "call_indirect_target_closure_function_count": 1,
+      "call_indirect_target_closure_store_set_site_ids": [],
+      "call_indirect_target_closure_store_set_targets": [],
       "cid": "QmYwxHm2GNNcukX9oe4owucCLNoAk2rYrbMFuMFtWfKLn2",
       "component": "NonfungiblePositionManager",
       "dynamic_store_set_target_count": 0,
@@ -2179,11 +2365,23 @@
         }
       ],
       "store_set_import_count": 1,
+      "unsupported_call_ref_instruction_count": 0,
       "wat_sha256": "c68a6ea285b643a301f7931ec8bebc3acd88c047a7c84b5773ffd2aa8570f9c3"
     },
     {
       "bytes": 39128,
+      "call_indirect_exported_table_count": 1,
+      "call_indirect_imported_table_count": 0,
       "call_indirect_instruction_count": 0,
+      "call_indirect_local_table_count": 1,
+      "call_indirect_table_mutation_instruction_count": 0,
+      "call_indirect_table_target_count": 1,
+      "call_indirect_table_targets": [
+        "null"
+      ],
+      "call_indirect_target_closure_function_count": 1,
+      "call_indirect_target_closure_store_set_site_ids": [],
+      "call_indirect_target_closure_store_set_targets": [],
       "cid": "QmZPiDeH1j95mozzb5AjKCHn6zgpnhMu77kNAitPbi4Vt3",
       "component": "Pool",
       "dynamic_store_set_target_count": 0,
@@ -2457,11 +2655,23 @@
         }
       ],
       "store_set_import_count": 1,
+      "unsupported_call_ref_instruction_count": 0,
       "wat_sha256": "7444416b1ac3e7a3c98f4a2d5d3f24d343b2a1af8238f159b4839a0b2adc0a02"
     },
     {
       "bytes": 40988,
+      "call_indirect_exported_table_count": 1,
+      "call_indirect_imported_table_count": 0,
       "call_indirect_instruction_count": 0,
+      "call_indirect_local_table_count": 1,
+      "call_indirect_table_mutation_instruction_count": 0,
+      "call_indirect_table_target_count": 1,
+      "call_indirect_table_targets": [
+        "null"
+      ],
+      "call_indirect_target_closure_function_count": 1,
+      "call_indirect_target_closure_store_set_site_ids": [],
+      "call_indirect_target_closure_store_set_targets": [],
       "cid": "QmadCQv7VPgNXhQTNkcDyzmiWZpWexynUH4XuuaMrsAbJY",
       "component": "Pool",
       "dynamic_store_set_target_count": 0,
@@ -2735,11 +2945,23 @@
         }
       ],
       "store_set_import_count": 1,
+      "unsupported_call_ref_instruction_count": 0,
       "wat_sha256": "3868d954fe13117081173408b79d72fb88c4b88bfeabfb7a6e93b5482b87e4ff"
     },
     {
       "bytes": 40987,
+      "call_indirect_exported_table_count": 1,
+      "call_indirect_imported_table_count": 0,
       "call_indirect_instruction_count": 0,
+      "call_indirect_local_table_count": 1,
+      "call_indirect_table_mutation_instruction_count": 0,
+      "call_indirect_table_target_count": 1,
+      "call_indirect_table_targets": [
+        "null"
+      ],
+      "call_indirect_target_closure_function_count": 1,
+      "call_indirect_target_closure_store_set_site_ids": [],
+      "call_indirect_target_closure_store_set_targets": [],
       "cid": "Qmaydei2ScE7JptBTPgSfkf6PFxEZpLn39gEXYqrBZhsv8",
       "component": "Pool",
       "dynamic_store_set_target_count": 0,
@@ -3013,11 +3235,23 @@
         }
       ],
       "store_set_import_count": 1,
+      "unsupported_call_ref_instruction_count": 0,
       "wat_sha256": "3e68ada1f22ed2a2b72f74ecbdebe2f084ad42e11068fdc6991947963f145cb5"
     },
     {
       "bytes": 53851,
+      "call_indirect_exported_table_count": 0,
+      "call_indirect_imported_table_count": 0,
       "call_indirect_instruction_count": 1,
+      "call_indirect_local_table_count": 1,
+      "call_indirect_table_mutation_instruction_count": 0,
+      "call_indirect_table_target_count": 1,
+      "call_indirect_table_targets": [
+        "~lib/@graphprotocol/graph-ts/common/value/Value#displayData~anonymous|0"
+      ],
+      "call_indirect_target_closure_function_count": 15,
+      "call_indirect_target_closure_store_set_site_ids": [],
+      "call_indirect_target_closure_store_set_targets": [],
       "cid": "QmbJGLb6sXkN11djxLvKGb2zDk3s7ddgEsULwzC7TVyrEb",
       "component": "Factory",
       "dynamic_store_set_target_count": 0,
@@ -3100,11 +3334,23 @@
         }
       ],
       "store_set_import_count": 1,
+      "unsupported_call_ref_instruction_count": 0,
       "wat_sha256": "84064b99fa818216ac5090dcf2a8f6b16acfe5f93edcc9819d0cb88d84526449"
     },
     {
       "bytes": 23986,
+      "call_indirect_exported_table_count": 1,
+      "call_indirect_imported_table_count": 0,
       "call_indirect_instruction_count": 0,
+      "call_indirect_local_table_count": 1,
+      "call_indirect_table_mutation_instruction_count": 0,
+      "call_indirect_table_target_count": 1,
+      "call_indirect_table_targets": [
+        "null"
+      ],
+      "call_indirect_target_closure_function_count": 1,
+      "call_indirect_target_closure_store_set_site_ids": [],
+      "call_indirect_target_closure_store_set_targets": [],
       "cid": "QmcsaU3DrUqZHZLzrrWT9aW4EVQuS54wxNHynq8g1PvESL",
       "component": "Factory",
       "dynamic_store_set_target_count": 0,
@@ -3184,11 +3430,23 @@
         }
       ],
       "store_set_import_count": 1,
+      "unsupported_call_ref_instruction_count": 0,
       "wat_sha256": "d44ed8c0bbd1bdf62635871b475fbe1a22c8d3a4b88e5d77e6827e3e61b70f81"
     },
     {
       "bytes": 40971,
+      "call_indirect_exported_table_count": 1,
+      "call_indirect_imported_table_count": 0,
       "call_indirect_instruction_count": 0,
+      "call_indirect_local_table_count": 1,
+      "call_indirect_table_mutation_instruction_count": 0,
+      "call_indirect_table_target_count": 1,
+      "call_indirect_table_targets": [
+        "null"
+      ],
+      "call_indirect_target_closure_function_count": 1,
+      "call_indirect_target_closure_store_set_site_ids": [],
+      "call_indirect_target_closure_store_set_targets": [],
       "cid": "QmeNbEMUnaaPpmpLaUVBJfFWRCN5SxG8xPG5eDNoXEGdbW",
       "component": "Pool",
       "dynamic_store_set_target_count": 0,
@@ -3462,11 +3720,23 @@
         }
       ],
       "store_set_import_count": 1,
+      "unsupported_call_ref_instruction_count": 0,
       "wat_sha256": "6fac410afa86a411137e3bfabf46550261785b79fbfc53a39b8ec59492061d36"
     },
     {
       "bytes": 20794,
+      "call_indirect_exported_table_count": 1,
+      "call_indirect_imported_table_count": 0,
       "call_indirect_instruction_count": 0,
+      "call_indirect_local_table_count": 1,
+      "call_indirect_table_mutation_instruction_count": 0,
+      "call_indirect_table_target_count": 1,
+      "call_indirect_table_targets": [
+        "null"
+      ],
+      "call_indirect_target_closure_function_count": 1,
+      "call_indirect_target_closure_store_set_site_ids": [],
+      "call_indirect_target_closure_store_set_targets": [],
       "cid": "Qmebr2EyxV7v1wLt9DSFKA7g8EhcVr9k1x7pwZr5eWEHT6",
       "component": "NonfungiblePositionManager",
       "dynamic_store_set_target_count": 0,
@@ -3562,6 +3832,7 @@
         }
       ],
       "store_set_import_count": 1,
+      "unsupported_call_ref_instruction_count": 0,
       "wat_sha256": "19d7511d0a1ba05caeb115d4d820c89c61210c373b9253682915bc40d0d38d5d"
     }
   ],
@@ -3583,12 +3854,15 @@
         {
           "audited_semantic_scope": "cumulative NPM operations, Collect quirk, historical guards, fee refresh, snapshots, and direct Transfer only",
           "block_guard_handlers": [],
+          "block_guard_proofs": [],
           "collect_final_collected_fees_token0": "old_token0 + decimal(event.amount0, token0.decimals)",
           "collect_final_collected_fees_token1": "old_token1 + decimal(event.amount1, token1.decimals)",
           "collect_reachability": {
+            "conservative_call_indirect_table_targets": [],
             "dynamic_reachable_store_set_target_count": 0,
             "handler": "handleCollect",
             "handler_function": "src/mappings/position-manager/handleCollect",
+            "reachable_call_indirect_instruction_count": 0,
             "reachable_function_count": 107,
             "reachable_store_set_site_ids": [
               "src/types/schema/Transaction#save#1",
@@ -3704,12 +3978,15 @@
         {
           "audited_semantic_scope": "cumulative NPM operations, Collect quirk, historical guards, fee refresh, snapshots, and direct Transfer only",
           "block_guard_handlers": [],
+          "block_guard_proofs": [],
           "collect_final_collected_fees_token0": "old_token1 + decimal(event.amount1, token1.decimals)",
           "collect_final_collected_fees_token1": "old_token1 unchanged",
           "collect_reachability": {
+            "conservative_call_indirect_table_targets": [],
             "dynamic_reachable_store_set_target_count": 0,
             "handler": "handleCollect",
             "handler_function": "src/mappings/position-manager/handleCollect",
+            "reachable_call_indirect_instruction_count": 0,
             "reachable_function_count": 107,
             "reachable_store_set_site_ids": [
               "src/types/schema/Transaction#save#1",
@@ -3825,12 +4102,15 @@
         {
           "audited_semantic_scope": "cumulative NPM operations, Collect quirk, historical guards, fee refresh, snapshots, and direct Transfer only",
           "block_guard_handlers": [],
+          "block_guard_proofs": [],
           "collect_final_collected_fees_token0": "unchanged",
           "collect_final_collected_fees_token1": "unchanged",
           "collect_reachability": {
+            "conservative_call_indirect_table_targets": [],
             "dynamic_reachable_store_set_target_count": 0,
             "handler": "handleCollect",
             "handler_function": "src/mappings/position-manager/handleCollect",
+            "reachable_call_indirect_instruction_count": 0,
             "reachable_function_count": 93,
             "reachable_store_set_site_ids": [
               "src/types/schema/Transaction#save#1",
@@ -3952,12 +4232,52 @@
             "handleDecreaseLiquidity",
             "handleIncreaseLiquidity"
           ],
+          "block_guard_proofs": [
+            {
+              "block": 14317993,
+              "block_number_load_offset": 28,
+              "comparison_calls": [
+                "~lib/@graphprotocol/graph-ts/index/ByteArray.fromI32",
+                "~lib/@graphprotocol/graph-ts/index/BigInt#equals"
+              ],
+              "comparison_model": "old-codegen-byte-array-equality",
+              "condition_instructions": [],
+              "conditional_early_return": true,
+              "conditional_instruction": "if $I0",
+              "event_block_pointer_load_offset": 16,
+              "event_parameter": "$p0",
+              "handler": "handleDecreaseLiquidity",
+              "handler_function": "src/mappings/position-manager/handleDecreaseLiquidity",
+              "instruction_prefix_sha256": "31c442d1d8d775341c87e5d7df3927aaad6c43326b787165f86c347da396a35a",
+              "wat_start_line": 4136
+            },
+            {
+              "block": 14317993,
+              "block_number_load_offset": 28,
+              "comparison_calls": [
+                "~lib/@graphprotocol/graph-ts/index/ByteArray.fromI32",
+                "~lib/@graphprotocol/graph-ts/index/BigInt#equals"
+              ],
+              "comparison_model": "old-codegen-byte-array-equality",
+              "condition_instructions": [],
+              "conditional_early_return": true,
+              "conditional_instruction": "if $I0",
+              "event_block_pointer_load_offset": 16,
+              "event_parameter": "$p0",
+              "handler": "handleIncreaseLiquidity",
+              "handler_function": "src/mappings/position-manager/handleIncreaseLiquidity",
+              "instruction_prefix_sha256": "31c442d1d8d775341c87e5d7df3927aaad6c43326b787165f86c347da396a35a",
+              "wat_start_line": 4053
+            }
+          ],
           "collect_final_collected_fees_token0": "old_token0 + decimal(event.amount0, token0.decimals)",
           "collect_final_collected_fees_token1": "old_token1 + decimal(event.amount0, token0.decimals)",
           "collect_reachability": {
+            "conservative_call_indirect_table_targets": [],
             "dynamic_reachable_store_set_target_count": 0,
             "handler": "handleCollect",
             "handler_function": "src/mappings/position-manager/handleCollect",
+            "reachable_call_indirect_instruction_count": 0,
             "reachable_function_count": 106,
             "reachable_store_set_site_ids": [
               "src/types/schema/Transaction#save#1",
@@ -4080,13 +4400,59 @@
             "handleDecreaseLiquidity",
             "handleIncreaseLiquidity"
           ],
+          "block_guard_proofs": [
+            {
+              "block": 14317993,
+              "block_number_load_offset": 28,
+              "comparison_calls": [
+                "~lib/@graphprotocol/graph-ts/common/numbers/BigInt.fromI32",
+                "~lib/@graphprotocol/graph-ts/common/numbers/BigInt.compare"
+              ],
+              "comparison_model": "modern-big-int-compare-equals-zero",
+              "condition_instructions": [
+                "i32.eqz"
+              ],
+              "conditional_early_return": true,
+              "conditional_instruction": "if $I0",
+              "event_block_pointer_load_offset": 16,
+              "event_parameter": "$p0",
+              "handler": "handleDecreaseLiquidity",
+              "handler_function": "src/mappings/position-manager/handleDecreaseLiquidity",
+              "instruction_prefix_sha256": "434bb4f48fa30b526ac96f35150d0a7f95d3c3eeff52e1da7979e6a89bfedfbd",
+              "wat_start_line": 5748
+            },
+            {
+              "block": 14317993,
+              "block_number_load_offset": 28,
+              "comparison_calls": [
+                "~lib/@graphprotocol/graph-ts/common/numbers/BigInt.fromI32",
+                "~lib/@graphprotocol/graph-ts/common/numbers/BigInt.compare"
+              ],
+              "comparison_model": "modern-big-int-compare-equals-zero",
+              "condition_instructions": [
+                "i32.eqz"
+              ],
+              "conditional_early_return": true,
+              "conditional_instruction": "if $I0",
+              "event_block_pointer_load_offset": 16,
+              "event_parameter": "$p0",
+              "handler": "handleIncreaseLiquidity",
+              "handler_function": "src/mappings/position-manager/handleIncreaseLiquidity",
+              "instruction_prefix_sha256": "434bb4f48fa30b526ac96f35150d0a7f95d3c3eeff52e1da7979e6a89bfedfbd",
+              "wat_start_line": 5551
+            }
+          ],
           "collect_final_collected_fees_token0": "old_token0 + decimal(event.amount0, token0.decimals) when token0 exists; otherwise unchanged",
           "collect_final_collected_fees_token1": "old_token1 + decimal(event.amount0, token0.decimals) when token0 exists; otherwise unchanged",
           "collect_reachability": {
+            "conservative_call_indirect_table_targets": [
+              "~lib/@graphprotocol/graph-ts/common/value/Value#displayData~anonymous|0"
+            ],
             "dynamic_reachable_store_set_target_count": 0,
             "handler": "handleCollect",
             "handler_function": "src/mappings/position-manager/handleCollect",
-            "reachable_function_count": 62,
+            "reachable_call_indirect_instruction_count": 1,
+            "reachable_function_count": 63,
             "reachable_store_set_site_ids": [
               "src/utils/index/loadTransaction#1",
               "generated/schema/Position#save#1",
@@ -4187,13 +4553,59 @@
             "handleDecreaseLiquidity",
             "handleIncreaseLiquidity"
           ],
+          "block_guard_proofs": [
+            {
+              "block": 14317993,
+              "block_number_load_offset": 28,
+              "comparison_calls": [
+                "~lib/@graphprotocol/graph-ts/common/numbers/BigInt.fromI32",
+                "~lib/@graphprotocol/graph-ts/common/numbers/BigInt.compare"
+              ],
+              "comparison_model": "modern-big-int-compare-equals-zero",
+              "condition_instructions": [
+                "i32.eqz"
+              ],
+              "conditional_early_return": true,
+              "conditional_instruction": "if $I0",
+              "event_block_pointer_load_offset": 16,
+              "event_parameter": "$p0",
+              "handler": "handleDecreaseLiquidity",
+              "handler_function": "src/mappings/position-manager/handleDecreaseLiquidity",
+              "instruction_prefix_sha256": "434bb4f48fa30b526ac96f35150d0a7f95d3c3eeff52e1da7979e6a89bfedfbd",
+              "wat_start_line": 5748
+            },
+            {
+              "block": 14317993,
+              "block_number_load_offset": 28,
+              "comparison_calls": [
+                "~lib/@graphprotocol/graph-ts/common/numbers/BigInt.fromI32",
+                "~lib/@graphprotocol/graph-ts/common/numbers/BigInt.compare"
+              ],
+              "comparison_model": "modern-big-int-compare-equals-zero",
+              "condition_instructions": [
+                "i32.eqz"
+              ],
+              "conditional_early_return": true,
+              "conditional_instruction": "if $I0",
+              "event_block_pointer_load_offset": 16,
+              "event_parameter": "$p0",
+              "handler": "handleIncreaseLiquidity",
+              "handler_function": "src/mappings/position-manager/handleIncreaseLiquidity",
+              "instruction_prefix_sha256": "434bb4f48fa30b526ac96f35150d0a7f95d3c3eeff52e1da7979e6a89bfedfbd",
+              "wat_start_line": 5551
+            }
+          ],
           "collect_final_collected_fees_token0": "old_token0 + decimal(event.amount0, token0.decimals) when token0 exists; otherwise unchanged",
           "collect_final_collected_fees_token1": "old_token1 + decimal(event.amount0, token0.decimals) when token0 exists; otherwise unchanged",
           "collect_reachability": {
+            "conservative_call_indirect_table_targets": [
+              "~lib/@graphprotocol/graph-ts/common/value/Value#displayData~anonymous|0"
+            ],
             "dynamic_reachable_store_set_target_count": 0,
             "handler": "handleCollect",
             "handler_function": "src/mappings/position-manager/handleCollect",
-            "reachable_function_count": 62,
+            "reachable_call_indirect_instruction_count": 1,
+            "reachable_function_count": 63,
             "reachable_store_set_site_ids": [
               "src/utils/index/loadTransaction#1",
               "src/types/schema/Position#save#1",
@@ -4318,10 +4730,14 @@
       },
       "mapping_cid": "QmPZCHE1URf4oviX7Tbrkw3aMENo1qAeEGa1AS2gMumG7P",
       "reachable_writers": {
+        "conservative_call_indirect_table_targets": [
+          "~lib/@graphprotocol/graph-ts/common/value/Value#displayData~anonymous|0"
+        ],
         "dynamic_reachable_store_set_target_count": 0,
         "handler": "handleFlash",
         "handler_function": "src/mappings/core/handleFlash",
-        "reachable_function_count": 27,
+        "reachable_call_indirect_instruction_count": 1,
+        "reachable_function_count": 28,
         "reachable_store_set_site_ids": [
           "generated/schema/Pool#save#1"
         ],
@@ -4355,10 +4771,14 @@
       },
       "mapping_cid": "QmSaGgPnyhStviGQSGTokQYRgVqLFNvnGWfnv8tSfuvpWD",
       "reachable_writers": {
+        "conservative_call_indirect_table_targets": [
+          "~lib/@graphprotocol/graph-ts/common/value/Value#displayData~anonymous|0"
+        ],
         "dynamic_reachable_store_set_target_count": 0,
         "handler": "handleFlash",
         "handler_function": "src/mappings/core/handleFlash",
-        "reachable_function_count": 27,
+        "reachable_call_indirect_instruction_count": 1,
+        "reachable_function_count": 28,
         "reachable_store_set_site_ids": [
           "src/types/schema/Pool#save#1"
         ],
@@ -4392,9 +4812,11 @@
       },
       "mapping_cid": "QmWuomVAQCdEXdCRavcsmRz4BNqPx2nppqe8S6AXid66xw",
       "reachable_writers": {
+        "conservative_call_indirect_table_targets": [],
         "dynamic_reachable_store_set_target_count": 0,
         "handler": "handleFlash",
         "handler_function": "src/mappings/core/handleFlash",
+        "reachable_call_indirect_instruction_count": 0,
         "reachable_function_count": 34,
         "reachable_store_set_site_ids": [
           "src/types/schema/Pool#save#1"
@@ -4429,9 +4851,11 @@
       },
       "mapping_cid": "QmYQRHstsSS7mntgKNSot74qN2dpuyFEtd1DddPmnqWC65",
       "reachable_writers": {
+        "conservative_call_indirect_table_targets": [],
         "dynamic_reachable_store_set_target_count": 0,
         "handler": "handleFlash",
         "handler_function": "src/mappings/core/handleFlash",
+        "reachable_call_indirect_instruction_count": 0,
         "reachable_function_count": 34,
         "reachable_store_set_site_ids": [
           "src/types/schema/Pool#save#1"
@@ -4466,9 +4890,11 @@
       },
       "mapping_cid": "QmZPiDeH1j95mozzb5AjKCHn6zgpnhMu77kNAitPbi4Vt3",
       "reachable_writers": {
+        "conservative_call_indirect_table_targets": [],
         "dynamic_reachable_store_set_target_count": 0,
         "handler": "handleFlash",
         "handler_function": "src/mappings/core/handleFlash",
+        "reachable_call_indirect_instruction_count": 0,
         "reachable_function_count": 34,
         "reachable_store_set_site_ids": [
           "src/types/schema/Pool#save#1"
@@ -4503,9 +4929,11 @@
       },
       "mapping_cid": "QmadCQv7VPgNXhQTNkcDyzmiWZpWexynUH4XuuaMrsAbJY",
       "reachable_writers": {
+        "conservative_call_indirect_table_targets": [],
         "dynamic_reachable_store_set_target_count": 0,
         "handler": "handleFlash",
         "handler_function": "src/mappings/core/handleFlash",
+        "reachable_call_indirect_instruction_count": 0,
         "reachable_function_count": 34,
         "reachable_store_set_site_ids": [
           "src/types/schema/Pool#save#1"
@@ -4540,9 +4968,11 @@
       },
       "mapping_cid": "Qmaydei2ScE7JptBTPgSfkf6PFxEZpLn39gEXYqrBZhsv8",
       "reachable_writers": {
+        "conservative_call_indirect_table_targets": [],
         "dynamic_reachable_store_set_target_count": 0,
         "handler": "handleFlash",
         "handler_function": "src/mappings/core/handleFlash",
+        "reachable_call_indirect_instruction_count": 0,
         "reachable_function_count": 34,
         "reachable_store_set_site_ids": [
           "src/types/schema/Pool#save#1"
@@ -4577,9 +5007,11 @@
       },
       "mapping_cid": "QmeNbEMUnaaPpmpLaUVBJfFWRCN5SxG8xPG5eDNoXEGdbW",
       "reachable_writers": {
+        "conservative_call_indirect_table_targets": [],
         "dynamic_reachable_store_set_target_count": 0,
         "handler": "handleFlash",
         "handler_function": "src/mappings/core/handleFlash",
+        "reachable_call_indirect_instruction_count": 0,
         "reachable_function_count": 34,
         "reachable_store_set_site_ids": [
           "src/types/schema/Pool#save#1"
@@ -4630,6 +5062,7 @@
         "block": 14317993,
         "block_in_segment": false,
         "effective_in_segment": false,
+        "handler_proofs": [],
         "present_in_mapping": false
       },
       "manifest_features": [],
@@ -4673,6 +5106,7 @@
         "block": 14317993,
         "block_in_segment": false,
         "effective_in_segment": false,
+        "handler_proofs": [],
         "present_in_mapping": false
       },
       "manifest_features": [],
@@ -4716,6 +5150,7 @@
         "block": 14317993,
         "block_in_segment": false,
         "effective_in_segment": false,
+        "handler_proofs": [],
         "present_in_mapping": false
       },
       "manifest_features": [],
@@ -4759,6 +5194,7 @@
         "block": 14317993,
         "block_in_segment": false,
         "effective_in_segment": false,
+        "handler_proofs": [],
         "present_in_mapping": false
       },
       "manifest_features": [],
@@ -4802,6 +5238,7 @@
         "block": 14317993,
         "block_in_segment": true,
         "effective_in_segment": false,
+        "handler_proofs": [],
         "present_in_mapping": false
       },
       "manifest_features": [],
@@ -4845,6 +5282,48 @@
         "block": 14317993,
         "block_in_segment": false,
         "effective_in_segment": false,
+        "handler_proofs": [
+          {
+            "block": 14317993,
+            "block_number_load_offset": 28,
+            "comparison_calls": [
+              "~lib/@graphprotocol/graph-ts/common/numbers/BigInt.fromI32",
+              "~lib/@graphprotocol/graph-ts/common/numbers/BigInt.compare"
+            ],
+            "comparison_model": "modern-big-int-compare-equals-zero",
+            "condition_instructions": [
+              "i32.eqz"
+            ],
+            "conditional_early_return": true,
+            "conditional_instruction": "if $I0",
+            "event_block_pointer_load_offset": 16,
+            "event_parameter": "$p0",
+            "handler": "handleDecreaseLiquidity",
+            "handler_function": "src/mappings/position-manager/handleDecreaseLiquidity",
+            "instruction_prefix_sha256": "434bb4f48fa30b526ac96f35150d0a7f95d3c3eeff52e1da7979e6a89bfedfbd",
+            "wat_start_line": 5748
+          },
+          {
+            "block": 14317993,
+            "block_number_load_offset": 28,
+            "comparison_calls": [
+              "~lib/@graphprotocol/graph-ts/common/numbers/BigInt.fromI32",
+              "~lib/@graphprotocol/graph-ts/common/numbers/BigInt.compare"
+            ],
+            "comparison_model": "modern-big-int-compare-equals-zero",
+            "condition_instructions": [
+              "i32.eqz"
+            ],
+            "conditional_early_return": true,
+            "conditional_instruction": "if $I0",
+            "event_block_pointer_load_offset": 16,
+            "event_parameter": "$p0",
+            "handler": "handleIncreaseLiquidity",
+            "handler_function": "src/mappings/position-manager/handleIncreaseLiquidity",
+            "instruction_prefix_sha256": "434bb4f48fa30b526ac96f35150d0a7f95d3c3eeff52e1da7979e6a89bfedfbd",
+            "wat_start_line": 5551
+          }
+        ],
         "present_in_mapping": true
       },
       "manifest_features": [
@@ -4891,6 +5370,44 @@
         "block": 14317993,
         "block_in_segment": true,
         "effective_in_segment": true,
+        "handler_proofs": [
+          {
+            "block": 14317993,
+            "block_number_load_offset": 28,
+            "comparison_calls": [
+              "~lib/@graphprotocol/graph-ts/index/ByteArray.fromI32",
+              "~lib/@graphprotocol/graph-ts/index/BigInt#equals"
+            ],
+            "comparison_model": "old-codegen-byte-array-equality",
+            "condition_instructions": [],
+            "conditional_early_return": true,
+            "conditional_instruction": "if $I0",
+            "event_block_pointer_load_offset": 16,
+            "event_parameter": "$p0",
+            "handler": "handleDecreaseLiquidity",
+            "handler_function": "src/mappings/position-manager/handleDecreaseLiquidity",
+            "instruction_prefix_sha256": "31c442d1d8d775341c87e5d7df3927aaad6c43326b787165f86c347da396a35a",
+            "wat_start_line": 4136
+          },
+          {
+            "block": 14317993,
+            "block_number_load_offset": 28,
+            "comparison_calls": [
+              "~lib/@graphprotocol/graph-ts/index/ByteArray.fromI32",
+              "~lib/@graphprotocol/graph-ts/index/BigInt#equals"
+            ],
+            "comparison_model": "old-codegen-byte-array-equality",
+            "condition_instructions": [],
+            "conditional_early_return": true,
+            "conditional_instruction": "if $I0",
+            "event_block_pointer_load_offset": 16,
+            "event_parameter": "$p0",
+            "handler": "handleIncreaseLiquidity",
+            "handler_function": "src/mappings/position-manager/handleIncreaseLiquidity",
+            "instruction_prefix_sha256": "31c442d1d8d775341c87e5d7df3927aaad6c43326b787165f86c347da396a35a",
+            "wat_start_line": 4053
+          }
+        ],
         "present_in_mapping": true
       },
       "manifest_features": [
@@ -4936,6 +5453,48 @@
         "block": 14317993,
         "block_in_segment": false,
         "effective_in_segment": false,
+        "handler_proofs": [
+          {
+            "block": 14317993,
+            "block_number_load_offset": 28,
+            "comparison_calls": [
+              "~lib/@graphprotocol/graph-ts/common/numbers/BigInt.fromI32",
+              "~lib/@graphprotocol/graph-ts/common/numbers/BigInt.compare"
+            ],
+            "comparison_model": "modern-big-int-compare-equals-zero",
+            "condition_instructions": [
+              "i32.eqz"
+            ],
+            "conditional_early_return": true,
+            "conditional_instruction": "if $I0",
+            "event_block_pointer_load_offset": 16,
+            "event_parameter": "$p0",
+            "handler": "handleDecreaseLiquidity",
+            "handler_function": "src/mappings/position-manager/handleDecreaseLiquidity",
+            "instruction_prefix_sha256": "434bb4f48fa30b526ac96f35150d0a7f95d3c3eeff52e1da7979e6a89bfedfbd",
+            "wat_start_line": 5748
+          },
+          {
+            "block": 14317993,
+            "block_number_load_offset": 28,
+            "comparison_calls": [
+              "~lib/@graphprotocol/graph-ts/common/numbers/BigInt.fromI32",
+              "~lib/@graphprotocol/graph-ts/common/numbers/BigInt.compare"
+            ],
+            "comparison_model": "modern-big-int-compare-equals-zero",
+            "condition_instructions": [
+              "i32.eqz"
+            ],
+            "conditional_early_return": true,
+            "conditional_instruction": "if $I0",
+            "event_block_pointer_load_offset": 16,
+            "event_parameter": "$p0",
+            "handler": "handleIncreaseLiquidity",
+            "handler_function": "src/mappings/position-manager/handleIncreaseLiquidity",
+            "instruction_prefix_sha256": "434bb4f48fa30b526ac96f35150d0a7f95d3c3eeff52e1da7979e6a89bfedfbd",
+            "wat_start_line": 5551
+          }
+        ],
         "present_in_mapping": true
       },
       "manifest_features": [

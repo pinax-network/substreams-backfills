@@ -106,6 +106,10 @@ jobs:
         run: |
           python3 scripts/verify-uniswap-v3-flash-reducer.py
           python3 -m unittest scripts.tests.test_uniswap_v3_flash_reducer
+      - name: Verify host-only NPM Transaction reducer contract and refusals
+        run: |
+          python3 scripts/verify-uniswap-v3-transaction-reducer.py
+          python3 -m unittest scripts.tests.test_uniswap_v3_transaction_reducer
       - name: Test and build the source-pinned protocol-v3 parity client
         working-directory: scripts/parity-client
         run: |
@@ -267,6 +271,44 @@ jobs:
             --writer-runtime "$RUNNER_TEMP/uniswap-v3-writer-runtime" \
             --mainnet-spkg "$RUNNER_TEMP/uniswap-v3-mainnet-flash-reducer-diagnostic.spkg" \
             --base-spkg "$RUNNER_TEMP/uniswap-v3-base-flash-reducer-diagnostic.spkg"
+      - name: Release completed reducer build caches before Transaction validation
+        run: |
+          cargo +1.79.0 clean --manifest-path "$RUNNER_TEMP/uniswap-v3-configured/Cargo.toml"
+          cargo +1.79.0 clean --manifest-path "$RUNNER_TEMP/uniswap-v3-position-reducer/Cargo.toml"
+          cargo +1.79.0 clean --manifest-path "$RUNNER_TEMP/uniswap-v3-flash-reducer/Cargo.toml"
+          test ! -e "$RUNNER_TEMP/uniswap-v3-configured/target"
+          test ! -e "$RUNNER_TEMP/uniswap-v3-position-reducer/target"
+          test ! -e "$RUNNER_TEMP/uniswap-v3-flash-reducer/target"
+      - name: Materialize the host-only NPM Transaction reducer
+        run: ./scripts/materialize-uniswap-v3-transaction-reducer.sh "$RUNNER_TEMP/uniswap-v3-transaction-reducer"
+      - name: Test and format-check the host-only NPM Transaction reducer
+        working-directory: ${{ runner.temp }}/uniswap-v3-transaction-reducer
+        run: |
+          cargo +1.79.0 test --locked --target x86_64-unknown-linux-gnu
+          rustfmt +1.79.0 --edition 2021 --config-path rustfmt.toml --check \
+            src/transaction_reducer.rs tests/transaction_reducer.rs
+      - name: Enforce inherited Clippy inventory for the NPM Transaction reducer
+        run: >-
+          python3 scripts/verify-uniswap-v3-writer-clippy.py
+          --baseline "$RUNNER_TEMP/uniswap-v3-configured"
+          --runtime "$RUNNER_TEMP/uniswap-v3-transaction-reducer"
+          --target x86_64-unknown-linux-gnu
+      - name: Prove the host-only reducer leaves writer WASM and packages unchanged
+        working-directory: ${{ runner.temp }}/uniswap-v3-transaction-reducer
+        run: |
+          cargo +1.79.0 build --locked --target wasm32-unknown-unknown --release
+          substreams pack -o "$RUNNER_TEMP/uniswap-v3-mainnet-transaction-reducer-diagnostic.spkg" substreams.mainnet.yaml
+          substreams pack -o "$RUNNER_TEMP/uniswap-v3-base-transaction-reducer-diagnostic.spkg" substreams.base.yaml
+          cmp "$RUNNER_TEMP/uniswap-v3-mainnet-writer-diagnostic.spkg" \
+            "$RUNNER_TEMP/uniswap-v3-mainnet-transaction-reducer-diagnostic.spkg"
+          cmp "$RUNNER_TEMP/uniswap-v3-base-writer-diagnostic.spkg" \
+            "$RUNNER_TEMP/uniswap-v3-base-transaction-reducer-diagnostic.spkg"
+          python3 "$GITHUB_WORKSPACE/scripts/verify-uniswap-v3-transaction-reducer.py" \
+            --root "$GITHUB_WORKSPACE" \
+            --runtime "$RUNNER_TEMP/uniswap-v3-transaction-reducer" \
+            --writer-runtime "$RUNNER_TEMP/uniswap-v3-writer-runtime" \
+            --mainnet-spkg "$RUNNER_TEMP/uniswap-v3-mainnet-transaction-reducer-diagnostic.spkg" \
+            --base-spkg "$RUNNER_TEMP/uniswap-v3-base-transaction-reducer-diagnostic.spkg"
       - name: Test the parity client against all three real controlled-build packages
         working-directory: scripts/parity-client
         env:

@@ -1,0 +1,234 @@
+{
+  "format_version": 1,
+  "contract_version": "uniswap-v3-transaction-reducer/v1",
+  "mode": "host-diagnostic-only",
+  "source_writer_runtime": {
+    "path": "uniswap-v3/writer-runtime/contract-v1.json",
+    "contract_version": "uniswap-v3-writer-runtime/v1",
+    "sha256": "765806bf19fca7695ef4d97f557593e4f791759589fe55c20f18c6523a5d07ca",
+    "writer_descriptor_sha256": "22b899f9eeffc8dcfb608eea7ab93884a1756897aba62dc7107507c50a4ac3f0"
+  },
+  "source_segment_matrix": {
+    "path": "uniswap-v3/segment-writer-matrix/v1/contract.json",
+    "contract_version": "uniswap-v3-segment-writer-matrix/v1",
+    "sha256": "7f6d1a34a8c885fe5ddcd81895818ba7ae8a0d736d541b881c1cc7cd54275161"
+  },
+  "source_segment_profiles": {
+    "path": "uniswap-v3/writer-runtime/segment-profiles-v1.json",
+    "contract_version": "uniswap-v3-writer-runtime-segment-profiles/v1",
+    "sha256": "2b6635c061a7a0bfce39430c71c41dacc1567f095fe41134e890a697aa27f823"
+  },
+  "source_graph_node_transaction_gas": {
+    "version": "v0.44.0",
+    "commit": "77823b5a7adc4eac4abf03202c8dd7cb00dea31d",
+    "tree": "1f372b47e4de659ddbf503cdbc31ebe4d54df239",
+    "legacy_api_version": "0.0.4",
+    "legacy_mapping_property": "event.transaction.gasUsed",
+    "legacy_wat_field_offset_bytes": 20,
+    "asc_transaction_field": "gas_limit",
+    "entity_field": "Transaction.gasUsed",
+    "receipt_gas_used_used": false,
+    "target_runtime_binary_or_source_identity_bound": false,
+    "files": [
+      {
+        "path": "chain/ethereum/src/runtime/abi.rs",
+        "sha256": "86932f5228b303ea15121767a5cc5d39417208346a351a2e057e4ac430a6d6c9",
+        "relevant_lines": [
+          "254-269",
+          "520-537"
+        ],
+        "immutable_url": "https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/chain/ethereum/src/runtime/abi.rs",
+        "claim": "the API 0.0.4 AscEthereumTransaction_0_0_2 field at offset 20 is gas_limit and ToAscObj populates it from EthereumTransactionData.gas_limit"
+      },
+      {
+        "path": "chain/ethereum/src/trigger.rs",
+        "sha256": "6b31d65fa9c0289d76a5bb7d812965e51e26054bb4fad417aa641843c531700f",
+        "relevant_lines": [
+          "127-184",
+          "552-557"
+        ],
+        "immutable_url": "https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/chain/ethereum/src/trigger.rs",
+        "claim": "API 0.0.4 selects AscEthereumTransaction_0_0_2 and EthereumTransactionData.gas_limit delegates to the transaction gas_limit accessor"
+      },
+      {
+        "path": "graph/src/components/transaction_receipt.rs",
+        "sha256": "4f491ddc90f16f4aff919dde803ba0ba47cdccf979db5904366b4bc4ca82ec36",
+        "relevant_lines": [
+          "9-27"
+        ],
+        "immutable_url": "https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/graph/src/components/transaction_receipt.rs",
+        "claim": "receipt gas_used is a distinct transaction-receipt field and is not the legacy transaction offset"
+      }
+    ]
+  },
+  "source_execution_order": {
+    "path": "uniswap-v3/execution-order/v1/contract.json",
+    "contract_version": "uniswap-v3-execution-order/v1",
+    "raw_sha256": "241e970cfcec4d76610b29a10141d3bff2512d80454a6308594f3db23621cde2"
+  },
+  "execution_contract": {
+    "transaction_id": "lowercase 0x plus the exact 32-byte transaction hash",
+    "load_transaction": "unconditional upsert overwriting blockNumber, timestamp, gasUsed, and gasPrice on every helper call",
+    "legacy_stored_gas_used": "apiVersion 0.0.4 writes the transaction gas_limit exposed to the mapping as event.transaction.gasUsed",
+    "current_stored_gas_used": "apiVersion 0.0.7 writes zero while preserving gasPrice",
+    "receipt_gas_used": "not consumed by either deployed NPM loadTransaction generation",
+    "new_position_helper_calls": 2,
+    "existing_position_helper_calls": 1,
+    "position_transaction": "first successfully persisted identity-creation transaction",
+    "snapshot_transaction": "current accepted event transaction; last accepted same-position event in a block overwrites the snapshot",
+    "normal_return_orphans": [
+      "new identity followed by ignored-pool return",
+      "new identity followed by current Increase or Decrease missing-token return"
+    ],
+    "deterministic_error_entity_state": "discard all attempted entity-state writes from the failing handler",
+    "fatal_error_entity_state": "discard all NPM Transaction and relation entity-state changes from the block and stop",
+    "nonfatal_error_entity_state": "discard the failing handler entity-state scratch and continue",
+    "npm_writer_event_order": "strictly increasing global ordinal and block_log_index within the NPM WriterEvents envelope",
+    "pool_cross_component_execution_order": "uncertified; newly Factory-created dynamic Pool data-source triggers execute after initial static and existing-data-source triggers, so raw global log order is not a complete cross-component execution order",
+    "physical_graph_node_side_effects": "not modeled; failed store.set attempts may consume entity VIDs and remain represented in PoI and error streams even when entity-state changes are discarded",
+    "producer_corruption": "reject before event execution and outside segment nonfatal policy",
+    "metadata_scope": "host-only diagnostic input; writer protobuf and descriptors unchanged"
+  },
+  "segments": [
+    {
+      "network": "mainnet",
+      "start_block_inclusive": 12369621,
+      "end_block_inclusive": 13450880,
+      "npm_start_block": 12369651,
+      "segment_id": "mainnet:Qme66ZNMxSdCQKzaDuvS381whCVYCQjf637sGZCqJHAWHB",
+      "semantic_contract_sha256": "4839ecce0391345e412ccde53a12d6d243cafd3d6a99e9072f8f1d2020b802ff",
+      "npm_profile_id": "mainnet-root-correct-collect",
+      "api_version": "0.0.4",
+      "stored_gas_used_mode": "transaction-gas-limit",
+      "nonfatal_errors": false,
+      "historical_guard_effective": false,
+      "increase_decrease_missing_token_policy": "deterministic-error",
+      "collect_token_requirement": "both"
+    },
+    {
+      "network": "mainnet",
+      "start_block_inclusive": 13450881,
+      "end_block_inclusive": 13498328,
+      "npm_start_block": 12369651,
+      "segment_id": "mainnet:QmRvEgUpbjVV326W2zPvxWimzQwcDREfjejUdFn2L92qry",
+      "semantic_contract_sha256": "b344c20468dc56e3a6a4d32cf785de598f816270edbad4e5a7e979d6d5428a3c",
+      "npm_profile_id": "mainnet-second-fee0-overwrite",
+      "api_version": "0.0.4",
+      "stored_gas_used_mode": "transaction-gas-limit",
+      "nonfatal_errors": false,
+      "historical_guard_effective": false,
+      "increase_decrease_missing_token_policy": "deterministic-error",
+      "collect_token_requirement": "both"
+    },
+    {
+      "network": "mainnet",
+      "start_block_inclusive": 13498329,
+      "end_block_inclusive": 13591197,
+      "npm_start_block": 12369651,
+      "segment_id": "mainnet:QmS13421u6qsbVdBCrZhdRaZw2wH67drwF3urmueJvvJ5P",
+      "semantic_contract_sha256": "cc0894a0822321f296585430bb93f705903494b832e56a20b858994c6f7052d0",
+      "npm_profile_id": "mainnet-no-collect-amounts",
+      "api_version": "0.0.4",
+      "stored_gas_used_mode": "transaction-gas-limit",
+      "nonfatal_errors": false,
+      "historical_guard_effective": false,
+      "increase_decrease_missing_token_policy": "deterministic-error",
+      "collect_token_requirement": "none"
+    },
+    {
+      "network": "mainnet",
+      "start_block_inclusive": 13591198,
+      "end_block_inclusive": 13605860,
+      "npm_start_block": 12369651,
+      "segment_id": "mainnet:QmSLHXCZBNKVtJRrWiEAF1yRQNPqAFptBsAcLdXQPsubSX",
+      "semantic_contract_sha256": "9b890298b85194fb05123b7a0c5836feb63d2224c845f6714183d8588882d85a",
+      "npm_profile_id": "mainnet-no-collect-amounts",
+      "api_version": "0.0.4",
+      "stored_gas_used_mode": "transaction-gas-limit",
+      "nonfatal_errors": false,
+      "historical_guard_effective": false,
+      "increase_decrease_missing_token_policy": "deterministic-error",
+      "collect_token_requirement": "none"
+    },
+    {
+      "network": "mainnet",
+      "start_block_inclusive": 13605861,
+      "end_block_inclusive": 19470000,
+      "npm_start_block": 12369651,
+      "segment_id": "mainnet:QmZeCuoZeadgHkGwLwMeguyqUKz1WPWQYKcKyMCeQqGhsF",
+      "semantic_contract_sha256": "83e4269b0582acfec8d1f868c59c6a71e362554ee41ecab4a7ccfbab87888815",
+      "npm_profile_id": "mainnet-no-collect-amounts",
+      "api_version": "0.0.4",
+      "stored_gas_used_mode": "transaction-gas-limit",
+      "nonfatal_errors": false,
+      "historical_guard_effective": false,
+      "increase_decrease_missing_token_policy": "deterministic-error",
+      "collect_token_requirement": "none"
+    },
+    {
+      "network": "mainnet",
+      "start_block_inclusive": 19470001,
+      "end_block_inclusive": null,
+      "npm_start_block": 12369651,
+      "segment_id": "mainnet:QmTZ8ejXJxRo7vDBS4uwqBeGoxLSWbhaA7oXa1RvxunLy7",
+      "semantic_contract_sha256": "0b2a208cc7ff5cbced29818ddb4fddabfa236393fc289686a87a48e8c309b754",
+      "npm_profile_id": "current-amount0-to-both",
+      "api_version": "0.0.7",
+      "stored_gas_used_mode": "zero",
+      "nonfatal_errors": true,
+      "historical_guard_effective": false,
+      "increase_decrease_missing_token_policy": "normal-return",
+      "collect_token_requirement": "optional-token0"
+    },
+    {
+      "network": "base",
+      "start_block_inclusive": 1371679,
+      "end_block_inclusive": 19852000,
+      "npm_start_block": 1371713,
+      "segment_id": "base:QmPWDTWRfS8XewMJhxXoQiZX6RkrUMYH7BFnnB846v6wzR",
+      "semantic_contract_sha256": "03d3fdaeecacfbb4aae325a1021117ddc6c3baf48d9589af69d0f3db7cdfab20",
+      "npm_profile_id": "base-root-amount0-to-both",
+      "api_version": "0.0.4",
+      "stored_gas_used_mode": "transaction-gas-limit",
+      "nonfatal_errors": true,
+      "historical_guard_effective": true,
+      "increase_decrease_missing_token_policy": "deterministic-error",
+      "collect_token_requirement": "token0"
+    },
+    {
+      "network": "base",
+      "start_block_inclusive": 19852001,
+      "end_block_inclusive": null,
+      "npm_start_block": 1371713,
+      "segment_id": "base:Qmb4VUcAY9LsVgeCuCCMs7X1XrkbRcaiuAbSK8SqhmsAfP",
+      "semantic_contract_sha256": "5dd72427adcb71c3e4fd249dc4371005fb372875f236fb90439adf5fe9d7398b",
+      "npm_profile_id": "current-amount0-to-both",
+      "api_version": "0.0.7",
+      "stored_gas_used_mode": "zero",
+      "nonfatal_errors": true,
+      "historical_guard_effective": false,
+      "increase_decrease_missing_token_policy": "normal-return",
+      "collect_token_requirement": "optional-token0"
+    }
+  ],
+  "truth_boundary": {
+    "backfill_ready": false,
+    "boundary_state_continuity_complete": false,
+    "diagnostic_only": true,
+    "full_npm_handler_semantics": false,
+    "graph_out_replaced": false,
+    "live_calls_added": false,
+    "logical_oracle_complete": false,
+    "physical_parity_complete": false,
+    "poi_parity_complete": false,
+    "failed_handler_poi_error_stream_semantics_certified": false,
+    "physical_entity_vid_semantics_certified": false,
+    "pool_cross_component_execution_order_certified": false,
+    "pool_transaction_writers_audited": false,
+    "production_ready": false,
+    "runtime_population_complete": false,
+    "shared_transaction_last_writer_semantics_certified": false,
+    "stores_added": false,
+    "substreams_handler_added": false
+  }
+}

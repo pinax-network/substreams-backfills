@@ -46,11 +46,14 @@ materializes it separately, tests both pinned configurations, builds one WASM,
 and proves the mainnet and Base diagnostic packages embed identical WASM bytes.
 A factory-only parameter is still not a valid Base rebind.
 
-The sibling [`graft-ancestry/`](graft-ancestry/README.md) contract retains all
-eight mainnet/Base history segments and the exact 38-object manifest artifact
-closure. It makes the graft-block ownership rule executable and records the
-historical mapping differences that forbid replaying the current writer from
-origin.
+The sibling [`graft-ancestry/`](graft-ancestry/README.md) ancestry v2 contract
+retains all eight mainnet/Base history segments and reuses the exact immutable
+38-object v1 artifact closure. It makes the graft-block ownership rule
+executable and numerically binds every registered manifest handler to its raw
+WASM function export. The original v1 contracts remain retained history.
+Complete artifact lineage does not prove inherited store-state continuity;
+boundary continuity remains false, and the historical mapping differences
+still forbid replaying the current writer from origin.
 
 The sibling [`oracle/`](oracle/README.md) contract retains deployment-scoped
 current-head responses and the asymmetric graft-boundary discovery result:

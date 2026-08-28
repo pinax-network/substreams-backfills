@@ -16,8 +16,8 @@ from typing import Any
 import yaml
 
 
-CONTRACT_VERSION = "uniswap-v3-graft-ancestry/v1"
-CONTRACT_PATH = Path("uniswap-v3/graft-ancestry/v1/contract.json")
+CONTRACT_VERSION = "uniswap-v3-graft-ancestry/v2"
+CONTRACT_PATH = Path("uniswap-v3/graft-ancestry/v2/contract.json")
 ARTIFACT_DIRECTORY = Path("uniswap-v3/graft-ancestry/v1/artifacts")
 CID_RE = re.compile(r"^Qm[1-9A-HJ-NP-Za-km-z]{44}$")
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
@@ -357,53 +357,222 @@ def unixfs_file_cidv0(payload: bytes) -> str:
     return base58btc(b"\x12\x20" + hashlib.sha256(node).digest())
 
 
-def read_leb(payload: bytes, offset: int) -> tuple[int, int]:
+def read_leb(
+    payload: bytes, offset: int, limit: int | None = None
+) -> tuple[int, int]:
+    """Read one canonical unsigned WebAssembly u32 LEB128 within ``limit``."""
+
+    if limit is None:
+        limit = len(payload)
+    require(0 <= offset <= limit <= len(payload), "invalid WebAssembly LEB128 bounds")
+    start = offset
     result = 0
-    shift = 0
-    while True:
-        require(offset < len(payload), "truncated WebAssembly LEB128")
+    for byte_index in range(5):
+        require(offset < limit, "truncated WebAssembly LEB128")
         byte = payload[offset]
         offset += 1
-        result |= (byte & 0x7F) << shift
+        if byte_index == 4:
+            require(
+                byte & 0xF0 == 0,
+                "overflowing WebAssembly u32 LEB128",
+            )
+        result |= (byte & 0x7F) << (byte_index * 7)
         if byte & 0x80 == 0:
+            require(
+                payload[start:offset] == encode_varint(result),
+                "non-canonical WebAssembly u32 LEB128",
+            )
             return result, offset
-        shift += 7
-        require(shift <= 35, "oversized WebAssembly LEB128")
+    raise VerificationError("overflowing WebAssembly u32 LEB128")
 
 
-def read_wasm_name(payload: bytes, offset: int) -> tuple[str, int]:
-    size, offset = read_leb(payload, offset)
+def read_wasm_name(
+    payload: bytes, offset: int, limit: int | None = None
+) -> tuple[str, int]:
+    if limit is None:
+        limit = len(payload)
+    size, offset = read_leb(payload, offset, limit)
     end = offset + size
-    require(end <= len(payload), "truncated WebAssembly name")
+    require(end <= limit, "truncated WebAssembly name")
     try:
         return payload[offset:end].decode("utf-8"), end
     except UnicodeDecodeError as error:
         raise VerificationError("invalid UTF-8 WebAssembly name") from error
 
 
-def wasm_function_exports(payload: bytes) -> set[str]:
+def _read_wasm_limits(payload: bytes, offset: int, limit: int) -> int:
+    flags, offset = read_leb(payload, offset, limit)
+    require(flags in {0, 1}, f"unsupported WebAssembly limits flags: {flags}")
+    minimum, offset = read_leb(payload, offset, limit)
+    if flags == 1:
+        maximum, offset = read_leb(payload, offset, limit)
+        require(minimum <= maximum, "WebAssembly limits minimum exceeds maximum")
+    return offset
+
+
+def _wasm_function_import_count(payload: bytes, start: int, end: int) -> int:
+    count, cursor = read_leb(payload, start, end)
+    function_count = 0
+    for _ in range(count):
+        _, cursor = read_wasm_name(payload, cursor, end)
+        _, cursor = read_wasm_name(payload, cursor, end)
+        require(cursor < end, "truncated WebAssembly import descriptor")
+        kind = payload[cursor]
+        cursor += 1
+        if kind == 0:
+            _, cursor = read_leb(payload, cursor, end)
+            function_count += 1
+        elif kind == 1:
+            require(cursor < end, "truncated WebAssembly table type")
+            reference_type = payload[cursor]
+            cursor += 1
+            require(
+                reference_type in {0x6F, 0x70},
+                f"unsupported WebAssembly table reference type: {reference_type}",
+            )
+            cursor = _read_wasm_limits(payload, cursor, end)
+        elif kind == 2:
+            cursor = _read_wasm_limits(payload, cursor, end)
+        elif kind == 3:
+            require(cursor + 2 <= end, "truncated WebAssembly global type")
+            value_type = payload[cursor]
+            mutable = payload[cursor + 1]
+            cursor += 2
+            require(
+                value_type in {0x6F, 0x70, 0x7B, 0x7C, 0x7D, 0x7E, 0x7F},
+                f"unsupported WebAssembly global value type: {value_type}",
+            )
+            require(mutable in {0, 1}, "invalid WebAssembly global mutability")
+        elif kind == 4:
+            require(cursor < end, "truncated WebAssembly tag type")
+            attribute = payload[cursor]
+            cursor += 1
+            require(attribute == 0, "unsupported WebAssembly tag attribute")
+            _, cursor = read_leb(payload, cursor, end)
+        else:
+            raise VerificationError(f"unsupported WebAssembly import kind: {kind}")
+    require(cursor == end, "trailing WebAssembly import data")
+    return function_count
+
+
+def _wasm_defined_function_count(payload: bytes, start: int, end: int) -> int:
+    count, cursor = read_leb(payload, start, end)
+    for _ in range(count):
+        _, cursor = read_leb(payload, cursor, end)
+    require(cursor == end, "trailing WebAssembly function data")
+    return count
+
+
+def _wasm_code_function_count(payload: bytes, start: int, end: int) -> int:
+    count, cursor = read_leb(payload, start, end)
+    for _ in range(count):
+        body_size, cursor = read_leb(payload, cursor, end)
+        body_end = cursor + body_size
+        require(body_end <= end, "truncated WebAssembly function body")
+        cursor = body_end
+    require(cursor == end, "trailing WebAssembly code data")
+    return count
+
+
+WASM_SECTION_RANK = {
+    1: 1,   # type
+    2: 2,   # import
+    3: 3,   # function
+    4: 4,   # table
+    5: 5,   # memory
+    13: 6,  # tag
+    6: 7,   # global
+    7: 8,   # export
+    8: 9,   # start
+    9: 10,  # element
+    12: 11, # data count (logically precedes code despite its numeric ID)
+    10: 12, # code
+    11: 13, # data
+}
+
+
+def wasm_function_exports(
+    payload: bytes, registered_handlers: set[str] | None = None
+) -> tuple[dict[str, int], int, int]:
+    """Return function exports and exact imported/defined function counts.
+
+    The numeric function index space starts with imported functions. Registered
+    mapping handlers must resolve to locally defined functions, never imports.
+    """
+
     require(payload.startswith(b"\0asm\x01\0\0\0"), "mapping is not WebAssembly v1")
     offset = 8
-    result: set[str] = set()
+    seen_sections: set[int] = set()
+    export_records: dict[str, tuple[int, int]] = {}
+    function_import_count = 0
+    defined_function_count = 0
+    code_function_count = 0
+    last_section_rank = 0
     while offset < len(payload):
         section_id = payload[offset]
         offset += 1
         size, offset = read_leb(payload, offset)
         end = offset + size
         require(end <= len(payload), "truncated WebAssembly section")
-        if section_id == 7:
-            count, cursor = read_leb(payload, offset)
+        if section_id != 0:
+            require(
+                section_id in WASM_SECTION_RANK,
+                f"unsupported WebAssembly section {section_id}",
+            )
+            require(
+                section_id not in seen_sections,
+                f"duplicate WebAssembly section {section_id}",
+            )
+            rank = WASM_SECTION_RANK[section_id]
+            require(rank > last_section_rank, "out-of-order WebAssembly section")
+            last_section_rank = rank
+            seen_sections.add(section_id)
+        if section_id == 2:
+            function_import_count = _wasm_function_import_count(payload, offset, end)
+        elif section_id == 3:
+            defined_function_count = _wasm_defined_function_count(payload, offset, end)
+        elif section_id == 7:
+            count, cursor = read_leb(payload, offset, end)
             for _ in range(count):
-                name, cursor = read_wasm_name(payload, cursor)
+                name, cursor = read_wasm_name(payload, cursor, end)
+                require(name not in export_records, f"duplicate WebAssembly export name: {name}")
                 require(cursor < end, "truncated WebAssembly export")
                 kind = payload[cursor]
                 cursor += 1
-                _, cursor = read_leb(payload, cursor)
-                if kind == 0:
-                    result.add(name)
+                require(kind <= 4, f"unsupported WebAssembly export kind: {kind}")
+                index, cursor = read_leb(payload, cursor, end)
+                export_records[name] = (kind, index)
             require(cursor == end, "trailing WebAssembly export data")
+        elif section_id == 10:
+            code_function_count = _wasm_code_function_count(payload, offset, end)
         offset = end
-    return result
+
+    require(
+        code_function_count == defined_function_count,
+        "WebAssembly function/code count mismatch",
+    )
+
+    handlers = registered_handlers or set()
+    function_exports: dict[str, int] = {}
+    function_count = function_import_count + defined_function_count
+    for name, (kind, index) in export_records.items():
+        if name in handlers:
+            require(kind == 0, f"registered handler export {name} is not a function")
+        if kind != 0:
+            continue
+        require(
+            index < function_count,
+            f"WebAssembly function export {name} index is out of range: {index}",
+        )
+        function_exports[name] = index
+    for handler in sorted(handlers):
+        require(handler in export_records, f"registered handler export is missing: {handler}")
+        index = function_exports[handler]
+        require(
+            index >= function_import_count,
+            f"registered handler export {handler} targets imported function index {index}",
+        )
+    return function_exports, function_import_count, defined_function_count
 
 
 def cid_from_file(value: object, field: str) -> str:
@@ -696,15 +865,19 @@ def mapping_inventories(
         reference = references[cid]
         require(reference["component"] == component, f"mapping {cid} locked component drift")
         handlers = sorted(reference["handlers"])
-        exports = wasm_function_exports(payload)
-        require(set(handlers) <= exports, f"mapping {cid} is missing a registered handler export")
+        exports, function_import_count, defined_function_count = wasm_function_exports(
+            payload, set(handlers)
+        )
+        handler_indices = {handler: exports[handler] for handler in handlers}
         result.append(
             {
                 "cid": cid,
                 "sha256": hashlib.sha256(payload).hexdigest(),
                 "component": component,
                 "referenced_by_deployments": sorted(reference["deployments"]),
-                "registered_handler_exports": handlers,
+                "function_import_count": function_import_count,
+                "defined_function_count": defined_function_count,
+                "registered_handler_export_function_indices": handler_indices,
                 "manual_wat_sha256": WAT_SHA256[cid],
                 "observed_constant_store_set_targets": list(entities),
                 "observed_constant_store_set_target_count": len(entities),
@@ -872,7 +1045,7 @@ def build_contract(root: Path) -> dict[str, object]:
         }
 
     return {
-        "format_version": 1,
+        "format_version": 2,
         "contract_version": CONTRACT_VERSION,
         "boundary_rule": "base owns state through and including the graft block; child writer starts at graft block + 1",
         "artifacts": artifacts,
@@ -1038,8 +1211,8 @@ def build_contract(root: Path) -> dict[str, object]:
         },
         "truth_boundary": {
             "artifact_reference_closure_complete": True,
-            "graft_ancestry_complete": True,
-            "handler_inventory_complete": True,
+            "graft_lineage_artifact_graph_complete": True,
+            "registered_handler_export_bindings_complete": True,
             "schema_entity_inventory_complete": True,
             "static_store_set_target_observations_retained": True,
             "constant_store_set_target_inventory_complete": False,
@@ -1050,12 +1223,7 @@ def build_contract(root: Path) -> dict[str, object]:
             "poi_parity_complete": False,
             "segment_execution_models_decided": False,
             "production_ready": False,
-            "remaining_blockers": [
-                "complete segment-specific entity and field writer semantics, conditions, exclusions, ordering, calls, and quirks",
-                "choose emulation or an independently certified graft-boundary seed for every differing segment",
-                "capture oracle samples on both sides of every graft and prove state continuity",
-                "complete logical, physical, and proof-of-indexing parity gates",
-            ],
+            "remaining_blockers": list(REMAINING_BLOCKERS),
         },
     }
 
@@ -1073,6 +1241,47 @@ TOP_LEVEL_KEYS = {
     "truth_boundary",
 }
 
+MAPPING_INVENTORY_KEYS = {
+    "cid",
+    "sha256",
+    "component",
+    "referenced_by_deployments",
+    "function_import_count",
+    "defined_function_count",
+    "registered_handler_export_function_indices",
+    "manual_wat_sha256",
+    "observed_constant_store_set_targets",
+    "observed_constant_store_set_target_count",
+    "observed_dynamic_store_set_target_count",
+    "review_status",
+}
+
+ANCESTRY_TRUE_FLAGS = (
+    "artifact_reference_closure_complete",
+    "graft_lineage_artifact_graph_complete",
+    "registered_handler_export_bindings_complete",
+    "schema_entity_inventory_complete",
+    "static_store_set_target_observations_retained",
+)
+
+ANCESTRY_FALSE_FLAGS = (
+    "constant_store_set_target_inventory_complete",
+    "field_writer_audit_complete",
+    "logical_oracle_complete",
+    "boundary_state_continuity_complete",
+    "physical_parity_complete",
+    "poi_parity_complete",
+    "segment_execution_models_decided",
+    "production_ready",
+)
+
+REMAINING_BLOCKERS = [
+    "complete segment-specific entity and field writer semantics, conditions, exclusions, ordering, calls, and quirks",
+    "choose emulation or an independently certified graft-boundary seed for every differing segment",
+    "capture oracle samples on both sides of every graft and prove state continuity",
+    "complete logical, physical, and proof-of-indexing parity gates",
+]
+
 
 def select_segment(contract: dict[str, object], network: str, block: int) -> dict[str, object]:
     require(network in contract["networks"], f"unknown network selector: {network}")
@@ -1089,7 +1298,7 @@ def select_segment(contract: dict[str, object], network: str, block: int) -> dic
 
 def validate_internal_contract(root: Path, contract: object) -> dict[str, object]:
     contract = exact_keys(contract, TOP_LEVEL_KEYS, "contract")
-    require(contract["format_version"] == 1, "format version drift")
+    require(contract["format_version"] == 2, "format version drift")
     require(contract["contract_version"] == CONTRACT_VERSION, "contract version drift")
     require(
         contract["boundary_rule"]
@@ -1119,6 +1328,40 @@ def validate_internal_contract(root: Path, contract: object) -> dict[str, object
 
     directory_entries = {item.name for item in (root / ARTIFACT_DIRECTORY).iterdir()}
     require(directory_entries == set(by_cid), f"artifact directory closure drift: {sorted(directory_entries ^ set(by_cid))}")
+
+    mapping_records = contract["mapping_writer_inventories"]
+    require(
+        isinstance(mapping_records, list) and len(mapping_records) == len(MAPPING_WRITERS),
+        "mapping writer inventories malformed",
+    )
+    mapping_cids: list[str] = []
+    for index, value in enumerate(mapping_records):
+        mapping = exact_keys(
+            value,
+            MAPPING_INVENTORY_KEYS,
+            f"mapping_writer_inventories[{index}]",
+        )
+        cid = mapping["cid"]
+        require(isinstance(cid, str) and CID_RE.fullmatch(cid), f"mapping inventory CID malformed at {index}")
+        mapping_cids.append(cid)
+        require(type(mapping["function_import_count"]) is int and mapping["function_import_count"] >= 0, f"mapping {cid} function import count malformed")
+        require(type(mapping["defined_function_count"]) is int and mapping["defined_function_count"] >= 0, f"mapping {cid} defined function count malformed")
+        bindings = mapping["registered_handler_export_function_indices"]
+        require(isinstance(bindings, dict) and bindings, f"mapping {cid} handler export bindings malformed")
+        require(
+            all(isinstance(name, str) and type(target) is int and target >= 0 for name, target in bindings.items()),
+            f"mapping {cid} handler export bindings malformed",
+        )
+        exports, imported, defined = wasm_function_exports(
+            artifact_payload(root, cid), set(bindings)
+        )
+        require(imported == mapping["function_import_count"], f"mapping {cid} function import count drift")
+        require(defined == mapping["defined_function_count"], f"mapping {cid} defined function count drift")
+        require(
+            bindings == {handler: exports[handler] for handler in sorted(bindings)},
+            f"mapping {cid} registered handler numeric export binding drift",
+        )
+    require(mapping_cids == sorted(MAPPING_WRITERS), "mapping writer inventory order or CID closure drift")
 
     networks = exact_keys(contract["networks"], {"mainnet", "base"}, "networks")
     seen: set[str] = set()
@@ -1219,19 +1462,21 @@ def validate_internal_contract(root: Path, contract: object) -> dict[str, object
         direct_references.update(direct_ipfs_references(raw))
     require(direct_references == set(by_cid), f"artifact-reference closure drift: {sorted(direct_references ^ set(by_cid))}")
 
-    truth = contract["truth_boundary"]
-    require(isinstance(truth, dict), "truth boundary malformed")
-    for field in (
-        "constant_store_set_target_inventory_complete",
-        "field_writer_audit_complete",
-        "logical_oracle_complete",
-        "boundary_state_continuity_complete",
-        "physical_parity_complete",
-        "poi_parity_complete",
-        "segment_execution_models_decided",
-        "production_ready",
-    ):
-        require(truth.get(field) is False, f"unproved promotion claim: {field}")
+    require(
+        mapping_records == mapping_inventories(root, manifest_cache),
+        "mapping writer inventory drift from raw manifests and WebAssembly",
+    )
+
+    truth = exact_keys(
+        contract["truth_boundary"],
+        set(ANCESTRY_TRUE_FLAGS) | set(ANCESTRY_FALSE_FLAGS) | {"remaining_blockers"},
+        "truth_boundary",
+    )
+    for field in ANCESTRY_TRUE_FLAGS:
+        require(truth[field] is True, f"proved ancestry evidence flag drift: {field}")
+    for field in ANCESTRY_FALSE_FLAGS:
+        require(truth[field] is False, f"unproved promotion claim: {field}")
+    require(truth["remaining_blockers"] == REMAINING_BLOCKERS, "ancestry remaining blockers drift")
     return contract
 
 

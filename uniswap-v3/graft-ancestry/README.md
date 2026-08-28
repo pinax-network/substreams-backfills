@@ -1,12 +1,18 @@
 # Uniswap V3 graft ancestry contract
 
-`v1/contract.json` is the fail-closed, machine-readable history contract for
-the Uniswap V3 mainnet and Base deployments. `v1/writer-compatibility.json`
-adds a versioned writer-evidence layer over that immutable ancestry. They retain
-the exact raw IPFS manifest bytes for every ancestor through a graft-free root
-and every schema, ABI, and mapping WASM directly referenced by those manifests.
-The 38 retained objects are stored without normalization under
-`v1/artifacts/<CID>`.
+`v2/contract.json` is the latest fail-closed, machine-readable lineage contract
+for the Uniswap V3 mainnet and Base deployments.
+`v2/writer-compatibility.json` is writer contract v3 and adds recomputed writer
+evidence over ancestry v2. The original ancestry contract v1 and writer
+contract v2 remain untouched under `v1/` as retained historical contracts.
+Ancestry v2 deliberately reuses the same 38 immutable objects stored without
+normalization under `v1/artifacts/<CID>`; it does not copy or replace them.
+
+The contract proves the complete retained graft-lineage artifact graph: every
+manifest ancestor through a graft-free root and every directly referenced
+schema, ABI, and mapping WASM. That artifact-lineage claim is distinct from
+inherited store-state continuity across a graft. No boundary state has been
+captured or certified, so `boundary_state_continuity_complete` remains false.
 
 ## Ordered writer ownership
 
@@ -33,9 +39,26 @@ does not resolve to exactly one writer.
 Every artifact record contains its CIDv0, raw byte length, SHA-256, media type,
 path, and all manifest references. Verification recomputes the canonical
 single-chunk UnixFS CIDv0 offline, checks regular-file and path containment,
-parses raw manifests with duplicate-key rejection, checks WebAssembly handler
-exports, and requires exact reference closure. No gateway or live service is
-used by CI.
+parses raw manifests with duplicate-key rejection, and requires exact reference
+closure. Its raw WebAssembly parser counts imported and defined functions and
+binds each manifest-registered handler export to its numeric function index. It
+rejects duplicate sections or export names, handler-named non-function exports,
+out-of-range targets, imported-function targets, malformed section structure,
+and truncated, non-canonical, or overflowing u32 LEB128 values. No gateway or
+live service is used by CI.
+
+Canonical u32 LEB encoding is an intentional pinned-evidence restriction that
+is stricter than the WebAssembly specification's width-bounded trailing-zero
+allowance; every relevant field in the retained corpus is minimally encoded.
+This is an export-index structural parser, not a full WebAssembly validator. It
+checks section envelopes, order and uniqueness, import/function/export
+structure, function/code counts, and function indices. Checksum-pinned WABT
+remains responsible for type-index validity, non-function index bounds, code
+instruction validity, and payloads the structural parser intentionally skips.
+Non-function import decoding intentionally accepts only the retained profile's
+short reference/value types and limits flags 0/1; shared, memory64, typed/GC
+reference encodings are rejected. All 293 retained imports are functions, so
+this restriction does not discard any corpus evidence.
 
 The three retained schemas each declare the same 20 entities. The writer
 verifier reruns checksum-pinned `WABT wasm2wat 1.0.35 --generate-names` over all
@@ -45,8 +68,11 @@ same proved argument shape: a decoded constant entity literal, an ID converted
 to string, and the entity value. The verifier finds 162 fixed known targets and
 zero dynamic or indirect targets. The WAT output SHA-256, handler bodies,
 normalized cross-chain bodies, call sequences, and callsite locations are
-retained in `writer-compatibility.json`. Registered-handler evidence is rooted
-at the exact WAT export target rather than a suffix-matched function name.
+retained in `writer-compatibility.json`. Each of the 70 registered-handler
+records follows one exact evidence chain: manifest handler name to raw-WASM
+numeric function index, to the WAT export's symbolic function at that same
+index, to the function-body and normalized-body digests. It is never rooted in
+a suffix-matched function name.
 
 Six modern mappings contain one `call_indirect` instruction. For each, the
 verifier rejects imported/exported tables and every table mutation opcode,
@@ -116,7 +142,7 @@ saves it; a missing call result traps that handler.
 
 ## Factory and Pool writer profiles
 
-Writer contract v2 closes the static Factory/Pool profile inventory across all
+Writer contract v3 closes the static Factory/Pool profile inventory across all
 14 distinct mappings: six Factory mappings with one `handlePoolCreated` each,
 and eight Pool mappings with five handlers each. The verifier binds every
 profile to its retained mapping CID, artifact digest, handler-body digest,
@@ -194,9 +220,11 @@ The contract generates one canonical writer record for each of the eight
 segments and all 28 unordered pairwise diffs. Artifact and semantic differences
 have separate hashes and JSON paths. Six adjacent-graft pairs additionally pin
 the boundary block. Standalone validation first verifies the retained immutable
-ancestry file and cross-checks its path, SHA-256, version, artifact count, and
-mapping count. It then binds the top-level writer segments—not only their child
-records—to the ancestry network, deployment, range, Factory/NPM/Pool CIDs,
+ancestry v2 file and cross-checks its path, SHA-256, version, artifact count,
+mapping count, and 70-handler binding count. It also cross-checks all 70 raw
+numeric bindings against the WAT symbolic targets and handler-body records. It
+then binds the top-level writer segments—not only their child records—to the
+ancestry network, deployment, range, Factory/NPM/Pool CIDs,
 manifest handlers/features, and range-derived historical-guard status. Child
 records are independently derived from those anchored segments and selected
 profile semantics before accepting canonical hashes. Each segment
@@ -250,18 +278,18 @@ python3 -m unittest scripts/tests/test_uniswap_v3_graft_ancestry.py
 python3 -m unittest scripts/tests/test_uniswap_v3_writer_semantics.py
 ```
 
-`--write-contract` deterministically regenerates `v1/contract.json` from the
+`--write-contract` deterministically regenerates `v2/contract.json` from the
 retained artifacts and hard-pinned ancestry/static-review evidence. Generation
 fails if an artifact no longer matches its CID or if manifest reference closure
 changes. The writer verifier's same flag regenerates
-`v1/writer-compatibility.json`, but only after every retained mapping reproduces
+`v2/writer-compatibility.json`, but only after every retained mapping reproduces
 its WAT digest and every writer/profile invariant passes.
 
 ## Truth boundary
 
-These contracts complete the immutable artifact closure, ordered ancestry,
-manifest/handler inventory, schema inventory, exact constant writer-target
-inventory, critical Collect/Flash reachability, Factory/Pool static profile and
+These contracts complete the immutable artifact closure, ordered lineage,
+numeric manifest-handler export bindings, schema inventory, exact constant writer-target
+inventory, conservative Collect/Flash writer closure, Factory/Pool static profile and
 source-binding inventories, all segment writer records and pairwise diffs, and
 static absence certification for Collect, Flash, and TickHourData. Every
 segment's execution model remains undecided and `backfill_allowed=false`.

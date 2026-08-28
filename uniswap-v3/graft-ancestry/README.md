@@ -45,7 +45,8 @@ same proved argument shape: a decoded constant entity literal, an ID converted
 to string, and the entity value. The verifier finds 162 fixed known targets and
 zero dynamic or indirect targets. The WAT output SHA-256, handler bodies,
 normalized cross-chain bodies, call sequences, and callsite locations are
-retained in `writer-compatibility.json`.
+retained in `writer-compatibility.json`. Registered-handler evidence is rooted
+at the exact WAT export target rather than a suffix-matched function name.
 
 Six modern mappings contain one `call_indirect` instruction. For each, the
 verifier rejects imported/exported tables and every table mutation opcode,
@@ -58,9 +59,11 @@ target containing a writer is included in critical handler reachability.
 That complete callsite closure certifies static writer absence for `Collect`,
 `Flash`, and `TickHourData` across the retained mainnet and Base ancestry. It
 does **not** certify that those tables are empty in a live store: runtime
-population remains a separate oracle query. `handleCollect` is also proved to
-reach only `Transaction`, `Position`, and `PositionSnapshot` writers, while
-`handleFlash` reaches only `Pool`.
+population remains a separate oracle query. The conservative lexical call-graph
+closure for `handleCollect` contains only `Transaction`, `Position`, and
+`PositionSnapshot` writers, while the equivalent closure for `handleFlash`
+contains only `Pool`. This over-approximation supports writer-target absence
+checks; it is not a same-path execution proof.
 
 The deployment-specific observations include the historical position-manager
 changes rather than projecting the current mappings backward:
@@ -110,6 +113,94 @@ preserves the previous values. Transfer directly sets the owner from the NPM
 event. Pool Flash uses generated non-try `SmartContract#call` for
 `feeGrowthGlobal0X128` followed by `feeGrowthGlobal1X128`, updates Pool, and
 saves it; a missing call result traps that handler.
+
+## Factory and Pool writer profiles
+
+Writer contract v2 closes the static Factory/Pool profile inventory across all
+14 distinct mappings: six Factory mappings with one `handlePoolCreated` each,
+and eight Pool mappings with five handlers each. The verifier binds every
+profile to its retained mapping CID, artifact digest, handler-body digest,
+reachable entity writers, and WAT locations. It rejects missing or duplicate
+profile coverage.
+
+Every Factory profile retains the reviewed `PoolCreated` order as Pool save,
+dynamic Pool datasource creation, token0 save, token1 save, then Factory save.
+The verifier checks that lexical callsite tail and binds it to the exact handler
+digest, but it does not prove same-path reachability, template argument dataflow,
+or token identity. The ignored-pool guard is likewise a digest-bound reviewed
+observation: literal and equality-call presence are checked, but event.pool to
+comparison to early-return control flow is not. No `PoolCreated` row or
+`Pool.tick` writer exists in the complete static writer inventory. Factory
+static-handler completeness therefore remains false.
+
+Factory metadata has two code generations. Legacy mappings convert the
+`CallResult` pointer/allocation rather than the returned ERC20 total supply.
+Their static arrays are constructor-backed and may contain leading holes: Base
+root contains six empty slots, while historic mainnet allocates six empty slots
+and then appends six definitions. Modern mappings decode total supply and use
+safe literal arrays: empty on Base and six populated entries on mainnet. The
+verifier checks the relevant helper bodies, array construction model, slot and
+entry counts, and profile selection.
+
+The eight Pool profiles retain these independent reviewed axes: legacy/modern
+control generation, tracked-amount threshold and pricing profile, optional
+QmRv 22-token gate, stable shortcut, Initialize persistence, TickDay relation
+mode, fee-tier spacing, and explicit hour re-saves. Control generation, pricing,
+threshold, gate, and stable shortcut are digest-bound reviewed catalog values,
+not complete machine-proven axes. QmWu is the only mapping that rewrites
+`TickDayData.tick` on every update; the other seven assign the relation only
+when the day row is created. The verifier requires `store.get` to feed an exact
+`local.tee`, then `eqz` and the creation `if`, and requires the helper to be
+reachable from the exact exported Swap handler. The decoded `tick` literal,
+setter, and branch placement remain digest-bound lexical evidence: symbolic key
+stack dataflow and therefore the relation semantics are not machine-proven.
+Legacy fee-spacing helpers must be
+reachable from that same export and require an exact comparison branch whose
+returned value is the recorded spacing. Equality branches are direct; compare
+branches must use `eqz`. Modern inlined branches remain digest-bound reviewed
+observations with only comparison-count and numeric-inventory checks.
+
+QmZPi, QmPZ, and QmSa all contain direct PoolHourData re-save callsites after
+the Pool-hour helper. The retained evidence records one direct re-save for
+QmZPi and two each for QmPZ and QmSa. The other five profiles contain none.
+These are exact lexical callsite counts and ordering; full control-flow
+reachability is not claimed.
+
+Mint, Burn, and Swap remain the only Pool event rows. The reviewed Flash behavior
+is two ordered non-try fee-growth calls and one Pool save, with no Flash row.
+For inline codegen, the verifier proves distinct field-specific method/signature
+calls and distinct result locals, then retains lexical setter/save shapes and
+the exact handler digest. Wrapper codegen additionally has immediate local
+setter operand checks. Neither model claims CFG dominance or same-path execution.
+Initialize persistence is likewise a digest-bound reviewed observation backed
+by a lexical Pool.save callsite inventory, not an executable-path proof. The
+Pool contract
+also records the digest-bound reviewed observations for the Swap-only ignored
+pool, cumulative writer groups, Token day/hour untracked-volume quirk, and
+handler-atomic deterministic failure source model. These observations do not
+claim complete field-value semantics. This is static deployed-WASM evidence,
+not a runtime-population or boundary-state oracle.
+
+Four mappings have exact source-entry blob anchors: Base-root Factory and Pool,
+and current mainnet Factory and Pool. These pin a repository commit, entry path,
+and Git blob only; no reproducible source-to-WASM build correspondence is
+claimed. Every other mapping is explicitly `none_found`; four historic source
+commits are retained only as unassigned semantic anchors. The retained deployed
+WASM remains authoritative in every case. Validation reconstructs every full
+provenance tuple from the mapping analysis and pinned entry-anchor table;
+self-consistent fabricated commit/path/blob tuples are rejected.
+
+The contract generates one canonical writer record for each of the eight
+segments and all 28 unordered pairwise diffs. Artifact and semantic differences
+have separate hashes and JSON paths. Six adjacent-graft pairs additionally pin
+the boundary block. Standalone validation first verifies the retained immutable
+ancestry file and cross-checks its path, SHA-256, version, artifact count, and
+mapping count. It then binds the top-level writer segments—not only their child
+records—to the ancestry network, deployment, range, Factory/NPM/Pool CIDs,
+manifest handlers/features, and range-derived historical-guard status. Child
+records are independently derived from those anchored segments and selected
+profile semantics before accepting canonical hashes. Each segment
+still has `execution_model="undecided"` and `backfill_allowed=false`.
 
 ## Trigger timing and failure source model
 
@@ -170,11 +261,13 @@ its WAT digest and every writer/profile invariant passes.
 
 These contracts complete the immutable artifact closure, ordered ancestry,
 manifest/handler inventory, schema inventory, exact constant writer-target
-inventory, critical Collect/Flash reachability, and static absence certification
-for Collect, Flash, and TickHourData. Every segment's execution model remains
-undecided and `backfill_allowed=false`.
+inventory, critical Collect/Flash reachability, Factory/Pool static profile and
+source-binding inventories, all segment writer records and pairwise diffs, and
+static absence certification for Collect, Flash, and TickHourData. Every
+segment's execution model remains undecided and `backfill_allowed=false`.
 
-The complete field writer audit, complete handler semantics, runtime
+Factory/Pool profile-axis machine proof, Factory/Pool static writer provenance,
+the complete field writer audit, complete handler semantics, runtime
 population, target Graph Node runtime identity, boundary-state continuity,
 logical parity, physical history, proof of indexing, execution-model decisions,
 and production package gates remain false.

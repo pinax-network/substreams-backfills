@@ -38,7 +38,7 @@ The Base stable list intentionally contains
 address. That surprising value is present in the deployed Base mapping WASM and
 is preserved rather than “corrected.” The deployed ignored-pool and swap-only
 hotfix behavior is likewise pinned. See
-`provenance/uniswap-v3-chain-config-v1.json` for the deployment, mapping, ABI,
+`docs/provenance/uniswap-v3-chain-config-v1.json` for the deployment, mapping, ABI,
 schema, graft, digest, and read-only reference-pool evidence.
 
 ## One binary, two executions

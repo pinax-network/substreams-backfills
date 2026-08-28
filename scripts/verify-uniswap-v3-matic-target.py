@@ -13,7 +13,7 @@ from pathlib import Path
 import yaml
 
 
-LOCK_PATH = Path("provenance/uniswap-v3-matic-target.json")
+LOCK_PATH = Path("docs/provenance/uniswap-v3-matic-target.json")
 EXPECTED_DEPLOYMENT = "QmWqwrVtcTzZzbTLGLgiRSQzbZ7MTH53VwqK4AxXVmf7n3"
 EXPECTED_SCHEMA = "QmVYKvi799Cpg4WVXjhSWjRXNcNg4p1JQxj1WBdbcfHvoq"
 EXPECTED_SOURCE_STATUS = "exact_reproduction"

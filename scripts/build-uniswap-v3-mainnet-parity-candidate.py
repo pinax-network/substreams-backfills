@@ -511,7 +511,7 @@ def build_manifest(args: argparse.Namespace) -> dict[str, object]:
 
     profile = args.profile.resolve()
     config = root / "uniswap-v3/chain-config/configs/mainnet-v1.json"
-    provenance_path = root / "provenance/uniswap-v3-chain-config-v1.json"
+    provenance_path = root / "docs/provenance/uniswap-v3-chain-config-v1.json"
     overlay = root / "uniswap-v3/chain-config/runtime.patch"
     builder = root / "scripts/build-uniswap-v3-mainnet-parity-candidate.py"
     capture_source = root / "scripts/parity-client/main.go"

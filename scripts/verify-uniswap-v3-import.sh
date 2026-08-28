@@ -43,8 +43,8 @@ git diff --cached --quiet -- "$import_path" || fail "index modifies the imported
 
 python3 scripts/verify-uniswap-v3-logical-contract.py
 python3 scripts/build-uniswap-v3-import-inventory.py \
-    --check provenance/uniswap-v3-qma8a81t-parity-files.json \
-    --provenance provenance/uniswap-v3-qma8a81t-parity.json \
+    --check docs/provenance/uniswap-v3-qma8a81t-parity-files.json \
+    --provenance docs/provenance/uniswap-v3-qma8a81t-parity.json \
     --verify-source-dir "$import_path"
 
 echo "verified mirrored Uniswap V3 history, exact imported tree and inventory, 75 files, one executable mode, and the 20-entity logical contract"

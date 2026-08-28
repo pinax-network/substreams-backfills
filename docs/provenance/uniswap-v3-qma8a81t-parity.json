@@ -14,7 +14,7 @@
     "rust_toolchain": "1.79"
   },
   "file_inventory": {
-    "path": "provenance/uniswap-v3-qma8a81t-parity-files.json",
+    "path": "docs/provenance/uniswap-v3-qma8a81t-parity-files.json",
     "sha256": "177a98f60f230d1b13dfa064f3b98a50163a506d2c7a08432330d47ee2170e60",
     "format_version": 1,
     "records": 75

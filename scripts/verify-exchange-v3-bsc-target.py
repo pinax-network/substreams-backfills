@@ -13,7 +13,7 @@ from pathlib import Path
 import yaml
 
 
-LOCK_PATH = Path("provenance/exchange-v3-bsc-target.json")
+LOCK_PATH = Path("docs/provenance/exchange-v3-bsc-target.json")
 PROFILE_PATH = Path("exchange-v3-bsc/layout-profile-v1.json")
 BINDING_PATH = Path(
     "exchange-v3-bsc/"

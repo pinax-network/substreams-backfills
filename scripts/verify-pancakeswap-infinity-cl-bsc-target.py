@@ -13,7 +13,7 @@ from pathlib import Path
 import yaml
 
 
-LOCK_PATH = Path("provenance/pancakeswap-infinity-cl-bsc-target.json")
+LOCK_PATH = Path("docs/provenance/pancakeswap-infinity-cl-bsc-target.json")
 PROFILE_PATH = Path("pancakeswap-infinity-cl-bsc/layout-profile-v1.json")
 BINDING_PATH = Path(
     "pancakeswap-infinity-cl-bsc/"

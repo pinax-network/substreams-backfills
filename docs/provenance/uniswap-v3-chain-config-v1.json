@@ -6,7 +6,7 @@
     "commit": "42c7b15345e6df80561b694e52a0eb622b374b96",
     "tree": "a00e882e92d07b46550b74dea279c114d57631ac",
     "import_path": "uniswap-v3/source",
-    "contract": "provenance/uniswap-v3-qma8a81t-parity.json",
+    "contract": "docs/provenance/uniswap-v3-qma8a81t-parity.json",
     "mutation_policy": "The imported source stays byte-identical. runtime.patch is applied only to a separate materialized directory."
   },
   "overlay": {

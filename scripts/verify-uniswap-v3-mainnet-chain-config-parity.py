@@ -45,11 +45,11 @@ HISTORICAL_NOTE_COMMIT = "d3e5384b3ef47c78e8a1404b3c33de1ae8a78e3a"
 HISTORICAL_NOTE_BLOB = "e0177270802668f4c2832ec0eba51f8c250219a6"
 HISTORICAL_NOTE_SHA256 = "6726bc0a64d4a6c6e6a54b4db09fb8c28ed0a44c82d05cb962d0ab16851f011a"
 CONFIG_SHA256 = "30f5caf9ee8906a8886dc103e55286b9d5b6dbd8784d1c97d21b9a38b266bb55"
-CONFIG_PROVENANCE_SHA256 = "ca098e763dce0c139bff7137774cb27ae56058e3475f7de529fb179de0cf8667"
+CONFIG_PROVENANCE_SHA256 = "d8b6d0c1454929209343acbcc58f8801fe66f3cd7947a383209d0be0dd0f577f"
 OVERLAY_SHA256 = "4f87d22239b84aebca6712a72e2c4047b0735e911756973b6e7c228fe455e8ae"
 SOURCE_SCHEMA_SHA256 = "f234a0e4dc88c923d6ad28a3fcd1ed6093351bd2221d7c18486f0cbde41bb52c"
 TARGET_SCHEMA_SHA256 = "ae03d0c6d3c6c03f87ae8e699b1e71804266c1d4adb7acbf4f4de5d48727c39c"
-IMPORT_PROVENANCE_SHA256 = "9e44a654281d6d0d6ecfc8cf3fc70dcc56bcbd8999d13ecc20f77b84b133d165"
+IMPORT_PROVENANCE_SHA256 = "aafc43562e8867b0e40cfc905065aad14dc72227b7b937d1cf7ccbf6eb8457a8"
 IMPORT_INVENTORY_SHA256 = "177a98f60f230d1b13dfa064f3b98a50163a506d2c7a08432330d47ee2170e60"
 CAPTURE_CLIENT_VERSION = (
     "uniswap-v3-mainnet-parity-client-v1 "
@@ -293,9 +293,9 @@ def validate_profile(profile: dict[str, object], root: Path) -> None:
         "commit": IMPORT_COMMIT,
         "tree": IMPORT_TREE,
         "import_path": "uniswap-v3/source",
-        "provenance_path": "provenance/uniswap-v3-qma8a81t-parity.json",
+        "provenance_path": "docs/provenance/uniswap-v3-qma8a81t-parity.json",
         "provenance_sha256": IMPORT_PROVENANCE_SHA256,
-        "inventory_path": "provenance/uniswap-v3-qma8a81t-parity-files.json",
+        "inventory_path": "docs/provenance/uniswap-v3-qma8a81t-parity-files.json",
         "inventory_sha256": IMPORT_INVENTORY_SHA256,
     }, "profile source-import drift")
     config = exact_keys(
@@ -306,7 +306,7 @@ def validate_profile(profile: dict[str, object], root: Path) -> None:
     require(config == {
         "path": "uniswap-v3/chain-config/configs/mainnet-v1.json",
         "sha256": CONFIG_SHA256,
-        "provenance_path": "provenance/uniswap-v3-chain-config-v1.json",
+        "provenance_path": "docs/provenance/uniswap-v3-chain-config-v1.json",
         "provenance_sha256": CONFIG_PROVENANCE_SHA256,
         "selector": f"version=1;network=mainnet;sha256={CONFIG_SHA256}",
         "module_start": START_BLOCK,

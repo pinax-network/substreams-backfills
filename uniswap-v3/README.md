@@ -46,6 +46,12 @@ materializes it separately, tests both pinned configurations, builds one WASM,
 and proves the mainnet and Base diagnostic packages embed identical WASM bytes.
 A factory-only parameter is still not a valid Base rebind.
 
+The sibling [`graft-ancestry/`](graft-ancestry/README.md) contract retains all
+eight mainnet/Base history segments and the exact 38-object manifest artifact
+closure. It makes the graft-block ownership rule executable and records the
+historical mapping differences that forbid replaying the current writer from
+origin.
+
 This does **not** yet prove fixed-range mainnet output parity, Base Firehose and
 authoritative-reference parity, exact physical history, save ordering, proof of
 indexing, GraphQL parity, or a controlled production package pin.

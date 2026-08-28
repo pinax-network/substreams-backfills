@@ -32,6 +32,8 @@ jobs:
         run: python3 scripts/verify-pancakeswap-infinity-cl-bsc-target.py
       - name: Verify immutable Exchange V3 BSC target
         run: python3 scripts/verify-exchange-v3-bsc-target.py
+      - name: Verify immutable Uniswap V3 graft ancestry
+        run: python3 scripts/verify-uniswap-v3-graft-ancestry.py
       - name: Test eligibility decisions and freshness gates
         run: python3 -m unittest discover -s scripts/tests -p 'test_*.py'
 

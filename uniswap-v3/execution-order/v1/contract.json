@@ -1,0 +1,608 @@
+{
+  "contract_version": "uniswap-v3-execution-order/v1",
+  "execution_model": {
+    "dynamic_data_sources": {
+      "activation_scope": "entire_creation_block",
+      "creation_log_ordinal_gate": false,
+      "host_order": "data-source creation order",
+      "host_scope": "only hosts created in the current dynamic stage",
+      "raw_global_flattening": false,
+      "stage_batch": "successfully instantiated nonduplicate hosts produced by the prior stage, preserving encounter order",
+      "stage_scope": "stage_local",
+      "traversal": "breadth_first",
+      "trigger_source": "refetch and rematch the whole creation block for each new-host batch"
+    },
+    "failure_modes": {
+      "deterministic_fatal": "discard the failing mapping handler; filter only entity modifications to the PoI entity, still pass persisted data sources and deterministic errors to the block transaction, advance the failed block pointer, then stop",
+      "deterministic_nonfatal": "discard the failing mapping handler's entity and created-data-source changes; retain successful modifications and submit the block/PoI transaction; continuation is conditional on no fail-fast cancellation",
+      "deterministic_nonfatal_fail_fast": "after transaction, an unsynced deployment may still be canceled by maybe_cancel",
+      "pretransaction_mapping_decode_or_dynamic_stage_unknown": "return before block transaction; do not commit that partial block state"
+    },
+    "handler_rollback": {
+      "block_shared_vid_sequence": true,
+      "chain_reorg_replay": "entity versions created at or after the first reverted block are removed; prior versions closed there are unclamped; replay constructs a fresh block-scoped sequence generator",
+      "created_data_sources_discarded_on_deterministic_error": true,
+      "discard_scope": [
+        "handler entity updates",
+        "handler-created data sources"
+      ],
+      "entity_changes_buffered_per_mapping_handler": true,
+      "entity_changes_discarded_on_deterministic_error": true,
+      "entity_vid_distinct_from_dynamic_datasource_metadata_vid": true,
+      "not_rewound": [
+        "VID sequence",
+        "auto-ID sequence",
+        "proof-of-indexing events",
+        "write-capacity accounting",
+        "metrics",
+        "cache reads"
+      ],
+      "vid_allocation": "each EntityCache::set call that reaches the allocation point receives a fresh VID; discarding that handler's entity buffer does not reclaim it",
+      "vid_reserved_sequence_start": 100,
+      "vid_sequence_rewinds_on_handler_rollback": false
+    },
+    "proof_of_indexing": {
+      "deterministic_error": "append DeterministicError with redacted_events equal to PoI events since the runnable-trigger boundary",
+      "failed_handler_set_entity_events_physically_erased": false,
+      "handler_boundary": "once per runnable raw trigger before its ordered hosted mapping handlers",
+      "redaction_encoding": "retained SetEntity events plus appended counter",
+      "set_entity_precedes_vid_allocation": true,
+      "set_entity_written_before_entity_cache_set": true
+    },
+    "scope": "Ethereum onchain triggers and mapping handlers in Graph Node v0.44.0",
+    "stage_one": {
+      "ethereum_comparator": {
+        "block_start": "before every non-Start trigger",
+        "call_vs_call": "ascending transaction index",
+        "log_vs_call_different_transaction": "ascending transaction index",
+        "log_vs_call_same_transaction": "log before call",
+        "log_vs_log": "ascending global log index",
+        "non_start_block_triggers": "after calls and logs; relative input order is retained when the block-trigger comparator is equal"
+      },
+      "handler_order": "for each ordered raw trigger, matching hosts execute in insertion order",
+      "initial_host_order": "successfully instantiated nonduplicate hosts encountered from manifest data sources in manifest order, followed by stored dynamic data sources ordered by creation block then database vid",
+      "input": "sorted and deduplicated BlockWithTriggers for the block",
+      "ordering_scope": "stage_local"
+    }
+  },
+  "fixtures": {
+    "rollback": {
+      "expected_allocations": [
+        {
+          "entity": "A",
+          "vid_sequence": 100
+        },
+        {
+          "entity": "B",
+          "vid_sequence": 101
+        },
+        {
+          "entity": "C",
+          "vid_sequence": 102
+        },
+        {
+          "entity": "D",
+          "vid_sequence": 103
+        },
+        {
+          "entity": "PoI",
+          "vid_sequence": 104
+        }
+      ],
+      "expected_persisted_entities_nonfatal": [
+        {
+          "entity": "A",
+          "vid_sequence": 100
+        },
+        {
+          "entity": "D",
+          "vid_sequence": 103
+        },
+        {
+          "entity": "PoI",
+          "vid_sequence": 104
+        }
+      ],
+      "expected_poi_events": [
+        {
+          "entity": "A",
+          "type": "SetEntity"
+        },
+        {
+          "entity": "B",
+          "type": "SetEntity"
+        },
+        {
+          "entity": "C",
+          "type": "SetEntity"
+        },
+        {
+          "redacted_events": 2,
+          "type": "DeterministicError"
+        },
+        {
+          "entity": "D",
+          "type": "SetEntity"
+        }
+      ],
+      "fatal_transaction": {
+        "deployment_stops_after_transaction": true,
+        "deterministic_errors_passed": true,
+        "entity_modifications": [
+          {
+            "entity": "PoI",
+            "vid_sequence": 104
+          }
+        ],
+        "failed_block_pointer_advanced": true,
+        "persisted_dynamic_data_sources_passed": true
+      },
+      "fixture_id": "handler-rollback-vid-gap-and-poi-redaction",
+      "handlers": [
+        {
+          "id": "success-before",
+          "outcome": "success",
+          "set_entities": [
+            "A"
+          ]
+        },
+        {
+          "id": "deterministic-failure",
+          "outcome": "deterministic_error",
+          "set_entities": [
+            "B",
+            "C"
+          ]
+        },
+        {
+          "id": "success-after",
+          "outcome": "success",
+          "set_entities": [
+            "D"
+          ]
+        }
+      ],
+      "nonfatal_transaction": {
+        "block_transaction_accepted_and_pointer_advanced": true,
+        "continuation_after_transaction_acceptance": "conditional_on_no_fail_fast_cancellation",
+        "persisted_user_entities": [
+          "A",
+          "D"
+        ],
+        "poi_entity_modification": {
+          "entity": "PoI",
+          "vid_sequence": 104
+        }
+      },
+      "scope": "one hosted mapping handler per runnable raw trigger",
+      "vid_sequence_start": 100
+    },
+    "stage_order": {
+      "creations": [
+        {
+          "created_host": "pool-a",
+          "parent_host": "factory",
+          "trigger": "create-a"
+        },
+        {
+          "created_host": "pool-b",
+          "parent_host": "factory",
+          "trigger": "create-b"
+        },
+        {
+          "created_host": "pool-a-child",
+          "parent_host": "pool-a",
+          "trigger": "pool-a-hit"
+        },
+        {
+          "created_host": "pool-b-child",
+          "parent_host": "pool-b",
+          "trigger": "pool-b-hit"
+        }
+      ],
+      "description": "Synthetic log-only counterexample: every dynamic-stage match predates the log that created its host, so flattening or ordinal gating changes the trace.",
+      "expected_stage_batches": [
+        [
+          "factory"
+        ],
+        [
+          "pool-a",
+          "pool-b"
+        ],
+        [
+          "pool-a-child",
+          "pool-b-child"
+        ]
+      ],
+      "expected_trace": [
+        {
+          "host": "factory",
+          "log_index": 10,
+          "stage": 0,
+          "trigger": "create-a"
+        },
+        {
+          "host": "factory",
+          "log_index": 20,
+          "stage": 0,
+          "trigger": "create-b"
+        },
+        {
+          "host": "pool-a",
+          "log_index": 3,
+          "stage": 1,
+          "trigger": "pool-a-hit"
+        },
+        {
+          "host": "pool-b",
+          "log_index": 4,
+          "stage": 1,
+          "trigger": "pool-b-hit"
+        },
+        {
+          "host": "pool-a-child",
+          "log_index": 1,
+          "stage": 2,
+          "trigger": "grandchild-hit"
+        },
+        {
+          "host": "pool-b-child",
+          "log_index": 1,
+          "stage": 2,
+          "trigger": "grandchild-hit"
+        }
+      ],
+      "fixture_id": "stage-local-whole-block-breadth-first",
+      "initial_hosts": [
+        "factory"
+      ],
+      "triggers": [
+        {
+          "id": "grandchild-hit",
+          "log_index": 1,
+          "matching_hosts": [
+            "pool-a-child",
+            "pool-b-child"
+          ]
+        },
+        {
+          "id": "pool-a-hit",
+          "log_index": 3,
+          "matching_hosts": [
+            "pool-a"
+          ]
+        },
+        {
+          "id": "pool-b-hit",
+          "log_index": 4,
+          "matching_hosts": [
+            "pool-b"
+          ]
+        },
+        {
+          "id": "create-a",
+          "log_index": 10,
+          "matching_hosts": [
+            "factory"
+          ]
+        },
+        {
+          "id": "create-b",
+          "log_index": 20,
+          "matching_hosts": [
+            "factory"
+          ]
+        }
+      ]
+    }
+  },
+  "format_version": 1,
+  "graph_node_reference": {
+    "commit": "77823b5a7adc4eac4abf03202c8dd7cb00dea31d",
+    "commit_url": "https://github.com/graphprotocol/graph-node/commit/77823b5a7adc4eac4abf03202c8dd7cb00dea31d",
+    "scope": "primary-source reference model; not target runtime identity",
+    "source_files": [
+      {
+        "claims": [
+          "ethereum-trigger-comparator"
+        ],
+        "immutable_url": "https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/chain/ethereum/src/trigger.rs",
+        "path": "chain/ethereum/src/trigger.rs",
+        "relevant_lines": [
+          "364-403"
+        ],
+        "sha256": "6b31d65fa9c0289d76a5bb7d812965e51e26054bb4fad417aa641843c531700f"
+      },
+      {
+        "claims": [
+          "stage-trigger-sort-and-dedup",
+          "extended-stage-resort"
+        ],
+        "immutable_url": "https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/graph/src/blockchain/block_stream.rs",
+        "path": "graph/src/blockchain/block_stream.rs",
+        "relevant_lines": [
+          "248-260",
+          "293-295"
+        ],
+        "sha256": "8e4004884534c18054cb7ccd30b9eb675cbc956a3f651041e546ccca31fb0933"
+      },
+      {
+        "claims": [
+          "initial-stage-before-dynamic-stages",
+          "breadth-first-dynamic-datasource-stages",
+          "whole-block-refetch-per-dynamic-stage",
+          "new-host-creation-order",
+          "fatal-and-nonfatal-deterministic-error-policy",
+          "block-shared-vid-generator",
+          "poi-entity-consumes-shared-vid"
+        ],
+        "immutable_url": "https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/core/src/subgraph/runner/mod.rs",
+        "path": "core/src/subgraph/runner/mod.rs",
+        "relevant_lines": [
+          "636-805",
+          "807-825",
+          "854-923",
+          "947-1027",
+          "1060-1180",
+          "1222-1292",
+          "1295-1405",
+          "1698-1768"
+        ],
+        "sha256": "bb5623ed45b51ad99c783069ea4344c08a69e826016951a8b6282f3685e4b026"
+      },
+      {
+        "claims": [
+          "nonfatal-errors-feature-selects-error-policy"
+        ],
+        "immutable_url": "https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/core/src/subgraph/inputs.rs",
+        "path": "core/src/subgraph/inputs.rs",
+        "relevant_lines": [
+          "79-85"
+        ],
+        "sha256": "22a2ee4a8ef0b7ef4cca52115b505c41ff5ee917621645fa48e0971e712ff278"
+      },
+      {
+        "claims": [
+          "runnable-triggers-execute-in-stage-order"
+        ],
+        "immutable_url": "https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/core/src/subgraph/runner/trigger_runner.rs",
+        "path": "core/src/subgraph/runner/trigger_runner.rs",
+        "relevant_lines": [
+          "44-78"
+        ],
+        "sha256": "02813d2165820c59b9391fef0c70e565f7175b5f8f40c062b71b7975645d8e93"
+      },
+      {
+        "claims": [
+          "matching-hosts-execute-in-host-order",
+          "poi-boundary-is-runnable-trigger-scoped",
+          "deterministic-error-poi-event-appended"
+        ],
+        "immutable_url": "https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/core/src/subgraph/trigger_processor.rs",
+        "path": "core/src/subgraph/trigger_processor.rs",
+        "relevant_lines": [
+          "24-80"
+        ],
+        "sha256": "5cdce1e42627e45d8520d5e8d938a1eb13f142c245d72d5bfb098d94e7cb2905"
+      },
+      {
+        "claims": [
+          "onchain-host-insertion-order-retained"
+        ],
+        "immutable_url": "https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/core/src/subgraph/context/instance/hosts.rs",
+        "path": "core/src/subgraph/context/instance/hosts.rs",
+        "relevant_lines": [
+          "59-75",
+          "96-120"
+        ],
+        "sha256": "059be297f3f0696d4b1c8900a3287e19a5fc761510f212da94b2642085dc0bc2"
+      },
+      {
+        "claims": [
+          "duplicate-runtime-hosts-are-not-added"
+        ],
+        "immutable_url": "https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/core/src/subgraph/context/instance/mod.rs",
+        "path": "core/src/subgraph/context/instance/mod.rs",
+        "relevant_lines": [
+          "133-187"
+        ],
+        "sha256": "4646efa652cd60763c8f3d6555640c2065804c654c73ff08e79b04b79849dd8e"
+      },
+      {
+        "claims": [
+          "manifest-hosts-before-stored-dynamic-hosts"
+        ],
+        "immutable_url": "https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/core/src/subgraph/instance_manager.rs",
+        "path": "core/src/subgraph/instance_manager.rs",
+        "relevant_lines": [
+          "350-357",
+          "529-545"
+        ],
+        "sha256": "8921629009c13cf1fa7464fddf6dea62440e432f5681172a8ce4be2ee60abfed"
+      },
+      {
+        "claims": [
+          "stored-dynamic-datasources-loaded-in-store-order"
+        ],
+        "immutable_url": "https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/core/src/subgraph/loader.rs",
+        "path": "core/src/subgraph/loader.rs",
+        "relevant_lines": [
+          "8-38"
+        ],
+        "sha256": "1bd089f3e888da61df66c4782f59dbd325de0b16e0e304300e951ce89f69c46d"
+      },
+      {
+        "claims": [
+          "legacy-stored-datasource-order-is-creation-block-then-database-vid"
+        ],
+        "immutable_url": "https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/store/postgres/src/dynds/shared.rs",
+        "path": "store/postgres/src/dynds/shared.rs",
+        "relevant_lines": [
+          "40-102"
+        ],
+        "sha256": "d055be63954a967d395145cf16b6c58f276a0c54f99640f3f1ca11ac9f86c087"
+      },
+      {
+        "claims": [
+          "private-stored-datasource-order-is-creation-block-then-database-vid"
+        ],
+        "immutable_url": "https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/store/postgres/src/dynds/private.rs",
+        "path": "store/postgres/src/dynds/private.rs",
+        "relevant_lines": [
+          "105-149"
+        ],
+        "sha256": "f3959c0729536d633222c2ffc2c221399c424fd232d6f79a707471baec353f61"
+      },
+      {
+        "claims": [
+          "dynamic-datasource-start-block-is-creation-block",
+          "matching-gates-by-address-and-block-number-not-log-ordinal"
+        ],
+        "immutable_url": "https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/chain/ethereum/src/data_source.rs",
+        "path": "chain/ethereum/src/data_source.rs",
+        "relevant_lines": [
+          "90-138",
+          "675-703"
+        ],
+        "sha256": "d636a77029f1bd56101a1d9524a80f4b63a4157433a31b8964239c82a1e22921"
+      },
+      {
+        "claims": [
+          "mapping-handler-enter-exit-and-deterministic-discard"
+        ],
+        "immutable_url": "https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/runtime/wasm/src/module/instance.rs",
+        "path": "runtime/wasm/src/module/instance.rs",
+        "relevant_lines": [
+          "164-247"
+        ],
+        "sha256": "5d259076417e59ef217d888b5bb8e711faa31e7431165ac8f5c2bbeac9accc86"
+      },
+      {
+        "claims": [
+          "datasource-create-receives-block-number-with-no-log-ordinal"
+        ],
+        "immutable_url": "https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/runtime/wasm/src/module/context.rs",
+        "path": "runtime/wasm/src/module/context.rs",
+        "relevant_lines": [
+          "1021-1068"
+        ],
+        "sha256": "f3bb98699b3c3b20a3627df8c96f2eb633629c5dad8426490850226c2cfea800"
+      },
+      {
+        "claims": [
+          "failed-handler-entities-and-created-datasources-discarded"
+        ],
+        "immutable_url": "https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/graph/src/components/subgraph/instance.rs",
+        "path": "graph/src/components/subgraph/instance.rs",
+        "relevant_lines": [
+          "150-179"
+        ],
+        "sha256": "e55bda1854ea60b10729b56b2e1b524bbc76aaa02a4d3256424b1631968de504"
+      },
+      {
+        "claims": [
+          "block-shared-monotonic-vid-sequence",
+          "handler-entity-buffer-discard-does-not-rewind-vid"
+        ],
+        "immutable_url": "https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/graph/src/components/store/entity_cache.rs",
+        "path": "graph/src/components/store/entity_cache.rs",
+        "relevant_lines": [
+          "21-68",
+          "140-154",
+          "209-233",
+          "350-385"
+        ],
+        "sha256": "6242beb1480057b553e5300917d310d13194c6c4948c8137b3b6b2eba9a8139b"
+      },
+      {
+        "claims": [
+          "chain-revert-removes-and-unclamps-entity-versions"
+        ],
+        "immutable_url": "https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/store/postgres/src/relational.rs",
+        "path": "store/postgres/src/relational.rs",
+        "relevant_lines": [
+          "1076-1120"
+        ],
+        "sha256": "32081c3a099af03dcbc50d0a76bf876457741eb16d7ac39d234d90332f6a0c55"
+      },
+      {
+        "claims": [
+          "writer-selects-synchronous-transaction-or-async-queue-acceptance",
+          "accepted-block-transaction-advances-in-memory-block-pointer"
+        ],
+        "immutable_url": "https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/store/postgres/src/writable.rs",
+        "path": "store/postgres/src/writable.rs",
+        "relevant_lines": [
+          "1131-1211",
+          "1445-1495",
+          "1800-1843"
+        ],
+        "sha256": "f2d71c26e9aef31f71c65329769e1d964c34d6e4936acd51aa006ea64ebea1ce"
+      },
+      {
+        "claims": [
+          "poi-set-entity-written-before-entity-cache-set"
+        ],
+        "immutable_url": "https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/runtime/wasm/src/host_exports.rs",
+        "path": "runtime/wasm/src/host_exports.rs",
+        "relevant_lines": [
+          "300-340"
+        ],
+        "sha256": "7ec1c25389a3d8a173963175afc036b2dbbc442ee41a3ed4295e4991198bec98"
+      },
+      {
+        "claims": [
+          "poi-handler-boundary-and-redacted-event-count"
+        ],
+        "immutable_url": "https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/graph/src/components/subgraph/proof_of_indexing/online.rs",
+        "path": "graph/src/components/subgraph/proof_of_indexing/online.rs",
+        "relevant_lines": [
+          "154-168",
+          "197-207",
+          "230-247"
+        ],
+        "sha256": "06862d0f0a7150a0e6ad7c42670292c875ad77c78c726225215db230c085fa6a"
+      },
+      {
+        "claims": [
+          "poi-set-entity-and-deterministic-error-event-semantics"
+        ],
+        "immutable_url": "https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/graph/src/components/subgraph/proof_of_indexing/event.rs",
+        "path": "graph/src/components/subgraph/proof_of_indexing/event.rs",
+        "relevant_lines": [
+          "8-58"
+        ],
+        "sha256": "5d46455d5e3103afd724ef09c3708ee413a722ed2eed393e7d9f7276d0b6a7b2"
+      }
+    ],
+    "tag_ref_url": "https://api.github.com/repos/graphprotocol/graph-node/git/ref/tags/v0.44.0",
+    "tree": "1f372b47e4de659ddbf503cdbc31ebe4d54df239",
+    "version": "v0.44.0"
+  },
+  "mode": "reference-truth-supplement",
+  "reference_truth_sha256": "18e55c551761ea5f3f70dcc43cae01e1932624413da0d35f2dd49c2c5b9b0cbd",
+  "source_contracts": {
+    "segment_matrix_v1": {
+      "contract_version": "uniswap-v3-segment-writer-matrix/v1",
+      "path": "uniswap-v3/segment-writer-matrix/v1/contract.json",
+      "raw_sha256": "7f6d1a34a8c885fe5ddcd81895818ba7ae8a0d736d541b881c1cc7cd54275161"
+    },
+    "writer_v3": {
+      "contract_version": "uniswap-v3-writer-compatibility/v3",
+      "path": "uniswap-v3/graft-ancestry/v2/writer-compatibility.json",
+      "raw_sha256": "259481724561d5aa725c17f90b5a19ea93ad6f7cd6074cf2cb8a8661c39f81c4"
+    }
+  },
+  "truth_boundary": {
+    "backfill_allowed": false,
+    "combined_handler_order_implemented": false,
+    "dynamic_datasource_stage_reference_modeled": true,
+    "graph_node_reference_source_bound": true,
+    "physical_parity_complete": false,
+    "poi_parity_complete": false,
+    "production_ready": false,
+    "runtime_consumes_contract": false,
+    "same_path_order_machine_proven": false,
+    "target_runtime_identity_bound": false
+  }
+}

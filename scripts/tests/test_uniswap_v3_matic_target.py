@@ -12,7 +12,7 @@ from pathlib import Path
 
 REPOSITORY = Path(__file__).resolve().parents[2]
 VERIFIER = REPOSITORY / "scripts/verify-uniswap-v3-matic-target.py"
-LOCK_PATH = Path("provenance/uniswap-v3-matic-target.json")
+LOCK_PATH = Path("docs/provenance/uniswap-v3-matic-target.json")
 
 
 class UniswapV3MaticTargetTest(unittest.TestCase):
@@ -25,7 +25,7 @@ class UniswapV3MaticTargetTest(unittest.TestCase):
             REPOSITORY / "uniswap-v3/source/schema.graphql",
             self.root / "uniswap-v3/source/schema.graphql",
         )
-        (self.root / "provenance").mkdir()
+        (self.root / LOCK_PATH.parent).mkdir(parents=True)
         shutil.copy2(REPOSITORY / LOCK_PATH, self.root / LOCK_PATH)
 
     def tearDown(self) -> None:

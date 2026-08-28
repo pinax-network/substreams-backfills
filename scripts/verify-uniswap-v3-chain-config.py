@@ -489,7 +489,7 @@ def verify_packages(
 
 
 def verify_provenance(root: Path) -> None:
-    path = root / "provenance/uniswap-v3-chain-config-v1.json"
+    path = root / "docs/provenance/uniswap-v3-chain-config-v1.json"
     provenance = json.loads(path.read_text())
     require(provenance["format_version"] == 1, "ChainConfig provenance format drift")
     require(provenance["config_version"] == CONFIG_VERSION, "ChainConfig provenance version drift")

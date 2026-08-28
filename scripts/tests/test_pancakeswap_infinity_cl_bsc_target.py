@@ -12,7 +12,7 @@ from pathlib import Path
 
 REPOSITORY = Path(__file__).resolve().parents[2]
 VERIFIER = REPOSITORY / "scripts/verify-pancakeswap-infinity-cl-bsc-target.py"
-LOCK_PATH = Path("provenance/pancakeswap-infinity-cl-bsc-target.json")
+LOCK_PATH = Path("docs/provenance/pancakeswap-infinity-cl-bsc-target.json")
 PROFILE_PATH = Path("pancakeswap-infinity-cl-bsc/layout-profile-v1.json")
 BINDING_NAME = "QmVjXU7yQNyyLphPGqoz8iBzqu5YXphooFJn15JqZ6ZMFz.yaml"
 
@@ -35,7 +35,7 @@ class PancakeInfinityClBscTargetTest(unittest.TestCase):
                 REPOSITORY / "uniswap-v4/artifacts/deployment" / deployment / "schema.graphql",
                 destination / "schema.graphql",
             )
-        (self.root / "provenance").mkdir()
+        (self.root / LOCK_PATH.parent).mkdir(parents=True)
         shutil.copy2(REPOSITORY / LOCK_PATH, self.root / LOCK_PATH)
 
     def tearDown(self) -> None:

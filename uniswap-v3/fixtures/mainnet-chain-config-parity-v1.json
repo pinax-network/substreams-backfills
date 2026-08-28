@@ -26,16 +26,16 @@
       "commit": "42c7b15345e6df80561b694e52a0eb622b374b96",
       "tree": "a00e882e92d07b46550b74dea279c114d57631ac",
       "import_path": "uniswap-v3/source",
-      "provenance_path": "provenance/uniswap-v3-qma8a81t-parity.json",
-      "provenance_sha256": "9e44a654281d6d0d6ecfc8cf3fc70dcc56bcbd8999d13ecc20f77b84b133d165",
-      "inventory_path": "provenance/uniswap-v3-qma8a81t-parity-files.json",
+      "provenance_path": "docs/provenance/uniswap-v3-qma8a81t-parity.json",
+      "provenance_sha256": "aafc43562e8867b0e40cfc905065aad14dc72227b7b937d1cf7ccbf6eb8457a8",
+      "inventory_path": "docs/provenance/uniswap-v3-qma8a81t-parity-files.json",
       "inventory_sha256": "177a98f60f230d1b13dfa064f3b98a50163a506d2c7a08432330d47ee2170e60"
     },
     "chain_config": {
       "path": "uniswap-v3/chain-config/configs/mainnet-v1.json",
       "sha256": "30f5caf9ee8906a8886dc103e55286b9d5b6dbd8784d1c97d21b9a38b266bb55",
-      "provenance_path": "provenance/uniswap-v3-chain-config-v1.json",
-      "provenance_sha256": "ca098e763dce0c139bff7137774cb27ae56058e3475f7de529fb179de0cf8667",
+      "provenance_path": "docs/provenance/uniswap-v3-chain-config-v1.json",
+      "provenance_sha256": "d8b6d0c1454929209343acbcc58f8801fe66f3cd7947a383209d0be0dd0f577f",
       "selector": "version=1;network=mainnet;sha256=30f5caf9ee8906a8886dc103e55286b9d5b6dbd8784d1c97d21b9a38b266bb55",
       "module_start": 12369621,
       "position_manager_start": 12369651

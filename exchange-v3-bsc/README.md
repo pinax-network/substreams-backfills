@@ -16,7 +16,7 @@ block 26,931,961.
 three mapping binaries. `layout-profile-v1.json` records the target-specific handler,
 entity, fee, position, aggregate, pricing, and metadata contract needed for a later
 implementation gap.
-`provenance/exchange-v3-bsc-target.json` pins every CID, byte count, SHA-256 digest,
+`docs/provenance/exchange-v3-bsc-target.json` pins every CID, byte count, SHA-256 digest,
 data-source/template address and handler, the 20-entity all-mutable schema profile, and
 the static schema difference from the frozen imported Uniswap V3 reference. Run:
 

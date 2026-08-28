@@ -42,7 +42,7 @@ git diff --quiet -- "$import_path" || fail "working tree modifies the imported s
 git diff --cached --quiet -- "$import_path" || fail "index modifies the imported source"
 
 python3 scripts/build-uniswap-v4-import-inventory.py \
-    --check provenance/uniswap-v4-v0.4.1-files.json
+    --check docs/provenance/uniswap-v4-v0.4.1-files.json
 
 verify_sha256() {
     expected=$1

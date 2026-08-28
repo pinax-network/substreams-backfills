@@ -12,7 +12,7 @@ from pathlib import Path
 
 REPOSITORY = Path(__file__).resolve().parents[2]
 VERIFIER = REPOSITORY / "scripts/verify-exchange-v3-bsc-target.py"
-LOCK_PATH = Path("provenance/exchange-v3-bsc-target.json")
+LOCK_PATH = Path("docs/provenance/exchange-v3-bsc-target.json")
 PROFILE_PATH = Path("exchange-v3-bsc/layout-profile-v1.json")
 BINDING_NAME = "QmY67iZDTsTdpWXSCotpVPYankwnyHXNT7N95YEn8ccUsn.yaml"
 
@@ -27,7 +27,7 @@ class ExchangeV3BscTargetTest(unittest.TestCase):
             REPOSITORY / "uniswap-v3/source/schema.graphql",
             self.root / "uniswap-v3/source/schema.graphql",
         )
-        (self.root / "provenance").mkdir()
+        (self.root / LOCK_PATH.parent).mkdir(parents=True)
         shutil.copy2(REPOSITORY / LOCK_PATH, self.root / LOCK_PATH)
 
     def tearDown(self) -> None:

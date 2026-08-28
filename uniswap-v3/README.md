@@ -56,6 +56,15 @@ runtime/Factory origin to 1,371,679 while keeping the direct NPM gate at
 independent bytecode-creation proof. The new map has no consumer or transitive
 path to `graph_out`; all promotion gates remain false.
 
+The third sibling [`position-reducer/`](position-reducer/README.md) overlay adds
+a pure host-only sequential model for Position and PositionSnapshot transitions
+after the diagnostic writer contract. It binds all eight segment boundaries and
+five NPM profiles, including event-local versus block-fatal rollback, ordinal
+Token reads, block-scoped call caching, and graph-node v0.44 decimal precision.
+It is excluded from the WASM target, so the writer WASM and 23-module packages
+remain byte-identical. It does not implement Transaction entity side effects,
+Substreams stores, live calls, `graph_out`, or any promotion gate.
+
 The sibling [`graft-ancestry/`](graft-ancestry/README.md) ancestry v2 contract
 retains all eight mainnet/Base history segments and reuses the exact immutable
 38-object v1 artifact closure. It makes the graft-block ownership rule

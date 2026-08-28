@@ -1,0 +1,9 @@
+diff --git a/src/lib.rs b/src/lib.rs
+index fdf4124..8434ef9 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -1434,1 +1434,4 @@ pub fn graph_out(
+ }
++
++#[cfg(not(target_arch = "wasm32"))]
++pub mod position_reducer;

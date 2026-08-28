@@ -1,0 +1,227 @@
+{
+  "format_version": 1,
+  "contract_version": "uniswap-v3-position-reducer/v1",
+  "mode": "host-diagnostic-only",
+  "source_writer_contract": {
+    "path": "uniswap-v3/graft-ancestry/v2/writer-compatibility.json",
+    "contract_version": "uniswap-v3-writer-compatibility/v3",
+    "sha256": "259481724561d5aa725c17f90b5a19ea93ad6f7cd6074cf2cb8a8661c39f81c4"
+  },
+  "source_segment_profiles": {
+    "path": "uniswap-v3/writer-runtime/segment-profiles-v1.json",
+    "contract_version": "uniswap-v3-writer-runtime-segment-profiles/v1",
+    "sha256": "2b6635c061a7a0bfce39430c71c41dacc1567f095fe41134e890a697aa27f823"
+  },
+  "source_writer_runtime": {
+    "path": "uniswap-v3/writer-runtime/contract-v1.json",
+    "contract_version": "uniswap-v3-writer-runtime/v1",
+    "sha256": "765806bf19fca7695ef4d97f557593e4f791759589fe55c20f18c6523a5d07ca",
+    "writer_descriptor_sha256": "22b899f9eeffc8dcfb608eea7ab93884a1756897aba62dc7107507c50a4ac3f0"
+  },
+  "network_contracts": [
+    {
+      "network": "mainnet",
+      "factory": "1f98431c8ad98523631ae4a59f267346ea31f984",
+      "nonfungible_position_manager": "c36442b4a4522e871399cd717abdd847ab11fe88",
+      "runtime_start_block": 12369621,
+      "npm_start_block": 12369651
+    },
+    {
+      "network": "base",
+      "factory": "33128a8fc17869897dce68ed026d694621f6fdfd",
+      "nonfungible_position_manager": "03a520b32c04bf3beef7beb72e919cf822ed34f1",
+      "runtime_start_block": 1371679,
+      "npm_start_block": 1371713
+    }
+  ],
+  "execution_contract": {
+    "event_order": "strictly increasing global ordinal with strictly increasing block_log_index",
+    "block_context": "immutable number, timestamp, and optional hash; number must match WriterEvents and every snapshot uses the exact timestamp",
+    "producer_corruption": "reject before event execution and before applying segment nonfatal policy",
+    "event_state": "clone-on-write; only a fully accepted handler commits Position and PositionSnapshot",
+    "nonfatal_error": "discard the failing event scratch state and continue",
+    "fatal_error": "discard every Position and PositionSnapshot change from the block and stop",
+    "graph_call_scope": "one reducer invocation and its exact block pointer; hash-bound when available and number fallback otherwise; never event ordinal",
+    "graph_call_cache": "invocation-local raw results keyed by target address and exact positions or getPool calldata",
+    "token_read_scope": "event ordinal; never block-only",
+    "provisional_identity": "a getPosition identity is Position scratch state until its handler commits; Transaction entity side effects are outside this reducer",
+    "snapshot_id": "position token id plus # plus block number; the last accepted same-position event in a block overwrites it",
+    "fee_refresh_handlers": [
+      "collect",
+      "decrease",
+      "increase"
+    ],
+    "fee_refresh_revert": "preserve prior fee-growth-inside values",
+    "snapshot_handlers": [
+      "collect",
+      "decrease",
+      "increase",
+      "transfer"
+    ],
+    "excluded_pool": "8fe8d9bb8eeba3ed688069c3d6b556c9ca258248",
+    "excluded_pool_handlers": [
+      "collect",
+      "decrease",
+      "increase"
+    ],
+    "historical_guard_block": 14317993,
+    "historical_guard_handlers": [
+      "decrease",
+      "increase"
+    ],
+    "historical_guard_order": "before Position identity calls, pool calls, token reads, mutation, fee refresh, and snapshot"
+  },
+  "npm_profiles": [
+    {
+      "profile_id": "mainnet-root-correct-collect",
+      "collect_mode": "own-field-amounts",
+      "collect_token_reads": [
+        "token0",
+        "token1"
+      ],
+      "collect_missing_token_policy": "deterministic-error",
+      "increase_decrease_missing_token_policy": "deterministic-error"
+    },
+    {
+      "profile_id": "mainnet-second-fee0-overwrite",
+      "collect_mode": "fee0-from-fee1-plus-amount1",
+      "collect_token_reads": [
+        "token0",
+        "token1"
+      ],
+      "collect_missing_token_policy": "deterministic-error",
+      "increase_decrease_missing_token_policy": "deterministic-error"
+    },
+    {
+      "profile_id": "mainnet-no-collect-amounts",
+      "collect_mode": "no-amount-accumulation",
+      "collect_token_reads": [],
+      "collect_missing_token_policy": "no-token-read",
+      "increase_decrease_missing_token_policy": "deterministic-error"
+    },
+    {
+      "profile_id": "base-root-amount0-to-both",
+      "collect_mode": "amount0-to-both",
+      "collect_token_reads": [
+        "token0"
+      ],
+      "collect_missing_token_policy": "deterministic-error",
+      "increase_decrease_missing_token_policy": "deterministic-error"
+    },
+    {
+      "profile_id": "current-amount0-to-both",
+      "collect_mode": "amount0-to-both-if-token0-exists",
+      "collect_token_reads": [
+        "token0"
+      ],
+      "collect_missing_token_policy": "preserve-amounts-refresh-and-save",
+      "increase_decrease_missing_token_policy": "drop-event"
+    }
+  ],
+  "segments": [
+    {
+      "network": "mainnet",
+      "start_block_inclusive": 12369621,
+      "end_block_inclusive": 13450880,
+      "deployment": "Qme66ZNMxSdCQKzaDuvS381whCVYCQjf637sGZCqJHAWHB",
+      "segment_id": "mainnet:Qme66ZNMxSdCQKzaDuvS381whCVYCQjf637sGZCqJHAWHB",
+      "semantic_contract_sha256": "4839ecce0391345e412ccde53a12d6d243cafd3d6a99e9072f8f1d2020b802ff",
+      "npm_profile_id": "mainnet-root-correct-collect",
+      "nonfatal_errors": false,
+      "historical_guard_effective": false
+    },
+    {
+      "network": "mainnet",
+      "start_block_inclusive": 13450881,
+      "end_block_inclusive": 13498328,
+      "deployment": "QmRvEgUpbjVV326W2zPvxWimzQwcDREfjejUdFn2L92qry",
+      "segment_id": "mainnet:QmRvEgUpbjVV326W2zPvxWimzQwcDREfjejUdFn2L92qry",
+      "semantic_contract_sha256": "b344c20468dc56e3a6a4d32cf785de598f816270edbad4e5a7e979d6d5428a3c",
+      "npm_profile_id": "mainnet-second-fee0-overwrite",
+      "nonfatal_errors": false,
+      "historical_guard_effective": false
+    },
+    {
+      "network": "mainnet",
+      "start_block_inclusive": 13498329,
+      "end_block_inclusive": 13591197,
+      "deployment": "QmS13421u6qsbVdBCrZhdRaZw2wH67drwF3urmueJvvJ5P",
+      "segment_id": "mainnet:QmS13421u6qsbVdBCrZhdRaZw2wH67drwF3urmueJvvJ5P",
+      "semantic_contract_sha256": "cc0894a0822321f296585430bb93f705903494b832e56a20b858994c6f7052d0",
+      "npm_profile_id": "mainnet-no-collect-amounts",
+      "nonfatal_errors": false,
+      "historical_guard_effective": false
+    },
+    {
+      "network": "mainnet",
+      "start_block_inclusive": 13591198,
+      "end_block_inclusive": 13605860,
+      "deployment": "QmSLHXCZBNKVtJRrWiEAF1yRQNPqAFptBsAcLdXQPsubSX",
+      "segment_id": "mainnet:QmSLHXCZBNKVtJRrWiEAF1yRQNPqAFptBsAcLdXQPsubSX",
+      "semantic_contract_sha256": "9b890298b85194fb05123b7a0c5836feb63d2224c845f6714183d8588882d85a",
+      "npm_profile_id": "mainnet-no-collect-amounts",
+      "nonfatal_errors": false,
+      "historical_guard_effective": false
+    },
+    {
+      "network": "mainnet",
+      "start_block_inclusive": 13605861,
+      "end_block_inclusive": 19470000,
+      "deployment": "QmZeCuoZeadgHkGwLwMeguyqUKz1WPWQYKcKyMCeQqGhsF",
+      "segment_id": "mainnet:QmZeCuoZeadgHkGwLwMeguyqUKz1WPWQYKcKyMCeQqGhsF",
+      "semantic_contract_sha256": "83e4269b0582acfec8d1f868c59c6a71e362554ee41ecab4a7ccfbab87888815",
+      "npm_profile_id": "mainnet-no-collect-amounts",
+      "nonfatal_errors": false,
+      "historical_guard_effective": false
+    },
+    {
+      "network": "mainnet",
+      "start_block_inclusive": 19470001,
+      "end_block_inclusive": null,
+      "deployment": "QmTZ8ejXJxRo7vDBS4uwqBeGoxLSWbhaA7oXa1RvxunLy7",
+      "segment_id": "mainnet:QmTZ8ejXJxRo7vDBS4uwqBeGoxLSWbhaA7oXa1RvxunLy7",
+      "semantic_contract_sha256": "0b2a208cc7ff5cbced29818ddb4fddabfa236393fc289686a87a48e8c309b754",
+      "npm_profile_id": "current-amount0-to-both",
+      "nonfatal_errors": true,
+      "historical_guard_effective": false
+    },
+    {
+      "network": "base",
+      "start_block_inclusive": 1371679,
+      "end_block_inclusive": 19852000,
+      "deployment": "QmPWDTWRfS8XewMJhxXoQiZX6RkrUMYH7BFnnB846v6wzR",
+      "segment_id": "base:QmPWDTWRfS8XewMJhxXoQiZX6RkrUMYH7BFnnB846v6wzR",
+      "semantic_contract_sha256": "03d3fdaeecacfbb4aae325a1021117ddc6c3baf48d9589af69d0f3db7cdfab20",
+      "npm_profile_id": "base-root-amount0-to-both",
+      "nonfatal_errors": true,
+      "historical_guard_effective": true
+    },
+    {
+      "network": "base",
+      "start_block_inclusive": 19852001,
+      "end_block_inclusive": null,
+      "deployment": "Qmb4VUcAY9LsVgeCuCCMs7X1XrkbRcaiuAbSK8SqhmsAfP",
+      "segment_id": "base:Qmb4VUcAY9LsVgeCuCCMs7X1XrkbRcaiuAbSK8SqhmsAfP",
+      "semantic_contract_sha256": "5dd72427adcb71c3e4fd249dc4371005fb372875f236fb90439adf5fe9d7398b",
+      "npm_profile_id": "current-amount0-to-both",
+      "nonfatal_errors": true,
+      "historical_guard_effective": false
+    }
+  ],
+  "truth_boundary": {
+    "backfill_ready": false,
+    "boundary_state_continuity_complete": false,
+    "diagnostic_only": true,
+    "graph_out_replaced": false,
+    "live_calls_added": false,
+    "logical_oracle_complete": false,
+    "physical_parity_complete": false,
+    "poi_parity_complete": false,
+    "production_ready": false,
+    "runtime_population_complete": false,
+    "stores_added": false,
+    "substreams_handler_added": false,
+    "transaction_entity_effects_implemented": false,
+    "full_npm_handler_semantics": false
+  }
+}

@@ -1,0 +1,169 @@
+{
+  "format_version": 1,
+  "kind": "uniswap-v3-mainnet-chain-config-parity-profile",
+  "profile_id": "uniswap-v3-mainnet-chain-config-parity-v1",
+  "network": "mainnet",
+  "stream": {
+    "module": "graph_out",
+    "output_type": "sf.substreams.entity.v1.EntityChanges"
+  },
+  "range": {
+    "start_block": 12369621,
+    "end_block_exclusive": 12370674,
+    "processed_block_limit": 1053,
+    "complete_envelope_count": 1053,
+    "capture_mode": "source-pinned-protocol-v3-explicit-all-block-map-bytes"
+  },
+  "boundaries": {
+    "module_start": 12369621,
+    "position_manager_start": 12369651,
+    "historical_first_mints_start": 12370624,
+    "range_last_block": 12370673
+  },
+  "repository_evidence": {
+    "source_import": {
+      "repository": "pinax-network/substreams-uniswap-v3",
+      "commit": "42c7b15345e6df80561b694e52a0eb622b374b96",
+      "tree": "a00e882e92d07b46550b74dea279c114d57631ac",
+      "import_path": "uniswap-v3/source",
+      "provenance_path": "provenance/uniswap-v3-qma8a81t-parity.json",
+      "provenance_sha256": "9e44a654281d6d0d6ecfc8cf3fc70dcc56bcbd8999d13ecc20f77b84b133d165",
+      "inventory_path": "provenance/uniswap-v3-qma8a81t-parity-files.json",
+      "inventory_sha256": "177a98f60f230d1b13dfa064f3b98a50163a506d2c7a08432330d47ee2170e60"
+    },
+    "chain_config": {
+      "path": "uniswap-v3/chain-config/configs/mainnet-v1.json",
+      "sha256": "30f5caf9ee8906a8886dc103e55286b9d5b6dbd8784d1c97d21b9a38b266bb55",
+      "provenance_path": "provenance/uniswap-v3-chain-config-v1.json",
+      "provenance_sha256": "ca098e763dce0c139bff7137774cb27ae56058e3475f7de529fb179de0cf8667",
+      "selector": "version=1;network=mainnet;sha256=30f5caf9ee8906a8886dc103e55286b9d5b6dbd8784d1c97d21b9a38b266bb55",
+      "module_start": 12369621,
+      "position_manager_start": 12369651
+    },
+    "runtime_overlay": {
+      "path": "uniswap-v3/chain-config/runtime.patch",
+      "sha256": "4f87d22239b84aebca6712a72e2c4047b0735e911756973b6e7c228fe455e8ae"
+    },
+    "schema": {
+      "path": "uniswap-v3/source/schema.graphql",
+      "sha256": "f234a0e4dc88c923d6ad28a3fcd1ed6093351bd2221d7c18486f0cbde41bb52c",
+      "target_cid": "Qma8a81T9XoX5Pbkrk8J3kxMhWdXJzFSYZge1wGi3QZBru",
+      "target_raw_sha256": "ae03d0c6d3c6c03f87ae8e699b1e71804266c1d4adb7acbf4f4de5d48727c39c",
+      "logical_contract_sha256": "6c801fc4c141c0ae12dbb937652f0dd49c9be5bd3b1b3c8e38bdb92fe6efec5d"
+    },
+    "historical_first_mints_note": {
+      "commit": "d3e5384b3ef47c78e8a1404b3c33de1ae8a78e3a",
+      "path": "uniswap-v3/PARITY.md",
+      "blob": "e0177270802668f4c2832ec0eba51f8c250219a6",
+      "sha256": "6726bc0a64d4a6c6e6a54b4db09fb8c28ed0a44c82d05cb962d0ab16851f011a",
+      "recorded_start_block": 12370624,
+      "recorded_end_block_exclusive": 12370674,
+      "retained_artifacts": false,
+      "certification_authority": false,
+      "classification": "historical-unretained-smoke-context-only"
+    }
+  },
+  "entity_contract": {
+    "schema_entities": [
+      "Bundle",
+      "Burn",
+      "Collect",
+      "Factory",
+      "Flash",
+      "Mint",
+      "Pool",
+      "PoolDayData",
+      "PoolHourData",
+      "Position",
+      "PositionSnapshot",
+      "Swap",
+      "Tick",
+      "TickDayData",
+      "TickHourData",
+      "Token",
+      "TokenDayData",
+      "TokenHourData",
+      "Transaction",
+      "UniswapDayData"
+    ],
+    "coverage_requirement": "nonempty-observed-subset-equal-between-baseline-and-candidate",
+    "known_unimplemented_entity_rows": [
+      "Collect",
+      "Flash"
+    ],
+    "all_schema_entities_implemented": false,
+    "authoritative_entity_coverage": false
+  },
+  "capture_contract": {
+    "protocol": "sf.substreams.rpc.v3.Stream/Blocks",
+    "protocol_version": 3,
+    "client_version": "uniswap-v3-mainnet-parity-client-v1",
+    "upstream_version": "v1.20.3",
+    "upstream_commit": "cc555bd4e325b65ac3f95dfde4655076f88d4a0a",
+    "upstream_tree": "38ea588549e5e41698da00ee149278aa2d855c64",
+    "go_version": "go1.26.5",
+    "package_closure": "v1.20.3-rpc-v3-package-closure",
+    "private_services_control_plane_imported": false,
+    "execution_mode": "development",
+    "network": "mainnet",
+    "final_blocks_only": true,
+    "production_mode": false,
+    "noop_mode": false,
+    "partial_blocks": false,
+    "max_retries": 0,
+    "limit_processed_blocks": 1053,
+    "dev_output_modules": [
+      "graph_out"
+    ],
+    "complete_block_records_required": 1053,
+    "explicit_zero_byte_map_outputs_required": true,
+    "reconstruction_of_missing_blocks": false,
+    "clean_eof_required_after_last_block": true,
+    "clock_hash_timestamp_and_finality_bound": true,
+    "cursor_final_block_and_lib_bound": true,
+    "raw_stdout_stderr_retained": true,
+    "local_invocation_completion_is_signed_remote_attestation": false,
+    "completion_is_local_capture_evidence_only": true
+  },
+  "build_contract": {
+    "repository": "pinax-network/substreams-backfills",
+    "candidate_artifact": "configured_mainnet",
+    "artifacts": [
+      "baseline",
+      "configured_mainnet",
+      "configured_base"
+    ],
+    "capture_client": "scripts/parity-client",
+    "execution_modules": [
+      "map_pools_created",
+      "store_pools_created",
+      "store_tokens",
+      "store_pool_count",
+      "map_tokens_whitelist_pools",
+      "store_tokens_whitelist_pools",
+      "map_extract_data_types",
+      "store_pool_sqrt_price",
+      "store_prices",
+      "store_pool_liquidities",
+      "store_total_tx_counts",
+      "store_swaps_volume",
+      "store_native_amounts",
+      "store_eth_prices",
+      "store_token_tvl",
+      "store_derived_tvl",
+      "store_derived_factory_tvl",
+      "store_ticks_liquidities",
+      "store_positions",
+      "store_min_windows",
+      "store_max_windows",
+      "graph_out"
+    ]
+  },
+  "trust_boundary": {
+    "promotion_eligible": false,
+    "authoritative_graph_reference": false,
+    "physical_or_poi_parity": false,
+    "production_pin": false,
+    "approved_runtime_contract": null
+  }
+}

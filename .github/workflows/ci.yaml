@@ -50,6 +50,10 @@ jobs:
         run: python3 scripts/verify-uniswap-v3-writer-semantics.py --wasm2wat "$WASM2WAT"
       - name: Recompute Uniswap V3 segment writer matrix
         run: python3 scripts/verify-uniswap-v3-segment-writer-matrix.py --wasm2wat "$WASM2WAT"
+      - name: Verify Uniswap V3 Graph Node execution-order supplement
+        run: |
+          python3 scripts/verify-uniswap-v3-execution-order.py
+          python3 -m unittest scripts.tests.test_uniswap_v3_execution_order
       - name: Test eligibility decisions and freshness gates
         run: python3 -m unittest discover -s scripts/tests -p 'test_*.py'
 

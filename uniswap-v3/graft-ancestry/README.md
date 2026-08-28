@@ -256,6 +256,15 @@ post-state. The adapter uses an EIP-1898 block hash when supported and otherwise
 falls back to the block number, which is not fork/hash-bound. This is
 deliberately distinct from intra-block handler order.
 
+## Execution-order erratum
+
+The preceding "global log index" wording is stage-local under the separately
+versioned [execution-order supplement](../execution-order/README.md). Graph Node
+first runs the initial trigger/host pass, then replays the whole block in
+breadth-first dynamic-data-source stages. A data source is active for its whole
+creation block and is not gated by the creating log's ordinal. The comparator
+therefore must not be used to flatten raw triggers across those stages.
+
 The first five mainnet segments do not enable `nonFatalErrors`; current mainnet
 and both Base segments do. Under the pinned source model, a deterministic trap
 discards the failing handler's created data sources and entity-cache changes and

@@ -6,7 +6,7 @@ versioned configuration overlay for one shared runtime binary.
 | Target | Chain | Factory | Start block | Value signal |
 |---|---|---|---:|---:|
 | `QmTZ8ejX…` | Ethereum mainnet | `0x1F98431c8aD98523631AE4a59f267346ea31F984` | 12,369,621 | 11.3M queries/day |
-| `Qmb4VUcA…` | Base | `0x33128a8fC17869897dcE68Ed026d694621f6FDfD` | 1,371,713 | 2.1M queries/day |
+| `Qmb4VUcA…` | Base | `0x33128a8fC17869897dcE68Ed026d694621f6FDfD` | 1,371,679 | 2.1M queries/day |
 
 ## Imported source
 
@@ -45,6 +45,16 @@ audited mainnet/Base contract without changing those source bytes. CI
 materializes it separately, tests both pinned configurations, builds one WASM,
 and proves the mainnet and Base diagnostic packages embed identical WASM bytes.
 A factory-only parameter is still not a valid Base rebind.
+
+The second sibling [`writer-runtime/`](writer-runtime/README.md) overlay adds a
+raw, diagnostic-only NonfungiblePositionManager event map after ChainConfig.
+It internally selects one of the eight digest-bound ancestry profiles, scans
+successful receipt logs directly, and retains all Increase, Decrease, Collect,
+and Transfer occurrences in global ordinal order. It also corrects the Base
+runtime/Factory origin to 1,371,679 while keeping the direct NPM gate at
+1,371,713. The evidence is the QmPW root manifest plus ancestry v2, not an
+independent bytecode-creation proof. The new map has no consumer or transitive
+path to `graph_out`; all promotion gates remain false.
 
 The sibling [`graft-ancestry/`](graft-ancestry/README.md) ancestry v2 contract
 retains all eight mainnet/Base history segments and reuses the exact immutable

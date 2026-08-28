@@ -1,0 +1,167 @@
+{
+  "format_version": 1,
+  "fixture_version": "uniswap-v3-writer-events-fixtures/v1",
+  "quantity_encoding": "unscaled unsigned ABI integers serialized as base-10 strings",
+  "addresses": {
+    "mainnet_nonfungible_position_manager": "c36442b4a4522e871399cd717abdd847ab11fe88",
+    "base_nonfungible_position_manager": "03a520b32c04bf3beef7beb72e919cf822ed34f1",
+    "foreign": "1111111111111111111111111111111111111111"
+  },
+  "cases": [
+    {
+      "id": "transfer-only-mainnet",
+      "network": "mainnet",
+      "block_number": 12369651,
+      "transactions": [
+        {
+          "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "status": 1,
+          "logs": [
+            {
+              "address": "c36442b4a4522e871399cd717abdd847ab11fe88",
+              "ordinal": 11,
+              "event": {
+                "type": "transfer",
+                "from": "0000000000000000000000000000000000000000",
+                "to": "2222222222222222222222222222222222222222",
+                "token_id": "42"
+              }
+            }
+          ]
+        }
+      ],
+      "expected_ordinals": [11],
+      "expected_types": ["transfer"]
+    },
+    {
+      "id": "all-occurrences-global-order-and-filtering-mainnet",
+      "network": "mainnet",
+      "block_number": 14317993,
+      "transactions": [
+        {
+          "hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "status": 1,
+          "logs": [
+            {
+              "address": "c36442b4a4522e871399cd717abdd847ab11fe88",
+              "ordinal": 50,
+              "event": {
+                "type": "increase",
+                "token_id": "7",
+                "liquidity": "340282366920938463463374607431768211455",
+                "amount0": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+                "amount1": "9007199254740993"
+              }
+            },
+            {
+              "address": "1111111111111111111111111111111111111111",
+              "ordinal": 15,
+              "event": {
+                "type": "transfer",
+                "from": "3333333333333333333333333333333333333333",
+                "to": "4444444444444444444444444444444444444444",
+                "token_id": "999"
+              }
+            },
+            {
+              "address": "c36442b4a4522e871399cd717abdd847ab11fe88",
+              "ordinal": 10,
+              "event": {
+                "type": "transfer",
+                "from": "2222222222222222222222222222222222222222",
+                "to": "5555555555555555555555555555555555555555",
+                "token_id": "7"
+              }
+            },
+            {
+              "address": "03a520b32c04bf3beef7beb72e919cf822ed34f1",
+              "ordinal": 12,
+              "event": {
+                "type": "transfer",
+                "from": "6666666666666666666666666666666666666666",
+                "to": "7777777777777777777777777777777777777777",
+                "token_id": "1000"
+              }
+            },
+            {
+              "address": "c36442b4a4522e871399cd717abdd847ab11fe88",
+              "ordinal": 30,
+              "event": {
+                "type": "collect",
+                "token_id": "7",
+                "recipient": "8888888888888888888888888888888888888888",
+                "amount0": "123456789012345678901234567890",
+                "amount1": "987654321098765432109876543210"
+              }
+            },
+            {
+              "address": "c36442b4a4522e871399cd717abdd847ab11fe88",
+              "ordinal": 20,
+              "event": {
+                "type": "decrease",
+                "token_id": "7",
+                "liquidity": "17",
+                "amount0": "18",
+                "amount1": "19"
+              }
+            },
+            {
+              "address": "c36442b4a4522e871399cd717abdd847ab11fe88",
+              "ordinal": 40,
+              "event": {
+                "type": "increase",
+                "token_id": "7",
+                "liquidity": "20",
+                "amount0": "21",
+                "amount1": "22"
+              }
+            }
+          ]
+        },
+        {
+          "hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "status": 3,
+          "logs": [
+            {
+              "address": "c36442b4a4522e871399cd717abdd847ab11fe88",
+              "ordinal": 5,
+              "event": {
+                "type": "transfer",
+                "from": "9999999999999999999999999999999999999999",
+                "to": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "token_id": "1234"
+              }
+            }
+          ]
+        }
+      ],
+      "expected_ordinals": [10, 20, 30, 40, 50],
+      "expected_types": ["transfer", "decrease", "collect", "increase", "increase"]
+    },
+    {
+      "id": "base-npm-gate",
+      "network": "base",
+      "block_number": 1371713,
+      "transactions": [
+        {
+          "hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "status": 1,
+          "logs": [
+            {
+              "address": "03a520b32c04bf3beef7beb72e919cf822ed34f1",
+              "ordinal": 1,
+              "event": {
+                "type": "transfer",
+                "from": "0000000000000000000000000000000000000000",
+                "to": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "token_id": "1"
+              }
+            }
+          ]
+        }
+      ],
+      "expected_ordinals": [1],
+      "expected_types": ["transfer"]
+    }
+  ]
+}

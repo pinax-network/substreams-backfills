@@ -88,6 +88,10 @@ jobs:
           python3 -m unittest scripts/tests/test_uniswap_v3_mainnet_parity_capture.py
           python3 -m unittest scripts/tests/test_uniswap_v3_mainnet_parity_candidate.py
           python3 -m unittest scripts/tests/test_uniswap_v3_mainnet_parity_runner.py
+      - name: Verify diagnostic writer-runtime contract and refusals
+        run: |
+          python3 scripts/verify-uniswap-v3-writer-runtime.py
+          python3 -m unittest scripts.tests.test_uniswap_v3_writer_runtime
       - name: Test and build the source-pinned protocol-v3 parity client
         working-directory: scripts/parity-client
         run: |
@@ -103,6 +107,7 @@ jobs:
           test "$("$RUNNER_TEMP/uniswap-v3-parity-client" --version)" = "uniswap-v3-mainnet-parity-client-v1 (protocol v3; upstream v1.20.3 cc555bd4e325b65ac3f95dfde4655076f88d4a0a)"
       - uses: dtolnay/rust-toolchain@1.79
         with:
+          components: clippy, rustfmt
           targets: wasm32-unknown-unknown
       - name: Install checksum-pinned Substreams CLI
         run: |
@@ -144,6 +149,40 @@ jobs:
             --mainnet-spkg "$RUNNER_TEMP/uniswap-v3-mainnet-configured-diagnostic.spkg" \
             --base-spkg "$RUNNER_TEMP/uniswap-v3-base-configured-diagnostic.spkg" \
             --evidence-out "$RUNNER_TEMP/uniswap-v3-configured-diagnostic-evidence.json"
+      - name: Materialize the isolated diagnostic writer runtime
+        run: ./scripts/materialize-uniswap-v3-writer-runtime.sh "$RUNNER_TEMP/uniswap-v3-writer-runtime"
+      - name: Test the writer runtime and format-check its standalone Rust files
+        working-directory: ${{ runner.temp }}/uniswap-v3-writer-runtime
+        run: |
+          test "$(rustc +1.79.0 --version)" = "rustc 1.79.0 (129f3b996 2024-06-10)"
+          cargo +1.79.0 test --locked --target x86_64-unknown-linux-gnu
+          rustfmt +1.79.0 --edition 2021 --check \
+            build.rs src/writer_runtime.rs src/pb/uniswap.writer.v1.rs
+      - name: Enforce exact inherited Clippy inventory and strict new-file cleanliness
+        run: >-
+          python3 scripts/verify-uniswap-v3-writer-clippy.py
+          --baseline "$RUNNER_TEMP/uniswap-v3-configured"
+          --runtime "$RUNNER_TEMP/uniswap-v3-writer-runtime"
+          --target x86_64-unknown-linux-gnu
+      - name: Build the one shared writer-runtime WASM
+        working-directory: ${{ runner.temp }}/uniswap-v3-writer-runtime
+        run: cargo +1.79.0 build --locked --target wasm32-unknown-unknown --release
+      - name: Pack both writer diagnostics and prove the exact shared WASM contract
+        working-directory: ${{ runner.temp }}/uniswap-v3-writer-runtime
+        run: |
+          substreams pack -o "$RUNNER_TEMP/uniswap-v3-mainnet-writer-diagnostic.spkg" substreams.mainnet.yaml
+          substreams pack -o "$RUNNER_TEMP/uniswap-v3-base-writer-diagnostic.spkg" substreams.base.yaml
+          substreams pack -o "$RUNNER_TEMP/uniswap-v3-mainnet-writer-diagnostic-repeat.spkg" substreams.mainnet.yaml
+          substreams pack -o "$RUNNER_TEMP/uniswap-v3-base-writer-diagnostic-repeat.spkg" substreams.base.yaml
+          cmp "$RUNNER_TEMP/uniswap-v3-mainnet-writer-diagnostic.spkg" \
+            "$RUNNER_TEMP/uniswap-v3-mainnet-writer-diagnostic-repeat.spkg"
+          cmp "$RUNNER_TEMP/uniswap-v3-base-writer-diagnostic.spkg" \
+            "$RUNNER_TEMP/uniswap-v3-base-writer-diagnostic-repeat.spkg"
+          python3 "$GITHUB_WORKSPACE/scripts/verify-uniswap-v3-writer-runtime.py" \
+            --root "$GITHUB_WORKSPACE" \
+            --runtime "$RUNNER_TEMP/uniswap-v3-writer-runtime" \
+            --mainnet-spkg "$RUNNER_TEMP/uniswap-v3-mainnet-writer-diagnostic.spkg" \
+            --base-spkg "$RUNNER_TEMP/uniswap-v3-base-writer-diagnostic.spkg"
       - name: Test the parity client against all three real controlled-build packages
         working-directory: scripts/parity-client
         env:
@@ -173,6 +212,14 @@ jobs:
             ${{ runner.temp }}/uniswap-v3-mainnet-configured-diagnostic.spkg
             ${{ runner.temp }}/uniswap-v3-base-configured-diagnostic.spkg
             ${{ runner.temp }}/uniswap-v3-configured-diagnostic-evidence.json
+          if-no-files-found: error
+      - name: Upload isolated V3 writer diagnostic packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: uniswap-v3-writer-diagnostic-packages
+          path: |
+            ${{ runner.temp }}/uniswap-v3-mainnet-writer-diagnostic.spkg
+            ${{ runner.temp }}/uniswap-v3-base-writer-diagnostic.spkg
           if-no-files-found: error
       - name: Upload the V3 controlled-build candidate bundle
         uses: actions/upload-artifact@v4

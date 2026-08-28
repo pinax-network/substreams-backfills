@@ -1,0 +1,1411 @@
+diff --git a/Cargo.lock b/Cargo.lock
+index fd60018..7e20ff6 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -462,0 +463,45 @@ dependencies = [
++[[package]]
++name = "pest"
++version = "2.7.14"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "879952a81a83930934cbf1786752d6dedc3b1f29e8f8fb2ad1d0a36f377cf442"
++dependencies = [
++ "memchr",
++ "thiserror",
++ "ucd-trie",
++]
++
++[[package]]
++name = "pest_derive"
++version = "2.7.14"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "d214365f632b123a47fd913301e14c946c61d1c183ee245fa76eb752e59a02dd"
++dependencies = [
++ "pest",
++ "pest_generator",
++]
++
++[[package]]
++name = "pest_generator"
++version = "2.7.14"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "eb55586734301717aea2ac313f50b2eb8f60d2fc3dc01d190eefa2e625f60c4e"
++dependencies = [
++ "pest",
++ "pest_meta",
++ "proc-macro2",
++ "quote",
++ "syn 2.0.53",
++]
++
++[[package]]
++name = "pest_meta"
++version = "2.7.14"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "b75da2a70cf4d9cb76833c990ac9cd3923c9a8905a8929789ce347c84564d03d"
++dependencies = [
++ "once_cell",
++ "pest",
++ "sha2",
++]
++
+@@ -530,0 +576,10 @@ dependencies = [
++[[package]]
++name = "prettyplease"
++version = "0.2.17"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "8d3928fb5db768cb86f891ff014f0144589297e3c6a1aba6ed7cecfdace270c7"
++dependencies = [
++ "proc-macro2",
++ "syn 2.0.53",
++]
++
+@@ -570 +625,11 @@ dependencies = [
+- "prost-derive",
++ "prost-derive 0.11.9",
++]
++
++[[package]]
++name = "prost"
++version = "0.13.3"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "7b0487d90e047de87f984913713b85c601c05609aad5b0df4b4573fbf69aa13f"
++dependencies = [
++ "bytes",
++ "prost-derive 0.13.5",
+@@ -586,3 +651,3 @@ dependencies = [
+- "prettyplease",
+- "prost",
+- "prost-types",
++ "prettyplease 0.1.25",
++ "prost 0.11.9",
++ "prost-types 0.11.9",
+@@ -594,0 +660,21 @@ dependencies = [
++[[package]]
++name = "prost-build"
++version = "0.13.3"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "0c1318b19085f08681016926435853bbf7858f9c082d0999b80550ff5d9abe15"
++dependencies = [
++ "bytes",
++ "heck",
++ "itertools",
++ "log",
++ "multimap",
++ "once_cell",
++ "petgraph",
++ "prettyplease 0.2.17",
++ "prost 0.13.3",
++ "prost-types 0.13.3",
++ "regex",
++ "syn 2.0.53",
++ "tempfile",
++]
++
+@@ -607,0 +694,13 @@ dependencies = [
++[[package]]
++name = "prost-derive"
++version = "0.13.5"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "8a56d757972c98b346a9b766e3f02746cde6dd1cd1d1d563472929fdd74bec4d"
++dependencies = [
++ "anyhow",
++ "itertools",
++ "proc-macro2",
++ "quote",
++ "syn 2.0.53",
++]
++
+@@ -614 +713,10 @@ dependencies = [
+- "prost",
++ "prost 0.11.9",
++]
++
++[[package]]
++name = "prost-types"
++version = "0.13.3"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "4759aa0d3a6232fb8dbdb97b61de2c20047c68aca932c7ed76da9d788508d670"
++dependencies = [
++ "prost 0.13.3",
+@@ -792 +900 @@ name = "substreams"
+-version = "0.5.13"
++version = "0.6.4"
+@@ -794 +902 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "3520661f782c338f0e3c6cfc001ac790ed5e68d8f28515139e2aa674f8bb54da"
++checksum = "8e02e7abbbcbd809708634207bbe87f904db8696f5c148c6dd46cee5d7713d25"
+@@ -804,3 +912,5 @@ dependencies = [
+- "prost",
+- "prost-build",
+- "prost-types",
++ "pest",
++ "pest_derive",
++ "prost 0.13.3",
++ "prost-build 0.13.3",
++ "prost-types 0.13.3",
+@@ -813 +923 @@ name = "substreams-entity-change"
+-version = "1.3.2"
++version = "2.0.0"
+@@ -815 +925 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "e2c7fca123abff659d15ed30da5b605fa954a29e912c94260c488d0d18f9107d"
++checksum = "0587b8d5dd7bffb0415d544c31e742c4cabdb81bbe9a3abfffff125185e4e9e8"
+@@ -818,2 +928,2 @@ dependencies = [
+- "prost",
+- "prost-types",
++ "prost 0.13.3",
++ "prost-types 0.13.3",
+@@ -825 +935 @@ name = "substreams-ethereum"
+-version = "0.9.9"
++version = "0.10.6"
+@@ -827 +937 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "48f45dc04be50b7ca08d6d5c4560ee3eeba16ccaa1c124d0361bb30b5b84e28b"
++checksum = "a2fc683b368e317c60064267dbddc5d8ce290ef00170eb74df8cdde7cda939f3"
+@@ -839 +949 @@ name = "substreams-ethereum-abigen"
+-version = "0.9.9"
++version = "0.10.6"
+@@ -841 +951 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "9c04307913a355aaf2a1bb7186d4bc7e36875f3d4aff77b47e83f1b63b24da55"
++checksum = "72db7f7ca7766cb393c8479add840c76139bb25818f38d6db80c2be3b49b02a2"
+@@ -847 +957 @@ dependencies = [
+- "prettyplease",
++ "prettyplease 0.1.25",
+@@ -856 +966 @@ name = "substreams-ethereum-core"
+-version = "0.9.9"
++version = "0.10.6"
+@@ -858 +968 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "db9048cc9a66873ab7069ef958c2684994e6ee323da49c186b19156fdb4ca131"
++checksum = "533e22206a9709568ed829037ed49838d4c8c441b799f9c43a20c5a7d84027c9"
+@@ -864,3 +974,3 @@ dependencies = [
+- "prost",
+- "prost-build",
+- "prost-types",
++ "prost 0.13.3",
++ "prost-build 0.11.9",
++ "prost-types 0.13.3",
+@@ -872 +982 @@ name = "substreams-ethereum-derive"
+-version = "0.9.9"
++version = "0.10.6"
+@@ -874 +984 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "e862928bee8653f5c9291ac619c8dc0da14ca61d8cd8d89b3acdbbde4d0bf304"
++checksum = "b66155cfe7197efafcd46135fb8da7bfa344142c20a9c25d8fdb97cd1995cf8c"
+@@ -888 +998 @@ name = "substreams-macro"
+-version = "0.5.13"
++version = "0.6.4"
+@@ -890 +1000 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "c15595ceab80fece579e462d4823048fe85d67922584c681f5e94305727ad9ee"
++checksum = "21b4fdca34da8c0250425bd798bd843f95b12dea527eeb3ba571e0b0af93d1b7"
+@@ -904,0 +1015 @@ dependencies = [
++ "home",
+@@ -906,0 +1018,4 @@ dependencies = [
++ "pest",
++ "pest_derive",
++ "pest_generator",
++ "pest_meta",
+@@ -908,3 +1023,3 @@ dependencies = [
+- "prost",
+- "prost-build",
+- "prost-types",
++ "prost 0.13.3",
++ "prost-build 0.13.3",
++ "prost-types 0.13.3",
+@@ -1011,0 +1127,6 @@ checksum = "42ff0bf0c66b8238c6f3b578df37d0b7848e55df8577b3f74f92a69acceeb825"
++[[package]]
++name = "ucd-trie"
++version = "0.1.7"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "2896d95c02a80c6d6a5d6e953d479f5ddf2dfdb6a244441010e373ac0fb88971"
++
+diff --git a/Cargo.toml b/Cargo.toml
+index 565a059..82cc203 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -12,2 +12,2 @@ ethabi = "17.0"
+-prost = "0.11"
+-prost-types = "0.11"
++prost = "=0.13.3"
++prost-types = "=0.13.3"
+@@ -17,0 +18,4 @@ phf = { version = "0.11.1", features = ["macros"] }
++pest = "=2.7.14"
++pest_derive = "=2.7.14"
++pest_generator = "=2.7.14"
++pest_meta = "=2.7.14"
+@@ -21,3 +25,3 @@ sha2 = "0.10.8"
+-substreams = "0.5"
+-substreams-ethereum = "0.9"
+-substreams-entity-change = "1.3"
++substreams = "=0.6.4"
++substreams-ethereum = "=0.10.6"
++substreams-entity-change = "=2.0.0"
+@@ -27 +31 @@ tiny-keccak = "2.0"
+-prost-build = "0.11"
++prost-build = "=0.13.3"
+@@ -29 +33,2 @@ anyhow = "1"
+-substreams-ethereum = "0.9"
++home = "=0.5.9"
++substreams-ethereum = "=0.10.6"
+diff --git a/build.rs b/build.rs
+index 589d873..b2d97bb 100644
+--- a/build.rs
++++ b/build.rs
+@@ -1,2 +1 @@
+-use anyhow::{Ok, Result};
+-use substreams_ethereum::Abigen;
++use std::path::Path;
+@@ -4,13 +3,6 @@ use substreams_ethereum::Abigen;
+-fn main() -> Result<(), anyhow::Error> {
+-    Abigen::new("pool", "abis/pool.json")?
+-        .generate()?
+-        .write_to_file("src/abi/pool.rs")?;
+-    Abigen::new("erc20", "abis/ERC20.json")?
+-        .generate()?
+-        .write_to_file("src/abi/erc20.rs")?;
+-    Abigen::new("factory", "abis/factory.json")?
+-        .generate()?
+-        .write_to_file("src/abi/factory.rs")?;
+-    Abigen::new("positionmanager", "abis/NonfungiblePositionManager.json")?
+-        .generate()?
+-        .write_to_file("src/abi/positionmanager.rs")?;
++const CHECKED_IN_BINDINGS: &[&str] = &[
++    "src/abi/erc20.rs",
++    "src/abi/factory.rs",
++    "src/abi/pool.rs",
++    "src/abi/positionmanager.rs",
++];
+@@ -18 +10,5 @@ fn main() -> Result<(), anyhow::Error> {
+-    Ok(())
++fn main() {
++    for binding in CHECKED_IN_BINDINGS {
++        println!("cargo:rerun-if-changed={binding}");
++        assert!(Path::new(binding).is_file(), "missing checked-in ABI binding {binding}");
++    }
+diff --git a/proto/uniswap/v1/writer.proto b/proto/uniswap/v1/writer.proto
+new file mode 100644
+index 0000000..efebb63
+--- /dev/null
++++ b/proto/uniswap/v1/writer.proto
+@@ -0,0 +1,55 @@
++syntax = "proto3";
++
++package uniswap.writer.v1;
++
++// Diagnostic raw NonfungiblePositionManager events. This stream is not graph_out.
++message WriterEvents {
++  repeated WriterEvent events = 1;
++  string network = 2;
++  uint64 block_number = 3;
++  string segment_id = 4;
++  string source_writer_contract_sha256 = 5;
++  string segment_semantic_contract_sha256 = 6;
++}
++
++message WriterEvent {
++  uint64 ordinal = 1;
++  bytes transaction_hash = 2;
++  uint64 block_number = 3;
++  uint32 transaction_log_index = 4;
++  uint32 block_log_index = 5;
++  bytes contract_address = 6;
++  oneof event {
++    IncreaseLiquidity increase_liquidity = 10;
++    DecreaseLiquidity decrease_liquidity = 11;
++    Collect collect = 12;
++    Transfer transfer = 13;
++  }
++}
++
++message IncreaseLiquidity {
++  string token_id = 1;
++  string liquidity = 2;
++  string amount0 = 3;
++  string amount1 = 4;
++}
++
++message DecreaseLiquidity {
++  string token_id = 1;
++  string liquidity = 2;
++  string amount0 = 3;
++  string amount1 = 4;
++}
++
++message Collect {
++  string token_id = 1;
++  bytes recipient = 2;
++  string amount0 = 3;
++  string amount1 = 4;
++}
++
++message Transfer {
++  bytes from = 1;
++  bytes to = 2;
++  string token_id = 3;
++}
+diff --git a/rust-toolchain.toml b/rust-toolchain.toml
+index 3b94163..89f786a 100644
+--- a/rust-toolchain.toml
++++ b/rust-toolchain.toml
+@@ -2 +2 @@
+-channel = "1.79"
++channel = "1.79.0"
+diff --git a/src/config.rs b/src/config.rs
+index 01ce5b0..3ff8cf7 100644
+--- a/src/config.rs
++++ b/src/config.rs
+@@ -7,3 +7,7 @@ use substreams::errors::Error;
+-const CONFIG_VERSION: &str = "uniswap-v3-chain-config/v1";
+-const MAINNET_SHA256: &str = "30f5caf9ee8906a8886dc103e55286b9d5b6dbd8784d1c97d21b9a38b266bb55";
+-const BASE_SHA256: &str = "2eeed82547cea2d8e6c6adb9b3770bd8f8bbdde3b43ce4c7a5410325cf9b2832";
++const CONFIG_VERSION: &str = "uniswap-v3-chain-config/v2";
++const MAINNET_SHA256: &str = "1438edbd94e492190ce15d059ab766a03022f7255fdfa1cde9ef32e78a0fe547";
++const BASE_SHA256: &str = "a227784961973c72b47f663d7ee66b2f9306372bf2232dfb416abbba6ccf8df0";
++const WRITER_RUNTIME_VERSION: &str = "uniswap-v3-writer-runtime/v1";
++const SEGMENT_PROFILES_VERSION: &str = "uniswap-v3-writer-runtime-segment-profiles/v1";
++const SEGMENT_PROFILES_SHA256: &str = "2b6635c061a7a0bfce39430c71c41dacc1567f095fe41134e890a697aa27f823";
++const SOURCE_WRITER_CONTRACT_SHA256: &str = "259481724561d5aa725c17f90b5a19ea93ad6f7cd6074cf2cb8a8661c39f81c4";
+@@ -21,0 +26 @@ pub struct ChainConfig {
++    pub writer_runtime: WriterRuntimeConfig,
+@@ -50,0 +56,14 @@ pub struct InitialBlockConfig {
++#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
++#[serde(deny_unknown_fields)]
++pub struct WriterRuntimeConfig {
++    pub contract_version: String,
++    pub mode: String,
++    pub segment_profiles_version: String,
++    pub segment_profiles_sha256: String,
++    pub source_writer_contract_sha256: String,
++    pub graph_out_replaced: bool,
++    pub runtime_population_complete: bool,
++    pub backfill_ready: bool,
++    pub production_ready: bool,
++}
++
+@@ -83,2 +102,2 @@ impl ChainConfig {
+-            "mainnet" => (include_str!("../configs/mainnet-v1.json"), "mainnet"),
+-            "base" => (include_str!("../configs/base-v1.json"), "base"),
++            "mainnet" => (include_str!("../configs/mainnet-v2.json"), "mainnet"),
++            "base" => (include_str!("../configs/base-v2.json"), "base"),
+@@ -170,0 +190,17 @@ impl ChainConfig {
++        let writer = &self.writer_runtime;
++        if writer.contract_version != WRITER_RUNTIME_VERSION
++            || writer.mode != "diagnostic-only"
++            || writer.segment_profiles_version != SEGMENT_PROFILES_VERSION
++            || writer.segment_profiles_sha256 != SEGMENT_PROFILES_SHA256
++            || writer.source_writer_contract_sha256 != SOURCE_WRITER_CONTRACT_SHA256
++        {
++            return Err(Error::msg("writer-runtime binding drift"));
++        }
++        if writer.graph_out_replaced
++            || writer.runtime_population_complete
++            || writer.backfill_ready
++            || writer.production_ready
++        {
++            return Err(Error::msg("writer-runtime conservative gate promoted"));
++        }
++
+@@ -327 +363 @@ impl Selector {
+-        if values["version"] != "1" {
++        if values["version"] != "2" {
+@@ -391,2 +427,2 @@ mod tests {
+-    const MAINNET_PARAMS: &str = "version=1;network=mainnet;sha256=30f5caf9ee8906a8886dc103e55286b9d5b6dbd8784d1c97d21b9a38b266bb55";
+-    const BASE_PARAMS: &str = "version=1;network=base;sha256=2eeed82547cea2d8e6c6adb9b3770bd8f8bbdde3b43ce4c7a5410325cf9b2832";
++    const MAINNET_PARAMS: &str = "version=2;network=mainnet;sha256=1438edbd94e492190ce15d059ab766a03022f7255fdfa1cde9ef32e78a0fe547";
++    const BASE_PARAMS: &str = "version=2;network=base;sha256=a227784961973c72b47f663d7ee66b2f9306372bf2232dfb416abbba6ccf8df0";
+@@ -417,5 +453,3 @@ mod tests {
+-            "version=1;network=base",
+-            "version=1;network=base;sha256=abc;extra=no",
+-            "version=1;network=base;network=mainnet;sha256=abc",
+-            "version=2;network=base;sha256=abc",
+-            "version=1;network=unknown;sha256=abc",
++            "version=2;network=base",
++            "version=2;network=base;sha256=abc;extra=no",
++            "version=2;network=base;network=mainnet;sha256=abc",
+@@ -422,0 +457,2 @@ mod tests {
++            "version=2;network=unknown;sha256=abc",
++            "version=2;network=base;sha256=abc",
+@@ -433,2 +469,2 @@ mod tests {
+-        let raw = include_str!("../configs/base-v1.json");
+-        let inconsistent = raw.replace("\"module\": 1371713", "\"module\": 1371712");
++        let raw = include_str!("../configs/base-v2.json");
++        let inconsistent = raw.replace("\"module\": 1371679", "\"module\": 1371678");
+@@ -454,0 +491,3 @@ mod tests {
++        assert_eq!(base.initial_blocks.module, 1_371_679);
++        assert_eq!(base.initial_blocks.nonfungible_position_manager, 1_371_713);
++        assert!(!base.writer_runtime.production_ready);
+diff --git a/src/lib.rs b/src/lib.rs
+index 844a2ed..fdf4124 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -7,0 +8 @@ pub mod utils;
++pub mod writer_runtime;
+@@ -41,0 +43,6 @@ use substreams_ethereum::{pb::eth as ethpb, Event as EventTrait};
++#[substreams::handlers::map]
++pub fn map_writer_events(params: String, block: Block) -> Result<crate::pb::writer::WriterEvents, Error> {
++    let config = config::ChainConfig::from_params(&params)?;
++    writer_runtime::extract_writer_events(&config, &block)
++}
++
+diff --git a/src/pb/mod.rs b/src/pb/mod.rs
+index 854d575..bf7d8b1 100644
+--- a/src/pb/mod.rs
++++ b/src/pb/mod.rs
+@@ -0,0 +1 @@
++use crate::config::ChainConfig;
+@@ -7 +7,0 @@ use crate::pb::uniswap::events::PositionEvent;
+-use crate::config::ChainConfig;
+@@ -9 +8,0 @@ use crate::{Erc20Token, Pool};
+-use substreams::scalar::BigDecimal;
+@@ -10,0 +10 @@ use substreams::log;
++use substreams::scalar::BigDecimal;
+@@ -16,0 +17,4 @@ pub mod uniswap;
++#[allow(dead_code)]
++#[path = "./uniswap.writer.v1.rs"]
++pub mod writer;
++
+diff --git a/src/pb/uniswap.writer.v1.rs b/src/pb/uniswap.writer.v1.rs
+new file mode 100644
+index 0000000..62980ac
+--- /dev/null
++++ b/src/pb/uniswap.writer.v1.rs
+@@ -0,0 +1,101 @@
++// @generated and checked in for the pinned prost 0.13.3 wire contract.
++#[allow(clippy::derive_partial_eq_without_eq)]
++#[derive(Clone, PartialEq, ::prost::Message)]
++pub struct WriterEvents {
++    #[prost(message, repeated, tag = "1")]
++    pub events: ::prost::alloc::vec::Vec<WriterEvent>,
++    #[prost(string, tag = "2")]
++    pub network: ::prost::alloc::string::String,
++    #[prost(uint64, tag = "3")]
++    pub block_number: u64,
++    #[prost(string, tag = "4")]
++    pub segment_id: ::prost::alloc::string::String,
++    #[prost(string, tag = "5")]
++    pub source_writer_contract_sha256: ::prost::alloc::string::String,
++    #[prost(string, tag = "6")]
++    pub segment_semantic_contract_sha256: ::prost::alloc::string::String,
++}
++
++#[allow(clippy::derive_partial_eq_without_eq)]
++#[derive(Clone, PartialEq, ::prost::Message)]
++pub struct WriterEvent {
++    #[prost(uint64, tag = "1")]
++    pub ordinal: u64,
++    #[prost(bytes = "vec", tag = "2")]
++    pub transaction_hash: ::prost::alloc::vec::Vec<u8>,
++    #[prost(uint64, tag = "3")]
++    pub block_number: u64,
++    #[prost(uint32, tag = "4")]
++    pub transaction_log_index: u32,
++    #[prost(uint32, tag = "5")]
++    pub block_log_index: u32,
++    #[prost(bytes = "vec", tag = "6")]
++    pub contract_address: ::prost::alloc::vec::Vec<u8>,
++    #[prost(oneof = "writer_event::Event", tags = "10, 11, 12, 13")]
++    pub event: ::core::option::Option<writer_event::Event>,
++}
++
++pub mod writer_event {
++    #[allow(clippy::derive_partial_eq_without_eq)]
++    #[derive(Clone, PartialEq, ::prost::Oneof)]
++    pub enum Event {
++        #[prost(message, tag = "10")]
++        IncreaseLiquidity(super::IncreaseLiquidity),
++        #[prost(message, tag = "11")]
++        DecreaseLiquidity(super::DecreaseLiquidity),
++        #[prost(message, tag = "12")]
++        Collect(super::Collect),
++        #[prost(message, tag = "13")]
++        Transfer(super::Transfer),
++    }
++}
++
++#[allow(clippy::derive_partial_eq_without_eq)]
++#[derive(Clone, PartialEq, ::prost::Message)]
++pub struct IncreaseLiquidity {
++    #[prost(string, tag = "1")]
++    pub token_id: ::prost::alloc::string::String,
++    #[prost(string, tag = "2")]
++    pub liquidity: ::prost::alloc::string::String,
++    #[prost(string, tag = "3")]
++    pub amount0: ::prost::alloc::string::String,
++    #[prost(string, tag = "4")]
++    pub amount1: ::prost::alloc::string::String,
++}
++
++#[allow(clippy::derive_partial_eq_without_eq)]
++#[derive(Clone, PartialEq, ::prost::Message)]
++pub struct DecreaseLiquidity {
++    #[prost(string, tag = "1")]
++    pub token_id: ::prost::alloc::string::String,
++    #[prost(string, tag = "2")]
++    pub liquidity: ::prost::alloc::string::String,
++    #[prost(string, tag = "3")]
++    pub amount0: ::prost::alloc::string::String,
++    #[prost(string, tag = "4")]
++    pub amount1: ::prost::alloc::string::String,
++}
++
++#[allow(clippy::derive_partial_eq_without_eq)]
++#[derive(Clone, PartialEq, ::prost::Message)]
++pub struct Collect {
++    #[prost(string, tag = "1")]
++    pub token_id: ::prost::alloc::string::String,
++    #[prost(bytes = "vec", tag = "2")]
++    pub recipient: ::prost::alloc::vec::Vec<u8>,
++    #[prost(string, tag = "3")]
++    pub amount0: ::prost::alloc::string::String,
++    #[prost(string, tag = "4")]
++    pub amount1: ::prost::alloc::string::String,
++}
++
++#[allow(clippy::derive_partial_eq_without_eq)]
++#[derive(Clone, PartialEq, ::prost::Message)]
++pub struct Transfer {
++    #[prost(bytes = "vec", tag = "1")]
++    pub from: ::prost::alloc::vec::Vec<u8>,
++    #[prost(bytes = "vec", tag = "2")]
++    pub to: ::prost::alloc::vec::Vec<u8>,
++    #[prost(string, tag = "3")]
++    pub token_id: ::prost::alloc::string::String,
++}
+diff --git a/src/writer_runtime.rs b/src/writer_runtime.rs
+new file mode 100644
+index 0000000..190dd27
+--- /dev/null
++++ b/src/writer_runtime.rs
+@@ -0,0 +1,837 @@
++use std::collections::BTreeSet;
++
++use serde::Deserialize;
++use sha2::{Digest, Sha256};
++use substreams::errors::Error;
++use substreams_ethereum::pb::eth::v2::{Block, Log};
++
++use crate::abi::positionmanager::events::{Collect, DecreaseLiquidity, IncreaseLiquidity, Transfer};
++use crate::config::ChainConfig;
++use crate::pb::writer::writer_event::Event;
++use crate::pb::writer::{
++    Collect as RawCollect, DecreaseLiquidity as RawDecreaseLiquidity, IncreaseLiquidity as RawIncreaseLiquidity,
++    Transfer as RawTransfer, WriterEvent, WriterEvents,
++};
++
++pub const SOURCE_WRITER_CONTRACT_SHA256: &str = "259481724561d5aa725c17f90b5a19ea93ad6f7cd6074cf2cb8a8661c39f81c4";
++const PROFILE_CONTRACT_VERSION: &str = "uniswap-v3-writer-runtime-segment-profiles/v1";
++const PROFILE_SET_SHA256: &str = "2b6635c061a7a0bfce39430c71c41dacc1567f095fe41134e890a697aa27f823";
++const SOURCE_CONTRACT_VERSION: &str = "uniswap-v3-writer-compatibility/v3";
++const SOURCE_CONTRACT_PATH: &str = "uniswap-v3/graft-ancestry/v2/writer-compatibility.json";
++
++const INCREASE_TOPIC: &str = "3067048beee31b25b2f1681f88dac838c8bba36af25bfb2b7cf7473a5847e35f";
++const DECREASE_TOPIC: &str = "26f6a048ee9138f2c0ce266f322cb99228e8d619ae2bff30c67f8dcf9d2377b4";
++const COLLECT_TOPIC: &str = "40d0efd1a53d60ecbf40971b9daf7dc90178c3aadc7aab1765632738fa8b8f01";
++const TRANSFER_TOPIC: &str = "ddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
++
++#[derive(Debug, Clone, Copy, Deserialize, PartialEq, Eq)]
++#[serde(rename_all = "lowercase")]
++enum Network {
++    Mainnet,
++    Base,
++}
++
++impl Network {
++    fn parse(value: &str) -> Result<Self, Error> {
++        match value {
++            "mainnet" => Ok(Self::Mainnet),
++            "base" => Ok(Self::Base),
++            other => Err(Error::msg(format!("unknown writer-runtime network `{other}`"))),
++        }
++    }
++
++    fn as_str(self) -> &'static str {
++        match self {
++            Self::Mainnet => "mainnet",
++            Self::Base => "base",
++        }
++    }
++}
++
++#[derive(Debug, Clone, Copy, Deserialize, PartialEq, Eq)]
++#[serde(rename_all = "lowercase")]
++enum ExecutionModel {
++    Undecided,
++}
++
++#[derive(Debug, Clone, Copy, Deserialize, PartialEq, Eq)]
++enum HandlerName {
++    #[serde(rename = "handleDecreaseLiquidity")]
++    DecreaseLiquidity,
++    #[serde(rename = "handleIncreaseLiquidity")]
++    IncreaseLiquidity,
++}
++
++#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
++#[serde(deny_unknown_fields)]
++struct SourceWriterContract {
++    contract_version: String,
++    path: String,
++    raw_sha256: String,
++}
++
++#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
++#[serde(deny_unknown_fields)]
++struct HistoricalGuard {
++    block: u64,
++    effective_in_segment: bool,
++    present_in_mapping: bool,
++}
++
++#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
++#[serde(deny_unknown_fields)]
++struct SegmentProfile {
++    artifact_identity_sha256: String,
++    backfill_allowed: bool,
++    deployment: String,
++    end_block_inclusive: Option<u64>,
++    execution_model: ExecutionModel,
++    factory_mapping_cid: String,
++    factory_profile_id: String,
++    historical_guard: HistoricalGuard,
++    network: Network,
++    npm_block_guard_handlers: Vec<HandlerName>,
++    npm_full_handler_or_field_writer_audit_complete: bool,
++    npm_mapping_cid: String,
++    npm_profile_id: String,
++    pool_mapping_cid: String,
++    pool_profile_id: String,
++    segment_id: String,
++    semantic_contract_sha256: String,
++    source_segment_sha256: String,
++    start_block_inclusive: u64,
++    target_runtime_identity_bound: bool,
++}
++
++impl SegmentProfile {
++    fn includes(&self, network: Network, block: u64) -> bool {
++        self.network == network
++            && self.start_block_inclusive <= block
++            && self.end_block_inclusive.map_or(true, |end| block <= end)
++    }
++}
++
++#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
++#[serde(deny_unknown_fields)]
++struct SourceTruthBoundary {
++    backfill_ready: bool,
++    boundary_state_continuity_complete: bool,
++    constant_store_set_target_inventory_complete: bool,
++    factory_pool_critical_writer_observations_bound: bool,
++    factory_pool_full_field_writer_semantics_complete: bool,
++    factory_pool_profile_axis_bindings_complete: bool,
++    factory_pool_profile_axis_catalog_digest_bound: bool,
++    factory_static_writer_observations_digest_bound: bool,
++    factory_static_writer_provenance_complete: bool,
++    field_writer_audit_complete: bool,
++    full_handler_semantics_complete: bool,
++    global_store_set_callsite_closure_complete: bool,
++    logical_oracle_complete: bool,
++    npm_collect_and_pool_flash_conservative_writer_closure_complete: bool,
++    npm_collect_and_pool_flash_reachability_complete: bool,
++    physical_parity_complete: bool,
++    poi_parity_complete: bool,
++    pool_static_writer_observations_digest_bound: bool,
++    pool_static_writer_provenance_complete: bool,
++    production_ready: bool,
++    registered_handler_export_binding_chain_complete: bool,
++    required_absence_static_certified: bool,
++    runtime_population_complete: bool,
++    segment_execution_models_decided: bool,
++    segment_writer_contracts_complete: bool,
++    segment_writer_diff_complete: bool,
++    source_binding_inventory_complete: bool,
++    target_graph_node_runtime_identity_bound: bool,
++    wabt_analysis_ci_recomputed: bool,
++}
++
++const EXPECTED_SOURCE_TRUTH: SourceTruthBoundary = SourceTruthBoundary {
++    backfill_ready: false,
++    boundary_state_continuity_complete: false,
++    constant_store_set_target_inventory_complete: true,
++    factory_pool_critical_writer_observations_bound: true,
++    factory_pool_full_field_writer_semantics_complete: false,
++    factory_pool_profile_axis_bindings_complete: false,
++    factory_pool_profile_axis_catalog_digest_bound: true,
++    factory_static_writer_observations_digest_bound: true,
++    factory_static_writer_provenance_complete: false,
++    field_writer_audit_complete: false,
++    full_handler_semantics_complete: false,
++    global_store_set_callsite_closure_complete: true,
++    logical_oracle_complete: false,
++    npm_collect_and_pool_flash_conservative_writer_closure_complete: true,
++    npm_collect_and_pool_flash_reachability_complete: false,
++    physical_parity_complete: false,
++    poi_parity_complete: false,
++    pool_static_writer_observations_digest_bound: true,
++    pool_static_writer_provenance_complete: false,
++    production_ready: false,
++    registered_handler_export_binding_chain_complete: true,
++    required_absence_static_certified: true,
++    runtime_population_complete: false,
++    segment_execution_models_decided: false,
++    segment_writer_contracts_complete: true,
++    segment_writer_diff_complete: true,
++    source_binding_inventory_complete: true,
++    target_graph_node_runtime_identity_bound: false,
++    wabt_analysis_ci_recomputed: true,
++};
++
++#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
++#[serde(deny_unknown_fields)]
++struct TrancheTruthBoundary {
++    backfill_ready: bool,
++    boundary_state_continuity_complete: bool,
++    diagnostic_only: bool,
++    graph_out_replaced: bool,
++    logical_oracle_complete: bool,
++    physical_parity_complete: bool,
++    poi_parity_complete: bool,
++    production_ready: bool,
++    rpc_calls_added: bool,
++    runtime_population_complete: bool,
++    stores_added: bool,
++}
++
++const EXPECTED_TRANCHE_TRUTH: TrancheTruthBoundary = TrancheTruthBoundary {
++    backfill_ready: false,
++    boundary_state_continuity_complete: false,
++    diagnostic_only: true,
++    graph_out_replaced: false,
++    logical_oracle_complete: false,
++    physical_parity_complete: false,
++    poi_parity_complete: false,
++    production_ready: false,
++    rpc_calls_added: false,
++    runtime_population_complete: false,
++    stores_added: false,
++};
++
++#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
++#[serde(deny_unknown_fields)]
++struct SegmentProfiles {
++    format_version: u32,
++    profile_contract_version: String,
++    profiles: Vec<SegmentProfile>,
++    source_truth_boundary: SourceTruthBoundary,
++    source_writer_contract: SourceWriterContract,
++    tranche_truth_boundary: TrancheTruthBoundary,
++}
++
++impl SegmentProfiles {
++    fn embedded(config: &ChainConfig) -> Result<Self, Error> {
++        let raw = include_str!("../configs/segment-profiles-v1.json");
++        let digest = hex::encode(Sha256::digest(raw.as_bytes()));
++        if digest != PROFILE_SET_SHA256 || digest != config.writer_runtime.segment_profiles_sha256 {
++            return Err(Error::msg("writer-runtime segment-profile digest mismatch"));
++        }
++        Self::parse_and_validate(raw)
++    }
++
++    fn parse_and_validate(raw: &str) -> Result<Self, Error> {
++        if hex::encode(Sha256::digest(raw.as_bytes())) != PROFILE_SET_SHA256 {
++            return Err(Error::msg("unapproved writer-runtime segment-profile digest"));
++        }
++        let profiles: Self = serde_json::from_str(raw)
++            .map_err(|error| Error::msg(format!("invalid writer-runtime profile JSON: {error}")))?;
++        profiles.validate()?;
++        Ok(profiles)
++    }
++
++    fn validate(&self) -> Result<(), Error> {
++        if self.format_version != 1 || self.profile_contract_version != PROFILE_CONTRACT_VERSION {
++            return Err(Error::msg("unsupported writer-runtime segment-profile version"));
++        }
++        if self.source_writer_contract.contract_version != SOURCE_CONTRACT_VERSION
++            || self.source_writer_contract.path != SOURCE_CONTRACT_PATH
++            || self.source_writer_contract.raw_sha256 != SOURCE_WRITER_CONTRACT_SHA256
++        {
++            return Err(Error::msg("writer-runtime source-contract binding drift"));
++        }
++        if self.source_truth_boundary != EXPECTED_SOURCE_TRUTH || self.tranche_truth_boundary != EXPECTED_TRANCHE_TRUTH
++        {
++            return Err(Error::msg("writer-runtime truth boundary drift"));
++        }
++
++        const EXPECTED_RANGES: &[(Network, u64, Option<u64>)] = &[
++            (Network::Mainnet, 12_369_621, Some(13_450_880)),
++            (Network::Mainnet, 13_450_881, Some(13_498_328)),
++            (Network::Mainnet, 13_498_329, Some(13_591_197)),
++            (Network::Mainnet, 13_591_198, Some(13_605_860)),
++            (Network::Mainnet, 13_605_861, Some(19_470_000)),
++            (Network::Mainnet, 19_470_001, None),
++            (Network::Base, 1_371_679, Some(19_852_000)),
++            (Network::Base, 19_852_001, None),
++        ];
++        if self.profiles.len() != EXPECTED_RANGES.len() {
++            return Err(Error::msg("writer-runtime requires exactly eight ordered segments"));
++        }
++        for (profile, expected) in self.profiles.iter().zip(EXPECTED_RANGES) {
++            if (
++                profile.network,
++                profile.start_block_inclusive,
++                profile.end_block_inclusive,
++            ) != *expected
++            {
++                return Err(Error::msg("writer-runtime segment range or order drift"));
++            }
++            for (field, value) in [
++                ("deployment", profile.deployment.as_str()),
++                ("factory_mapping_cid", profile.factory_mapping_cid.as_str()),
++                ("pool_mapping_cid", profile.pool_mapping_cid.as_str()),
++                ("npm_mapping_cid", profile.npm_mapping_cid.as_str()),
++            ] {
++                validate_cid(field, value)?;
++            }
++            for (field, value) in [
++                ("source_segment_sha256", profile.source_segment_sha256.as_str()),
++                ("artifact_identity_sha256", profile.artifact_identity_sha256.as_str()),
++                ("semantic_contract_sha256", profile.semantic_contract_sha256.as_str()),
++            ] {
++                validate_sha256(field, value)?;
++            }
++            if profile.segment_id != format!("{}:{}", profile.network.as_str(), profile.deployment)
++                || profile.factory_profile_id.is_empty()
++                || profile.pool_profile_id.is_empty()
++                || profile.npm_profile_id.is_empty()
++                || profile.execution_model != ExecutionModel::Undecided
++                || profile.target_runtime_identity_bound
++                || profile.backfill_allowed
++                || profile.npm_full_handler_or_field_writer_audit_complete
++                || profile.historical_guard.block != 14_317_993
++                || (profile.historical_guard.effective_in_segment && !profile.historical_guard.present_in_mapping)
++            {
++                return Err(Error::msg("writer-runtime segment binding or conservative gate drift"));
++            }
++        }
++        Ok(())
++    }
++
++    fn select(&self, network: Network, block: u64) -> Result<&SegmentProfile, Error> {
++        let mut matches = self.profiles.iter().filter(|profile| profile.includes(network, block));
++        let profile = matches.next().ok_or_else(|| {
++            Error::msg(format!(
++                "no writer-runtime segment for {} block {block}",
++                network.as_str()
++            ))
++        })?;
++        if matches.next().is_some() {
++            return Err(Error::msg(format!(
++                "overlapping writer-runtime segments for {} block {block}",
++                network.as_str()
++            )));
++        }
++        Ok(profile)
++    }
++}
++
++pub fn extract_writer_events(config: &ChainConfig, block: &Block) -> Result<WriterEvents, Error> {
++    let network = Network::parse(&config.network)?;
++    let profiles = SegmentProfiles::embedded(config)?;
++    let profile = profiles.select(network, block.number)?;
++    let mut output = WriterEvents {
++        network: config.network.clone(),
++        block_number: block.number,
++        segment_id: profile.segment_id.clone(),
++        source_writer_contract_sha256: SOURCE_WRITER_CONTRACT_SHA256.to_string(),
++        segment_semantic_contract_sha256: profile.semantic_contract_sha256.clone(),
++        ..Default::default()
++    };
++    if block.number < config.initial_blocks.nonfungible_position_manager {
++        return Ok(output);
++    }
++
++    let manager = config.position_manager_address();
++    let mut ordinals = BTreeSet::new();
++    for log_view in block.logs() {
++        let log = log_view.log;
++        if log.address != manager {
++            continue;
++        }
++        let Some(event) = decode_writer_log(log)? else {
++            continue;
++        };
++        let transaction_hash = &log_view.receipt.transaction.hash;
++        if transaction_hash.len() != 32 {
++            return Err(Error::msg(format!(
++                "writer-event transaction hash must be 32 bytes at ordinal {}",
++                log.ordinal
++            )));
++        }
++        if !ordinals.insert(log.ordinal) {
++            return Err(Error::msg(format!("duplicate writer-event ordinal {}", log.ordinal)));
++        }
++        output.events.push(WriterEvent {
++            ordinal: log.ordinal,
++            transaction_hash: transaction_hash.clone(),
++            block_number: block.number,
++            transaction_log_index: log.index,
++            block_log_index: log.block_index,
++            contract_address: log.address.clone(),
++            event: Some(event),
++        });
++    }
++    output.events.sort_by_key(|event| event.ordinal);
++    Ok(output)
++}
++
++pub fn decode_writer_log(log: &Log) -> Result<Option<Event>, Error> {
++    let Some(topic) = log.topics.first() else {
++        return Ok(None);
++    };
++    match hex::encode(topic).as_str() {
++        INCREASE_TOPIC => {
++            require_shape(log, 2, 96, "IncreaseLiquidity")?;
++            let event = IncreaseLiquidity::decode(log)
++                .map_err(|_| Error::msg("malformed recognized IncreaseLiquidity event"))?;
++            Ok(Some(Event::IncreaseLiquidity(RawIncreaseLiquidity {
++                token_id: event.token_id.to_string(),
++                liquidity: event.liquidity.to_string(),
++                amount0: event.amount0.to_string(),
++                amount1: event.amount1.to_string(),
++            })))
++        }
++        DECREASE_TOPIC => {
++            require_shape(log, 2, 96, "DecreaseLiquidity")?;
++            let event = DecreaseLiquidity::decode(log)
++                .map_err(|_| Error::msg("malformed recognized DecreaseLiquidity event"))?;
++            Ok(Some(Event::DecreaseLiquidity(RawDecreaseLiquidity {
++                token_id: event.token_id.to_string(),
++                liquidity: event.liquidity.to_string(),
++                amount0: event.amount0.to_string(),
++                amount1: event.amount1.to_string(),
++            })))
++        }
++        COLLECT_TOPIC => {
++            require_shape(log, 2, 96, "Collect")?;
++            let event = Collect::decode(log).map_err(|_| Error::msg("malformed recognized Collect event"))?;
++            Ok(Some(Event::Collect(RawCollect {
++                token_id: event.token_id.to_string(),
++                recipient: event.recipient,
++                amount0: event.amount0.to_string(),
++                amount1: event.amount1.to_string(),
++            })))
++        }
++        TRANSFER_TOPIC => {
++            require_shape(log, 4, 0, "Transfer")?;
++            let event = Transfer::decode(log).map_err(|_| Error::msg("malformed recognized Transfer event"))?;
++            Ok(Some(Event::Transfer(RawTransfer {
++                from: event.from,
++                to: event.to,
++                token_id: event.token_id.to_string(),
++            })))
++        }
++        _ => Ok(None),
++    }
++}
++
++fn require_shape(log: &Log, topic_count: usize, data_length: usize, name: &str) -> Result<(), Error> {
++    if log.topics.len() != topic_count || log.data.len() != data_length {
++        return Err(Error::msg(format!("malformed recognized {name} event")));
++    }
++    Ok(())
++}
++
++fn validate_sha256(field: &str, value: &str) -> Result<(), Error> {
++    if value.len() != 64
++        || !value
++            .bytes()
++            .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase())
++    {
++        return Err(Error::msg(format!("{field} must be a lowercase SHA-256")));
++    }
++    Ok(())
++}
++
++fn validate_cid(field: &str, value: &str) -> Result<(), Error> {
++    if value.len() != 46 || !value.starts_with("Qm") || !value.bytes().all(|byte| byte.is_ascii_alphanumeric()) {
++        return Err(Error::msg(format!("{field} must be a CIDv0 string")));
++    }
++    Ok(())
++}
++
++#[cfg(test)]
++mod tests {
++    use ethabi::ethereum_types::U256;
++    use serde::Deserialize;
++    use substreams_ethereum::pb::eth::v2::{TransactionReceipt, TransactionTrace};
++
++    use super::*;
++
++    const MAINNET_PARAMS: &str =
++        "version=2;network=mainnet;sha256=1438edbd94e492190ce15d059ab766a03022f7255fdfa1cde9ef32e78a0fe547";
++    const BASE_PARAMS: &str =
++        "version=2;network=base;sha256=a227784961973c72b47f663d7ee66b2f9306372bf2232dfb416abbba6ccf8df0";
++
++    #[derive(Debug, Deserialize)]
++    #[serde(deny_unknown_fields)]
++    struct Fixtures {
++        format_version: u32,
++        fixture_version: String,
++        quantity_encoding: String,
++        addresses: FixtureAddresses,
++        cases: Vec<FixtureCase>,
++    }
++
++    #[derive(Debug, Deserialize)]
++    #[serde(deny_unknown_fields)]
++    struct FixtureAddresses {
++        mainnet_nonfungible_position_manager: String,
++        base_nonfungible_position_manager: String,
++        foreign: String,
++    }
++
++    #[derive(Debug, Clone, Deserialize)]
++    #[serde(deny_unknown_fields)]
++    struct FixtureCase {
++        id: String,
++        network: String,
++        block_number: u64,
++        transactions: Vec<FixtureTransaction>,
++        expected_ordinals: Vec<u64>,
++        expected_types: Vec<String>,
++    }
++
++    #[derive(Debug, Clone, Deserialize)]
++    #[serde(deny_unknown_fields)]
++    struct FixtureTransaction {
++        hash: String,
++        status: i32,
++        logs: Vec<FixtureLog>,
++    }
++
++    #[derive(Debug, Clone, Deserialize)]
++    #[serde(deny_unknown_fields)]
++    struct FixtureLog {
++        address: String,
++        ordinal: u64,
++        event: FixtureEvent,
++    }
++
++    #[derive(Debug, Clone, Deserialize)]
++    #[serde(tag = "type", rename_all = "lowercase", deny_unknown_fields)]
++    enum FixtureEvent {
++        Increase {
++            token_id: String,
++            liquidity: String,
++            amount0: String,
++            amount1: String,
++        },
++        Decrease {
++            token_id: String,
++            liquidity: String,
++            amount0: String,
++            amount1: String,
++        },
++        Collect {
++            token_id: String,
++            recipient: String,
++            amount0: String,
++            amount1: String,
++        },
++        Transfer {
++            from: String,
++            to: String,
++            token_id: String,
++        },
++    }
++
++    fn fixtures() -> Fixtures {
++        let fixtures: Fixtures = serde_json::from_str(include_str!("../fixtures/events-v1.json")).unwrap();
++        assert_eq!(fixtures.format_version, 1);
++        assert_eq!(fixtures.fixture_version, "uniswap-v3-writer-events-fixtures/v1");
++        assert!(fixtures.quantity_encoding.contains("unscaled unsigned ABI integers"));
++        assert_eq!(fixtures.addresses.mainnet_nonfungible_position_manager.len(), 40);
++        assert_eq!(fixtures.addresses.base_nonfungible_position_manager.len(), 40);
++        assert_eq!(fixtures.addresses.foreign.len(), 40);
++        fixtures
++    }
++
++    fn config(network: &str) -> ChainConfig {
++        ChainConfig::from_params(match network {
++            "mainnet" => MAINNET_PARAMS,
++            "base" => BASE_PARAMS,
++            _ => panic!("unsupported fixture network"),
++        })
++        .unwrap()
++    }
++
++    fn case(id: &str) -> FixtureCase {
++        fixtures().cases.into_iter().find(|case| case.id == id).unwrap()
++    }
++
++    fn block(case: &FixtureCase) -> Block {
++        Block {
++            number: case.block_number,
++            transaction_traces: case
++                .transactions
++                .iter()
++                .map(|transaction| TransactionTrace {
++                    hash: hex::decode(&transaction.hash).unwrap(),
++                    status: transaction.status,
++                    receipt: Some(TransactionReceipt {
++                        logs: transaction
++                            .logs
++                            .iter()
++                            .enumerate()
++                            .map(|(index, log)| fixture_log(log, index as u32))
++                            .collect(),
++                        ..Default::default()
++                    }),
++                    ..Default::default()
++                })
++                .collect(),
++            ..Default::default()
++        }
++    }
++
++    fn fixture_log(fixture: &FixtureLog, index: u32) -> Log {
++        let (topic, mut topics, data) = match &fixture.event {
++            FixtureEvent::Increase {
++                token_id,
++                liquidity,
++                amount0,
++                amount1,
++            } => (
++                INCREASE_TOPIC,
++                vec![word(token_id)],
++                words(&[liquidity, amount0, amount1]),
++            ),
++            FixtureEvent::Decrease {
++                token_id,
++                liquidity,
++                amount0,
++                amount1,
++            } => (
++                DECREASE_TOPIC,
++                vec![word(token_id)],
++                words(&[liquidity, amount0, amount1]),
++            ),
++            FixtureEvent::Collect {
++                token_id,
++                recipient,
++                amount0,
++                amount1,
++            } => (
++                COLLECT_TOPIC,
++                vec![word(token_id)],
++                [address_word(recipient), word(amount0), word(amount1)].concat(),
++            ),
++            FixtureEvent::Transfer { from, to, token_id } => (
++                TRANSFER_TOPIC,
++                vec![address_word(from), address_word(to), word(token_id)],
++                Vec::new(),
++            ),
++        };
++        topics.insert(0, hex::decode(topic).unwrap());
++        Log {
++            address: hex::decode(&fixture.address).unwrap(),
++            topics,
++            data,
++            index,
++            block_index: 100 + index,
++            ordinal: fixture.ordinal,
++        }
++    }
++
++    fn word(value: &str) -> Vec<u8> {
++        let value = U256::from_dec_str(value).unwrap();
++        let mut output = [0; 32];
++        value.to_big_endian(&mut output);
++        output.to_vec()
++    }
++
++    fn address_word(value: &str) -> Vec<u8> {
++        let mut output = vec![0; 12];
++        output.extend(hex::decode(value).unwrap());
++        output
++    }
++
++    fn words(values: &[&String]) -> Vec<u8> {
++        values.iter().flat_map(|value| word(value)).collect()
++    }
++
++    fn event_type(event: &WriterEvent) -> &'static str {
++        match event.event.as_ref().unwrap() {
++            Event::IncreaseLiquidity(_) => "increase",
++            Event::DecreaseLiquidity(_) => "decrease",
++            Event::Collect(_) => "collect",
++            Event::Transfer(_) => "transfer",
++        }
++    }
++
++    #[test]
++    fn fixture_contract_retains_all_occurrences_in_global_ordinal_order() {
++        for case in fixtures().cases {
++            let output = extract_writer_events(&config(&case.network), &block(&case)).unwrap();
++            assert_eq!(
++                output.events.iter().map(|event| event.ordinal).collect::<Vec<_>>(),
++                case.expected_ordinals,
++                "{} ordinals",
++                case.id
++            );
++            assert_eq!(
++                output.events.iter().map(event_type).collect::<Vec<_>>(),
++                case.expected_types,
++                "{} types",
++                case.id
++            );
++        }
++    }
++
++    #[test]
++    fn transfer_only_foreign_logs_failed_transactions_and_cross_network_addresses_are_handled() {
++        let transfer = case("transfer-only-mainnet");
++        let output = extract_writer_events(&config("mainnet"), &block(&transfer)).unwrap();
++        assert_eq!(output.events.len(), 1);
++        assert!(matches!(output.events[0].event, Some(Event::Transfer(_))));
++
++        let all = case("all-occurrences-global-order-and-filtering-mainnet");
++        let output = extract_writer_events(&config("mainnet"), &block(&all)).unwrap();
++        assert_eq!(output.events.len(), 5);
++        assert!(!output.events.iter().any(|event| event.ordinal == 5));
++        assert!(!output.events.iter().any(|event| event.ordinal == 12));
++        assert!(!output.events.iter().any(|event| event.ordinal == 15));
++    }
++
++    #[test]
++    fn raw_uint256_values_and_log_identity_are_unchanged() {
++        let all = case("all-occurrences-global-order-and-filtering-mainnet");
++        let output = extract_writer_events(&config("mainnet"), &block(&all)).unwrap();
++        let event = output.events.iter().find(|event| event.ordinal == 50).unwrap();
++        let Event::IncreaseLiquidity(increase) = event.event.as_ref().unwrap() else {
++            panic!("expected IncreaseLiquidity");
++        };
++        assert_eq!(increase.liquidity, "340282366920938463463374607431768211455");
++        assert_eq!(
++            increase.amount0,
++            "115792089237316195423570985008687907853269984665640564039457584007913129639935"
++        );
++        assert_eq!(increase.amount1, "9007199254740993");
++        assert_eq!(event.block_number, 14_317_993);
++        assert_eq!(event.contract_address, config("mainnet").position_manager_address());
++        assert_eq!(event.transaction_hash, vec![0xbb; 32]);
++        assert_eq!(event.transaction_log_index, 0);
++        assert_eq!(event.block_log_index, 100);
++    }
++
++    #[test]
++    fn duplicate_global_ordinal_is_a_deterministic_error() {
++        let mut all = case("all-occurrences-global-order-and-filtering-mainnet");
++        all.transactions[0].logs[6].ordinal = 50;
++        let error = extract_writer_events(&config("mainnet"), &block(&all)).unwrap_err();
++        assert_eq!(error.to_string(), "duplicate writer-event ordinal 50");
++    }
++
++    #[test]
++    fn accepted_event_requires_an_exact_32_byte_transaction_hash() {
++        let transfer = case("transfer-only-mainnet");
++        let mut malformed = block(&transfer);
++        malformed.transaction_traces[0].hash = vec![0xaa; 31];
++        let error = extract_writer_events(&config("mainnet"), &malformed).unwrap_err();
++        assert_eq!(
++            error.to_string(),
++            "writer-event transaction hash must be 32 bytes at ordinal 11"
++        );
++    }
++
++    #[test]
++    fn recognized_malformed_events_fail_and_unknown_signatures_continue() {
++        let malformed = Log {
++            topics: vec![hex::decode(INCREASE_TOPIC).unwrap()],
++            ..Default::default()
++        };
++        assert_eq!(
++            decode_writer_log(&malformed).unwrap_err().to_string(),
++            "malformed recognized IncreaseLiquidity event"
++        );
++        let unknown = Log {
++            topics: vec![vec![0x55; 32]],
++            ..Default::default()
++        };
++        assert!(decode_writer_log(&unknown).unwrap().is_none());
++    }
++
++    #[test]
++    fn selector_covers_every_inclusive_boundary_and_rejects_gaps_or_overlaps() {
++        let profiles = SegmentProfiles::embedded(&config("mainnet")).unwrap();
++        for profile in &profiles.profiles {
++            assert_eq!(
++                profiles
++                    .select(profile.network, profile.start_block_inclusive)
++                    .unwrap()
++                    .segment_id,
++                profile.segment_id
++            );
++            if let Some(end) = profile.end_block_inclusive {
++                assert_eq!(
++                    profiles.select(profile.network, end).unwrap().segment_id,
++                    profile.segment_id
++                );
++            }
++        }
++        assert!(profiles.select(Network::Mainnet, 12_369_620).is_err());
++        assert!(profiles.select(Network::Base, 1_371_678).is_err());
++
++        let mut gap = profiles.clone();
++        gap.profiles[1].start_block_inclusive += 1;
++        assert!(gap.validate().is_err());
++        let mut overlap = profiles.clone();
++        overlap.profiles[1].start_block_inclusive -= 1;
++        assert!(overlap.validate().is_err());
++        let mut missing = profiles.clone();
++        missing.profiles.pop();
++        assert!(missing.validate().is_err());
++        let mut extra = profiles.clone();
++        extra.profiles.push(extra.profiles[0].clone());
++        assert!(extra.validate().is_err());
++        let mut reordered = profiles.clone();
++        reordered.profiles.swap(0, 1);
++        assert!(reordered.validate().is_err());
++    }
++
++    #[test]
++    fn profile_digest_drift_and_truth_promotion_fail_closed() {
++        let raw = include_str!("../configs/segment-profiles-v1.json");
++        assert!(SegmentProfiles::parse_and_validate(&raw.replace(
++            "4839ecce0391345e412ccde53a12d6d243cafd3d6a99e9072f8f1d2020b802ff",
++            "5839ecce0391345e412ccde53a12d6d243cafd3d6a99e9072f8f1d2020b802ff"
++        ))
++        .is_err());
++        assert!(SegmentProfiles::parse_and_validate(
++            &raw.replace("\"production_ready\": false", "\"production_ready\": true")
++        )
++        .is_err());
++    }
++
++    #[test]
++    fn block_14317993_selects_unguarded_mainnet_and_guarded_base_root() {
++        let profiles = SegmentProfiles::embedded(&config("mainnet")).unwrap();
++        let mainnet = profiles.select(Network::Mainnet, 14_317_993).unwrap();
++        let base = profiles.select(Network::Base, 14_317_993).unwrap();
++        assert_eq!(mainnet.npm_profile_id, "mainnet-no-collect-amounts");
++        assert!(!mainnet.historical_guard.effective_in_segment);
++        assert_eq!(base.npm_profile_id, "base-root-amount0-to-both");
++        assert!(base.historical_guard.effective_in_segment);
++    }
++
++    #[test]
++    fn base_runtime_origin_and_npm_gate_are_distinct_at_all_boundaries() {
++        let fixture = case("base-npm-gate");
++        let base = config("base");
++        assert_eq!(base.initial_blocks.module, 1_371_679);
++        assert_eq!(base.initial_blocks.factory, 1_371_679);
++        assert_eq!(base.initial_blocks.factory_creation, 1_371_679);
++        assert_eq!(base.initial_blocks.nonfungible_position_manager, 1_371_713);
++
++        let mut candidate = block(&fixture);
++        candidate.number = 1_371_678;
++        assert!(extract_writer_events(&base, &candidate).is_err());
++        for number in [1_371_679, 1_371_712] {
++            candidate.number = number;
++            assert!(extract_writer_events(&base, &candidate).unwrap().events.is_empty());
++        }
++        candidate.number = 1_371_713;
++        assert_eq!(extract_writer_events(&base, &candidate).unwrap().events.len(), 1);
++    }
++}

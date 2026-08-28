@@ -54,6 +54,11 @@ only after this gate passes.
   materialized outside the frozen source tree. Both generated manifests use one
   compiled WASM; CI rejects any difference in the WASM embedded in their diagnostic
   packages and records distinct configuration-derived execution hashes.
+- **`uniswap-v3/writer-runtime/`** — a second ordered, digest-bound overlay that
+  exposes a raw diagnostic NPM event stream in both packages while preserving
+  the legacy `graph_out`; it corrects the Base runtime/Factory origin to
+  1,371,679, keeps the direct NPM gate at 1,371,713, and leaves every parity,
+  backfill, and production gate false.
 - **`uniswap-v3/graft-ancestry/`** — the complete content-addressed mainnet/Base
   manifest ancestry through graft-free roots, with exact boundary ownership,
   handler/schema inventories, static writer-target matrices, and deliberately

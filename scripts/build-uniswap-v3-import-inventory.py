@@ -6,6 +6,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
+import stat
 import subprocess
 import sys
 from pathlib import Path
@@ -58,6 +60,71 @@ def build_inventory() -> dict[str, object]:
     }
 
 
+def verify_live_source_tree(source_dir: Path, inventory: dict[str, object]) -> None:
+    """Verify the filesystem tree that a materializer would otherwise copy.
+
+    Git's index checks do not report ignored files and can miss untracked
+    symlinks.  Both are unsafe here: Cargo consumes extra configuration files,
+    and an overlay copy can follow a symlink out of the materialization root.
+    The build-only top-level ``target`` directory is allowed when it is a real
+    directory, but it is never copied or inspected.
+    """
+
+    source_dir = source_dir.resolve(strict=True)
+    expected_files = {item["path"]: item for item in inventory["files"]}
+    expected_directories = {
+        parent.as_posix()
+        for relative in expected_files
+        for parent in Path(relative).parents
+        if parent != Path(".")
+    }
+    actual_files: dict[str, os.DirEntry[str]] = {}
+    actual_directories: set[str] = set()
+
+    def walk(directory: Path, relative_directory: Path) -> None:
+        with os.scandir(directory) as entries:
+            for entry in entries:
+                relative = relative_directory / entry.name
+                relative_text = relative.as_posix()
+                if relative_directory == Path(".") and entry.name == "target":
+                    if entry.is_symlink() or not entry.is_dir(follow_symlinks=False):
+                        raise RuntimeError("live source target must be a real directory when present")
+                    continue
+                if entry.is_symlink():
+                    raise RuntimeError(f"live source contains symlink {relative_text}")
+                if entry.is_dir(follow_symlinks=False):
+                    actual_directories.add(relative_text)
+                    walk(Path(entry.path), relative)
+                    continue
+                if not entry.is_file(follow_symlinks=False):
+                    raise RuntimeError(f"live source contains non-regular entry {relative_text}")
+                actual_files[relative_text] = entry
+
+    walk(source_dir, Path("."))
+    if set(actual_files) != set(expected_files):
+        missing = sorted(set(expected_files) - set(actual_files))
+        extra = sorted(set(actual_files) - set(expected_files))
+        raise RuntimeError(f"live source file set drift; missing={missing}, extra={extra}")
+    if actual_directories != expected_directories:
+        missing = sorted(expected_directories - actual_directories)
+        extra = sorted(actual_directories - expected_directories)
+        raise RuntimeError(f"live source directory set drift; missing={missing}, extra={extra}")
+
+    for relative, expected in expected_files.items():
+        path = Path(actual_files[relative].path)
+        metadata = path.stat(follow_symlinks=False)
+        if not stat.S_ISREG(metadata.st_mode):
+            raise RuntimeError(f"live source entry is not a regular file: {relative}")
+        executable = bool(metadata.st_mode & 0o111)
+        expected_executable = expected["mode"] == "100755"
+        if executable != expected_executable:
+            raise RuntimeError(f"live source executable mode drift: {relative}")
+        if metadata.st_size != expected["size"]:
+            raise RuntimeError(f"live source size drift: {relative}")
+        if hashlib.sha256(path.read_bytes()).hexdigest() != expected["sha256"]:
+            raise RuntimeError(f"live source content drift: {relative}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", type=Path, help="verify an existing inventory")
@@ -66,12 +133,19 @@ def main() -> int:
         type=Path,
         help="with --check, verify the inventory binding in a provenance lock",
     )
+    parser.add_argument(
+        "--verify-source-dir",
+        type=Path,
+        help="with --check, verify the exact live filesystem tree before materialization",
+    )
     parser.add_argument("--output", type=Path, help="write the generated inventory")
     args = parser.parse_args()
     if args.check and args.output:
         parser.error("--check and --output are mutually exclusive")
     if args.provenance and not args.check:
         parser.error("--provenance requires --check")
+    if args.verify_source_dir and not args.check:
+        parser.error("--verify-source-dir requires --check")
     actual = build_inventory()
 
     if args.check:
@@ -97,6 +171,12 @@ def main() -> int:
                 return 1
             if inventory != expected_binding:
                 print("provenance file inventory binding drift", file=sys.stderr)
+                return 1
+        if args.verify_source_dir:
+            try:
+                verify_live_source_tree(args.verify_source_dir, actual)
+            except (OSError, RuntimeError) as error:
+                print(f"live source verification failed: {error}", file=sys.stderr)
                 return 1
         print(
             f"verified {actual['file_count']} V3 files and "

@@ -1,0 +1,357 @@
+{
+  "acknowledged_runtime_only": {
+    "count": 2,
+    "file": "src/lib.rs",
+    "lint": "clippy::not_unsafe_ptr_arg_deref",
+    "origin": "Substreams handler macro host-ABI wrapper, once for lib and once for lib-test",
+    "source": "pub fn map_writer_events(params: String, block: Block) -> Result<crate::pb::writer::WriterEvents, Error> {"
+  },
+  "baseline_inventory": [
+    {
+      "count": 22,
+      "file": "src/abi/erc20.rs",
+      "lint": "clippy::get_first"
+    },
+    {
+      "count": 2,
+      "file": "src/abi/erc20.rs",
+      "lint": "clippy::redundant_static_lifetimes"
+    },
+    {
+      "count": 18,
+      "file": "src/abi/erc20.rs",
+      "lint": "clippy::unnecessary_cast"
+    },
+    {
+      "count": 18,
+      "file": "src/abi/erc20.rs",
+      "lint": "clippy::useless_asref"
+    },
+    {
+      "count": 14,
+      "file": "src/abi/factory.rs",
+      "lint": "clippy::get_first"
+    },
+    {
+      "count": 4,
+      "file": "src/abi/factory.rs",
+      "lint": "clippy::len_zero"
+    },
+    {
+      "count": 2,
+      "file": "src/abi/factory.rs",
+      "lint": "clippy::redundant_static_lifetimes"
+    },
+    {
+      "count": 18,
+      "file": "src/abi/factory.rs",
+      "lint": "clippy::unnecessary_cast"
+    },
+    {
+      "count": 8,
+      "file": "src/abi/factory.rs",
+      "lint": "clippy::useless_asref"
+    },
+    {
+      "count": 2,
+      "file": "src/abi/pool.rs",
+      "lint": "clippy::clone_on_copy"
+    },
+    {
+      "count": 62,
+      "file": "src/abi/pool.rs",
+      "lint": "clippy::get_first"
+    },
+    {
+      "count": 2,
+      "file": "src/abi/pool.rs",
+      "lint": "clippy::redundant_static_lifetimes"
+    },
+    {
+      "count": 10,
+      "file": "src/abi/pool.rs",
+      "lint": "clippy::type_complexity"
+    },
+    {
+      "count": 196,
+      "file": "src/abi/pool.rs",
+      "lint": "clippy::unnecessary_cast"
+    },
+    {
+      "count": 44,
+      "file": "src/abi/pool.rs",
+      "lint": "clippy::useless_asref"
+    },
+    {
+      "count": 2,
+      "file": "src/abi/positionmanager.rs",
+      "lint": "clippy::clone_on_copy"
+    },
+    {
+      "count": 56,
+      "file": "src/abi/positionmanager.rs",
+      "lint": "clippy::get_first"
+    },
+    {
+      "count": 4,
+      "file": "src/abi/positionmanager.rs",
+      "lint": "clippy::len_zero"
+    },
+    {
+      "count": 2,
+      "file": "src/abi/positionmanager.rs",
+      "lint": "clippy::redundant_static_lifetimes"
+    },
+    {
+      "count": 6,
+      "file": "src/abi/positionmanager.rs",
+      "lint": "clippy::type_complexity"
+    },
+    {
+      "count": 158,
+      "file": "src/abi/positionmanager.rs",
+      "lint": "clippy::unnecessary_cast"
+    },
+    {
+      "count": 44,
+      "file": "src/abi/positionmanager.rs",
+      "lint": "clippy::useless_asref"
+    },
+    {
+      "count": 4,
+      "file": "src/db.rs",
+      "lint": "clippy::len_zero"
+    },
+    {
+      "count": 110,
+      "file": "src/db.rs",
+      "lint": "clippy::needless_borrow"
+    },
+    {
+      "count": 24,
+      "file": "src/db.rs",
+      "lint": "clippy::needless_borrows_for_generic_args"
+    },
+    {
+      "count": 12,
+      "file": "src/db.rs",
+      "lint": "clippy::single_match"
+    },
+    {
+      "count": 4,
+      "file": "src/db.rs",
+      "lint": "clippy::too_many_arguments"
+    },
+    {
+      "count": 2,
+      "file": "src/db.rs",
+      "lint": "clippy::unnecessary_cast"
+    },
+    {
+      "count": 6,
+      "file": "src/filtering.rs",
+      "lint": "clippy::comparison_to_empty"
+    },
+    {
+      "count": 2,
+      "file": "src/filtering.rs",
+      "lint": "clippy::if_same_then_else"
+    },
+    {
+      "count": 22,
+      "file": "src/filtering.rs",
+      "lint": "clippy::needless_borrow"
+    },
+    {
+      "count": 4,
+      "file": "src/filtering.rs",
+      "lint": "clippy::too_many_arguments"
+    },
+    {
+      "count": 2,
+      "file": "src/filtering.rs",
+      "lint": "clippy::unnecessary_cast"
+    },
+    {
+      "count": 6,
+      "file": "src/lib.rs",
+      "lint": "clippy::needless_borrow"
+    },
+    {
+      "count": 2,
+      "file": "src/lib.rs",
+      "lint": "clippy::needless_return"
+    },
+    {
+      "count": 2,
+      "file": "src/lib.rs",
+      "lint": "clippy::needless_update"
+    },
+    {
+      "count": 16,
+      "file": "src/lib.rs",
+      "lint": "clippy::not_unsafe_ptr_arg_deref"
+    },
+    {
+      "count": 12,
+      "file": "src/lib.rs",
+      "lint": "clippy::unnecessary_cast"
+    },
+    {
+      "count": 2,
+      "file": "src/lib.rs",
+      "lint": "clippy::unnecessary_sort_by"
+    },
+    {
+      "count": 10,
+      "file": "src/lib.rs",
+      "lint": "clippy::useless_format"
+    },
+    {
+      "count": 6,
+      "file": "src/math.rs",
+      "lint": "clippy::needless_return"
+    },
+    {
+      "count": 4,
+      "file": "src/math.rs",
+      "lint": "clippy::unnecessary_cast"
+    },
+    {
+      "count": 4,
+      "file": "src/pb/mod.rs",
+      "lint": "clippy::needless_return"
+    },
+    {
+      "count": 4,
+      "file": "src/price.rs",
+      "lint": "clippy::needless_borrows_for_generic_args"
+    },
+    {
+      "count": 6,
+      "file": "src/price.rs",
+      "lint": "clippy::needless_return"
+    },
+    {
+      "count": 2,
+      "file": "src/price.rs",
+      "lint": "clippy::single_char_pattern"
+    },
+    {
+      "count": 2,
+      "file": "src/price.rs",
+      "lint": "clippy::too_many_arguments"
+    },
+    {
+      "count": 4,
+      "file": "src/rpc.rs",
+      "lint": "clippy::needless_return"
+    },
+    {
+      "count": 4,
+      "file": "src/storage/position_manager.rs",
+      "lint": "clippy::needless_borrow"
+    },
+    {
+      "count": 1,
+      "file": "src/storage/position_manager.rs",
+      "lint": "clippy::needless_lifetimes"
+    },
+    {
+      "count": 7,
+      "file": "src/storage/position_manager.rs",
+      "lint": "clippy::needless_return"
+    },
+    {
+      "count": 8,
+      "file": "src/storage/position_manager.rs",
+      "lint": "clippy::redundant_field_names"
+    },
+    {
+      "count": 2,
+      "file": "src/storage/uniswap_v3_pool.rs",
+      "lint": "clippy::needless_borrow"
+    },
+    {
+      "count": 6,
+      "file": "src/storage/uniswap_v3_pool.rs",
+      "lint": "clippy::needless_return"
+    },
+    {
+      "count": 8,
+      "file": "src/storage/uniswap_v3_pool.rs",
+      "lint": "clippy::redundant_field_names"
+    },
+    {
+      "count": 8,
+      "file": "src/storage/uniswap_v3_pool.rs",
+      "lint": "clippy::zero_prefixed_literal"
+    },
+    {
+      "count": 4,
+      "file": "src/storage/utils.rs",
+      "lint": "clippy::manual_memcpy"
+    },
+    {
+      "count": 10,
+      "file": "src/storage/utils.rs",
+      "lint": "clippy::needless_return"
+    },
+    {
+      "count": 8,
+      "file": "src/storage/utils.rs",
+      "lint": "clippy::ptr_arg"
+    },
+    {
+      "count": 2,
+      "file": "src/storage/utils.rs",
+      "lint": "clippy::question_mark"
+    },
+    {
+      "count": 14,
+      "file": "src/utils.rs",
+      "lint": "clippy::needless_return"
+    },
+    {
+      "count": 4,
+      "file": "src/utils.rs",
+      "lint": "clippy::ptr_arg"
+    },
+    {
+      "count": 4,
+      "file": "src/utils.rs",
+      "lint": "clippy::too_many_arguments"
+    },
+    {
+      "count": 10,
+      "file": "src/utils.rs",
+      "lint": "clippy::unnecessary_cast"
+    }
+  ],
+  "baseline_warning_count": 1068,
+  "command": [
+    "cargo",
+    "+1.79.0",
+    "clippy",
+    "--locked",
+    "--all-targets",
+    "--message-format=json",
+    "--",
+    "-W",
+    "clippy::not_unsafe_ptr_arg_deref"
+  ],
+  "contract_version": "uniswap-v3-writer-runtime-clippy-baseline/v1",
+  "format_version": 1,
+  "new_runtime_files_required_clean": [
+    "build.rs",
+    "src/config.rs",
+    "src/pb/uniswap.writer.v1.rs",
+    "src/writer_runtime.rs"
+  ],
+  "rust_toolchain": "1.79.0",
+  "truth_boundary": {
+    "broad_lint_suppression_added": false,
+    "legacy_lint_debt_fixed": false,
+    "new_handwritten_runtime_strict_clippy_clean": true
+  }
+}

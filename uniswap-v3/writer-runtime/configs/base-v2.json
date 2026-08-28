@@ -1,0 +1,58 @@
+{
+  "format_version": 1,
+  "config_version": "uniswap-v3-chain-config/v2",
+  "network": "base",
+  "deployment": "Qmb4VUcAY9LsVgeCuCCMs7X1XrkbRcaiuAbSK8SqhmsAfP",
+  "schema_cid": "Qma8a81T9XoX5Pbkrk8J3kxMhWdXJzFSYZge1wGi3QZBru",
+  "graft": {
+    "base": "QmPWDTWRfS8XewMJhxXoQiZX6RkrUMYH7BFnnB846v6wzR",
+    "block": 19852000
+  },
+  "contracts": {
+    "factory": "33128a8fc17869897dce68ed026d694621f6fdfd",
+    "factory_entity_id": "0x33128a8fC17869897dcE68Ed026d694621f6FDfD",
+    "nonfungible_position_manager": "03a520b32c04bf3beef7beb72e919cf822ed34f1"
+  },
+  "initial_blocks": {
+    "module": 1371679,
+    "factory": 1371679,
+    "factory_creation": 1371679,
+    "nonfungible_position_manager": 1371713
+  },
+  "writer_runtime": {
+    "contract_version": "uniswap-v3-writer-runtime/v1",
+    "mode": "diagnostic-only",
+    "segment_profiles_version": "uniswap-v3-writer-runtime-segment-profiles/v1",
+    "segment_profiles_sha256": "2b6635c061a7a0bfce39430c71c41dacc1567f095fe41134e890a697aa27f823",
+    "source_writer_contract_sha256": "259481724561d5aa725c17f90b5a19ea93ad6f7cd6074cf2cb8a8661c39f81c4",
+    "graph_out_replaced": false,
+    "runtime_population_complete": false,
+    "backfill_ready": false,
+    "production_ready": false
+  },
+  "pricing": {
+    "wrapped_native_token": "4200000000000000000000000000000000000006",
+    "usd_reference_pool": "4c36388be6f416a29c8d8eee81c771ce6be14b18",
+    "usd_reference_token": "d9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca",
+    "usd_reference_token_side": 1,
+    "minimum_native_locked": "1",
+    "stablecoins": [
+      "b97ef9ef8734c71904d8002f8b6bc66dd9c48a6e"
+    ],
+    "whitelist_tokens": [
+      "4200000000000000000000000000000000000006",
+      "d9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca",
+      "50c5725949a6f0c72e6c4a641f24049a917db0cb",
+      "833589fcd6edb6e08f4c7c32d4f71b54bda02913"
+    ]
+  },
+  "filters": {
+    "ignored_pools": [
+      "8fe8d9bb8eeba3ed688069c3d6b556c9ca258248"
+    ],
+    "swap_ignored_pools": [
+      "9663f2ca0454accad3e094448ea6f77443880454"
+    ]
+  },
+  "static_token_metadata": []
+}

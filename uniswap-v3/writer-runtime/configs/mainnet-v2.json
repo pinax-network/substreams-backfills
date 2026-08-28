@@ -1,0 +1,117 @@
+{
+  "format_version": 1,
+  "config_version": "uniswap-v3-chain-config/v2",
+  "network": "mainnet",
+  "deployment": "QmTZ8ejXJxRo7vDBS4uwqBeGoxLSWbhaA7oXa1RvxunLy7",
+  "schema_cid": "Qma8a81T9XoX5Pbkrk8J3kxMhWdXJzFSYZge1wGi3QZBru",
+  "graft": {
+    "base": "QmZeCuoZeadgHkGwLwMeguyqUKz1WPWQYKcKyMCeQqGhsF",
+    "block": 19470000
+  },
+  "contracts": {
+    "factory": "1f98431c8ad98523631ae4a59f267346ea31f984",
+    "factory_entity_id": "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+    "nonfungible_position_manager": "c36442b4a4522e871399cd717abdd847ab11fe88"
+  },
+  "initial_blocks": {
+    "module": 12369621,
+    "factory": 12369621,
+    "factory_creation": 12369621,
+    "nonfungible_position_manager": 12369651
+  },
+  "writer_runtime": {
+    "contract_version": "uniswap-v3-writer-runtime/v1",
+    "mode": "diagnostic-only",
+    "segment_profiles_version": "uniswap-v3-writer-runtime-segment-profiles/v1",
+    "segment_profiles_sha256": "2b6635c061a7a0bfce39430c71c41dacc1567f095fe41134e890a697aa27f823",
+    "source_writer_contract_sha256": "259481724561d5aa725c17f90b5a19ea93ad6f7cd6074cf2cb8a8661c39f81c4",
+    "graph_out_replaced": false,
+    "runtime_population_complete": false,
+    "backfill_ready": false,
+    "production_ready": false
+  },
+  "pricing": {
+    "wrapped_native_token": "c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+    "usd_reference_pool": "8ad599c3a0ff1de082011efddc58f1908eb6e6d8",
+    "usd_reference_token": "a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+    "usd_reference_token_side": 0,
+    "minimum_native_locked": "52",
+    "stablecoins": [
+      "6b175474e89094c44da98b954eedeac495271d0f",
+      "a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "dac17f958d2ee523a2206206994597c13d831ec7",
+      "0000000000085d4780b73119b644ae5ecd22b376",
+      "956f47f50a910163d8bf957cf5846d573e7f87ca",
+      "4dd28568d05f09b02220b09c2cb307bfd837cb95"
+    ],
+    "whitelist_tokens": [
+      "c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "6b175474e89094c44da98b954eedeac495271d0f",
+      "a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "dac17f958d2ee523a2206206994597c13d831ec7",
+      "0000000000085d4780b73119b644ae5ecd22b376",
+      "2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "5d3a536e4d6dbd6114cc1ead35777bab948e3643",
+      "39aa39c021dfbae8fac545936693ac917d5e7563",
+      "86fadb80d8d2cff3c3680819e4da99c10232ba0f",
+      "57ab1ec28d129707052df4df418d58a2d46d5f51",
+      "9f8f72aa9304c8b593d555f12ef6589cc3a579a2",
+      "c00e94cb662c3520282e6f5717214004a7f26888",
+      "514910771af9ca656af840dff83e8264ecf986ca",
+      "c011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f",
+      "0bc529c00c6401aef6d220be8c6ea1667f6ad93e",
+      "111111111117dc0aa78b770fa6a738034120c302",
+      "df5e0e81dff6faf3a7e52ba697820c5e32d806a8",
+      "956f47f50a910163d8bf957cf5846d573e7f87ca",
+      "7d1afa7b718fb893db30a3abc0cfc608aacfebb0",
+      "7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9",
+      "fe2e637202056d30016725477c5da089ab0a043a"
+    ]
+  },
+  "filters": {
+    "ignored_pools": [
+      "8fe8d9bb8eeba3ed688069c3d6b556c9ca258248"
+    ],
+    "swap_ignored_pools": [
+      "9663f2ca0454accad3e094448ea6f77443880454"
+    ]
+  },
+  "static_token_metadata": [
+    {
+      "address": "e0b7927c4af23765cb51314a0e0521a9645f0e2a",
+      "name": "DGD",
+      "symbol": "DGD",
+      "decimals": 9
+    },
+    {
+      "address": "7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9",
+      "name": "Aave Token",
+      "symbol": "AAVE",
+      "decimals": 18
+    },
+    {
+      "address": "eb9951021698b42e4399f9cbb6267aa35f82d59d",
+      "name": "LIF",
+      "symbol": "LIF",
+      "decimals": 18
+    },
+    {
+      "address": "bdeb4b83251fb146687fa19d1c660f99411eefe3",
+      "name": "savedroid",
+      "symbol": "SVD",
+      "decimals": 18
+    },
+    {
+      "address": "bb9bc244d798123fde783fcc1c72d3bb8c189413",
+      "name": "TheDAO",
+      "symbol": "TheDAO",
+      "decimals": 16
+    },
+    {
+      "address": "38c6a68304cdefb9bec48bbfaaba5c5b47818bb2",
+      "name": "HPBCoin",
+      "symbol": "HPB",
+      "decimals": 18
+    }
+  ]
+}

@@ -97,6 +97,21 @@ setter candidates to complete field semantics. No entity is yet certified
 required-nonempty, both possible execution models remain ineligible, and all
 boundary, oracle, parity, backfill, and production gates stay false.
 
+The sibling [`transaction-reducer/`](transaction-reducer/README.md) overlay is
+a host-only, pure reducer for the NonfungiblePositionManager `Transaction`
+side effects bound to those exact eight segments. It captures lowercase
+transaction identity, unconditional helper overwrites, legacy transaction gas
+limit versus current zero `gasUsed`, helper-call counts, normal-return orphans,
+final entity-state discard on errors, block error policy, NPM-local event
+interleaving, and Position/Snapshot transaction relations. Its ordering,
+failure-channel, VID, and PoI caveats bind the sibling
+[`execution-order/v1`](execution-order/README.md) supplement rather than
+duplicating its Graph Node source evidence. It adds no Substreams module,
+store, live call, or `graph_out` path. Pool writers of the shared `Transaction`
+entity remain unaudited; new dynamic Pool triggers do not follow a raw global
+cross-component log order, and final last-writer, VID, and PoI/error-stream
+parity are uncertified. Every readiness gate remains false.
+
 The sibling [`oracle/`](oracle/README.md) contract retains deployment-scoped
 current-head responses and the asymmetric graft-boundary discovery result:
 mainnet history was queryable without canonical block hashes, while Base

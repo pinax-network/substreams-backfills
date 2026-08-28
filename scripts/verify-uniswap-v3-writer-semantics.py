@@ -6,6 +6,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import importlib.util
+import itertools
+import json
 import re
 import shutil
 import struct
@@ -13,7 +15,6 @@ import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-
 
 REPOSITORY = Path(__file__).resolve().parents[1]
 ANCESTRY_VERIFIER = REPOSITORY / "scripts/verify-uniswap-v3-graft-ancestry.py"
@@ -26,7 +27,7 @@ ANCESTRY = importlib.util.module_from_spec(ANCESTRY_SPEC)
 ANCESTRY_SPEC.loader.exec_module(ANCESTRY)
 
 
-CONTRACT_VERSION = "uniswap-v3-writer-compatibility/v1"
+CONTRACT_VERSION = "uniswap-v3-writer-compatibility/v2"
 CONTRACT_PATH = Path(
     "uniswap-v3/graft-ancestry/v1/writer-compatibility.json"
 )
@@ -102,7 +103,249 @@ REQUIRED_ABSENT = ("Collect", "Flash", "TickHourData")
 STORE_SET_CALL = "~lib/@graphprotocol/graph-ts/index/store.set"
 ETHEREUM_CALL = "~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.call"
 EXCLUDED_POOL = "0x8fe8d9bb8eeba3ed688069c3d6b556c9ca258248"
+SWAP_EXCLUDED_POOL = "0x9663f2ca0454accad3e094448ea6f77443880454"
 HISTORICAL_GUARD_BLOCK = 14_317_993
+TRIGGER_ORDER_SOURCE_MODEL = (
+    "Graph Node v0.44.0 orders Ethereum log triggers by ascending global log "
+    "index; contract calls still read block-level post-state"
+)
+NONFATAL_HANDLER_ERROR_POLICY = (
+    "discard the failing handler's data-source and entity-cache changes, "
+    "continue other successful handlers, and write a deterministic proof-of-indexing error"
+)
+FATAL_HANDLER_ERROR_POLICY = (
+    "nonFatalErrors is absent; a deterministic handler error fails the deployment at that block"
+)
+
+FACTORY_HANDLER = "handlePoolCreated"
+POOL_HANDLERS = (
+    "handleInitialize",
+    "handleMint",
+    "handleBurn",
+    "handleSwap",
+    "handleFlash",
+)
+
+def factory_profile(
+    profile_id: str,
+    generation: str,
+    static_profile: str,
+    slots: int,
+    entries: int,
+    safe: bool,
+) -> dict[str, object]:
+    return {
+        "profile_id": profile_id,
+        "metadata_generation": generation,
+        "static_metadata_profile": static_profile,
+        "initial_array_slots": slots,
+        "appended_static_entries": entries,
+        "safe_literal_array": safe,
+    }
+
+
+def pool_profile(
+    profile_id: str,
+    generation: str,
+    pricing: str,
+    threshold: int,
+    gate: int | None,
+    stable: bool,
+    initialize_save: bool,
+    tick_day_mode: str,
+    fee_spacing: str,
+    hour_resaves: bool = False,
+) -> dict[str, object]:
+    return {
+        "profile_id": profile_id,
+        "control_generation": generation,
+        "pricing_profile": pricing,
+        "tracked_amount_threshold": threshold,
+        "whitelist_cardinality_gate": gate,
+        "stable_shortcut": stable,
+        "initialize_persists_pool": initialize_save,
+        "tick_day_tick_relation_mode": tick_day_mode,
+        "fee_spacing_mode": fee_spacing,
+        "explicit_hour_resaves": hour_resaves,
+    }
+
+
+FACTORY_PROFILE_BY_MAPPING = {
+    "QmUN4pxwjMTfNem7rf1sKNFNHDsfzpbcTP93RxPAczgkvj": factory_profile(
+        "legacy-base-root", "legacy", "base-six-leading-holes", 6, 0, False
+    ),
+    "QmXFDgK3qLnmsLFcPWobXbdnqV9gESL9BvYY29si4vpTjr": factory_profile(
+        "modern-base", "modern", "base-safe-empty", 0, 0, True
+    ),
+    "QmUu9rnGvUiBbF9pLnuJQab1wHXqjooo3bY5cZDVTyQQgr": factory_profile(
+        "legacy-mainnet-root", "legacy", "mainnet-six-leading-holes-plus-six-entries", 6, 6, False
+    ),
+    "QmT8CKmLDFFCgwYnubFhKXUsuer5rfJKPT4PrCsv9tTwjV": factory_profile(
+        "legacy-mainnet-qmrv", "legacy", "mainnet-six-leading-holes-plus-six-entries", 6, 6, False
+    ),
+    "QmcsaU3DrUqZHZLzrrWT9aW4EVQuS54wxNHynq8g1PvESL": factory_profile(
+        "legacy-mainnet-stable", "legacy", "mainnet-six-leading-holes-plus-six-entries", 6, 6, False
+    ),
+    "QmbJGLb6sXkN11djxLvKGb2zDk3s7ddgEsULwzC7TVyrEb": factory_profile(
+        "modern-mainnet", "modern", "mainnet-safe-six", 6, 6, True
+    ),
+}
+
+POOL_PROFILE_BY_MAPPING = {
+    "QmZPiDeH1j95mozzb5AjKCHn6zgpnhMu77kNAitPbi4Vt3": pool_profile(
+        "legacy-base-root", "legacy", "base-reference-pool-threshold-1", 1,
+        None, False, True, "create_only", "fee_tier_100_spacing_1", True,
+    ),
+    "QmPZCHE1URf4oviX7Tbrkw3aMENo1qAeEGa1AS2gMumG7P": pool_profile(
+        "modern-base", "modern", "base-reference-pool-threshold-1", 1,
+        None, False, True, "create_only", "fee_tier_100_spacing_1", True,
+    ),
+    "QmWuomVAQCdEXdCRavcsmRz4BNqPx2nppqe8S6AXid66xw": pool_profile(
+        "legacy-mainnet-root", "legacy", "mainnet-threshold-52", 52,
+        None, False, False, "every_update", "no_fee_tier_100",
+    ),
+    "QmYQRHstsSS7mntgKNSot74qN2dpuyFEtd1DddPmnqWC65": pool_profile(
+        "legacy-mainnet-qmrv", "legacy", "mainnet-threshold-30-gate-22", 30,
+        22, False, False, "create_only", "no_fee_tier_100",
+    ),
+    "QmeNbEMUnaaPpmpLaUVBJfFWRCN5SxG8xPG5eDNoXEGdbW": pool_profile(
+        "legacy-mainnet-stable", "legacy", "mainnet-stable-shortcut-threshold-52", 52,
+        None, True, False, "create_only", "no_fee_tier_100",
+    ),
+    "Qmaydei2ScE7JptBTPgSfkf6PFxEZpLn39gEXYqrBZhsv8": pool_profile(
+        "legacy-mainnet-stable-fee-tier-1", "legacy", "mainnet-stable-shortcut-threshold-52", 52,
+        None, True, False, "create_only", "fee_tier_1_spacing_1",
+    ),
+    "QmadCQv7VPgNXhQTNkcDyzmiWZpWexynUH4XuuaMrsAbJY": pool_profile(
+        "legacy-mainnet-stable-fee-tier-100", "legacy", "mainnet-stable-shortcut-threshold-52", 52,
+        None, True, False, "create_only", "fee_tier_100_spacing_1",
+    ),
+    "QmSaGgPnyhStviGQSGTokQYRgVqLFNvnGWfnv8tSfuvpWD": pool_profile(
+        "modern-mainnet", "modern", "mainnet-threshold-60-safe-six", 60,
+        None, False, True, "create_only", "fee_tier_100_spacing_1", True,
+    ),
+}
+
+SOURCE_REPOSITORY = "https://github.com/Uniswap/v3-subgraph"
+ENTRY_BLOB_ANCHOR_BY_MAPPING = {
+    "QmUN4pxwjMTfNem7rf1sKNFNHDsfzpbcTP93RxPAczgkvj": (
+        "a5e8000ffc0b173d699242f30a0f360dadebe55e",
+        "src/mappings/factory.ts",
+        "d8a3ed16684bbdf59510f66a232a3b548bff4065",
+    ),
+    "QmZPiDeH1j95mozzb5AjKCHn6zgpnhMu77kNAitPbi4Vt3": (
+        "a5e8000ffc0b173d699242f30a0f360dadebe55e",
+        "src/mappings/core.ts",
+        "b1a0574d665caa556a3e1af64ec8f76ed8a1f19c",
+    ),
+    "QmbJGLb6sXkN11djxLvKGb2zDk3s7ddgEsULwzC7TVyrEb": (
+        "69b50154b344e821d2ac71c24f260a5f54094808",
+        "src/mappings/factory.ts",
+        "d8a3ed16684bbdf59510f66a232a3b548bff4065",
+    ),
+    "QmSaGgPnyhStviGQSGTokQYRgVqLFNvnGWfnv8tSfuvpWD": (
+        "68cad02419d0e892c10b78177611651d1cf15a5d",
+        "src/mappings/core.ts",
+        "2b0b4bf766bc788314399dc5fce0963b249406a2",
+    ),
+}
+
+SEMANTIC_SOURCE_ANCHORS = (
+    "199e317deb2e92032666223c29564998e779f11b",
+    "a651743931092c0a0b27ad135225675476bf1d7d",
+    "78cf4221e0c5f29ffec27f1449bfa0e219f7d659",
+    "3a6dc5a5604f4df4abb8199ab0d09deb63a662f7",
+)
+
+FACTORY_FIELD_WRITER_CONTRACT = {
+    "coverage": "all stored Factory, Bundle, Token, and Pool fields",
+    "entity_id_sources": {
+        "Factory.id": "factory address",
+        "Bundle.id": "1",
+        "Token.id": "event token address",
+        "Pool.id": "event pool address",
+    },
+    "initialize_zero": [
+        "Factory.txCount", "Factory.totalVolumeUSD", "Factory.totalVolumeETH",
+        "Factory.totalFeesUSD", "Factory.totalFeesETH", "Factory.untrackedVolumeUSD",
+        "Factory.totalValueLockedUSD", "Factory.totalValueLockedETH",
+        "Factory.totalValueLockedUSDUntracked", "Factory.totalValueLockedETHUntracked",
+        "Bundle.ethPriceUSD", "Token.volume", "Token.volumeUSD",
+        "Token.untrackedVolumeUSD", "Token.feesUSD", "Token.txCount",
+        "Token.poolCount", "Token.totalValueLocked", "Token.totalValueLockedUSD",
+        "Token.totalValueLockedUSDUntracked", "Token.derivedETH", "Pool.liquidity",
+        "Pool.sqrtPrice", "Pool.feeGrowthGlobal0X128", "Pool.feeGrowthGlobal1X128",
+        "Pool.token0Price", "Pool.token1Price", "Pool.observationIndex",
+        "Pool.volumeToken0", "Pool.volumeToken1", "Pool.volumeUSD",
+        "Pool.untrackedVolumeUSD", "Pool.feesUSD", "Pool.txCount",
+        "Pool.collectedFeesToken0", "Pool.collectedFeesToken1",
+        "Pool.collectedFeesUSD", "Pool.totalValueLockedToken0",
+        "Pool.totalValueLockedToken1", "Pool.totalValueLockedETH",
+        "Pool.totalValueLockedUSD", "Pool.totalValueLockedUSDUntracked",
+        "Pool.liquidityProviderCount",
+    ],
+    "initialize_zero_address": ["Factory.owner"],
+    "increment": ["Factory.poolCount"],
+    "token_metadata": ["Token.symbol", "Token.name", "Token.decimals", "Token.totalSupply"],
+    "event_values": [
+        "Pool.createdAtTimestamp", "Pool.createdAtBlockNumber", "Pool.token0",
+        "Pool.token1", "Pool.feeTier",
+    ],
+    "conditional_symmetric_append": ["Token.whitelistPools"],
+    "required_absent": ["Pool.tick"],
+}
+
+POOL_CRITICAL_WRITER_OBSERVATIONS = {
+    "handleInitialize": {
+        "observed_fields": ["Pool.sqrtPrice", "Pool.tick"],
+        "event_row": None,
+        "reviewed_observation": "writes event sqrtPriceX96 and tick; Pool persistence is profile-specific",
+    },
+    "handleMint": {
+        "observed_fields": [
+            "Pool.liquidity",
+            "Pool.totalValueLockedToken0",
+            "Pool.totalValueLockedToken1",
+            "Tick.liquidityGross",
+            "Tick.liquidityNet",
+        ],
+        "event_row": "Mint",
+        "reviewed_observation": "cumulative TVL/liquidity/tick/window writes and direct non-try pool tick calls",
+    },
+    "handleBurn": {
+        "observed_fields": [
+            "Pool.liquidity",
+            "Pool.totalValueLockedToken0",
+            "Pool.totalValueLockedToken1",
+            "Tick.liquidityGross",
+            "Tick.liquidityNet",
+        ],
+        "event_row": "Burn",
+        "reviewed_observation": "cumulative TVL/liquidity/tick/window writes and direct non-try pool tick calls",
+    },
+    "handleSwap": {
+        "observed_fields": [
+            "Pool.sqrtPrice",
+            "Pool.tick",
+            "Pool.liquidity",
+            "Pool.feeGrowthGlobal0X128",
+            "Pool.feeGrowthGlobal1X128",
+            "TickDayData.tick",
+            "TokenDayData.untrackedVolumeUSD",
+            "TokenHourData.untrackedVolumeUSD",
+        ],
+        "event_row": "Swap",
+        "reviewed_observation": "fee refresh, profile-specific TickDay relation, and retained Token day/hour untracked-volume quirk",
+    },
+    "handleFlash": {
+        "observed_fields": [
+            "Pool.feeGrowthGlobal0X128",
+            "Pool.feeGrowthGlobal1X128",
+        ],
+        "event_row": None,
+        "reviewed_observation": "two ordered non-try calls followed by one Pool save",
+    },
+}
 
 NPM_HANDLERS = (
     "handleIncreaseLiquidity",
@@ -268,8 +511,12 @@ def decode_wat_string(value: str) -> bytes:
 DATA_RE = re.compile(r'^  \(data \$\S+ \(i32\.const (\d+)\) "(.*)"\)\)?$')
 MEMORY_RE = re.compile(r"^  \(memory \$\S+ (\d+)(?: \d+)?\)$")
 FUNCTION_RE = re.compile(r"^  \(func \$([^\s]+)")
+EXPORT_RE = re.compile(r'^  \(export "([^"]+)" \(func \$([^\s\)]+)\)\)$')
 I32_CONST_RE = re.compile(r"^\s*i32\.const (-?\d+)$")
 CALL_RE = re.compile(r"\bcall \$([^\s\)]+)")
+LOCAL_GET_RE = re.compile(r"^\s*local\.get (\$[^\s]+)$")
+LOCAL_SET_RE = re.compile(r"^\s*local\.(?:set|tee) (\$[^\s]+)$")
+LOCAL_TEE_RE = re.compile(r"^\s*local\.tee (\$[^\s]+)$")
 ELEMENT_RE = re.compile(
     r"^\s*\(elem(?:\s+\$[^\s\)]+)?\s+\(i32\.const\s+-?\d+\)\s+func"
     r"((?:\s+\$[^\s\)]+)+)\)$"
@@ -289,7 +536,12 @@ TABLE_MUTATION_INSTRUCTIONS = (
 
 def parse_wat(
     wat: str,
-) -> tuple[bytearray, dict[str, WatFunction], tuple[str, ...]]:
+) -> tuple[
+    bytearray,
+    dict[str, WatFunction],
+    tuple[str, ...],
+    dict[str, str],
+]:
     lines = wat.splitlines()
     data_segments: list[tuple[int, bytes]] = []
     for line in lines:
@@ -333,6 +585,19 @@ def parse_wat(
         functions[name] = WatFunction(name, start + 1, tuple(body))
     require(functions, "WAT contains no named functions")
 
+    exports: dict[str, str] = {}
+    for line in lines:
+        match = EXPORT_RE.fullmatch(line)
+        if match is None:
+            continue
+        export_name, function_name = match.groups()
+        require(export_name not in exports, f"duplicate WAT export {export_name}")
+        require(
+            function_name in functions,
+            f"WAT export {export_name} targets missing function {function_name}",
+        )
+        exports[export_name] = function_name
+
     indirect_targets: list[str] = []
     for line in lines:
         if not line.lstrip().startswith("(elem"):
@@ -352,7 +617,7 @@ def parse_wat(
         not missing_targets,
         f"indirect-call table targets do not resolve to local functions: {missing_targets}",
     )
-    return memory, functions, tuple(sorted(indirect_targets))
+    return memory, functions, tuple(sorted(indirect_targets)), exports
 
 
 def decode_assemblyscript_string(memory: bytearray, pointer: int) -> str | None:
@@ -429,14 +694,92 @@ def normalized_call_sequence(function: WatFunction) -> list[str]:
     return [call.replace("generated/schema/", "src/types/schema/") for call in function_calls(function)]
 
 
-def resolve_handler(functions: dict[str, WatFunction], handler: str) -> WatFunction:
-    matches = [
-        function
-        for name, function in functions.items()
-        if name == handler or name.endswith(f"/{handler}")
-    ]
-    require(len(matches) == 1, f"handler {handler} resolved to {len(matches)} functions")
+def resolve_handler(
+    functions: dict[str, WatFunction],
+    export_targets: dict[str, str],
+    handler: str,
+) -> WatFunction:
+    require(handler in export_targets, f"handler export {handler} is missing")
+    target = export_targets[handler]
+    require(target in functions, f"handler export {handler} target is missing: {target}")
+    return functions[target]
+
+
+def resolve_suffix_function(
+    functions: dict[str, WatFunction], suffix: str, field: str
+) -> WatFunction:
+    matches = [function for name, function in functions.items() if name.endswith(suffix)]
+    require(len(matches) == 1, f"{field} resolved to {len(matches)} functions")
     return matches[0]
+
+
+def function_call_sites(function: WatFunction) -> list[tuple[int, str]]:
+    result: list[tuple[int, str]] = []
+    for line_index, line in enumerate(function.lines):
+        match = CALL_RE.search(line)
+        if match is not None:
+            result.append((line_index, match.group(1)))
+    return result
+
+
+def decoded_constant_sites(
+    function: WatFunction, memory: bytearray, value: str
+) -> list[int]:
+    result: list[int] = []
+    for line_index, line in enumerate(function.lines):
+        match = I32_CONST_RE.fullmatch(line)
+        if match is not None and decode_assemblyscript_string(
+            memory, int(match.group(1))
+        ) == value:
+            result.append(line_index)
+    return result
+
+
+def matching_end(lines: tuple[str, ...], start: int, field: str) -> int:
+    require(lines[start].strip().startswith("if "), f"{field} does not begin at an if")
+    depth = 0
+    for index in range(start, len(lines)):
+        instruction = lines[index].strip()
+        if re.match(r"^(?:block|loop|if)\b", instruction):
+            depth += 1
+        if instruction == "end" or instruction.startswith("end "):
+            depth -= 1
+            if depth == 0:
+                return index
+    raise VerificationError(f"{field} has no matching end")
+
+
+def canonical_sha256(value: object) -> str:
+    payload = json.dumps(
+        value, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    ).encode("utf-8")
+    return sha256_bytes(payload)
+
+
+def json_diff_paths(left: object, right: object, path: str = "$") -> list[str]:
+    if type(left) is not type(right):
+        return [path]
+    if isinstance(left, dict):
+        result: list[str] = []
+        left_keys = set(left)
+        right_keys = set(right)
+        for key in sorted(left_keys | right_keys):
+            child = f"{path}.{key}"
+            if key not in left or key not in right:
+                result.append(child)
+            else:
+                result.extend(json_diff_paths(left[key], right[key], child))
+        return result
+    if isinstance(left, list):
+        result = []
+        for index in range(max(len(left), len(right))):
+            child = f"{path}[{index}]"
+            if index >= len(left) or index >= len(right):
+                result.append(child)
+            else:
+                result.extend(json_diff_paths(left[index], right[index], child))
+        return result
+    return [] if left == right else [path]
 
 
 def extract_store_set_callsites(
@@ -689,7 +1032,7 @@ def analyze_mapping(
         f"WAT SHA-256 drift for {cid}",
     )
     wat = wat_payload.decode("utf-8")
-    memory, functions, indirect_targets = parse_wat(wat)
+    memory, functions, indirect_targets, exports = parse_wat(wat)
     callsites = extract_store_set_callsites(functions, memory)
     require_fixed_callsites(callsites, str(cid))
     store_import_marker = f'(import "index" "store.set" (func ${STORE_SET_CALL}'
@@ -726,9 +1069,11 @@ def analyze_mapping(
     ]
 
     handlers: dict[str, object] = {}
+    registered_export_targets: dict[str, str] = {}
     for handler in mapping["registered_handler_exports"]:
-        function = resolve_handler(functions, handler)
+        function = resolve_handler(functions, exports, handler)
         handlers[handler] = handler_record(function, memory)
+        registered_export_targets[handler] = function.name
 
     targets = sorted({str(item["target"]) for item in callsites})
     return (
@@ -739,6 +1084,7 @@ def analyze_mapping(
             "sha256": artifact["sha256"],
             "wat_sha256": wat_sha256,
             "registered_handlers": handlers,
+            "registered_handler_export_targets": registered_export_targets,
             "store_set_callsite_count": len(callsites),
             "store_set_import_count": store_import_count,
             "store_set_callsites": callsites,
@@ -769,7 +1115,11 @@ def critical_reachability(
     functions: dict[str, WatFunction],
     handler_name: str,
 ) -> dict[str, object]:
-    handler = resolve_handler(functions, handler_name)
+    handler = resolve_handler(
+        functions,
+        analysis["registered_handler_export_targets"],
+        handler_name,
+    )
     indirect_targets = tuple(analysis["call_indirect_table_targets"])
     reachable = reachable_functions(functions, handler, indirect_targets)
     reachable_call_indirect_count = sum(
@@ -798,14 +1148,706 @@ def critical_reachability(
     }
 
 
+def compact_handler_binding(
+    analysis: dict[str, object], handler: str
+) -> dict[str, object]:
+    record = analysis["registered_handlers"][handler]
+    return {
+        "mapping_cid": analysis["cid"],
+        "handler": handler,
+        "record_sha256": canonical_sha256(record),
+    }
+
+
+def compact_reachability(record: dict[str, object]) -> dict[str, object]:
+    site_ids = record["reachable_store_set_site_ids"]
+    return {
+        "handler": record["handler"],
+        "handler_function": record["handler_function"],
+        "reachable_function_count": record["reachable_function_count"],
+        "reachable_store_set_site_count": len(site_ids),
+        "reachable_store_set_site_ids_sha256": canonical_sha256(site_ids),
+        "reachable_store_set_targets": record["reachable_store_set_targets"],
+        "reachable_call_indirect_instruction_count": record[
+            "reachable_call_indirect_instruction_count"
+        ],
+        "dynamic_reachable_store_set_target_count": record[
+            "dynamic_reachable_store_set_target_count"
+        ],
+    }
+
+
+def factory_effect_order_observation(
+    cid: str,
+    analysis: dict[str, object],
+    handler: WatFunction,
+) -> dict[str, object]:
+    direct_sites = {
+        int(item["wat_line"]): item
+        for item in analysis["store_set_callsites"]
+        if item["function"] == handler.name
+    }
+    effects: list[dict[str, object]] = []
+    save_re = re.compile(r"(?:src/types|generated)/schema/([^/]+)#save$")
+    for line_index, call in function_call_sites(handler):
+        wat_line = handler.start_line + line_index
+        match = save_re.search(call)
+        if match is not None:
+            effects.append(
+                {
+                    "kind": "entity_save",
+                    "entity": match.group(1),
+                    "call": call,
+                    "wat_line": wat_line,
+                }
+            )
+        elif call == STORE_SET_CALL:
+            require(wat_line in direct_sites, f"{cid} Factory direct save site drift")
+            effects.append(
+                {
+                    "kind": "entity_save",
+                    "entity": direct_sites[wat_line]["target"],
+                    "call": call,
+                    "site_id": direct_sites[wat_line]["site_id"],
+                    "wat_line": wat_line,
+                }
+            )
+        elif call.endswith("dataSource.create"):
+            effects.append(
+                {
+                    "kind": "dynamic_data_source_create",
+                    "call": call,
+                    "wat_line": wat_line,
+                }
+            )
+    tail = effects[-5:]
+    observed = [
+        item.get("entity", "PoolTemplate")
+        for item in tail
+    ]
+    require(
+        observed == ["Pool", "PoolTemplate", "Token", "Token", "Factory"],
+        f"{cid} Factory PoolCreated effect order drift: {observed}",
+    )
+    return {
+        "reviewed_order": [
+            "Pool.save",
+            "PoolTemplate.create",
+            "Token[token0].save",
+            "Token[token1].save",
+            "Factory.save",
+        ],
+        "machine_checked_lexical_tail": tail,
+        "same_path_or_dataflow_machine_proven": False,
+        "evidence_kind": (
+            "digest-bound reviewed order plus lexical callsite inventory; "
+            "control-flow reachability, template identity, and argument dataflow are not proved"
+        ),
+        "handler_body_sha256": sha256_bytes(handler.payload),
+    }
+
+
+def factory_metadata_evidence(
+    cid: str,
+    profile: dict[str, object],
+    functions: dict[str, WatFunction],
+    memory: bytearray,
+) -> dict[str, object]:
+    total_supply = resolve_suffix_function(
+        functions, "/fetchTokenTotalSupply", f"{cid} total-supply helper"
+    )
+    calls = function_calls(total_supply)
+    generation = profile["metadata_generation"]
+    if generation == "legacy":
+        require(
+            any(call.endswith("#try_totalSupply") for call in calls)
+            and any(call.endswith("#get:reverted") for call in calls)
+            and not any(call.endswith("#get:value") for call in calls)
+            and calls[-1].endswith("ByteArray.fromI32"),
+            f"{cid} legacy total-supply pointer/allocation model drift",
+        )
+        total_supply_model = (
+            "on success convert the CallResult pointer/allocation with "
+            "ByteArray.fromI32 rather than reading the ERC20 result"
+        )
+    else:
+        require(
+            any(call.endswith("ethereum.SmartContract#tryCall") for call in calls)
+            and any(call.endswith("#get:value") for call in calls)
+            and any(call.endswith("ethereum.Value#toBigInt") for call in calls)
+            and not calls[-1].endswith("ByteArray.fromI32"),
+            f"{cid} modern total-supply decoded-result model drift",
+        )
+        total_supply_model = "decode the ERC20 totalSupply result as BigInt"
+
+    from_address = resolve_suffix_function(
+        functions,
+        "StaticTokenDefinition.fromAddress",
+        f"{cid} static metadata lookup",
+    )
+    static_function = from_address
+    definitions = [
+        function
+        for name, function in functions.items()
+        if name.endswith("StaticTokenDefinition.getStaticDefinitions")
+    ]
+    if definitions:
+        require(len(definitions) == 1, f"{cid} static definition helper drift")
+        static_function = definitions[0]
+    static_calls = function_calls(static_function)
+    constants = [
+        int(match.group(1))
+        for line in static_function.lines
+        if (match := I32_CONST_RE.fullmatch(line)) is not None
+    ]
+    require(constants, f"{cid} static metadata slot constant missing")
+    initial_slots = int(profile["initial_array_slots"])
+    require(constants[0] == initial_slots, f"{cid} static metadata slot count drift")
+    if generation == "legacy":
+        appended = sum(call.endswith("#push") for call in static_calls)
+        require(
+            any(call.endswith("#constructor") and "Array<" in call for call in static_calls),
+            f"{cid} legacy static array constructor drift",
+        )
+    else:
+        appended = sum(
+            call.endswith("StaticTokenDefinition#constructor") for call in static_calls
+        )
+        require(
+            any(call.endswith("__newArray") for call in static_calls),
+            f"{cid} modern literal static array drift",
+        )
+    require(
+        appended == profile["appended_static_entries"],
+        f"{cid} static metadata populated-entry count drift",
+    )
+    return {
+        "metadata_generation": generation,
+        "total_supply_model": total_supply_model,
+        "total_supply_helper": {
+            "function": total_supply.name,
+            "body_sha256": sha256_bytes(total_supply.payload),
+            "wat_start_line": total_supply.start_line,
+        },
+        "static_metadata_profile": profile["static_metadata_profile"],
+        "initial_array_slots": initial_slots,
+        "appended_static_entries": appended,
+        "leading_uninitialized_slots": (
+            initial_slots if generation == "legacy" else 0
+        ),
+        "safe_literal_array": profile["safe_literal_array"],
+        "static_definition_helper": {
+            "function": static_function.name,
+            "body_sha256": sha256_bytes(static_function.payload),
+            "wat_start_line": static_function.start_line,
+        },
+    }
+
+
+def verify_factory_profile_evidence(
+    cid: str,
+    profile: dict[str, object],
+    analysis: dict[str, object],
+    functions: dict[str, WatFunction],
+    memory: bytearray,
+) -> dict[str, object]:
+    handler = resolve_handler(
+        functions,
+        analysis["registered_handler_export_targets"],
+        FACTORY_HANDLER,
+    )
+    reachability = critical_reachability(analysis, functions, FACTORY_HANDLER)
+    require(
+        reachability["reachable_store_set_targets"]
+        == ["Bundle", "Factory", "Pool", "Token"],
+        f"{cid} Factory writer reachability drift",
+    )
+    reachable = reachable_functions(
+        functions, handler, tuple(analysis["call_indirect_table_targets"])
+    )
+    strings = [
+        value
+        for name in reachable
+        for value in function_static_strings(functions[name], memory)
+    ]
+    calls = [
+        call for name in reachable for call in function_calls(functions[name])
+    ]
+    require(EXCLUDED_POOL in strings, f"{cid} Factory excluded pool drift")
+    require(
+        any(call.endswith(("ByteArray#equals", "String.__eq")) for call in calls),
+        f"{cid} Factory excluded pool is not bound to equality",
+    )
+    require(
+        "tick" not in strings
+        and not any(call.endswith("schema/Pool#set:tick") for call in calls),
+        f"{cid} Factory must leave Pool.tick unset",
+    )
+    return {
+        "mapping_cid": cid,
+        **profile,
+        "handler": FACTORY_HANDLER,
+        "handler_body_binding": compact_handler_binding(analysis, FACTORY_HANDLER),
+        "reachable_writers": compact_reachability(reachability),
+        "excluded_pool": EXCLUDED_POOL,
+        "excluded_pool_guard_observation": {
+            "literal_present_machine_checked": True,
+            "some_equality_call_present_machine_checked": True,
+            "event_pool_to_comparison_to_early_return_machine_proven": False,
+            "evidence_kind": (
+                "digest-bound reviewed ignored-pool guard; literal and equality "
+                "presence alone do not prove guard control flow"
+            ),
+            "handler_body_sha256": sha256_bytes(handler.payload),
+        },
+        "pool_tick_write": "absent",
+        "whitelist_pool_update": "symmetric token0/token1 append when the peer token is whitelisted",
+        "pool_created_effect_order_observation": factory_effect_order_observation(
+            cid, analysis, handler
+        ),
+        "pool_created_event_row_write": False,
+        "metadata_evidence": factory_metadata_evidence(
+            cid, profile, functions, memory
+        ),
+        "complete_static_handler_contract": False,
+    }
+
+
+def typed_map_field_set_evidence(
+    cid: str,
+    function: WatFunction,
+    memory: bytearray,
+    field: str,
+    after_line: int = -1,
+    required_value_local: str | None = None,
+) -> dict[str, object]:
+    field_sites = [
+        line_index
+        for line_index in decoded_constant_sites(function, memory, field)
+        if line_index > after_line
+    ]
+    require(len(field_sites) == 1, f"{cid} {field} field literal count drift")
+    field_site = field_sites[0]
+    require(field_site > 0, f"{cid} {field} field literal has no receiver")
+    receiver = LOCAL_GET_RE.fullmatch(function.lines[field_site - 1])
+    require(receiver is not None, f"{cid} {field} field literal is not receiver-bound")
+    setter_sites = [
+        (line_index, call)
+        for line_index, call in function_call_sites(function)
+        if line_index > field_site
+        and "TypedMap<" in call
+        and call.endswith("#set")
+    ]
+    require(setter_sites, f"{cid} {field} field literal has no map setter")
+    setter_site, setter_call = setter_sites[0]
+    forbidden = {"drop", "return", "unreachable"}
+    between = [line.strip() for line in function.lines[field_site + 1 : setter_site]]
+    require(
+        not any(
+            instruction in forbidden
+            or instruction.startswith(("br ", "br_if ", "br_table "))
+            for instruction in between
+        ),
+        f"{cid} {field} field literal is discarded or leaves its setter path",
+    )
+    require(
+        any(LOCAL_GET_RE.fullmatch(line) for line in function.lines[field_site + 1 : setter_site]),
+        f"{cid} {field} setter has no value operand",
+    )
+    if required_value_local is not None:
+        require(
+            f"local.get {required_value_local}" in between,
+            f"{cid} {field} setter is not bound to {required_value_local}",
+        )
+    return {
+        "field_literal_wat_line": function.start_line + field_site,
+        "setter_call": setter_call,
+        "setter_wat_line": function.start_line + setter_site,
+        "receiver_local": receiver.group(1),
+        "lexical_receiver_key_value_setter_shape_checked": True,
+        "decoded_key_to_setter_machine_checked": False,
+        "structural_stack_binding_machine_checked": False,
+    }
+
+
+def tick_day_relation_evidence(
+    cid: str,
+    expected_mode: str,
+    functions: dict[str, WatFunction],
+    memory: bytearray,
+    reachable_from_swap: set[str],
+) -> dict[str, object]:
+    function = resolve_suffix_function(
+        functions, "/updateTickDayData", f"{cid} TickDay update helper"
+    )
+    require(
+        function.name in reachable_from_swap,
+        f"{cid} TickDay helper is not reachable from exported handleSwap",
+    )
+    setter = typed_map_field_set_evidence(cid, function, memory, "tick")
+    setter_site = int(setter["setter_wat_line"]) - function.start_line
+    store_get_sites = [
+        line_index
+        for line_index, call in function_call_sites(function)
+        if call.endswith("index/store.get")
+    ]
+    require(len(store_get_sites) == 1, f"{cid} TickDay store.get callsite drift")
+    store_get_site = store_get_sites[0]
+    require(
+        store_get_site + 3 < len(function.lines)
+        and LOCAL_TEE_RE.fullmatch(function.lines[store_get_site + 1]) is not None
+        and function.lines[store_get_site + 2].strip() == "i32.eqz"
+        and function.lines[store_get_site + 3].strip().startswith("if "),
+        f"{cid} TickDay store.get result is not bound to the creation null branch",
+    )
+    branch = store_get_site + 3
+    branch_end = matching_end(
+        function.lines, int(branch), f"{cid} TickDay creation branch"
+    )
+    if int(branch) < setter_site < branch_end:
+        mode = "create_only"
+    else:
+        require(
+            setter_site > branch_end,
+            f"{cid} TickDay.tick setter precedes the store.get creation branch",
+        )
+        mode = "every_update"
+    require(mode == expected_mode, f"{cid} TickDay.tick relation mode drift")
+    return {
+        "mode": mode,
+        "function": function.name,
+        "body_sha256": sha256_bytes(function.payload),
+        "tick_setter_binding": setter,
+        "creation_store_get_wat_line": function.start_line + store_get_site,
+        "creation_store_get_result_to_eqz_to_if_machine_checked": True,
+        "reachable_from_exact_exported_handle_swap": True,
+        "relation_semantics_machine_checked": False,
+        "evidence_kind": (
+            "digest-bound reviewed TickDay relation plus lexical decoded-key/setter "
+            "and branch-placement shape; decoded key stack dataflow is not proved"
+        ),
+        "creation_branch_wat_lines": [
+            function.start_line + int(branch),
+            function.start_line + branch_end,
+        ],
+    }
+
+
+def hour_resave_evidence(
+    cid: str,
+    expected: bool,
+    handler: WatFunction,
+) -> dict[str, object]:
+    helper_sites = [
+        line_index
+        for line_index, call in function_call_sites(handler)
+        if call.endswith("/updatePoolHourData")
+    ]
+    require(len(helper_sites) == 1, f"{cid} Pool hour helper callsite drift")
+    save_sites = [
+        line_index
+        for line_index, call in function_call_sites(handler)
+        if call.endswith("schema/PoolHourData#save")
+    ]
+    require(
+        all(line_index > helper_sites[0] for line_index in save_sites),
+        f"{cid} Pool hour direct save precedes its helper",
+    )
+    observed = bool(save_sites)
+    require(observed is expected, f"{cid} explicit Pool hour resave drift")
+    return {
+        "explicit_hour_resaves_observed": observed,
+        "hour_helper_callsite_count": len(helper_sites),
+        "direct_resave_callsite_count": len(save_sites),
+        "hour_helper_wat_line": handler.start_line + helper_sites[0],
+        "direct_resave_wat_lines": [
+            handler.start_line + line_index for line_index in save_sites
+        ],
+        "all_direct_resaves_lexically_after_helper": True,
+        "control_flow_reachability_machine_proven": False,
+        "handler_body_sha256": sha256_bytes(handler.payload),
+    }
+
+
+def fee_spacing_pairs(function: WatFunction) -> list[list[int]]:
+    pairs: list[list[int]] = []
+    lines = function.lines
+    for index, line in enumerate(lines):
+        match = I32_CONST_RE.fullmatch(line)
+        if match is None:
+            continue
+        fee = int(match.group(1))
+        if fee not in {1, 100, 500, 3000, 10000}:
+            continue
+        if index == 0 or LOCAL_GET_RE.fullmatch(lines[index - 1]) is None:
+            continue
+        comparison_tail = [line.strip() for line in lines[index + 1 : index + 5]]
+        if not comparison_tail or not (
+            comparison_tail[0].startswith("call $")
+            and comparison_tail[0].endswith(("BigInt.fromI32", "ByteArray.fromI32"))
+        ):
+            continue
+        if len(comparison_tail) < 3 or not (
+            comparison_tail[1].startswith("call $")
+            and comparison_tail[1].endswith(("BigInt#equals", "BigInt.compare"))
+        ):
+            continue
+        comparison_call = comparison_tail[1]
+        if comparison_call.endswith("BigInt#equals"):
+            branch_offset = 2
+            if comparison_tail[branch_offset] == "i32.eqz":
+                continue
+        else:
+            if len(comparison_tail) < 4 or comparison_tail[2] != "i32.eqz":
+                continue
+            branch_offset = 3
+        if not comparison_tail[branch_offset].startswith("if "):
+            continue
+        branch = index + 1 + branch_offset
+        branch_end = matching_end(lines, branch, f"{function.name} fee branch")
+        body = [line.strip() for line in lines[branch + 1 : branch_end]]
+        if len(body) != 3:
+            continue
+        spacing_match = I32_CONST_RE.fullmatch(body[0])
+        if not (
+            spacing_match is not None
+            and body[1].startswith("call $")
+            and body[1].endswith(("BigInt.fromI32", "ByteArray.fromI32"))
+            and body[2] == "return"
+        ):
+            continue
+        spacing = int(spacing_match.group(1))
+        if spacing not in {1, 10, 60, 200}:
+            continue
+        pair = [fee, spacing]
+        if pair not in pairs:
+            pairs.append(pair)
+    return pairs
+
+
+def fee_spacing_evidence(
+    cid: str,
+    profile: dict[str, object],
+    analysis: dict[str, object],
+    functions: dict[str, WatFunction],
+    memory: bytearray,
+    reachable_from_swap: set[str],
+) -> dict[str, object]:
+    expected = [[10000, 200], [3000, 60], [500, 10]]
+    mode = profile["fee_spacing_mode"]
+    if mode == "fee_tier_1_spacing_1":
+        expected.append([1, 1])
+    elif mode == "fee_tier_100_spacing_1":
+        expected.append([100, 1])
+    helpers = [
+        function
+        for name, function in functions.items()
+        if name.endswith("/feeTierToTickSpacing")
+    ]
+    if helpers:
+        require(len(helpers) == 1, f"{cid} fee-spacing helper drift")
+        function = helpers[0]
+        require(
+            function.name in reachable_from_swap,
+            f"{cid} fee-spacing helper is not reachable from exported handleSwap",
+        )
+        pairs = fee_spacing_pairs(function)
+        proof_kind = "machine-checked exact comparison-branch return binding"
+        machine_checked_complete = True
+    else:
+        function = resolve_handler(
+            functions,
+            analysis["registered_handler_export_targets"],
+            "handleSwap",
+        )
+        calls = function_calls(function)
+        constants = [
+            int(match.group(1))
+            for line in function.lines
+            if (match := I32_CONST_RE.fullmatch(line)) is not None
+        ]
+        require(
+            calls.count(
+                "~lib/@graphprotocol/graph-ts/common/numbers/BigInt.compare"
+            )
+            >= len(expected)
+            and all(value in constants for pair in expected for value in pair),
+            f"{cid} inlined fee-spacing structural evidence drift",
+        )
+        pairs = expected
+        proof_kind = (
+            "digest-bound independently reviewed inlined comparison branches; "
+            "numeric presence and comparison count are machine checked"
+        )
+        machine_checked_complete = False
+    require(
+        function.name in reachable_from_swap,
+        f"{cid} fee-spacing evidence is dormant from exported handleSwap",
+    )
+    require(pairs == expected, f"{cid} fee-spacing comparison binding drift: {pairs}")
+    return {
+        "mode": mode,
+        "fee_tier_to_tick_spacing": pairs,
+        "proof_kind": proof_kind,
+        "comparison_to_return_machine_checked": machine_checked_complete,
+        "reachable_from_exact_exported_handle_swap": True,
+        "function": function.name,
+        "body_sha256": sha256_bytes(function.payload),
+        "normalized_body_sha256": sha256_bytes(
+            normalized_function_payload(function, memory)
+        ),
+    }
+
+
+def initialize_persistence_observation(
+    cid: str,
+    expected: bool,
+    handler: WatFunction,
+) -> dict[str, object]:
+    save_sites = [
+        line_index
+        for line_index, call in function_call_sites(handler)
+        if call.endswith("schema/Pool#save")
+    ]
+    observed = bool(save_sites)
+    require(observed is expected, f"{cid} Initialize Pool save callsite drift")
+    return {
+        "lexical_pool_save_callsite_present": observed,
+        "pool_save_callsite_count": len(save_sites),
+        "pool_save_wat_lines": [
+            handler.start_line + line_index for line_index in save_sites
+        ],
+        "same_path_machine_proven": False,
+        "evidence_kind": (
+            "digest-bound reviewed persistence observation plus lexical Pool.save "
+            "callsite inventory; executable-path reachability is not proved"
+        ),
+        "handler_body_sha256": sha256_bytes(handler.payload),
+    }
+
+
+def verify_pool_profile_evidence(
+    cid: str,
+    profile: dict[str, object],
+    analysis: dict[str, object],
+    functions: dict[str, WatFunction],
+    memory: bytearray,
+) -> dict[str, object]:
+    handlers: dict[str, object] = {}
+    for handler_name in POOL_HANDLERS:
+        handlers[handler_name] = {
+            "body_binding": compact_handler_binding(analysis, handler_name),
+            "reachable_writers": compact_reachability(
+                critical_reachability(analysis, functions, handler_name)
+            ),
+            **POOL_CRITICAL_WRITER_OBSERVATIONS[handler_name],
+        }
+
+    initialize = resolve_handler(
+        functions,
+        analysis["registered_handler_export_targets"],
+        "handleInitialize",
+    )
+    initialize_calls = function_calls(initialize)
+    initialize_strings = function_static_strings(initialize, memory)
+    for field in ("sqrtPrice", "tick"):
+        require(
+            field in initialize_strings
+            or any(call.endswith(f"schema/Pool#set:{field}") for call in initialize_calls),
+            f"{cid} Initialize Pool.{field} writer drift",
+        )
+    initialize_persistence = initialize_persistence_observation(
+        cid,
+        bool(profile["initialize_persists_pool"]),
+        initialize,
+    )
+
+    swap = resolve_handler(
+        functions,
+        analysis["registered_handler_export_targets"],
+        "handleSwap",
+    )
+    swap_reachable = reachable_functions(
+        functions, swap, tuple(analysis["call_indirect_table_targets"])
+    )
+    swap_strings = [
+        value
+        for name in swap_reachable
+        for value in function_static_strings(functions[name], memory)
+    ]
+    require(SWAP_EXCLUDED_POOL in swap_strings, f"{cid} Swap excluded pool drift")
+
+    return {
+        "mapping_cid": cid,
+        **profile,
+        "handlers": handlers,
+        "initialize_writes": ["Pool.sqrtPrice", "Pool.tick"],
+        "initialize_persistence_observation": initialize_persistence,
+        "tick_day_relation_evidence": tick_day_relation_evidence(
+            cid,
+            str(profile["tick_day_tick_relation_mode"]),
+            functions,
+            memory,
+            swap_reachable,
+        ),
+        "fee_spacing_evidence": fee_spacing_evidence(
+            cid, profile, analysis, functions, memory, swap_reachable
+        ),
+        "hour_resave_evidence": hour_resave_evidence(
+            cid, bool(profile["explicit_hour_resaves"]), swap
+        ),
+        "swap_excluded_pool": SWAP_EXCLUDED_POOL,
+        "emitted_event_rows": ["Burn", "Mint", "Swap"],
+        "required_absent_event_rows": [
+            "Collect",
+            "Flash",
+            "Initialize",
+            "PoolCreated",
+            "TickHourData",
+        ],
+        "mint_burn_tick_calls": (
+            "direct non-try pool ticks calls; a missing result aborts and rolls back the handler"
+        ),
+        "flash_reviewed_observation": (
+            "feeGrowthGlobal0X128 then feeGrowthGlobal1X128, both non-try, then Pool save; exact digest and lexical shapes retained without same-path proof"
+        ),
+        "trigger_order": "ascending global Ethereum log index",
+        "deterministic_failure_scope": "handler atomic under the pinned Graph Node source model",
+        "profile_axis_evidence": {
+            "machine_checked_axes": [],
+            "lexical_callsite_checked_axes": ["explicit_hour_resaves"],
+            "partially_machine_checked_axis": "fee_spacing_mode",
+            "digest_bound_reviewed_axes": [
+                "control_generation",
+                "pricing_profile",
+                "tracked_amount_threshold",
+                "whitelist_cardinality_gate",
+                "stable_shortcut",
+                "initialize_persists_pool",
+                "tick_day_tick_relation_mode",
+            ],
+            "all_profile_axes_machine_proven": False,
+            "retained_mapping_sha256": analysis["sha256"],
+        },
+        "profile_axis_binding_complete": False,
+        "critical_observations_digest_bound": True,
+        "complete_static_handler_contract": False,
+    }
+
+
 def observed_guard_proofs(
     mapping_cid: str,
+    analysis: dict[str, object],
     functions: dict[str, WatFunction],
 ) -> list[dict[str, object]]:
     del mapping_cid
     result: list[dict[str, object]] = []
     for handler in NPM_HANDLERS:
-        function = resolve_handler(functions, handler)
+        function = resolve_handler(
+            functions,
+            analysis["registered_handler_export_targets"],
+            handler,
+        )
         proof = historical_guard_proof(function)
         if proof is not None:
             result.append({"handler": handler, **proof})
@@ -820,12 +1862,17 @@ def verify_npm_profile_evidence(
     memory: bytearray,
 ) -> dict[str, object]:
     expected = PROFILE_DEFINITIONS[profile_id]
-    guard_proofs = observed_guard_proofs(cid, functions)
+    export_targets = analysis["registered_handler_export_targets"]
+    guard_proofs = observed_guard_proofs(cid, analysis, functions)
     guards = [str(item["handler"]) for item in guard_proofs]
     require(guards == expected["block_guard_handlers"], f"{cid} block guard profile drift")
     pool_guards = []
     for handler in NPM_HANDLERS:
-        handler_function = resolve_handler(functions, handler)
+        handler_function = resolve_handler(
+            functions,
+            analysis["registered_handler_export_targets"],
+            handler,
+        )
         reachable = reachable_functions(
             functions,
             handler_function,
@@ -882,7 +1929,9 @@ def verify_npm_profile_evidence(
         for handler in NPM_HANDLERS
         if any(
             call.endswith("/updateFeeVars")
-            for call in function_calls(resolve_handler(functions, handler))
+            for call in function_calls(
+                resolve_handler(functions, export_targets, handler)
+            )
         )
     ]
     require(
@@ -899,21 +1948,22 @@ def verify_npm_profile_evidence(
         for handler in NPM_HANDLERS
         if any(
             call.endswith("/savePositionSnapshot")
-            for call in function_calls(resolve_handler(functions, handler))
+            for call in function_calls(
+                resolve_handler(functions, export_targets, handler)
+            )
         )
     ]
     require(
         snapshot_handlers == list(NPM_HANDLERS),
         f"{cid} snapshot handler inventory drift",
     )
-    transfer_calls = function_calls(resolve_handler(functions, "handleTransfer"))
+    transfer_handler = resolve_handler(functions, export_targets, "handleTransfer")
+    transfer_calls = function_calls(transfer_handler)
     require(
         (
             any(call.endswith("schema/Position#set:owner") for call in transfer_calls)
             or "owner"
-            in function_static_strings(
-                resolve_handler(functions, "handleTransfer"), memory
-            )
+            in function_static_strings(transfer_handler, memory)
         )
         and any(call.endswith("schema/Position#save") for call in transfer_calls),
         f"{cid} direct Transfer writer drift",
@@ -975,27 +2025,204 @@ def verify_npm_profile_evidence(
     }
 
 
+def local_result_after_call(
+    cid: str,
+    function: WatFunction,
+    call_site: int,
+    field: str,
+) -> tuple[str, int]:
+    for line_index in range(call_site + 1, min(len(function.lines), call_site + 8)):
+        instruction = function.lines[line_index].strip()
+        require(
+            instruction not in {"drop", "return", "unreachable"}
+            and not instruction.startswith(("br ", "br_if ", "br_table ")),
+            f"{cid} Flash {field} result is discarded before assignment",
+        )
+        match = LOCAL_SET_RE.fullmatch(function.lines[line_index])
+        if match is not None:
+            return match.group(1), line_index
+    raise VerificationError(f"{cid} Flash {field} result local is missing")
+
+
+def direct_field_set_evidence(
+    cid: str,
+    function: WatFunction,
+    field: str,
+    result_local: str,
+) -> dict[str, object] | None:
+    sites = [
+        (line_index, call)
+        for line_index, call in function_call_sites(function)
+        if call.endswith(f"schema/Pool#set:{field}")
+        or call.endswith(f"schema/PoolDayData#set:{field}")
+    ]
+    if not sites:
+        return None
+    require(len(sites) == 1, f"{cid} Flash {field} direct setter count drift")
+    setter_site, setter_call = sites[0]
+    require(setter_site >= 2, f"{cid} Flash {field} direct setter operands missing")
+    receiver = LOCAL_GET_RE.fullmatch(function.lines[setter_site - 2])
+    value = LOCAL_GET_RE.fullmatch(function.lines[setter_site - 1])
+    require(
+        receiver is not None
+        and value is not None
+        and value.group(1) == result_local,
+        f"{cid} Flash {field} direct setter is not result-bound",
+    )
+    return {
+        "setter_call": setter_call,
+        "setter_wat_line": function.start_line + setter_site,
+        "receiver_local": receiver.group(1),
+        "structural_stack_binding_machine_checked": True,
+    }
+
+
+def flash_field_flow_evidence(
+    cid: str,
+    handler: WatFunction,
+    memory: bytearray,
+    field: str,
+    wrapper_model: bool,
+) -> dict[str, object]:
+    call_sites = function_call_sites(handler)
+    if wrapper_model:
+        getter_sites = [
+            line_index
+            for line_index, call in call_sites
+            if call.endswith(f"#{field}")
+        ]
+        getter_literal_binding: dict[str, object] = {
+            "wrapper_call_name_machine_checked": True,
+        }
+    else:
+        getter_sites = []
+        field_literals = decoded_constant_sites(handler, memory, field)
+        signature = f"{field}():(uint256)"
+        signature_literals = decoded_constant_sites(handler, memory, signature)
+        for line_index, call in call_sites:
+            if not call.endswith("ethereum.SmartContract#call"):
+                continue
+            if any(
+                line_index - 8 <= field_site < signature_site < line_index
+                for field_site in field_literals
+                for signature_site in signature_literals
+            ):
+                getter_sites.append(line_index)
+        require(
+            len(field_literals) >= 1 and len(signature_literals) == 1,
+            f"{cid} Flash {field} method/signature literal drift",
+        )
+        getter_literal_binding = {
+            "method_literal": field,
+            "signature_literal": signature,
+            "method_literal_to_signature_to_call_lexical_shape_checked": True,
+        }
+    require(len(getter_sites) == 1, f"{cid} Flash {field} getter callsite drift")
+    getter_site = getter_sites[0]
+    result_local, assignment_site = local_result_after_call(
+        cid, handler, getter_site, field
+    )
+    setter = direct_field_set_evidence(cid, handler, field, result_local)
+    if wrapper_model:
+        require(setter is not None, f"{cid} Flash {field} wrapper setter missing")
+        setter["same_path_machine_proven"] = False
+    else:
+        require(setter is None, f"{cid} Flash {field} inline setter model drift")
+        setter = typed_map_field_set_evidence(
+            cid,
+            handler,
+            memory,
+            field,
+            after_line=getter_site,
+        )
+        setter["structural_stack_binding_machine_checked"] = False
+        setter["field_literal_to_typed_map_set_lexical_shape_checked"] = True
+        setter["result_value_to_setter_machine_checked"] = False
+        setter["same_path_machine_proven"] = False
+    return {
+        "field": field,
+        "getter_wat_line": handler.start_line + getter_site,
+        "result_local": result_local,
+        "result_assignment_wat_line": handler.start_line + assignment_site,
+        **getter_literal_binding,
+        **setter,
+    }
+
+
+def flash_sequence_evidence(
+    cid: str,
+    handler: WatFunction,
+    memory: bytearray,
+) -> dict[str, object]:
+    calls = function_calls(handler)
+    wrapper_model = any(call.endswith("#feeGrowthGlobal0X128") for call in calls)
+    fee0 = flash_field_flow_evidence(
+        cid, handler, memory, "feeGrowthGlobal0X128", wrapper_model
+    )
+    fee1 = flash_field_flow_evidence(
+        cid, handler, memory, "feeGrowthGlobal1X128", wrapper_model
+    )
+    require(
+        fee0["getter_wat_line"] != fee1["getter_wat_line"]
+        and fee0["result_local"] != fee1["result_local"],
+        f"{cid} Flash fee fields do not have distinct getter calls/results",
+    )
+    save_sites = [
+        line_index
+        for line_index, call in function_call_sites(handler)
+        if call.endswith("schema/Pool#save")
+    ]
+    require(len(save_sites) == 1, f"{cid} Flash Pool save callsite drift")
+    save_site = save_sites[0]
+    require(save_site > 0, f"{cid} Flash Pool save receiver missing")
+    save_receiver = LOCAL_GET_RE.fullmatch(handler.lines[save_site - 1])
+    require(save_receiver is not None, f"{cid} Flash Pool save is not receiver-bound")
+    order = [
+        int(fee0["getter_wat_line"]),
+        int(fee1["getter_wat_line"]),
+        int(fee0["setter_wat_line"]),
+        int(fee1["setter_wat_line"]),
+        handler.start_line + save_site,
+    ]
+    require(order == sorted(order), f"{cid} Flash field-flow order drift")
+    require(
+        fee0["receiver_local"]
+        == fee1["receiver_local"]
+        == save_receiver.group(1),
+        f"{cid} Flash setters/save do not target one Pool receiver",
+    )
+    return {
+        "codegen_model": "wrapper" if wrapper_model else "inline",
+        "fee_growth_0_flow": fee0,
+        "fee_growth_1_flow": fee1,
+        "pool_save_wat_line": handler.start_line + save_site,
+        "pool_receiver_local": save_receiver.group(1),
+        "distinct_getter_calls_and_results_machine_checked": True,
+        "lexical_call_setter_save_order_checked": True,
+        "ordered_field_flow_machine_checked": False,
+        "same_path_machine_proven": False,
+        "evidence_kind": (
+            "digest-bound reviewed Flash behavior plus lexical call/local/setter/save "
+            "shape checks; CFG dominance and same-path execution are not proved"
+        ),
+        "handler_body_sha256": sha256_bytes(handler.payload),
+    }
+
+
 def verify_flash_evidence(
     cid: str,
     analysis: dict[str, object],
     functions: dict[str, WatFunction],
     memory: bytearray,
 ) -> dict[str, object]:
-    handler = resolve_handler(functions, "handleFlash")
+    handler = resolve_handler(
+        functions,
+        analysis["registered_handler_export_targets"],
+        "handleFlash",
+    )
     calls = function_calls(handler)
-    static_strings = function_static_strings(handler, memory)
     old_wrapper_model = any(call.endswith("#feeGrowthGlobal0X128") for call in calls)
     if old_wrapper_model:
-        expected_suffixes = (
-            "#feeGrowthGlobal0X128",
-            "#feeGrowthGlobal1X128",
-            "schema/Pool#save",
-        )
-        positions = [
-            next(index for index, call in enumerate(calls) if call.endswith(suffix))
-            for suffix in expected_suffixes
-        ]
-        require(positions == sorted(positions), f"{cid} Flash call order drift")
         wrappers = [
             function
             for name, function in functions.items()
@@ -1013,12 +2240,7 @@ def verify_flash_evidence(
             call for call in calls if call.endswith("ethereum.SmartContract#call")
         ]
         require(len(direct_calls) == 2, f"{cid} Flash direct-call count drift")
-        require(
-            "feeGrowthGlobal0X128" in static_strings
-            and "feeGrowthGlobal1X128" in static_strings,
-            f"{cid} Flash method identity drift",
-        )
-        require(any(call.endswith("schema/Pool#save") for call in calls), f"{cid} Flash Pool save drift")
+    sequence = flash_sequence_evidence(cid, handler, memory)
     smart_contract_call = next(
         (
             function
@@ -1043,7 +2265,8 @@ def verify_flash_evidence(
     return {
         "mapping_cid": cid,
         "handler_body_binding": analysis["registered_handlers"]["handleFlash"],
-        "call_order": [
+        "field_flow_evidence": sequence,
+        "reviewed_call_order": [
             "feeGrowthGlobal0X128",
             "feeGrowthGlobal1X128",
             "set both Pool fields",
@@ -1054,7 +2277,7 @@ def verify_flash_evidence(
         "contract_call_temporal_source_model": "Graph Node v0.44.0 reads post-block state by block hash when supported or block number otherwise; this is not intra-block log-ordinal state",
         "reachable_writers": reachability,
         "flash_entity_write": False,
-        "evidence_kind": "machine-checked non-try call, call ordering, handler reachability, and digest-bound WAT identity",
+        "evidence_kind": "digest-bound reviewed getter/setter/save behavior with exact export, distinct getter/result, lexical shape/order, non-try call, and conservative writer-closure checks; same-path execution is not machine-proven",
         "complete_pool_field_writer_semantics": False,
     }
 
@@ -1099,6 +2322,44 @@ def component_record(
     return matches[0]
 
 
+def ancestry_segment_anchors(
+    ancestry: dict[str, object],
+) -> list[dict[str, object]]:
+    result: list[dict[str, object]] = []
+    for network in ("mainnet", "base"):
+        for segment in ancestry["networks"][network]["segments"]:
+            factory = component_record(segment, "Factory")
+            npm = component_record(segment, "NonfungiblePositionManager")
+            pool = component_record(segment, "Pool")
+            flash_handlers = [
+                handler
+                for handler in pool["mapping"]["handlers"]
+                if handler["handler"] == "handleFlash"
+            ]
+            require(
+                len(flash_handlers) == 1,
+                f"{segment['deployment']} ancestry Pool Flash handler drift",
+            )
+            result.append(
+                {
+                    "network": network,
+                    "deployment": segment["deployment"],
+                    "start_block_inclusive": segment["start_block_inclusive"],
+                    "end_block_inclusive": segment["end_block_inclusive"],
+                    "factory_mapping_cid": factory["mapping"]["wasm_cid"],
+                    "npm_mapping_cid": npm["mapping"]["wasm_cid"],
+                    "pool_mapping_cid": pool["mapping"]["wasm_cid"],
+                    "npm_event_handlers_in_manifest_order": list(
+                        npm["mapping"]["handlers"]
+                    ),
+                    "pool_flash_event_handler": flash_handlers[0],
+                    "manifest_features": list(segment["manifest"]["features"]),
+                    "execution_model": segment["execution_model"],
+                }
+            )
+    return result
+
+
 def graph_node_source_evidence() -> dict[str, object]:
     return {
         "version": GRAPH_NODE_VERSION,
@@ -1124,6 +2385,205 @@ def graph_node_source_evidence() -> dict[str, object]:
         "target_runtime_binary_or_source_identity_bound": False,
         "status": "primary-source reference model only; not proof of target runtime identity",
     }
+
+
+def source_provenance_bindings(
+    analyses: dict[str, dict[str, object]],
+) -> list[dict[str, object]]:
+    cids = sorted(set(FACTORY_PROFILE_BY_MAPPING) | set(POOL_PROFILE_BY_MAPPING))
+    result: list[dict[str, object]] = []
+    for cid in cids:
+        exact = ENTRY_BLOB_ANCHOR_BY_MAPPING.get(cid)
+        if exact is None:
+            limitations = [
+                "no exact committed source entry blob anchor is assigned to this mapping",
+                "historic semantic anchors are intentionally unassigned and cannot replace the retained deployed WASM",
+            ]
+            if cid in {
+                "QmYQRHstsSS7mntgKNSot74qN2dpuyFEtd1DddPmnqWC65",
+                "QmXFDgK3qLnmsLFcPWobXbdnqV9gESL9BvYY29si4vpTjr",
+                "QmPZCHE1URf4oviX7Tbrkw3aMENo1qAeEGa1AS2gMumG7P",
+            }:
+                limitations.insert(
+                    0,
+                    "the exact audit found no matching committed source tree for this deployed mapping",
+                )
+            binding = {
+                "mapping_cid": cid,
+                "component": analyses[cid]["component"],
+                "match_kind": "none_found",
+                "repository": SOURCE_REPOSITORY,
+                "commit": None,
+                "entry_path": None,
+                "entry_blob_sha1": None,
+                "artifact_authority": "retained_mapping_wasm",
+                "artifact_sha256": analyses[cid]["sha256"],
+                "limitations": limitations,
+            }
+        else:
+            commit, entry_path, entry_blob_sha1 = exact
+            binding = {
+                "mapping_cid": cid,
+                "component": analyses[cid]["component"],
+                "match_kind": "exact_entry_blob_anchor",
+                "repository": SOURCE_REPOSITORY,
+                "commit": commit,
+                "entry_path": entry_path,
+                "entry_blob_sha1": entry_blob_sha1,
+                "artifact_authority": "retained_mapping_wasm",
+                "artifact_sha256": analyses[cid]["sha256"],
+                "limitations": [
+                    "the commit and mapping entry blob are exact source anchors only; no reproducible source-to-WASM build correspondence is proved",
+                    "retained deployed WASM remains authoritative",
+                ],
+            }
+        result.append(binding)
+    return result
+
+
+def segment_writer_contract_from_record(
+    segment: dict[str, object],
+) -> dict[str, object]:
+    factory_cid = str(segment["factory_mapping_cid"])
+    npm_cid = str(segment["npm_mapping_cid"])
+    pool_cid = str(segment["pool_mapping_cid"])
+    require(factory_cid in FACTORY_PROFILE_BY_MAPPING, "unknown segment Factory mapping CID")
+    require(npm_cid in PROFILE_BY_MAPPING, "unknown segment NPM mapping CID")
+    require(pool_cid in POOL_PROFILE_BY_MAPPING, "unknown segment Pool mapping CID")
+    factory_profile = FACTORY_PROFILE_BY_MAPPING[factory_cid]
+    npm_profile_id = PROFILE_BY_MAPPING[npm_cid]
+    pool_profile = POOL_PROFILE_BY_MAPPING[pool_cid]
+    artifact_bindings = {
+        "factory": {
+            "mapping_cid": factory_cid,
+            "profile_id": factory_profile["profile_id"],
+        },
+        "nonfungible_position_manager": {
+            "mapping_cid": npm_cid,
+            "profile_id": npm_profile_id,
+        },
+        "pool": {
+            "mapping_cid": pool_cid,
+            "profile_id": pool_profile["profile_id"],
+        },
+    }
+    semantic_contract = {
+        "factory": {
+            key: value
+            for key, value in factory_profile.items()
+            if key != "profile_id"
+        },
+        "nonfungible_position_manager": PROFILE_DEFINITIONS[npm_profile_id],
+        "pool": {
+            key: value
+            for key, value in pool_profile.items()
+            if key != "profile_id"
+        },
+        "manifest_features": segment["manifest_features"],
+        "deterministic_handler_error_policy_under_source_model": segment[
+            "deterministic_handler_error_policy_under_source_model"
+        ],
+        "trigger_order_source_model": segment["trigger_order_source_model"],
+    }
+    return {
+        "segment_id": f"{segment['network']}:{segment['deployment']}",
+        "network": segment["network"],
+        "deployment": segment["deployment"],
+        "start_block_inclusive": segment["start_block_inclusive"],
+        "end_block_inclusive": segment["end_block_inclusive"],
+        "artifact_bindings": artifact_bindings,
+        "semantic_contract": semantic_contract,
+        "artifact_identity_sha256": canonical_sha256(artifact_bindings),
+        "semantic_contract_sha256": canonical_sha256(semantic_contract),
+        "execution_model": "undecided",
+        "backfill_allowed": False,
+    }
+
+
+def build_segment_writer_contracts(
+    ancestry: dict[str, object],
+    segment_records: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    records_by_deployment = {
+        item["deployment"]: item for item in segment_records
+    }
+    result: list[dict[str, object]] = []
+    for network in ("mainnet", "base"):
+        for segment in ancestry["networks"][network]["segments"]:
+            deployment = segment["deployment"]
+            record = records_by_deployment[deployment]
+            expected_identity = {
+                "network": network,
+                "deployment": deployment,
+                "start_block_inclusive": segment["start_block_inclusive"],
+                "end_block_inclusive": segment["end_block_inclusive"],
+                "factory_mapping_cid": component_record(segment, "Factory")[
+                    "mapping"
+                ]["wasm_cid"],
+                "npm_mapping_cid": component_record(
+                    segment, "NonfungiblePositionManager"
+                )["mapping"]["wasm_cid"],
+                "pool_mapping_cid": component_record(segment, "Pool")["mapping"][
+                    "wasm_cid"
+                ],
+            }
+            require(
+                all(record[key] == value for key, value in expected_identity.items()),
+                f"{deployment} legacy segment identity/CID drift",
+            )
+            result.append(segment_writer_contract_from_record(record))
+    return result
+
+
+def build_segment_writer_diffs(
+    segments: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    result: list[dict[str, object]] = []
+    for left, right in itertools.combinations(segments, 2):
+        if left["network"] != right["network"]:
+            relation = "cross_network"
+            boundary = None
+        elif (
+            left["end_block_inclusive"] is not None
+            and right["start_block_inclusive"]
+            == left["end_block_inclusive"] + 1
+        ):
+            relation = "adjacent_graft"
+            boundary = left["end_block_inclusive"]
+        else:
+            relation = "same_network_nonadjacent"
+            boundary = None
+        artifact_paths = json_diff_paths(
+            left["artifact_bindings"], right["artifact_bindings"]
+        )
+        semantic_paths = json_diff_paths(
+            left["semantic_contract"], right["semantic_contract"]
+        )
+        result.append(
+            {
+                "left_segment_id": left["segment_id"],
+                "right_segment_id": right["segment_id"],
+                "relation": relation,
+                "boundary_block": boundary,
+                "artifact_equal": not artifact_paths,
+                "semantic_equal": not semantic_paths,
+                "artifact_diff_paths": artifact_paths,
+                "semantic_diff_paths": semantic_paths,
+                "left_artifact_identity_sha256": left[
+                    "artifact_identity_sha256"
+                ],
+                "right_artifact_identity_sha256": right[
+                    "artifact_identity_sha256"
+                ],
+                "left_semantic_contract_sha256": left[
+                    "semantic_contract_sha256"
+                ],
+                "right_semantic_contract_sha256": right[
+                    "semantic_contract_sha256"
+                ],
+            }
+        )
+    return result
 
 
 def build_contract(root: Path, wasm2wat: Path | None = None) -> dict[str, object]:
@@ -1154,9 +2614,34 @@ def build_contract(root: Path, wasm2wat: Path | None = None) -> dict[str, object
             memory_by_cid[cid],
         )
 
+    factory_profiles = [
+        verify_factory_profile_evidence(
+            cid,
+            FACTORY_PROFILE_BY_MAPPING[cid],
+            analyses[cid],
+            functions_by_cid[cid],
+            memory_by_cid[cid],
+        )
+        for cid in sorted(FACTORY_PROFILE_BY_MAPPING)
+    ]
+
     pool_cids = sorted(
         cid for cid, mapping in mappings.items() if mapping["component"] == "Pool"
     )
+    require(
+        pool_cids == sorted(POOL_PROFILE_BY_MAPPING),
+        "Pool profile mapping closure drift",
+    )
+    pool_profiles = [
+        verify_pool_profile_evidence(
+            cid,
+            POOL_PROFILE_BY_MAPPING[cid],
+            analyses[cid],
+            functions_by_cid[cid],
+            memory_by_cid[cid],
+        )
+        for cid in pool_cids
+    ]
     flash_evidence = [
         verify_flash_evidence(
             cid, analyses[cid], functions_by_cid[cid], memory_by_cid[cid]
@@ -1233,8 +2718,10 @@ def build_contract(root: Path, wasm2wat: Path | None = None) -> dict[str, object
     segments: list[dict[str, object]] = []
     for network in ("mainnet", "base"):
         for segment in ancestry["networks"][network]["segments"]:
+            factory_component = component_record(segment, "Factory")
             npm_component = component_record(segment, "NonfungiblePositionManager")
             pool_component = component_record(segment, "Pool")
+            factory_cid = factory_component["mapping"]["wasm_cid"]
             npm_cid = npm_component["mapping"]["wasm_cid"]
             pool_cid = pool_component["mapping"]["wasm_cid"]
             profile_id = PROFILE_BY_MAPPING[npm_cid]
@@ -1262,6 +2749,7 @@ def build_contract(root: Path, wasm2wat: Path | None = None) -> dict[str, object
                     "deployment": segment["deployment"],
                     "start_block_inclusive": start,
                     "end_block_inclusive": end,
+                    "factory_mapping_cid": factory_cid,
                     "npm_mapping_cid": npm_cid,
                     "pool_mapping_cid": pool_cid,
                     "npm_profile_id": profile_id,
@@ -1269,10 +2757,7 @@ def build_contract(root: Path, wasm2wat: Path | None = None) -> dict[str, object
                         npm_component["mapping"]["handlers"]
                     ),
                     "pool_flash_event_handler": flash_handlers[0],
-                    "trigger_order_source_model": (
-                        "Graph Node v0.44.0 orders Ethereum log triggers by ascending "
-                        "global log index; contract calls still read block-level post-state"
-                    ),
+                    "trigger_order_source_model": TRIGGER_ORDER_SOURCE_MODEL,
                     "manifest_features": features,
                     "historical_guard": {
                         "block": HISTORICAL_GUARD_BLOCK,
@@ -1282,10 +2767,9 @@ def build_contract(root: Path, wasm2wat: Path | None = None) -> dict[str, object
                         "effective_in_segment": guard_present and block_in_segment,
                     },
                     "deterministic_handler_error_policy_under_source_model": (
-                        "discard the failing handler's data-source and entity-cache changes, "
-                        "continue other successful handlers, and write a deterministic proof-of-indexing error"
+                        NONFATAL_HANDLER_ERROR_POLICY
                         if nonfatal
-                        else "nonFatalErrors is absent; a deterministic handler error fails the deployment at that block"
+                        else FATAL_HANDLER_ERROR_POLICY
                     ),
                     "target_runtime_identity_bound": False,
                     "execution_model": segment["execution_model"],
@@ -1343,8 +2827,12 @@ def build_contract(root: Path, wasm2wat: Path | None = None) -> dict[str, object
         )
 
     ancestry_contract_path = root / ANCESTRY.CONTRACT_PATH
+    segment_writer_contracts = build_segment_writer_contracts(
+        ancestry, segments
+    )
+    segment_writer_diffs = build_segment_writer_diffs(segment_writer_contracts)
     return {
-        "format_version": 1,
+        "format_version": 2,
         "contract_version": CONTRACT_VERSION,
         "ancestry_contract": {
             "path": ANCESTRY.CONTRACT_PATH.as_posix(),
@@ -1378,16 +2866,93 @@ def build_contract(root: Path, wasm2wat: Path | None = None) -> dict[str, object
         "mapping_analyses": [analyses[cid] for cid in sorted(analyses)],
         "handler_identity_groups": identity_groups,
         "npm_semantic_profiles": grouped_profiles,
+        "source_provenance_bindings": source_provenance_bindings(analyses),
+        "semantic_source_anchors": [
+            {
+                "repository": SOURCE_REPOSITORY,
+                "commit": commit,
+                "match_kind": "semantic_anchor",
+                "mapping_assignment": None,
+                "artifact_authority": "retained_mapping_wasm",
+                "limitations": [
+                    "historic semantic reference only; not an exact mapping-source entry anchor"
+                ],
+            }
+            for commit in SEMANTIC_SOURCE_ANCHORS
+        ],
+        "factory_writer_contract": {
+            "contract_id": "factory-pool-created/v1",
+            "mapping_count": len(factory_profiles),
+            "registered_handler_count": len(factory_profiles),
+            "handler": FACTORY_HANDLER,
+            "common": {
+                "excluded_pool": EXCLUDED_POOL,
+                "pool_tick_write": "required_absent",
+                "reviewed_effect_order": [
+                    "Pool.save",
+                    "PoolTemplate.create",
+                    "Token[token0].save",
+                    "Token[token1].save",
+                    "Factory.save",
+                ],
+                "pool_created_event_row_write": False,
+                "field_writer_contract": FACTORY_FIELD_WRITER_CONTRACT,
+                "complete_static_handler_contract": False,
+            },
+            "mapping_bindings": factory_profiles,
+        },
+        "pool_writer_contract": {
+            "contract_id": "pool-handlers/v1",
+            "mapping_count": len(pool_profiles),
+            "registered_handler_count": len(pool_profiles) * len(POOL_HANDLERS),
+            "handlers": list(POOL_HANDLERS),
+            "common": {
+                "emitted_event_rows": ["Burn", "Mint", "Swap"],
+                "required_absent_event_rows": [
+                    "Collect",
+                    "Flash",
+                    "Initialize",
+                    "PoolCreated",
+                    "TickHourData",
+                ],
+                "swap_excluded_pool": SWAP_EXCLUDED_POOL,
+                "trigger_order": "ascending global Ethereum log index",
+                "critical_writer_observations": POOL_CRITICAL_WRITER_OBSERVATIONS,
+                "observation_evidence_kind": (
+                    "digest-bound independently reviewed WAT observations; structural "
+                    "checks cover exact handler exports, Initialize save callsites, "
+                    "TickDay store.get branch and lexical setter shapes, legacy fee-spacing returns, Pool-hour "
+                    "resave callsites, Flash distinct getters and lexical shapes, and writer reachability; "
+                    "remaining profile axes are not machine-proven"
+                ),
+                "complete_field_value_semantics": False,
+            },
+            "mapping_bindings": pool_profiles,
+        },
         "pool_flash_evidence": flash_evidence,
         "segments": segments,
+        "segment_writer_contracts": segment_writer_contracts,
+        "segment_writer_diffs": segment_writer_diffs,
         "required_absence_certifications": absence,
         "truth_boundary": {
             "wabt_analysis_ci_recomputed": True,
             "global_store_set_callsite_closure_complete": True,
             "constant_store_set_target_inventory_complete": True,
-            "npm_collect_and_pool_flash_reachability_complete": True,
+            "npm_collect_and_pool_flash_conservative_writer_closure_complete": True,
             "required_absence_static_certified": True,
+            "factory_static_writer_observations_digest_bound": True,
+            "pool_static_writer_observations_digest_bound": True,
+            "factory_pool_profile_axis_catalog_digest_bound": True,
+            "factory_pool_critical_writer_observations_bound": True,
+            "segment_writer_contracts_complete": True,
+            "segment_writer_diff_complete": True,
+            "source_binding_inventory_complete": True,
             "field_writer_audit_complete": False,
+            "npm_collect_and_pool_flash_reachability_complete": False,
+            "factory_static_writer_provenance_complete": False,
+            "pool_static_writer_provenance_complete": False,
+            "factory_pool_profile_axis_bindings_complete": False,
+            "factory_pool_full_field_writer_semantics_complete": False,
             "full_handler_semantics_complete": False,
             "runtime_population_complete": False,
             "boundary_state_continuity_complete": False,
@@ -1396,6 +2961,7 @@ def build_contract(root: Path, wasm2wat: Path | None = None) -> dict[str, object
             "poi_parity_complete": False,
             "target_graph_node_runtime_identity_bound": False,
             "segment_execution_models_decided": False,
+            "backfill_ready": False,
             "production_ready": False,
         },
     }
@@ -1411,17 +2977,41 @@ TOP_LEVEL_KEYS = {
     "mapping_analyses",
     "handler_identity_groups",
     "npm_semantic_profiles",
+    "source_provenance_bindings",
+    "semantic_source_anchors",
+    "factory_writer_contract",
+    "pool_writer_contract",
     "pool_flash_evidence",
     "segments",
+    "segment_writer_contracts",
+    "segment_writer_diffs",
     "required_absence_certifications",
     "truth_boundary",
 }
 
 
-def validate_internal_contract(contract: object) -> dict[str, object]:
+def validate_internal_contract(
+    contract: object,
+    verified_ancestry: dict[str, object] | None = None,
+    root: Path = REPOSITORY,
+) -> dict[str, object]:
+    root = root.resolve()
+    ancestry = verified_ancestry or ANCESTRY.verify(root)
     contract = ANCESTRY.exact_keys(contract, TOP_LEVEL_KEYS, "writer contract")
-    require(contract["format_version"] == 1, "writer format version drift")
+    require(contract["format_version"] == 2, "writer format version drift")
     require(contract["contract_version"] == CONTRACT_VERSION, "writer contract version drift")
+    ancestry_path = root / ANCESTRY.CONTRACT_PATH
+    expected_ancestry_metadata = {
+        "path": ANCESTRY.CONTRACT_PATH.as_posix(),
+        "sha256": sha256_bytes(ancestry_path.read_bytes()),
+        "contract_version": ancestry["contract_version"],
+        "artifact_count": len(ancestry["artifacts"]),
+        "mapping_count": len(ancestry["mapping_writer_inventories"]),
+    }
+    require(
+        contract["ancestry_contract"] == expected_ancestry_metadata,
+        "writer ancestry metadata is not bound to the verified immutable ancestry",
+    )
     toolchain = contract["toolchain"]
     require(toolchain["version"] == WABT_VERSION, "writer tool version drift")
     require(toolchain["official_linux_archive"] == WABT_LINUX_ARCHIVE, "writer WABT archive identity drift")
@@ -1439,6 +3029,16 @@ def validate_internal_contract(contract: object) -> dict[str, object]:
     mapping_by_cid = {mapping["cid"]: mapping for mapping in mappings}
     require(len(mapping_by_cid) == 20, "writer mapping analysis CID closure drift")
     for mapping in mappings:
+        export_targets = mapping["registered_handler_export_targets"]
+        registered_handlers = mapping["registered_handlers"]
+        require(
+            set(export_targets) == set(registered_handlers)
+            and all(
+                registered_handlers[handler]["function"] == target
+                for handler, target in export_targets.items()
+            ),
+            "writer handler evidence is not rooted at its exact WAT export target",
+        )
         require(mapping["store_set_import_count"] == 1, "writer store.set import drift")
         require(
             mapping["store_set_callsite_count"]
@@ -1570,6 +3170,136 @@ def validate_internal_contract(contract: object) -> dict[str, object]:
                 evidence["complete_field_writer_semantics"] is False,
                 "writer NPM field-semantics overclaim",
             )
+
+    factory = contract["factory_writer_contract"]
+    factory_bindings = factory["mapping_bindings"]
+    factory_by_cid = {item["mapping_cid"]: item for item in factory_bindings}
+    require(
+        factory["contract_id"] == "factory-pool-created/v1"
+        and factory["mapping_count"] == factory["registered_handler_count"] == 6
+        and factory["handler"] == FACTORY_HANDLER
+        and factory["common"]["field_writer_contract"] == FACTORY_FIELD_WRITER_CONTRACT
+        and len(factory_by_cid) == len(factory_bindings) == 6,
+        "Factory writer contract closure drift",
+    )
+    require(
+        {
+            cid: {key: item[key] for key in FACTORY_PROFILE_BY_MAPPING[cid]}
+            for cid, item in factory_by_cid.items()
+        }
+        == FACTORY_PROFILE_BY_MAPPING,
+        "Factory profile axis drift",
+    )
+    require(
+        all(
+            item["pool_tick_write"] == "absent"
+            and item["pool_created_event_row_write"] is False
+            and item["complete_static_handler_contract"] is False
+            and item["excluded_pool_guard_observation"][
+                "event_pool_to_comparison_to_early_return_machine_proven"
+            ]
+            is False
+            and item["pool_created_effect_order_observation"][
+                "same_path_or_dataflow_machine_proven"
+            ]
+            is False
+            and item["pool_created_effect_order_observation"]["reviewed_order"]
+            == factory["common"]["reviewed_effect_order"]
+            for item in factory_bindings
+        ),
+        "Factory critical writer evidence drift",
+    )
+
+    pool = contract["pool_writer_contract"]
+    pool_bindings = pool["mapping_bindings"]
+    pool_by_cid = {item["mapping_cid"]: item for item in pool_bindings}
+    require(
+        pool["contract_id"] == "pool-handlers/v1"
+        and pool["mapping_count"] == 8
+        and pool["registered_handler_count"] == 40
+        and pool["handlers"] == list(POOL_HANDLERS)
+        and pool["common"]["critical_writer_observations"]
+        == POOL_CRITICAL_WRITER_OBSERVATIONS
+        and pool["common"]["complete_field_value_semantics"] is False
+        and len(pool_by_cid) == len(pool_bindings) == 8,
+        "Pool writer contract closure drift",
+    )
+    require(
+        {
+            cid: {key: item[key] for key in POOL_PROFILE_BY_MAPPING[cid]}
+            for cid, item in pool_by_cid.items()
+        }
+        == POOL_PROFILE_BY_MAPPING,
+        "Pool profile axis drift",
+    )
+    require(
+        all(
+            set(item["handlers"]) == set(POOL_HANDLERS)
+            and item["profile_axis_binding_complete"] is False
+            and item["profile_axis_evidence"][
+                "all_profile_axes_machine_proven"
+            ]
+            is False
+            and item["critical_observations_digest_bound"] is True
+            and item["complete_static_handler_contract"] is False
+            and item["initialize_persistence_observation"][
+                "lexical_pool_save_callsite_present"
+            ]
+            is item["initialize_persists_pool"]
+            and item["initialize_persistence_observation"][
+                "same_path_machine_proven"
+            ]
+            is False
+            and item["tick_day_relation_evidence"]["mode"]
+            == item["tick_day_tick_relation_mode"]
+            and item["tick_day_relation_evidence"][
+                "relation_semantics_machine_checked"
+            ]
+            is False
+            and item["tick_day_relation_evidence"]["tick_setter_binding"][
+                "decoded_key_to_setter_machine_checked"
+            ]
+            is False
+            and item["tick_day_relation_evidence"][
+                "reachable_from_exact_exported_handle_swap"
+            ]
+            is True
+            and item["fee_spacing_evidence"]["mode"] == item["fee_spacing_mode"]
+            and item["fee_spacing_evidence"][
+                "reachable_from_exact_exported_handle_swap"
+            ]
+            is True
+            and item["hour_resave_evidence"][
+                "explicit_hour_resaves_observed"
+            ]
+            is item["explicit_hour_resaves"]
+            and item["hour_resave_evidence"]["hour_helper_callsite_count"] == 1
+            and (
+                item["hour_resave_evidence"]["direct_resave_callsite_count"] > 0
+            )
+            is item["explicit_hour_resaves"]
+            for item in pool_bindings
+        ),
+        "Pool critical writer evidence drift",
+    )
+
+    provenance = contract["source_provenance_bindings"]
+    provenance_by_cid = {item["mapping_cid"]: item for item in provenance}
+    expected_provenance = source_provenance_bindings(mapping_by_cid)
+    require(
+        len(provenance_by_cid) == len(provenance) == 14
+        and set(provenance_by_cid)
+        == set(FACTORY_PROFILE_BY_MAPPING) | set(POOL_PROFILE_BY_MAPPING)
+        and provenance == expected_provenance,
+        "source provenance tuple drift or overclaim",
+    )
+    require(
+        [item["commit"] for item in contract["semantic_source_anchors"]]
+        == list(SEMANTIC_SOURCE_ANCHORS)
+        and all(item["mapping_assignment"] is None for item in contract["semantic_source_anchors"]),
+        "semantic source anchor assignment overclaim",
+    )
+
     require(
         len(contract["pool_flash_evidence"]) == 8,
         "writer Pool Flash evidence count drift",
@@ -1595,13 +3325,57 @@ def validate_internal_contract(contract: object) -> dict[str, object]:
             "writer Flash dynamic reachability drift",
         )
         require(evidence["flash_entity_write"] is False, "writer Flash write drift")
+        flow = evidence["field_flow_evidence"]
+        fee0 = flow["fee_growth_0_flow"]
+        fee1 = flow["fee_growth_1_flow"]
+        require(
+            flow["ordered_field_flow_machine_checked"] is False
+            and flow["same_path_machine_proven"] is False
+            and flow["distinct_getter_calls_and_results_machine_checked"] is True
+            and flow["lexical_call_setter_save_order_checked"] is True
+            and fee0["field"] == "feeGrowthGlobal0X128"
+            and fee1["field"] == "feeGrowthGlobal1X128"
+            and fee0["getter_wat_line"] != fee1["getter_wat_line"]
+            and fee0["result_local"] != fee1["result_local"]
+            and fee0["receiver_local"]
+            == fee1["receiver_local"]
+            == flow["pool_receiver_local"]
+            and [
+                fee0["getter_wat_line"],
+                fee1["getter_wat_line"],
+                fee0["setter_wat_line"],
+                fee1["setter_wat_line"],
+                flow["pool_save_wat_line"],
+            ]
+            == sorted(
+                [
+                    fee0["getter_wat_line"],
+                    fee1["getter_wat_line"],
+                    fee0["setter_wat_line"],
+                    fee1["setter_wat_line"],
+                    flow["pool_save_wat_line"],
+                ]
+            ),
+            "writer Flash getter/setter/save field-flow drift",
+        )
         require(
             evidence["complete_pool_field_writer_semantics"] is False,
             "writer Pool field-semantics overclaim",
         )
     effective_guards: list[tuple[str, str]] = []
     nonfatal_deployments: list[str] = []
-    for segment in contract["segments"]:
+    segments = contract["segments"]
+    ancestry_anchors = ancestry_segment_anchors(ancestry)
+    require(
+        isinstance(segments, list) and len(segments) == len(ancestry_anchors) == 8,
+        "writer top-level segment count drift from verified ancestry",
+    )
+    anchor_fields = tuple(ancestry_anchors[0])
+    for segment, anchor in zip(segments, ancestry_anchors, strict=True):
+        require(
+            all(segment[field] == anchor[field] for field in anchor_fields),
+            "writer top-level segment identity, range, CID, handler, feature, or execution-model drift from verified ancestry",
+        )
         require(segment["npm_profile_id"] in profile_ids, "writer segment profile mis-selection")
         require(
             segment["npm_profile_id"] == PROFILE_BY_MAPPING[segment["npm_mapping_cid"]],
@@ -1618,6 +3392,15 @@ def validate_internal_contract(contract: object) -> dict[str, object]:
         )
         guard = segment["historical_guard"]
         require(guard["block"] == HISTORICAL_GUARD_BLOCK, "writer guard block drift")
+        start = anchor["start_block_inclusive"]
+        end = anchor["end_block_inclusive"]
+        expected_block_in_segment = start <= HISTORICAL_GUARD_BLOCK and (
+            end is None or HISTORICAL_GUARD_BLOCK <= end
+        )
+        require(
+            guard["block_in_segment"] is expected_block_in_segment,
+            "writer historical guard block-in-segment drift from verified ancestry range",
+        )
         expected_guard_proofs = profile_evidence_by_mapping[segment["npm_mapping_cid"]][
             "block_guard_proofs"
         ]
@@ -1633,8 +3416,21 @@ def validate_internal_contract(contract: object) -> dict[str, object]:
         )
         if guard["effective_in_segment"]:
             effective_guards.append((segment["network"], segment["deployment"]))
-        if "nonFatalErrors" in segment["manifest_features"]:
+        nonfatal = "nonFatalErrors" in anchor["manifest_features"]
+        if nonfatal:
             nonfatal_deployments.append(segment["deployment"])
+        require(
+            segment["trigger_order_source_model"] == TRIGGER_ORDER_SOURCE_MODEL
+            and segment[
+                "deterministic_handler_error_policy_under_source_model"
+            ]
+            == (
+                NONFATAL_HANDLER_ERROR_POLICY
+                if nonfatal
+                else FATAL_HANDLER_ERROR_POLICY
+            ),
+            "writer segment source-model policy drift",
+        )
         require(segment["target_runtime_identity_bound"] is False, "writer target runtime overclaim")
         require(segment["execution_model"] == "undecided", "writer execution model overclaim")
         require(segment["backfill_allowed"] is False, "writer improperly allows backfill")
@@ -1651,6 +3447,70 @@ def validate_internal_contract(contract: object) -> dict[str, object]:
             "Qmb4VUcAY9LsVgeCuCCMs7X1XrkbRcaiuAbSK8SqhmsAfP",
         ],
         "writer nonFatalErrors feature policy drift",
+    )
+
+    segment_contracts = contract["segment_writer_contracts"]
+    require(
+        isinstance(segment_contracts, list) and len(segment_contracts) == 8,
+        "segment writer contract count drift",
+    )
+    segment_ids = [item["segment_id"] for item in segment_contracts]
+    require(len(segment_ids) == len(set(segment_ids)), "segment writer IDs repeat")
+    expected_segment_contracts = [
+        segment_writer_contract_from_record(segment)
+        for segment in contract["segments"]
+    ]
+    require(
+        segment_contracts == expected_segment_contracts,
+        "segment writer contract is not cross-bound to legacy identity, range, CIDs, and selected profile semantics",
+    )
+    for segment in segment_contracts:
+        bindings = segment["artifact_bindings"]
+        factory_binding = bindings["factory"]
+        npm_binding = bindings["nonfungible_position_manager"]
+        pool_binding = bindings["pool"]
+        require(
+            factory_binding["profile_id"]
+            == FACTORY_PROFILE_BY_MAPPING[factory_binding["mapping_cid"]][
+                "profile_id"
+            ],
+            "segment Factory profile selection drift",
+        )
+        require(
+            npm_binding["profile_id"]
+            == PROFILE_BY_MAPPING[npm_binding["mapping_cid"]],
+            "segment NPM profile selection drift",
+        )
+        require(
+            pool_binding["profile_id"]
+            == POOL_PROFILE_BY_MAPPING[pool_binding["mapping_cid"]][
+                "profile_id"
+            ],
+            "segment Pool profile selection drift",
+        )
+        require(
+            segment["artifact_identity_sha256"] == canonical_sha256(bindings)
+            and segment["semantic_contract_sha256"]
+            == canonical_sha256(segment["semantic_contract"]),
+            "segment writer canonical hash drift",
+        )
+        require(
+            segment["execution_model"] == "undecided"
+            and segment["backfill_allowed"] is False,
+            "segment writer promotion overclaim",
+        )
+    diffs = contract["segment_writer_diffs"]
+    require(
+        isinstance(diffs, list) and len(diffs) == 28,
+        "segment writer pairwise diff closure drift",
+    )
+    require(
+        diffs == build_segment_writer_diffs(segment_contracts),
+        "segment writer diff content drift",
+    )
+    require(
+        sum(item["relation"] == "adjacent_graft" for item in diffs) == 6,
+        "segment adjacent-graft diff inventory drift",
     )
 
     absence = contract["required_absence_certifications"]
@@ -1682,12 +3542,24 @@ def validate_internal_contract(contract: object) -> dict[str, object]:
         "wabt_analysis_ci_recomputed",
         "global_store_set_callsite_closure_complete",
         "constant_store_set_target_inventory_complete",
-        "npm_collect_and_pool_flash_reachability_complete",
+        "npm_collect_and_pool_flash_conservative_writer_closure_complete",
         "required_absence_static_certified",
+        "factory_static_writer_observations_digest_bound",
+        "pool_static_writer_observations_digest_bound",
+        "factory_pool_profile_axis_catalog_digest_bound",
+        "factory_pool_critical_writer_observations_bound",
+        "segment_writer_contracts_complete",
+        "segment_writer_diff_complete",
+        "source_binding_inventory_complete",
     ):
         require(truth.get(field) is True, f"writer proved evidence flag drift: {field}")
     for field in (
         "field_writer_audit_complete",
+        "npm_collect_and_pool_flash_reachability_complete",
+        "factory_static_writer_provenance_complete",
+        "pool_static_writer_provenance_complete",
+        "factory_pool_profile_axis_bindings_complete",
+        "factory_pool_full_field_writer_semantics_complete",
         "full_handler_semantics_complete",
         "runtime_population_complete",
         "boundary_state_continuity_complete",
@@ -1696,6 +3568,7 @@ def validate_internal_contract(contract: object) -> dict[str, object]:
         "poi_parity_complete",
         "target_graph_node_runtime_identity_bound",
         "segment_execution_models_decided",
+        "backfill_ready",
         "production_ready",
     ):
         require(truth.get(field) is False, f"unproved writer promotion claim: {field}")
@@ -1709,7 +3582,10 @@ def verify(
 ) -> dict[str, object]:
     root = root.resolve()
     path = contract_path or root / CONTRACT_PATH
-    actual = validate_internal_contract(ANCESTRY.load_json(path))
+    ancestry = ANCESTRY.verify(root)
+    actual = validate_internal_contract(
+        ANCESTRY.load_json(path), ancestry, root
+    )
     expected = build_contract(root, wasm2wat)
     require(actual == expected, "writer contract content drift from recomputed WAT evidence")
     return actual

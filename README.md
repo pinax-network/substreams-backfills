@@ -54,6 +54,10 @@ only after this gate passes.
   materialized outside the frozen source tree. Both generated manifests use one
   compiled WASM; CI rejects any difference in the WASM embedded in their diagnostic
   packages and records distinct configuration-derived execution hashes.
+- **`uniswap-v3/graft-ancestry/`** — the complete content-addressed mainnet/Base
+  manifest ancestry through graft-free roots, with exact boundary ownership,
+  handler/schema inventories, static writer-target matrices, and deliberately
+  false logical/physical/PoI promotion gates.
 - **`common/`** — shared contracts extracted only after they reproduce the V4 reference.
   A family boundary must preserve ordered mapping operations and the inputs required for
   exact PoI; a coalesced `EntityChanges` stream is not assumed sufficient.

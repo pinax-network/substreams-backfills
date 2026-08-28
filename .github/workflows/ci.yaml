@@ -102,6 +102,10 @@ jobs:
         run: |
           python3 scripts/verify-uniswap-v3-position-reducer.py
           python3 -m unittest scripts.tests.test_uniswap_v3_position_reducer
+      - name: Verify host-only Pool Flash reducer contract and refusals
+        run: |
+          python3 scripts/verify-uniswap-v3-flash-reducer.py
+          python3 -m unittest scripts.tests.test_uniswap_v3_flash_reducer
       - name: Test and build the source-pinned protocol-v3 parity client
         working-directory: scripts/parity-client
         run: |
@@ -228,6 +232,41 @@ jobs:
             --writer-runtime "$RUNNER_TEMP/uniswap-v3-writer-runtime" \
             --mainnet-spkg "$RUNNER_TEMP/uniswap-v3-mainnet-position-reducer-diagnostic.spkg" \
             --base-spkg "$RUNNER_TEMP/uniswap-v3-base-position-reducer-diagnostic.spkg"
+      - name: Materialize the host-only Pool Flash reducer after the writer
+        run: ./scripts/materialize-uniswap-v3-flash-reducer.sh "$RUNNER_TEMP/uniswap-v3-flash-reducer"
+      - name: Test and format-check the Pool Flash reducer
+        working-directory: ${{ runner.temp }}/uniswap-v3-flash-reducer
+        run: |
+          test "$(rustc +1.79.0 --version)" = "rustc 1.79.0 (129f3b996 2024-06-10)"
+          cargo +1.79.0 test --locked --target x86_64-unknown-linux-gnu
+          rustfmt +1.79.0 --edition 2021 --check src/flash_reducer.rs
+      - name: Keep the Pool Flash reducer strict-Clippy clean
+        run: >-
+          python3 scripts/verify-uniswap-v3-writer-clippy.py
+          --baseline "$RUNNER_TEMP/uniswap-v3-configured"
+          --runtime "$RUNNER_TEMP/uniswap-v3-flash-reducer"
+          --target x86_64-unknown-linux-gnu
+      - name: Prove the host-only Pool Flash reducer cannot change writer packages
+        working-directory: ${{ runner.temp }}/uniswap-v3-flash-reducer
+        run: |
+          cargo +1.79.0 build --locked --target wasm32-unknown-unknown --release
+          cmp \
+            "$RUNNER_TEMP/uniswap-v3-writer-runtime/target/wasm32-unknown-unknown/release/substreams_uniswap_v3.wasm" \
+            "$RUNNER_TEMP/uniswap-v3-flash-reducer/target/wasm32-unknown-unknown/release/substreams_uniswap_v3.wasm"
+          substreams pack -o "$RUNNER_TEMP/uniswap-v3-mainnet-flash-reducer-diagnostic.spkg" substreams.mainnet.yaml
+          substreams pack -o "$RUNNER_TEMP/uniswap-v3-base-flash-reducer-diagnostic.spkg" substreams.base.yaml
+          cmp \
+            "$RUNNER_TEMP/uniswap-v3-mainnet-writer-diagnostic.spkg" \
+            "$RUNNER_TEMP/uniswap-v3-mainnet-flash-reducer-diagnostic.spkg"
+          cmp \
+            "$RUNNER_TEMP/uniswap-v3-base-writer-diagnostic.spkg" \
+            "$RUNNER_TEMP/uniswap-v3-base-flash-reducer-diagnostic.spkg"
+          python3 "$GITHUB_WORKSPACE/scripts/verify-uniswap-v3-flash-reducer.py" \
+            --root "$GITHUB_WORKSPACE" \
+            --runtime "$RUNNER_TEMP/uniswap-v3-flash-reducer" \
+            --writer-runtime "$RUNNER_TEMP/uniswap-v3-writer-runtime" \
+            --mainnet-spkg "$RUNNER_TEMP/uniswap-v3-mainnet-flash-reducer-diagnostic.spkg" \
+            --base-spkg "$RUNNER_TEMP/uniswap-v3-base-flash-reducer-diagnostic.spkg"
       - name: Test the parity client against all three real controlled-build packages
         working-directory: scripts/parity-client
         env:

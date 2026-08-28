@@ -1,0 +1,128 @@
+{
+  "format_version": 1,
+  "contract_version": "uniswap-v3-flash-reducer-runtime/v1",
+  "mode": "host-diagnostic-only",
+  "ordered_materialization": [
+    {
+      "path": "uniswap-v3/writer-runtime/contract-v1.json",
+      "contract_version": "uniswap-v3-writer-runtime/v1",
+      "sha256": "765806bf19fca7695ef4d97f557593e4f791759589fe55c20f18c6523a5d07ca"
+    },
+    {
+      "path": "uniswap-v3/flash-reducer/runtime.patch",
+      "sha256": "1d916ba62f75541d8ce36dc986e49e53f9213a8dc3881acdcc19e77f0aead5f9"
+    }
+  ],
+  "repository_artifacts": {
+    "readme": {
+      "path": "uniswap-v3/flash-reducer/README.md",
+      "sha256": "c57b0e4f51df24a63954480eb585c6e5dbe9969af4830fef6b75461c43647bda"
+    },
+    "reducer_contract": {
+      "path": "uniswap-v3/flash-reducer/flash-reducer-v1.json",
+      "contract_version": "uniswap-v3-flash-reducer/v1",
+      "sha256": "85a3eb1037223dc7794706f860723df0f2897dd043e5e4a9db23f4a2de52af4f"
+    },
+    "reducer_source": {
+      "path": "uniswap-v3/flash-reducer/src/flash_reducer.rs",
+      "sha256": "751df82569aff4a232e3c2bbb93d97abe2c6057bb857c08a69f7b832bda40a3f"
+    },
+    "reducer_tests": {
+      "path": "scripts/tests/test_uniswap_v3_flash_reducer.py",
+      "sha256": "d33e1d5cea4f174d40ed1aab979f59c3c748e55dd2b9376c9cf89b7b969d68b4"
+    },
+    "source_execution_order_contract": {
+      "path": "uniswap-v3/execution-order/v1/contract.json",
+      "contract_version": "uniswap-v3-execution-order/v1",
+      "sha256": "241e970cfcec4d76610b29a10141d3bff2512d80454a6308594f3db23621cde2"
+    },
+    "segment_profiles": {
+      "path": "uniswap-v3/writer-runtime/segment-profiles-v1.json",
+      "contract_version": "uniswap-v3-writer-runtime-segment-profiles/v1",
+      "sha256": "2b6635c061a7a0bfce39430c71c41dacc1567f095fe41134e890a697aa27f823"
+    },
+    "source_writer_contract": {
+      "path": "uniswap-v3/graft-ancestry/v2/writer-compatibility.json",
+      "contract_version": "uniswap-v3-writer-compatibility/v3",
+      "sha256": "259481724561d5aa725c17f90b5a19ea93ad6f7cd6074cf2cb8a8661c39f81c4"
+    }
+  },
+  "materialized_runtime_artifacts": {
+    "Cargo.lock": "e6ae45abd9438e699c3c42b505fd67bbd7335acf81ffd006dbb187d2b17dc315",
+    "Cargo.toml": "becb407bfb3642e8e73a82bdfacb1801094683b12fc91d98e556378fe49dc90b",
+    "configs/flash-reducer-v1.json": "85a3eb1037223dc7794706f860723df0f2897dd043e5e4a9db23f4a2de52af4f",
+    "rust-toolchain.toml": "efa0faa3c4987d0cd1df72b56623b94ffb15f0ab5e5617536f43980d02bc9a2c",
+    "src/flash_reducer.rs": "751df82569aff4a232e3c2bbb93d97abe2c6057bb857c08a69f7b832bda40a3f",
+    "src/lib.rs": "183f1fc15a32a2ab08d1489feefcbba4fcc55f1eb855276fbff1d3ef222672fc",
+    "substreams.base.yaml": "2f5e73f0f80424aca284256d1067dde8001c541c657433c2187bc56d0705733b",
+    "substreams.mainnet.yaml": "36379225d7a28df0b772524c370126e481a9a1c9724503131907548db60dac22"
+  },
+  "producer_contract": {
+    "writer_runtime_sha256": "765806bf19fca7695ef4d97f557593e4f791759589fe55c20f18c6523a5d07ca",
+    "writer_descriptor_sha256": "22b899f9eeffc8dcfb608eea7ab93884a1756897aba62dc7107507c50a4ac3f0",
+    "writer_source_contract_sha256": "259481724561d5aa725c17f90b5a19ea93ad6f7cd6074cf2cb8a8661c39f81c4",
+    "execution_order_contract_sha256": "241e970cfcec4d76610b29a10141d3bff2512d80454a6308594f3db23621cde2",
+    "segment_profiles_sha256": "2b6635c061a7a0bfce39430c71c41dacc1567f095fe41134e890a697aa27f823",
+    "mainnet_runtime_start_block": 12369621,
+    "base_runtime_start_block": 1371679
+  },
+  "reducer_contract": {
+    "state_entities": [
+      "Pool",
+      "PoolDatasourceMembership"
+    ],
+    "event_order": "diagnostic envelope ordinal and block_log_index strictly increasing; not Graph Node cross-stage order",
+    "membership": "diagnostic creation-ordinal convention; not Graph Node block-scoped activation",
+    "graph_node_order_scope": "dynamic-datasource stage order is not implemented; no same-path or cross-component order claim",
+    "fatal_rollback_scope": "diagnostic Pool and membership state only; excludes VID, PoI, persisted data sources, deterministic-error streams, and physical transaction semantics",
+    "call_order": [
+      "f3058399",
+      "46141319"
+    ],
+    "call_cache": "none",
+    "call_block_scope": "post-block hash when available; number fallback",
+    "atomic_pool_update": true,
+    "segment_count": 8,
+    "fatal_segment_count": 5,
+    "nonfatal_segment_count": 3,
+    "emitted_row_types": [
+      "Pool"
+    ],
+    "synthetic_row_types": []
+  },
+  "package_contract": {
+    "module_count": 23,
+    "diagnostic_module": "map_writer_events",
+    "diagnostic_consumers": [],
+    "flash_reducer_substreams_module": false,
+    "graph_out_output": "proto:sf.substreams.entity.v1.EntityChanges",
+    "manifests_changed_from_writer_runtime": false,
+    "protobuf_descriptors_changed_from_writer_runtime": false,
+    "shared_wasm_binary_count": 1,
+    "wasm_identical_to_writer_runtime": true,
+    "writer_package_verifier_inherited": true
+  },
+  "truth_boundary": {
+    "backfill_ready": false,
+    "boundary_state_continuity_complete": false,
+    "combined_handler_order_implemented": false,
+    "cross_component_order_proven": false,
+    "diagnostic_only": true,
+    "dynamic_datasource_stage_order_implemented": false,
+    "full_pool_handler_semantics": false,
+    "graph_node_execution_order_supplement_bound": true,
+    "graph_out_replaced": false,
+    "live_rpc_added": false,
+    "logical_oracle_complete": false,
+    "physical_parity_complete": false,
+    "poi_parity_complete": false,
+    "production_ready": false,
+    "rpc_trigger_binding_complete": false,
+    "runtime_consumes_execution_order_contract": false,
+    "runtime_population_complete": false,
+    "same_path_order_machine_proven": false,
+    "stores_added": false,
+    "substreams_handler_added": false,
+    "target_runtime_identity_bound": false
+  }
+}

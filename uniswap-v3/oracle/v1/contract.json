@@ -1,0 +1,147 @@
+{
+  "format_version": 1,
+  "contract_version": "uniswap-v3-logical-oracle/v1",
+  "evidence_class": "retained_discovery_snapshot",
+  "purpose": "Retain a fail-closed discovery snapshot for deployment-scoped logical queries without promoting it to an authoritative parity oracle.",
+  "source_identity": {
+    "observed_origin": "https://www.lodestar-dashboard.com",
+    "repository": "https://github.com/nightswatchhq/lodestar",
+    "revision": "18c8e56189309b1b4948bfb4992cbe12df8e4879",
+    "tree": "70f3383207170dc3687628f21366c731c78ec343",
+    "committed_at_utc": "2026-08-28T11:00:59Z",
+    "production_revision_attested": false,
+    "source_matches_observed_behavior_only": true,
+    "files": [
+      {
+        "path": "src/app/api/indexing-status/[hash]/route.ts",
+        "git_blob": "c59cfb7ec86aa0ca716e8e9466cdf6a14d54c920",
+        "sha256": "4119918a86d4e8c315abb6be14e82a566252038ec3c9c1d354031e96c3eb4e11"
+      },
+      {
+        "path": "src/app/api/subgraph-playground/[hash]/route.ts",
+        "git_blob": "b928cb7d504bef2cec3daf06ded9fad2b2b43931",
+        "sha256": "f1bf4cbec99d46323260c0d0a51f133485f1d1da26502719893f153dde6c34b4"
+      },
+      {
+        "path": "src/lib/indexing-status.ts",
+        "git_blob": "0329344dbd1b04bf358df6a96ffa316db7126412",
+        "sha256": "93c4d61a934e4304e1b3b2c1dc92555248c1d6487779641ce1edea8b2dbb2b81"
+      }
+    ]
+  },
+  "files": [
+    {
+      "path": "discovery/base-boundary-error.json",
+      "bytes": 168,
+      "sha256": "cc4435ae749ffcd8b413eaaff19881a6dc2c3caa7b0c40076d2f27bb82291e32"
+    },
+    {
+      "path": "discovery/base-query-response.json",
+      "bytes": 729,
+      "sha256": "34f272caa00a96ef1f4cea9d96371f986b14630a7e3cece64c27208be9f1eb20"
+    },
+    {
+      "path": "discovery/base-status-response.json",
+      "bytes": 1316,
+      "sha256": "6257a9db0e4fb15c4679e23fa591c41699803b267b4944a35b36a9e0882441ee"
+    },
+    {
+      "path": "discovery/mainnet-boundary-response.json",
+      "bytes": 1792,
+      "sha256": "95ab94ae8e98bd04727b6e4c06ffa6ba1de9734a2c80f5cc089a08da9d7950d1"
+    },
+    {
+      "path": "discovery/mainnet-query-response.json",
+      "bytes": 800,
+      "sha256": "b0cf42260add535bd5056a3fa52a3467a9b0c3576ea0ab079ee2681cf03b3964"
+    },
+    {
+      "path": "discovery/mainnet-status-response.json",
+      "bytes": 3873,
+      "sha256": "4b3d7d13a63872fdf09df05a667175ac567b46365e3e513f1e40c0a9c450b7ff"
+    },
+    {
+      "path": "discovery/manifest.json",
+      "bytes": 2288,
+      "sha256": "cfc36b7248bae8a802d27a558fc76c8570c79f914dcd6b7c994ff41a394b024a"
+    },
+    {
+      "path": "queries/current-and-required-absence.graphql",
+      "bytes": 609,
+      "sha256": "8a5eeffeab5213d043ad43c8a09df6352c0be17a49d92a9dc5e8012d54196eac"
+    },
+    {
+      "path": "queries/graft-boundary-state.graphql",
+      "bytes": 1262,
+      "sha256": "93baa390e0b6a9aedde30a97b11b43bce02368e2ece21b409ee171433e0d906a"
+    }
+  ],
+  "observed_capabilities": {
+    "deployment_scoped_gateway_query_succeeded": true,
+    "deployment_echo_matched": true,
+    "current_head_required_absence_smoke_observed": true,
+    "mainnet_current_deployment_boundary_query_succeeded": true,
+    "base_current_deployment_boundary_query_succeeded": false,
+    "indexer_status_discovery_succeeded": true
+  },
+  "promotion_gates": {
+    "production_revision_attested": false,
+    "per_query_indexer_pinned": false,
+    "graph_node_version_pinned": false,
+    "canonical_historic_block_hash_sidecar_retained": false,
+    "ancestor_deployment_query_access": false,
+    "base_historical_boundary_query_access": false,
+    "authoritative_logical_oracle": false,
+    "required_absence_certified": false,
+    "logical_history_parity": false,
+    "physical_history_parity": false,
+    "proof_of_indexing_parity": false,
+    "final_parity_package": false,
+    "production_backfill_allowed": false
+  },
+  "networks": {
+    "mainnet": {
+      "deployment": "QmTZ8ejXJxRo7vDBS4uwqBeGoxLSWbhaA7oXa1RvxunLy7",
+      "current_response": "discovery/mainnet-query-response.json",
+      "status_response": "discovery/mainnet-status-response.json",
+      "current_empty_entity_smoke": [
+        "Collect",
+        "Flash",
+        "TickHourData"
+      ],
+      "current_positive_entity_smoke": [
+        "TickDayData",
+        "Position",
+        "Pool"
+      ],
+      "boundary": {
+        "status": "observed_without_canonical_hash_or_timestamp",
+        "before": 19470000,
+        "after": 19470001,
+        "response": "discovery/mainnet-boundary-response.json"
+      }
+    },
+    "base": {
+      "deployment": "Qmb4VUcAY9LsVgeCuCCMs7X1XrkbRcaiuAbSK8SqhmsAfP",
+      "current_response": "discovery/base-query-response.json",
+      "status_response": "discovery/base-status-response.json",
+      "current_empty_entity_smoke": [
+        "Collect",
+        "Flash",
+        "TickHourData"
+      ],
+      "current_positive_entity_smoke": [
+        "TickDayData",
+        "Position",
+        "Pool"
+      ],
+      "boundary": {
+        "status": "expected_refusal_missing_pruned_block",
+        "before": 19852000,
+        "after": 19852001,
+        "response": "discovery/base-boundary-error.json",
+        "required_error_fragment": "missing block: 19852000"
+      }
+    }
+  }
+}

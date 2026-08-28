@@ -52,6 +52,12 @@ closure. It makes the graft-block ownership rule executable and records the
 historical mapping differences that forbid replaying the current writer from
 origin.
 
+The sibling [`oracle/`](oracle/README.md) contract retains deployment-scoped
+current-head responses and the asymmetric graft-boundary discovery result:
+mainnet history was queryable without canonical block hashes, while Base
+history was pruned. It is discovery evidence only; all authoritative parity and
+production gates remain false.
+
 This does **not** yet prove fixed-range mainnet output parity, Base Firehose and
 authoritative-reference parity, exact physical history, save ordering, proof of
 indexing, GraphQL parity, or a controlled production package pin.

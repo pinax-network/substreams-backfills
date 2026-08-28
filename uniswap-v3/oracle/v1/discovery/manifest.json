@@ -1,0 +1,66 @@
+{
+  "format_version": 1,
+  "contract_version": "uniswap-v3-logical-oracle/v1",
+  "observations": [
+    {
+      "id": "mainnet-current-and-required-absence",
+      "observed_at_utc": "2026-08-28T11:59:13Z",
+      "http_status": 200,
+      "request_path": "queries/current-and-required-absence.graphql",
+      "response_path": "discovery/mainnet-query-response.json",
+      "deployment": "QmTZ8ejXJxRo7vDBS4uwqBeGoxLSWbhaA7oXa1RvxunLy7",
+      "network": "mainnet"
+    },
+    {
+      "id": "base-current-and-required-absence",
+      "observed_at_utc": "2026-08-28T11:59:21Z",
+      "http_status": 200,
+      "request_path": "queries/current-and-required-absence.graphql",
+      "response_path": "discovery/base-query-response.json",
+      "deployment": "Qmb4VUcAY9LsVgeCuCCMs7X1XrkbRcaiuAbSK8SqhmsAfP",
+      "network": "base"
+    },
+    {
+      "id": "mainnet-indexer-status",
+      "observed_at_utc": "2026-08-28T11:59:31Z",
+      "http_status": 200,
+      "response_path": "discovery/mainnet-status-response.json",
+      "deployment": "QmTZ8ejXJxRo7vDBS4uwqBeGoxLSWbhaA7oXa1RvxunLy7",
+      "network": "mainnet"
+    },
+    {
+      "id": "base-indexer-status",
+      "observed_at_utc": "2026-08-28T11:59:31Z",
+      "http_status": 200,
+      "response_path": "discovery/base-status-response.json",
+      "deployment": "Qmb4VUcAY9LsVgeCuCCMs7X1XrkbRcaiuAbSK8SqhmsAfP",
+      "network": "base"
+    },
+    {
+      "id": "mainnet-current-graft-boundary",
+      "observed_at_utc": "2026-08-28T11:55:17Z",
+      "http_status": 200,
+      "request_path": "queries/graft-boundary-state.graphql",
+      "variables": {
+        "before": 19470000,
+        "after": 19470001
+      },
+      "response_path": "discovery/mainnet-boundary-response.json",
+      "deployment": "QmTZ8ejXJxRo7vDBS4uwqBeGoxLSWbhaA7oXa1RvxunLy7",
+      "network": "mainnet"
+    },
+    {
+      "id": "base-current-graft-boundary-refusal",
+      "observed_at_utc": "2026-08-28T11:55:17Z",
+      "http_status": 200,
+      "request_path": "queries/graft-boundary-state.graphql",
+      "variables": {
+        "before": 19852000,
+        "after": 19852001
+      },
+      "response_path": "discovery/base-boundary-error.json",
+      "deployment": "Qmb4VUcAY9LsVgeCuCCMs7X1XrkbRcaiuAbSK8SqhmsAfP",
+      "network": "base"
+    }
+  ]
+}

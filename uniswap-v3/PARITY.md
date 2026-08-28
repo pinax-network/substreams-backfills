@@ -62,6 +62,18 @@ repository change does not execute that live comparison. Representative Base
 Firehose/reference parity and a controlled production package freeze also
 remain outstanding.
 
+The versioned [`oracle/`](oracle/README.md) discovery snapshot narrows the
+reference-access gap without closing it. Both exact current deployment CIDs
+answered a deployment-scoped current-state query and returned empty samples for
+`Collect`, `Flash`, and `TickHourData` alongside nonempty `TickDayData`,
+`Position`, and `Pool` samples. The current mainnet deployment also answered at
+blocks 19,470,000 and 19,470,001, while Base refused block 19,852,000 as
+missing/pruned. The gateway did not bind each response to an exact indexer or
+Graph Node version, mainnet historic block hashes/timestamps were null, and no
+ancestor deployment was queryable. These retained results are useful sample
+discovery and current-head logical evidence, not an authoritative oracle,
+history-wide required-absence proof, or parity certificate.
+
 ## Mainnet ChainConfig logical-parity gate
 
 [`fixtures/mainnet-chain-config-parity-v1.json`](fixtures/mainnet-chain-config-parity-v1.json)

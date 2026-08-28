@@ -1,0 +1,7 @@
+{
+  "errors": [
+    {
+      "message": "bad indexers: {0xf92f430dd8567b0d466358c79594ab58d919a6d4: Unavailable(missing block: 19852000, latest: 50564520)}"
+    }
+  ]
+}

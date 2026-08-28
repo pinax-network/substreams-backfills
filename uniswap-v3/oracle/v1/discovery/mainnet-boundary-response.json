@@ -1,0 +1,62 @@
+{
+  "data": {
+    "beforeMeta": {
+      "block": {
+        "number": 19470000,
+        "hash": null,
+        "timestamp": null
+      },
+      "deployment": "QmTZ8ejXJxRo7vDBS4uwqBeGoxLSWbhaA7oXa1RvxunLy7",
+      "hasIndexingErrors": false
+    },
+    "afterMeta": {
+      "block": {
+        "number": 19470001,
+        "hash": null,
+        "timestamp": null
+      },
+      "deployment": "QmTZ8ejXJxRo7vDBS4uwqBeGoxLSWbhaA7oXa1RvxunLy7",
+      "hasIndexingErrors": false
+    },
+    "beforePools": [
+      {
+        "id": "0x0000d36ab86d213c14d93cd5ae78615a20596505",
+        "feeGrowthGlobal0X128": "1950663683887649585341457959283660012971",
+        "feeGrowthGlobal1X128": "61306156093378588702209917153492"
+      }
+    ],
+    "afterPools": [
+      {
+        "id": "0x0000d36ab86d213c14d93cd5ae78615a20596505",
+        "feeGrowthGlobal0X128": "1950663683887649585341457959283660012971",
+        "feeGrowthGlobal1X128": "61306156093378588702209917153492"
+      }
+    ],
+    "beforePositions": [
+      {
+        "id": "1",
+        "owner": "0x50ec05ade8280758e2077fcbc08d878d4aef79c3",
+        "liquidity": "383995753785830744",
+        "depositedToken0": "0.999999999999999924",
+        "depositedToken1": "0.01264381746197226",
+        "withdrawnToken0": "0",
+        "withdrawnToken1": "0",
+        "collectedFeesToken0": "0",
+        "collectedFeesToken1": "0"
+      }
+    ],
+    "afterPositions": [
+      {
+        "id": "1",
+        "owner": "0x50ec05ade8280758e2077fcbc08d878d4aef79c3",
+        "liquidity": "383995753785830744",
+        "depositedToken0": "0.999999999999999924",
+        "depositedToken1": "0.01264381746197226",
+        "withdrawnToken0": "0",
+        "withdrawnToken1": "0",
+        "collectedFeesToken0": "0",
+        "collectedFeesToken1": "0"
+      }
+    ]
+  }
+}

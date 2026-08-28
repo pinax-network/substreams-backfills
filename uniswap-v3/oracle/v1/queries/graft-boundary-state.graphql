@@ -1,0 +1,72 @@
+query GraftBoundaryState($before: Int!, $after: Int!) {
+  beforeMeta: _meta(block: { number: $before }) {
+    block {
+      number
+      hash
+      timestamp
+    }
+    deployment
+    hasIndexingErrors
+  }
+  afterMeta: _meta(block: { number: $after }) {
+    block {
+      number
+      hash
+      timestamp
+    }
+    deployment
+    hasIndexingErrors
+  }
+  beforePools: pools(
+    first: 1
+    orderBy: id
+    orderDirection: asc
+    block: { number: $before }
+  ) {
+    id
+    feeGrowthGlobal0X128
+    feeGrowthGlobal1X128
+  }
+  afterPools: pools(
+    first: 1
+    orderBy: id
+    orderDirection: asc
+    block: { number: $after }
+  ) {
+    id
+    feeGrowthGlobal0X128
+    feeGrowthGlobal1X128
+  }
+  beforePositions: positions(
+    first: 1
+    orderBy: id
+    orderDirection: asc
+    block: { number: $before }
+  ) {
+    id
+    owner
+    liquidity
+    depositedToken0
+    depositedToken1
+    withdrawnToken0
+    withdrawnToken1
+    collectedFeesToken0
+    collectedFeesToken1
+  }
+  afterPositions: positions(
+    first: 1
+    orderBy: id
+    orderDirection: asc
+    block: { number: $after }
+  ) {
+    id
+    owner
+    liquidity
+    depositedToken0
+    depositedToken1
+    withdrawnToken0
+    withdrawnToken1
+    collectedFeesToken0
+    collectedFeesToken1
+  }
+}

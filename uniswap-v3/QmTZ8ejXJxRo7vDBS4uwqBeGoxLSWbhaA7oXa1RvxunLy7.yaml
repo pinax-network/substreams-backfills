@@ -12,7 +12,7 @@ graft:            # why ordinary deploy never resolves — full ancestry must ex
 placement:
   riv: { shard: mainnet_fast, node: index_node_chain_mainnet_0 }
   kan: { shard: chain_mainnet, node: index_node_chain_mainnet_0 }
-milestone: M2   # highest QV first (operator, 2026-08-21)
+milestone: M3   # highest QV first (operator, 2026-08-21)
 eligibility:
   policy: graph-node-net-catchup-v1
   required_clusters: [riv-subgraphs-a, kan-subgraphs-a]

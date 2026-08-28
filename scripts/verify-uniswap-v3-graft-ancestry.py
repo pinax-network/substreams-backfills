@@ -110,9 +110,9 @@ MAPPING_WRITERS = {
 }
 
 # SHA-256 of the complete textual output from WABT 1.0.35
-# `wasm2wat --generate-names <retained mapping>`. CI does not need WABT to
-# verify the contract, but these locks make the manual callsite review exactly
-# reproducible with the identified disassembler.
+# `wasm2wat --generate-names <retained mapping>`. This ancestry verifier does
+# not invoke WABT; the layered writer-compatibility verifier recomputes all of
+# these locks and every callsite in CI with the checksum-pinned tool.
 WAT_SHA256 = {
     "QmPZCHE1URf4oviX7Tbrkw3aMENo1qAeEGa1AS2gMumG7P": "bd42b64aeaaf677018c11fe779179ecb81d7c4125fa0b846134bb0e0a6059ad1",
     "QmPjhEuGqknJJ2LfJCi6XTLFLtiymYfZAtjTLfkmJJGMEj": "2ca2b971161bb406b60ddf8d0d486ee02c3599dedb72c3c9c9dad9f6e63dd8ca",

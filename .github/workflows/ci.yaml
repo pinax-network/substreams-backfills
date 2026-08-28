@@ -17,6 +17,16 @@ jobs:
           cache-dependency-path: requirements-ci.txt
       - name: Install checksum-pinned validation dependencies
         run: python3 -m pip install --require-hashes -r requirements-ci.txt
+      - name: Install checksum-pinned WABT writer-evidence tool
+        run: |
+          curl -fsSL \
+            https://github.com/WebAssembly/wabt/releases/download/1.0.35/wabt-1.0.35-ubuntu-20.04.tar.gz \
+            -o "$RUNNER_TEMP/wabt-1.0.35-ubuntu-20.04.tar.gz"
+          echo "cb3d22440273b1e8ee641e622b7a32222d97b519ad46169b1f8fcc6ce9af0b9b  $RUNNER_TEMP/wabt-1.0.35-ubuntu-20.04.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/wabt-1.0.35-ubuntu-20.04.tar.gz" -C "$RUNNER_TEMP"
+          test "$("$RUNNER_TEMP/wabt-1.0.35/bin/wasm2wat" --version)" = "1.0.35"
+          echo "WASM2WAT=$RUNNER_TEMP/wabt-1.0.35/bin/wasm2wat" >> "$GITHUB_ENV"
+          echo "$RUNNER_TEMP/wabt-1.0.35/bin" >> "$GITHUB_PATH"
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-unknown-unknown
@@ -36,6 +46,8 @@ jobs:
         run: python3 scripts/verify-exchange-v3-bsc-target.py
       - name: Verify immutable Uniswap V3 graft ancestry
         run: python3 scripts/verify-uniswap-v3-graft-ancestry.py
+      - name: Recompute Uniswap V3 writer compatibility evidence
+        run: python3 scripts/verify-uniswap-v3-writer-semantics.py --wasm2wat "$WASM2WAT"
       - name: Test eligibility decisions and freshness gates
         run: python3 -m unittest discover -s scripts/tests -p 'test_*.py'
 

@@ -1,0 +1,44 @@
+{
+  "data": {
+    "deploymentId": "0xbd0432957274a4e52f59197e03778f7e291cc7e6b42dfca6ce61f68ee44e6c06",
+    "ipfsHash": "Qmb4VUcAY9LsVgeCuCCMs7X1XrkbRcaiuAbSK8SqhmsAfP",
+    "displayName": "Uniswap V3 Base",
+    "signalledTokens": "27213752842645960935822",
+    "stakedTokens": "15000000000000000000000",
+    "indexers": [
+      {
+        "indexerId": "0xf92f430dd8567b0d466358c79594ab58d919a6d4",
+        "indexerName": null,
+        "url": "https://graph-l2prod.ellipfra.com/",
+        "allocatedTokens": "15000000000000000000000",
+        "status": "synced",
+        "health": "healthy",
+        "synced": true,
+        "chainHeadBlock": 50564511,
+        "latestBlock": 50564511,
+        "network": "base",
+        "entityCount": "1110486930",
+        "nonFatalErrorCount": 0,
+        "syncProgress": 100,
+        "blocksBehind": 0,
+        "serveProbe": "alive_paid",
+        "servable": true,
+        "networkChainHead": 50564511
+      }
+    ],
+    "totalIndexers": 1,
+    "totalAllocations": 1,
+    "syncedCount": 1,
+    "healthyCount": 1,
+    "unhealthyCount": 0,
+    "failedCount": 0,
+    "unreachableCount": 0,
+    "servability": {
+      "effectiveServingOperators": 1,
+      "servingIndexerCount": 1,
+      "effectivelyDead": false,
+      "recovering": false,
+      "dominantOperatorShare": 1
+    }
+  }
+}

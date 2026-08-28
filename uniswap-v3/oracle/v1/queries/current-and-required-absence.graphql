@@ -1,0 +1,31 @@
+query CurrentAndRequiredAbsence {
+  _meta {
+    block {
+      number
+      hash
+      timestamp
+    }
+    deployment
+    hasIndexingErrors
+  }
+  collects(first: 1, orderBy: id, orderDirection: asc) {
+    id
+  }
+  flashes(first: 1, orderBy: id, orderDirection: asc) {
+    id
+  }
+  tickHourDatas(first: 1, orderBy: id, orderDirection: asc) {
+    id
+  }
+  tickDayDatas(first: 1, orderBy: id, orderDirection: asc) {
+    id
+  }
+  positions(first: 1, orderBy: id, orderDirection: asc) {
+    id
+  }
+  pools(first: 1, orderBy: id, orderDirection: asc) {
+    id
+    feeGrowthGlobal0X128
+    feeGrowthGlobal1X128
+  }
+}

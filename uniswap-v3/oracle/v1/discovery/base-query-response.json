@@ -1,0 +1,33 @@
+{
+  "data": {
+    "collects": [],
+    "flashes": [],
+    "tickHourDatas": [],
+    "tickDayDatas": [
+      {
+        "id": "0x0000051c3bd707d5aa50a28eeaf54fb2cbf91196#-230400-20159"
+      }
+    ],
+    "positions": [
+      {
+        "id": "1"
+      }
+    ],
+    "pools": [
+      {
+        "id": "0x0000051c3bd707d5aa50a28eeaf54fb2cbf91196",
+        "feeGrowthGlobal0X128": "0",
+        "feeGrowthGlobal1X128": "0"
+      }
+    ],
+    "_meta": {
+      "block": {
+        "number": 50564504,
+        "hash": "0x8b699ba680133720c84c1451e3f11e836bb5bcc5ad7d6a785af489e9dde4adcf",
+        "timestamp": 1787918355
+      },
+      "deployment": "Qmb4VUcAY9LsVgeCuCCMs7X1XrkbRcaiuAbSK8SqhmsAfP",
+      "hasIndexingErrors": false
+    }
+  }
+}

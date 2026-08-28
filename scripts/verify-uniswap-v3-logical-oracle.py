@@ -240,6 +240,43 @@ def regular_file(base: Path, relative: str) -> Path:
     return path
 
 
+def verify_inventory_closure(oracle: Path) -> None:
+    try:
+        oracle_mode = oracle.lstat().st_mode
+    except FileNotFoundError as error:
+        raise VerificationError(f"missing oracle directory: {oracle}") from error
+    if stat.S_ISLNK(oracle_mode) or not stat.S_ISDIR(oracle_mode):
+        raise VerificationError("oracle directory must be a non-symlink directory")
+
+    expected_files = {"contract.json", *EXPECTED_FILE_LOCKS}
+    expected_directories = {"discovery", "queries"}
+    observed_files: set[str] = set()
+    observed_directories: set[str] = set()
+    for path in oracle.rglob("*"):
+        relative = path.relative_to(oracle).as_posix()
+        mode = path.lstat().st_mode
+        if stat.S_ISLNK(mode):
+            raise VerificationError(f"oracle inventory must not contain symlinks: {relative}")
+        if stat.S_ISDIR(mode):
+            observed_directories.add(relative)
+        elif stat.S_ISREG(mode):
+            observed_files.add(relative)
+        else:
+            raise VerificationError(f"unsupported oracle inventory entry: {relative}")
+    if observed_files != expected_files:
+        raise VerificationError(
+            "oracle file inventory drift: "
+            f"missing={sorted(expected_files - observed_files)}, "
+            f"extra={sorted(observed_files - expected_files)}"
+        )
+    if observed_directories != expected_directories:
+        raise VerificationError(
+            "oracle directory inventory drift: "
+            f"missing={sorted(expected_directories - observed_directories)}, "
+            f"extra={sorted(observed_directories - expected_directories)}"
+        )
+
+
 def verify_file_locks(oracle: Path, contract: dict[str, Any]) -> None:
     expected_records = [
         {"path": path, "bytes": size, "sha256": digest}
@@ -300,11 +337,11 @@ def verify_current_response(oracle: Path, network: str) -> int:
         raise VerificationError(f"{network} current response has indexing errors")
     block = meta["block"]
     require_exact_keys(block, {"number", "hash", "timestamp"}, f"{network} current block")
-    if not isinstance(block["number"], int) or block["number"] <= 0:
+    if type(block["number"]) is not int or block["number"] <= 0:
         raise VerificationError(f"{network} current block number is invalid")
     if not isinstance(block["hash"], str) or not HEX_HASH_RE.fullmatch(block["hash"]):
         raise VerificationError(f"{network} current block hash is invalid")
-    if not isinstance(block["timestamp"], int) or block["timestamp"] <= 0:
+    if type(block["timestamp"]) is not int or block["timestamp"] <= 0:
         raise VerificationError(f"{network} current block timestamp is invalid")
 
     empty_fields = {
@@ -571,6 +608,7 @@ def verify(root: Path) -> None:
     if contract["networks"] != EXPECTED_NETWORKS:
         raise VerificationError("network oracle contract drift")
 
+    verify_inventory_closure(oracle)
     verify_file_locks(oracle, contract)
     verify_queries(oracle)
     verify_manifest(oracle)

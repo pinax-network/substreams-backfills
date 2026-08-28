@@ -75,6 +75,15 @@ class UniswapV3LogicalOracleTest(unittest.TestCase):
         with self.assertRaisesRegex(MODULE.VerificationError, "(?:byte length|SHA-256) drift"):
             MODULE.verify(self.root)
 
+    def test_unlisted_oracle_artifact_is_rejected(self) -> None:
+        path = self.oracle / "discovery/authoritative-promotion.json"
+        path.write_text(
+            '{"final_parity_package":true,"production_backfill_allowed":true}\n',
+            encoding="utf-8",
+        )
+        with self.assertRaisesRegex(MODULE.VerificationError, "file inventory drift"):
+            MODULE.verify(self.root)
+
     def test_source_identity_drift_is_rejected(self) -> None:
         contract = self.read_contract()
         contract["source_identity"]["revision"] = "0" * 40
@@ -117,6 +126,17 @@ class UniswapV3LogicalOracleTest(unittest.TestCase):
         path.write_text(json.dumps(response, indent=2) + "\n", encoding="utf-8")
         with self.accept_modified_retained_bytes(relative):
             with self.assertRaisesRegex(MODULE.VerificationError, "deployment echo mismatch"):
+                MODULE.verify(self.root)
+
+    def test_json_booleans_are_not_valid_block_metadata(self) -> None:
+        relative = "discovery/mainnet-query-response.json"
+        path = self.oracle / relative
+        response = json.loads(path.read_text(encoding="utf-8"))
+        response["data"]["_meta"]["block"]["number"] = True
+        response["data"]["_meta"]["block"]["timestamp"] = True
+        path.write_text(json.dumps(response, indent=2) + "\n", encoding="utf-8")
+        with self.accept_modified_retained_bytes(relative):
+            with self.assertRaisesRegex(MODULE.VerificationError, "block number is invalid"):
                 MODULE.verify(self.root)
 
     def test_indexer_identity_drift_is_rejected_with_a_moved_byte_lock(self) -> None:

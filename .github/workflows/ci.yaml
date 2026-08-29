@@ -54,6 +54,10 @@ jobs:
         run: |
           python3 scripts/verify-uniswap-v3-execution-order.py
           python3 -m unittest scripts.tests.test_uniswap_v3_execution_order
+      - name: Verify scoped Uniswap V3 segment field semantics
+        run: |
+          python3 scripts/verify-uniswap-v3-segment-field-semantics.py
+          python3 -m unittest scripts.tests.test_uniswap_v3_segment_field_semantics
       - name: Test eligibility decisions and freshness gates
         run: python3 -m unittest discover -s scripts/tests -p 'test_*.py'
 
@@ -122,6 +126,10 @@ jobs:
         run: |
           python3 scripts/verify-uniswap-v3-npm-resolved-inputs.py
           python3 -m unittest scripts.tests.test_uniswap_v3_npm_resolved_inputs
+      - name: Verify scoped segment field-semantics supplement and refusals
+        run: |
+          python3 scripts/verify-uniswap-v3-segment-field-semantics.py
+          python3 -m unittest scripts.tests.test_uniswap_v3_segment_field_semantics
       - name: Test and build the source-pinned protocol-v3 parity client
         working-directory: scripts/parity-client
         run: |

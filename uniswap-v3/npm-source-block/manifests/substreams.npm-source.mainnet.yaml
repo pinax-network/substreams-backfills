@@ -1,0 +1,46 @@
+specVersion: v0.1.0
+package:
+  name: uniswap_v3_mainnet_npm_source
+  version: v0.1.0
+  url: https://github.com/pinax-network/substreams-backfills
+  description: Provider-free Uniswap V3 mainnet NPM source blocks for host-side execution.
+protobuf:
+  files:
+    - uniswap/v1/writer.proto
+    - uniswap/npm/source/v1/npm_source_block.proto
+  importPaths:
+    - ../proto
+  excludePaths:
+    - sf/substreams
+    - google
+binaries:
+  writer:
+    type: wasm/rust-v1
+    file: ../target/wasm32-unknown-unknown/release/substreams_uniswap_v3.wasm
+  npm_source:
+    type: wasm/rust-v1
+    file: ../npm-source-block-runtime/target/wasm32-unknown-unknown/release/uniswap_v3_npm_source_block.wasm
+network: mainnet
+modules:
+  - name: map_writer_events
+    kind: map
+    binary: writer
+    initialBlock: 12369651
+    inputs:
+      - params: string
+      - source: sf.ethereum.type.v2.Block
+    output:
+      type: proto:uniswap.writer.v1.WriterEvents
+    doc: Exact provider-free static NPM writer events from the pinned writer runtime.
+  - name: map_npm_source_block
+    kind: map
+    binary: npm_source
+    initialBlock: 12369651
+    inputs:
+      - source: sf.ethereum.type.v2.Block
+      - map: map_writer_events
+    output:
+      type: proto:uniswap.npm.source.v1.NpmSourceBlock
+    doc: Deterministic block identity and referenced transaction metadata; no providers or Graph execution outcomes.
+params:
+  map_writer_events: version=2;network=mainnet;sha256=1438edbd94e492190ce15d059ab766a03022f7255fdfa1cde9ef32e78a0fe547

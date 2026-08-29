@@ -30,13 +30,45 @@ later commits that do not change Matic configuration, source, or tooling can ret
 same binaries. The provenance therefore pins the earliest exact commit and records the
 equivalent mainline merge without claiming a unique deployment label.
 
+## Static layout and mapping behavior profile
+
+[`layout-profile-v1.json`](layout-profile-v1.json) is the repository-only M4-A contract.
+It binds the exact Matic mapping source's complete local import closure and compares the
+target in both directions with the retained deployed `Qma8a81T…` schema artifact. The
+retained deployed schema—not the imported Rust source schema—is authoritative for
+mutability: all 20 `Qma8a81T…` entities are mutable, while Matic makes `Burn`, `Collect`,
+`Flash`, `Mint`, `Swap`, and `Transaction` immutable.
+
+The static gap is larger than four omitted entities. Matic also uses `Bytes!` IDs for
+`Pool` and `Token`, makes `Tick.poolAddress` non-null `Bytes!`, omits fee-growth fields and
+eleven Tick fields, handles Pool `Collect` directly, keeps `Token.poolCount` at zero, and
+has no PositionManager, tick-window, fee-growth, or Flash writer path. Its exact mapping
+also saves `Transaction` on every Pool event even though the deployed entity is immutable;
+the same-transaction multi-event effect remains a required Graph Node runtime oracle.
+
+No existing V3 map or store is certified unchanged by this profile. It records conditional
+reuse candidates (transport, standard event decoders, selected cache stores, and decimal/
+sqrt-price math), the required Matic adapters and replacements, and the M2/M3 contracts
+that must be complete before promotion. Every implementation, eligibility, runtime,
+logical/physical/PoI parity, backfill, and production gate remains false.
+
+The normal verifier checks the retained `Qma8a81T…` schema and M3 closure hashes, the
+bidirectional entity/field/type/nullability/mutability difference, the behavior and reuse
+contract, and the false readiness gates. The exact-source CI job additionally rechecks
+every transitive mapping source byte and Git blob before accepting the byte-exact build.
+
 ## Remaining gates
 
-This baseline does not authorize implementation, loading, or activation. M4 still requires:
+This profile does not authorize implementation, loading, or activation. M4 still requires:
 
 1. fresh 24-hour and same-pod 72-hour evidence proving the fastest healthy Graph Node path
    remains greater than 28 days; and
-2. final comparison with the certified V3 family contract after M3.
+2. the M2 ordered loader, Matic physical schema profile, and certification harness;
+3. a certified M3 Factory/Pool handler, field-writer, runtime-population, and absence
+   contract;
+4. the target-specific runtime plus fixed-range logical, physical, VID, PoI, failure, and
+   PostgreSQL restore certification; and
+5. a paused load with separate operational validation and activation approval.
 
 The historical Kan copy remains the native-sync candidate until the eligibility gate says
 otherwise. Every eventual backfill lands paused and needs independent certification and

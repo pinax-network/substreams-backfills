@@ -38,7 +38,7 @@ jobs:
         run: cargo clippy --workspace --locked --all-targets -- -D warnings
       - name: Validate target and eligibility contracts
         run: python3 scripts/validate-targets.py
-      - name: Verify immutable Uniswap V3 Matic target
+      - name: Verify immutable Uniswap V3 Matic target and static layout profile
         run: python3 scripts/verify-uniswap-v3-matic-target.py
       - name: Verify immutable PancakeSwap Infinity CL BSC target
         run: python3 scripts/verify-pancakeswap-infinity-cl-bsc-target.py
@@ -569,7 +569,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "18.18.0"
-      - name: Reproduce exact deployed Matic source
+      - name: Reproduce exact deployed Matic source and behavior closure
         run: ./scripts/verify-uniswap-v3-matic-source.sh
 
   pancakeswap-infinity-cl-bsc-reference:

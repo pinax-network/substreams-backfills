@@ -13,6 +13,24 @@ from pathlib import Path
 REPOSITORY = Path(__file__).resolve().parents[2]
 VERIFIER = REPOSITORY / "scripts/verify-uniswap-v3-matic-target.py"
 LOCK_PATH = Path("docs/provenance/uniswap-v3-matic-target.json")
+PROFILE_PATH = Path("uniswap-v3-matic/layout-profile-v1.json")
+QMA8_REFERENCE_FILES = [
+    Path(
+        "uniswap-v3/graft-ancestry/v1/artifacts/"
+        "Qma8a81T9XoX5Pbkrk8J3kxMhWdXJzFSYZge1wGi3QZBru"
+    ),
+    Path("docs/provenance/uniswap-v3-qma8a81t-parity.json"),
+    Path("docs/provenance/uniswap-v3-qma8a81t-parity-files.json"),
+    Path("uniswap-v3/source/schema.graphql"),
+    Path("uniswap-v3/source/substreams.yaml"),
+    Path("uniswap-v3/graft-ancestry/v2/contract.json"),
+    Path("uniswap-v3/graft-ancestry/v2/writer-compatibility.json"),
+    Path("uniswap-v3/segment-writer-matrix/v1/contract.json"),
+    Path("uniswap-v3/execution-order/v1/contract.json"),
+    Path("uniswap-v3/writer-runtime/contract-v1.json"),
+    Path("uniswap-v3/writer-runtime/segment-profiles-v1.json"),
+    Path("uniswap-v3/chain-config/configs/mainnet-v1.json"),
+]
 
 
 class UniswapV3MaticTargetTest(unittest.TestCase):
@@ -20,12 +38,11 @@ class UniswapV3MaticTargetTest(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory()
         self.root = Path(self.temporary.name)
         shutil.copytree(REPOSITORY / "uniswap-v3-matic", self.root / "uniswap-v3-matic")
-        (self.root / "uniswap-v3/source").mkdir(parents=True)
-        shutil.copy2(
-            REPOSITORY / "uniswap-v3/source/schema.graphql",
-            self.root / "uniswap-v3/source/schema.graphql",
-        )
-        (self.root / LOCK_PATH.parent).mkdir(parents=True)
+        for relative_path in QMA8_REFERENCE_FILES:
+            destination = self.root / relative_path
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(REPOSITORY / relative_path, destination)
+        (self.root / LOCK_PATH.parent).mkdir(parents=True, exist_ok=True)
         shutil.copy2(REPOSITORY / LOCK_PATH, self.root / LOCK_PATH)
 
     def tearDown(self) -> None:
@@ -44,6 +61,32 @@ class UniswapV3MaticTargetTest(unittest.TestCase):
 
     def write_lock(self, lock: dict) -> None:
         (self.root / LOCK_PATH).write_text(json.dumps(lock, indent=2) + "\n")
+
+    def load_profile(self) -> dict:
+        return json.loads((self.root / PROFILE_PATH).read_text())
+
+    def write_profile(self, profile: dict) -> None:
+        (self.root / PROFILE_PATH).write_text(json.dumps(profile, indent=2) + "\n")
+
+    def relock_profile(self) -> None:
+        payload = (self.root / PROFILE_PATH).read_bytes()
+        lock = self.load_lock()
+        lock["layout_profile"]["bytes"] = len(payload)
+        lock["layout_profile"]["sha256"] = hashlib.sha256(payload).hexdigest()
+        self.write_lock(lock)
+
+    def relock_qma8_reference(self, role: str) -> None:
+        lock = self.load_lock()
+        reference = lock["qma8_reference"]
+        if role == "deployed_schema":
+            record = reference["deployed_schema"]
+        else:
+            records = reference["upstream_source"]["records"] + reference["m3_contract_closure"]
+            record = next(item for item in records if item["role"] == role)
+        payload = (self.root / record["path"]).read_bytes()
+        record["bytes"] = len(payload)
+        record["sha256"] = hashlib.sha256(payload).hexdigest()
+        self.write_lock(lock)
 
     def relock_artifact(self, role: str) -> None:
         lock = self.load_lock()
@@ -71,9 +114,74 @@ class UniswapV3MaticTargetTest(unittest.TestCase):
         self.relock_artifact("deployment")
         self.assertNotEqual(self.verify().returncode, 0)
 
-    def test_qma8_comparison_contract_drift_is_rejected(self) -> None:
+    def test_retained_qma8_deployed_mutability_drift_is_rejected_even_if_relocked(self) -> None:
+        schema = self.root / QMA8_REFERENCE_FILES[0]
+        schema.write_text(
+            schema.read_text().replace(
+                "type Transaction @entity {",
+                "type Transaction @entity(immutable: true) {",
+                1,
+            )
+        )
+        self.relock_qma8_reference("deployed_schema")
+        self.assertNotEqual(self.verify().returncode, 0)
+
+    def test_qma8_upstream_schema_drift_is_rejected_even_if_relocked(self) -> None:
         schema = self.root / "uniswap-v3/source/schema.graphql"
         schema.write_text(schema.read_text().replace("type Position ", "type PositionDrift ", 1))
+        self.relock_qma8_reference("imported_schema")
+        self.assertNotEqual(self.verify().returncode, 0)
+
+    def test_m3_contract_promotion_is_rejected_even_if_relocked(self) -> None:
+        contract_path = self.root / "uniswap-v3/writer-runtime/contract-v1.json"
+        contract = json.loads(contract_path.read_text())
+        contract["truth_boundary"]["production_ready"] = True
+        contract_path.write_text(json.dumps(contract, indent=2) + "\n")
+        self.relock_qma8_reference("writer_runtime")
+        self.assertNotEqual(self.verify().returncode, 0)
+
+    def test_bidirectional_nullability_gap_drift_is_rejected_after_profile_relock(self) -> None:
+        profile = self.load_profile()
+        profile["qma8_static_gap"]["field_differences"]["Tick"]["type_differences"][
+            "poolAddress"
+        ]["qma8_non_null"] = True
+        self.write_profile(profile)
+        self.relock_profile()
+        self.assertNotEqual(self.verify().returncode, 0)
+
+    def test_collect_behavior_drift_is_rejected_after_profile_relock(self) -> None:
+        profile = self.load_profile()
+        profile["mapping_behavior"]["collect"]["pool_and_token_tvl_delta"] = "none"
+        self.write_profile(profile)
+        self.relock_profile()
+        self.assertNotEqual(self.verify().returncode, 0)
+
+    def test_uncertified_reuse_promotion_is_rejected_after_profile_relock(self) -> None:
+        profile = self.load_profile()
+        profile["reuse_assessment"]["certified_unchanged"] = ["store_tokens"]
+        profile["reuse_assessment"]["reuse_certified"] = True
+        self.write_profile(profile)
+        self.relock_profile()
+        self.assertNotEqual(self.verify().returncode, 0)
+
+    def test_runtime_gate_promotion_is_rejected_after_profile_relock(self) -> None:
+        profile = self.load_profile()
+        profile["truth_boundary"]["runtime_parity"] = True
+        profile["runtime_parity"] = True
+        self.write_profile(profile)
+        self.relock_profile()
+        self.assertNotEqual(self.verify().returncode, 0)
+
+    def test_provenance_gate_promotion_is_rejected(self) -> None:
+        lock = self.load_lock()
+        lock["truth_boundary"]["physical_profile_complete"] = True
+        self.write_lock(lock)
+        self.assertNotEqual(self.verify().returncode, 0)
+
+    def test_behavior_source_closure_drift_is_rejected(self) -> None:
+        lock = self.load_lock()
+        lock["exact_source"]["behavior_source_files"][0]["sha256"] = "0" * 64
+        self.write_lock(lock)
         self.assertNotEqual(self.verify().returncode, 0)
 
     def test_exact_source_status_drift_is_rejected(self) -> None:

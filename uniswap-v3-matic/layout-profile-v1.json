@@ -1,0 +1,484 @@
+{
+  "format_version": 1,
+  "profile_id": "uniswap-v3-matic-QmWqwrVt",
+  "status": "static_target_layout_and_exact_source_behavior_profile_only",
+  "implementation_status": "not_started",
+  "runtime_parity": false,
+  "eligibility_decision": "awaiting_same_pod_72_hour_evidence",
+  "family": "uniswap-v3-matic",
+  "chain": "matic",
+  "deployment": {
+    "cid": "QmWqwrVtcTzZzbTLGLgiRSQzbZ7MTH53VwqK4AxXVmf7n3",
+    "spec_version": "0.0.4",
+    "mapping_api_version": "0.0.7",
+    "factory_start_block": 22757547,
+    "graft": null,
+    "features": [
+      "nonFatalErrors",
+      "grafting"
+    ]
+  },
+  "components": [
+    {
+      "kind": "data_source",
+      "name": "Factory",
+      "address": "0x1f98431c8ad98523631ae4a59f267346ea31f984",
+      "start_block": 22757547,
+      "mapping_cid": "QmfTPwo33sLrKY9yReuoSnnBYTBUsFtTtkFWDDifCUWi1b",
+      "handlers": [
+        {
+          "name": "handlePoolCreated",
+          "signature": "PoolCreated(address,address,uint24,int24,address)",
+          "topic0": "0x783cca1c0412dd0d695e784568c96da2e9c22ff989357a2e8b1d9b2b4e6b7118"
+        }
+      ]
+    },
+    {
+      "kind": "template",
+      "name": "Pool",
+      "created_by": "Factory.handlePoolCreated",
+      "mapping_cid": "QmeLVc4JwBzQe7pC2P7wR6tKbSJ7Y2fNb2YuP6YL4Z53X5",
+      "handlers": [
+        {
+          "name": "handleInitialize",
+          "signature": "Initialize(uint160,int24)",
+          "topic0": "0x98636036cb66a9c19a37435efc1e90142190214e8abeb821bdba3f2990dd4c95"
+        },
+        {
+          "name": "handleSwap",
+          "signature": "Swap(address,address,int256,int256,uint160,uint128,int24)",
+          "topic0": "0xc42079f94a6350d7e6235f29174924f928cc2ac818eb64fed8004e115fbcca67"
+        },
+        {
+          "name": "handleMint",
+          "signature": "Mint(address,address,int24,int24,uint128,uint256,uint256)",
+          "topic0": "0x7a53080ba414158be7ec69b987b5fb7d07dee101fe85488f0853ae16239d0bde"
+        },
+        {
+          "name": "handleBurn",
+          "signature": "Burn(address,int24,int24,uint128,uint256,uint256)",
+          "topic0": "0x0c396cd989a39f4459b5fa1aed6a9a8dcdbc45908acfd67e028cd568da98982c"
+        },
+        {
+          "name": "handleCollect",
+          "signature": "Collect(address,address,int24,int24,uint128,uint128)",
+          "topic0": "0x70935338e69775456a85ddef226c395fb668b63fa0115f5f20610b388e6ca9c0"
+        }
+      ]
+    }
+  ],
+  "entity_layout": {
+    "entity_count": 16,
+    "logical_sha256": "614561ebeb2192742eeb68df2a62c1ccd202c3cdd2c6af14740e2b2dee260c2a",
+    "entities": [
+      "Bundle",
+      "Burn",
+      "Collect",
+      "Factory",
+      "Flash",
+      "Mint",
+      "Pool",
+      "PoolDayData",
+      "PoolHourData",
+      "Swap",
+      "Tick",
+      "Token",
+      "TokenDayData",
+      "TokenHourData",
+      "Transaction",
+      "UniswapDayData"
+    ],
+    "immutable_entities": [
+      "Burn",
+      "Collect",
+      "Flash",
+      "Mint",
+      "Swap",
+      "Transaction"
+    ],
+    "mutable_entities": [
+      "Bundle",
+      "Factory",
+      "Pool",
+      "PoolDayData",
+      "PoolHourData",
+      "Tick",
+      "Token",
+      "TokenDayData",
+      "TokenHourData",
+      "UniswapDayData"
+    ],
+    "bytes_id_entities": [
+      "Pool",
+      "Token"
+    ],
+    "flash_schema_present": true,
+    "flash_handler_present": false
+  },
+  "qma8_deployed_reference": {
+    "schema_cid": "Qma8a81T9XoX5Pbkrk8J3kxMhWdXJzFSYZge1wGi3QZBru",
+    "schema_path": "uniswap-v3/graft-ancestry/v1/artifacts/Qma8a81T9XoX5Pbkrk8J3kxMhWdXJzFSYZge1wGi3QZBru",
+    "schema_bytes": 19034,
+    "schema_sha256": "ae03d0c6d3c6c03f87ae8e699b1e71804266c1d4adb7acbf4f4de5d48727c39c",
+    "entity_count": 20,
+    "logical_sha256": "6c801fc4c141c0ae12dbb937652f0dd49c9be5bd3b1b3c8e38bdb92fe6efec5d",
+    "immutable_entities": [],
+    "authority": "retained_deployed_schema_for_entity_field_type_nullability_and_mutability",
+    "imported_source_schema_is_mutability_authority": false
+  },
+  "qma8_static_gap": {
+    "comparison_direction": "bidirectional_matic_and_retained_qma8_deployed_schema",
+    "missing_from_matic": [
+      "Position",
+      "PositionSnapshot",
+      "TickDayData",
+      "TickHourData"
+    ],
+    "extra_in_matic": [],
+    "immutable_in_matic_but_mutable_in_qma8": [
+      "Burn",
+      "Collect",
+      "Flash",
+      "Mint",
+      "Swap",
+      "Transaction"
+    ],
+    "mutable_in_matic_but_immutable_in_qma8": [],
+    "exact_field_match_entities": [
+      "Bundle",
+      "Burn",
+      "Collect",
+      "Factory",
+      "Flash",
+      "Mint",
+      "Swap",
+      "TokenDayData",
+      "TokenHourData",
+      "Transaction",
+      "UniswapDayData"
+    ],
+    "field_differences": {
+      "Pool": {
+        "missing_from_matic": [
+          "feeGrowthGlobal0X128",
+          "feeGrowthGlobal1X128"
+        ],
+        "extra_in_matic": [],
+        "type_differences": {
+          "id": {
+            "matic_type": "Bytes!",
+            "qma8_type": "ID!",
+            "matic_non_null": true,
+            "qma8_non_null": true
+          }
+        }
+      },
+      "PoolDayData": {
+        "missing_from_matic": [
+          "feeGrowthGlobal0X128",
+          "feeGrowthGlobal1X128"
+        ],
+        "extra_in_matic": [],
+        "type_differences": {}
+      },
+      "PoolHourData": {
+        "missing_from_matic": [
+          "feeGrowthGlobal0X128",
+          "feeGrowthGlobal1X128"
+        ],
+        "extra_in_matic": [],
+        "type_differences": {}
+      },
+      "Tick": {
+        "missing_from_matic": [
+          "collectedFeesToken0",
+          "collectedFeesToken1",
+          "collectedFeesUSD",
+          "feeGrowthOutside0X128",
+          "feeGrowthOutside1X128",
+          "feesUSD",
+          "liquidityProviderCount",
+          "untrackedVolumeUSD",
+          "volumeToken0",
+          "volumeToken1",
+          "volumeUSD"
+        ],
+        "extra_in_matic": [],
+        "type_differences": {
+          "poolAddress": {
+            "matic_type": "Bytes!",
+            "qma8_type": "String",
+            "matic_non_null": true,
+            "qma8_non_null": false
+          }
+        }
+      },
+      "Token": {
+        "missing_from_matic": [],
+        "extra_in_matic": [],
+        "type_differences": {
+          "id": {
+            "matic_type": "Bytes!",
+            "qma8_type": "ID!",
+            "matic_non_null": true,
+            "qma8_non_null": true
+          }
+        }
+      }
+    },
+    "scope": "static_deployed_schema_only_pending_runtime_physical_and_poi_comparison"
+  },
+  "mapping_behavior": {
+    "evidence": "byte_exact_mapping_reproduction_plus_digest_bound_exact_source_transitive_closure",
+    "factory_pool_created": {
+      "pool_id": "pool_address_bytes",
+      "token_ids": "token_address_bytes",
+      "factory_entity_id": "lowercase_factory_address_hex",
+      "bundle_entity_id": "1",
+      "factory_pool_count_increment": 1,
+      "token_pool_count_on_creation": 0,
+      "token_pool_count_incremented": false,
+      "dynamic_pool_template_created": true,
+      "skip_pools": [],
+      "pool_mappings": [],
+      "missing_token_decimals_behavior": "return_without_pool_token_or_factory_saves; a newly-created Bundle may already have been saved",
+      "save_order": [
+        "Pool",
+        "PoolTemplate.create",
+        "Token0",
+        "Token1",
+        "Factory"
+      ]
+    },
+    "initialize": {
+      "updates": [
+        "Pool.sqrtPrice",
+        "Pool.tick",
+        "Bundle.ethPriceUSD",
+        "PoolDayData",
+        "PoolHourData",
+        "Token0.derivedETH",
+        "Token1.derivedETH"
+      ],
+      "pool_saved_before_bundle_and_interval_updates": true
+    },
+    "mint": {
+      "active_liquidity_condition": "tickLower_le_pool_tick_and_tickUpper_gt_pool_tick",
+      "pool_and_token_tvl_delta": "add_amounts",
+      "tick_liquidity_delta": "lower_gross_and_net_plus; upper_gross_plus_and_net_minus",
+      "emits": [
+        "Transaction",
+        "Mint"
+      ]
+    },
+    "burn": {
+      "active_liquidity_condition": "tickLower_le_pool_tick_and_tickUpper_gt_pool_tick",
+      "pool_and_token_tvl_delta": "none_until_collect",
+      "tick_liquidity_delta": "lower_gross_and_net_minus; upper_gross_minus_and_net_plus",
+      "emits": [
+        "Transaction",
+        "Burn"
+      ]
+    },
+    "swap": {
+      "ignored_pool": "0x9663f2ca0454accad3e094448ea6f77443880454",
+      "amounts": "signed_pool_tvl_deltas_and_absolute_volume_amounts",
+      "tracked_volume_divisor": 2,
+      "untracked_volume_divisor": 2,
+      "lp_fee_formula": "tracked_volume_times_fee_tier_div_1000000",
+      "pool_saved_before_bundle_price_and_derived_token_price_updates": true,
+      "emits": [
+        "Transaction",
+        "Swap"
+      ]
+    },
+    "collect": {
+      "component": "Pool",
+      "pool_and_token_tvl_delta": "subtract_collected_amounts",
+      "collected_fee_aggregates": [
+        "Pool.collectedFeesToken0",
+        "Pool.collectedFeesToken1",
+        "Pool.collectedFeesUSD"
+      ],
+      "transaction_saved_before_token_presence_check": true,
+      "missing_token_behavior": "return_after_transaction_save",
+      "emits": [
+        "Transaction",
+        "Collect"
+      ]
+    },
+    "transactions": {
+      "id": "lowercase_transaction_hash_hex",
+      "helper_saves_on_every_mint_burn_swap_or_collect_call": true,
+      "gas_used": "0",
+      "gas_price": "event.transaction.gasPrice",
+      "immutable_target_entity": true,
+      "same_transaction_multi_event_runtime_effect_certified": false
+    },
+    "intervals": [
+      "uniswap_day",
+      "pool_day",
+      "pool_hour",
+      "token_day",
+      "token_hour"
+    ],
+    "operation_order": {
+      "helper_functions_save_entities_internally": true,
+      "swap_repeats_pool_hour_save": true,
+      "ordered_store_operations_required_for_poi": true,
+      "coalesced_final_entity_changes_sufficient": false
+    },
+    "writer_absence": {
+      "position_manager_component_absent": true,
+      "position_entities_absent": [
+        "Position",
+        "PositionSnapshot"
+      ],
+      "tick_window_entities_absent": [
+        "TickDayData",
+        "TickHourData"
+      ],
+      "flash_handler_absent": true,
+      "flash_entity_static_writer_absent": true,
+      "runtime_population_certified": false
+    }
+  },
+  "chain_configuration": {
+    "reference_token": "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
+    "stable_token_pool": "0xa374094527e1673a86de625aa59517c5de346d32",
+    "minimum_native_locked": "20000",
+    "whitelist_tokens": [
+      "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
+      "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619",
+      "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+      "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
+      "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+      "0xc2132d05d31c914a87c6611c10748aeb04b58e8f"
+    ],
+    "stable_coins": [
+      "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+      "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
+      "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+      "0xc2132d05d31c914a87c6611c10748aeb04b58e8f"
+    ],
+    "skip_pools": [],
+    "pool_mappings": [],
+    "static_token_definitions": []
+  },
+  "reuse_assessment": {
+    "scope": "static_source_comparison_only",
+    "certified_unchanged": [],
+    "candidate_reuse_without_internal_algorithm_change": [
+      {
+        "component": "raw_firehose_block_transport",
+        "dependency": "M2 ordered BlockChanges protocol and engine contract"
+      },
+      {
+        "component": "Factory PoolCreated and Pool Initialize/Swap/Mint/Burn ABI decoders",
+        "dependency": "Matic address routing, canonical ordinal fixtures, and target package tests"
+      },
+      {
+        "component": "store_pools_created",
+        "dependency": "Matic map_pools_created adapter and ERROR_POOL removal"
+      },
+      {
+        "component": "store_pool_count",
+        "dependency": "Matic factory identity and PoolCreated acceptance parity"
+      },
+      {
+        "component": "store_pool_sqrt_price",
+        "dependency": "Matic event extraction and Initialize/Swap ordinal parity"
+      },
+      {
+        "component": "decimal conversion and sqrt-price math",
+        "dependency": "Graph Node decimal normalization and fixed-range differential fixtures"
+      }
+    ],
+    "target_adapter_required": [
+      "map_pools_created token RPC failure and metadata fallback behavior",
+      "whitelist pool derivation and Matic pricing configuration",
+      "pool liquidity and derived TVL routing",
+      "day/hour window creation, update, save order, and retention behavior",
+      "target initial block and manifest/package configuration"
+    ],
+    "target_specific_replacement_required": [
+      "map_extract_data_types must include Pool Collect and exclude NPM/Flash-only paths",
+      "store_tokens must preserve Token.poolCount at zero instead of incrementing per pool",
+      "transaction and total tx-count behavior must include Matic Pool Collect ordering",
+      "swap volume, fee, TVL, and interval aggregation must reproduce the exact Matic mapping",
+      "tick storage must omit TickDayData/TickHourData and the eleven absent Tick fields",
+      "graph_out must emit the 16-entity Bytes-ID and six-immutable-entity layout"
+    ],
+    "components_to_omit": [
+      "NonfungiblePositionManager routing",
+      "Position and PositionSnapshot reducers",
+      "TickDayData and TickHourData writers",
+      "Pool fee-growth-global writers",
+      "Flash handler and Flash row emission"
+    ],
+    "reuse_certified": false
+  },
+  "dependencies": {
+    "m2_generic_runtime": [
+      "ordered BlockChanges family-to-engine protocol replacing common/src/lib.rs placeholder",
+      "legacy schema profile support for Bytes versus ID, nullability, and immutable tables",
+      "Graph Node metadata, VID, block-range, block$, decimal, PoI, and failure semantics",
+      "target physical-profile capture and certification harness",
+      "fail-closed paused load and resume/checkpoint lifecycle"
+    ],
+    "m3_qma8_artifacts": [
+      "uniswap-v3/graft-ancestry/v2/contract.json",
+      "uniswap-v3/graft-ancestry/v2/writer-compatibility.json",
+      "uniswap-v3/segment-writer-matrix/v1/contract.json",
+      "uniswap-v3/execution-order/v1/contract.json",
+      "uniswap-v3/writer-runtime/contract-v1.json",
+      "uniswap-v3/writer-runtime/segment-profiles-v1.json",
+      "uniswap-v3/chain-config/configs/mainnet-v1.json"
+    ],
+    "m3_required_truth": [
+      "full Factory and Pool handler/field writer semantics",
+      "runtime population and required-absence oracle",
+      "boundary continuity and fixed-range logical parity",
+      "target Graph Node runtime identity, physical history, VID, PoI, and failure behavior"
+    ]
+  },
+  "required_target_changes": [
+    "matic_chain_config_and_factory_start_block",
+    "sixteen_entity_graph_out_with_bytes_ids_and_exact_nullability",
+    "six_immutable_entity_physical_and_operation_order_support",
+    "pool_collect_decode_transaction_tvl_fee_and_interval_semantics",
+    "token_pool_count_zero_compatibility",
+    "omit_position_snapshot_tick_windows_fee_growth_and_flash_writers",
+    "matic_transaction_repeated_save_and_nonfatal_failure_fixtures",
+    "exact_handler_save_order_blockchanges_and_poi_projection",
+    "target_specific_package_module_hashes_and_initial_block",
+    "matic_graph_node_logical_physical_vid_poi_and_postgresql_parity_certification"
+  ],
+  "truth_boundary": {
+    "static_target_layout_complete": true,
+    "qma8_deployed_schema_diff_complete": true,
+    "exact_source_transitive_closure_complete": true,
+    "static_mapping_behavior_profile_complete": true,
+    "reuse_assessment_static_only": true,
+    "full_graph_node_runtime_handler_semantics_complete": false,
+    "implementation_authorized": false,
+    "eligibility_complete": false,
+    "runtime_parity": false,
+    "logical_parity": false,
+    "physical_profile_complete": false,
+    "physical_parity": false,
+    "poi_parity": false,
+    "target_graph_node_runtime_identity_bound": false,
+    "backfill_ready": false,
+    "production_ready": false
+  },
+  "remaining_gates": [
+    "fresh_24_hour_and_same_pod_72_hour_graph_node_catchup_forecasts_both_greater_than_28_days",
+    "M2_ordered_blockchanges_generic_loader_and_release_contract",
+    "M2_matic_physical_profile_and_loader_schema_metadata_proof",
+    "M3_certified_qma8_factory_pool_handler_field_and_runtime_contract",
+    "Matic_runtime_implementation_and_fixed_range_differential_parity",
+    "Matic_physical_vid_poi_failure_and_postgresql_restore_certification",
+    "paused_load_validation_and_separate_operational_activation_approval"
+  ]
+}

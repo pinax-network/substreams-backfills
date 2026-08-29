@@ -49,8 +49,13 @@ git -C "$source_repository" archive "$source_commit" | tar -x -C "$source_work"
   ./node_modules/.bin/graph build v3-subgraph.yaml
 )
 
+# Newer Corepack versions add a packageManager field during invocation. Restore
+# that one tool-mutated input from the already verified commit before the
+# verifier checks the archived source bytes and Git blob.
+git -C "$source_repository" show "${source_commit}:package.json" > "$source_work/package.json"
+
 "$python_executable" "$repository_root/scripts/verify-uniswap-v3-matic-target.py" \
   --root "$repository_root" \
   --exact-source-root "$source_work"
 
-echo "verified exact Uniswap V3 Matic source commit/tree, locked toolchain, manifest, schema, ABIs, and mapping bytes"
+echo "verified exact Uniswap V3 Matic source commit/tree, transitive behavior closure, locked toolchain, manifest, schema, ABIs, and mapping bytes"

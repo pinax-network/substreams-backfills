@@ -115,6 +115,104 @@
       ]
     }
   ],
+  "layout_profile": {
+    "path": "uniswap-v3-matic/layout-profile-v1.json",
+    "bytes": 16623,
+    "sha256": "e86e826cee298f74d0f8b941b412cd15cd8bc0b9c5eef00de571cde50200985e"
+  },
+  "qma8_reference": {
+    "family": "uniswap-v3-mainnet-base",
+    "deployed_schema": {
+      "cid": "Qma8a81T9XoX5Pbkrk8J3kxMhWdXJzFSYZge1wGi3QZBru",
+      "path": "uniswap-v3/graft-ancestry/v1/artifacts/Qma8a81T9XoX5Pbkrk8J3kxMhWdXJzFSYZge1wGi3QZBru",
+      "bytes": 19034,
+      "sha256": "ae03d0c6d3c6c03f87ae8e699b1e71804266c1d4adb7acbf4f4de5d48727c39c",
+      "entity_count": 20,
+      "logical_sha256": "6c801fc4c141c0ae12dbb937652f0dd49c9be5bd3b1b3c8e38bdb92fe6efec5d",
+      "immutable_entities": []
+    },
+    "upstream_source": {
+      "repository": "pinax-network/substreams-uniswap-v3",
+      "commit": "42c7b15345e6df80561b694e52a0eb622b374b96",
+      "tree": "a00e882e92d07b46550b74dea279c114d57631ac",
+      "records": [
+        {
+          "role": "upstream_provenance",
+          "path": "docs/provenance/uniswap-v3-qma8a81t-parity.json",
+          "bytes": 3134,
+          "sha256": "aafc43562e8867b0e40cfc905065aad14dc72227b7b937d1cf7ccbf6eb8457a8"
+        },
+        {
+          "role": "upstream_file_inventory",
+          "path": "docs/provenance/uniswap-v3-qma8a81t-parity-files.json",
+          "bytes": 18035,
+          "sha256": "177a98f60f230d1b13dfa064f3b98a50163a506d2c7a08432330d47ee2170e60"
+        },
+        {
+          "role": "imported_schema",
+          "path": "uniswap-v3/source/schema.graphql",
+          "bytes": 18883,
+          "sha256": "f234a0e4dc88c923d6ad28a3fcd1ed6093351bd2221d7c18486f0cbde41bb52c"
+        },
+        {
+          "role": "imported_module_graph",
+          "path": "uniswap-v3/source/substreams.yaml",
+          "bytes": 11178,
+          "sha256": "74489e3056ff18760b3cd416fb10558f7fec1481a441b596e2b1e0f526c879a5"
+        }
+      ]
+    },
+    "m3_contract_closure": [
+      {
+        "role": "graft_ancestry",
+        "path": "uniswap-v3/graft-ancestry/v2/contract.json",
+        "bytes": 541804,
+        "sha256": "ae8c3e0099fedf2879b3071c2bcf545050fa4d448d0154fa6b895618bb8e203e"
+      },
+      {
+        "role": "writer_compatibility",
+        "path": "uniswap-v3/graft-ancestry/v2/writer-compatibility.json",
+        "bytes": 517362,
+        "sha256": "259481724561d5aa725c17f90b5a19ea93ad6f7cd6074cf2cb8a8661c39f81c4"
+      },
+      {
+        "role": "segment_writer_matrix",
+        "path": "uniswap-v3/segment-writer-matrix/v1/contract.json",
+        "bytes": 2785821,
+        "sha256": "7f6d1a34a8c885fe5ddcd81895818ba7ae8a0d736d541b881c1cc7cd54275161"
+      },
+      {
+        "role": "execution_order",
+        "path": "uniswap-v3/execution-order/v1/contract.json",
+        "bytes": 22216,
+        "sha256": "241e970cfcec4d76610b29a10141d3bff2512d80454a6308594f3db23621cde2"
+      },
+      {
+        "role": "writer_runtime",
+        "path": "uniswap-v3/writer-runtime/contract-v1.json",
+        "bytes": 6247,
+        "sha256": "765806bf19fca7695ef4d97f557593e4f791759589fe55c20f18c6523a5d07ca"
+      },
+      {
+        "role": "segment_profiles",
+        "path": "uniswap-v3/writer-runtime/segment-profiles-v1.json",
+        "bytes": 12989,
+        "sha256": "2b6635c061a7a0bfce39430c71c41dacc1567f095fe41134e890a697aa27f823"
+      },
+      {
+        "role": "mainnet_chain_config",
+        "path": "uniswap-v3/chain-config/configs/mainnet-v1.json",
+        "bytes": 3503,
+        "sha256": "30f5caf9ee8906a8886dc103e55286b9d5b6dbd8784d1c97d21b9a38b266bb55"
+      }
+    ],
+    "authority": {
+      "deployed_schema_is_layout_authority": true,
+      "imported_source_schema_is_mutability_authority": false,
+      "contract_closure_hashes_imply_m3_certification": false,
+      "target_graph_node_runtime_identity_bound": false
+    }
+  },
   "logical_contract": {
     "entity_count": 16,
     "logical_sha256": "614561ebeb2192742eeb68df2a62c1ccd202c3cdd2c6af14740e2b2dee260c2a",
@@ -158,11 +256,35 @@
     ],
     "qma8_entity_count": 20,
     "qma8_logical_sha256": "6c801fc4c141c0ae12dbb937652f0dd49c9be5bd3b1b3c8e38bdb92fe6efec5d",
+    "qma8_immutable_entities": [],
     "missing_from_matic": [
       "Position",
       "PositionSnapshot",
       "TickDayData",
       "TickHourData"
+    ],
+    "extra_in_matic": [],
+    "immutable_in_matic_but_mutable_in_qma8": [
+      "Burn",
+      "Collect",
+      "Flash",
+      "Mint",
+      "Swap",
+      "Transaction"
+    ],
+    "mutable_in_matic_but_immutable_in_qma8": [],
+    "exact_field_match_entities": [
+      "Bundle",
+      "Burn",
+      "Collect",
+      "Factory",
+      "Flash",
+      "Mint",
+      "Swap",
+      "TokenDayData",
+      "TokenHourData",
+      "Transaction",
+      "UniswapDayData"
     ],
     "field_differences": {
       "Pool": {
@@ -170,24 +292,31 @@
           "feeGrowthGlobal0X128",
           "feeGrowthGlobal1X128"
         ],
+        "extra_in_matic": [],
         "type_differences": {
-          "id": [
-            "Bytes!",
-            "ID!"
-          ]
+          "id": {
+            "matic_type": "Bytes!",
+            "qma8_type": "ID!",
+            "matic_non_null": true,
+            "qma8_non_null": true
+          }
         }
       },
       "PoolDayData": {
         "missing_from_matic": [
           "feeGrowthGlobal0X128",
           "feeGrowthGlobal1X128"
-        ]
+        ],
+        "extra_in_matic": [],
+        "type_differences": {}
       },
       "PoolHourData": {
         "missing_from_matic": [
           "feeGrowthGlobal0X128",
           "feeGrowthGlobal1X128"
-        ]
+        ],
+        "extra_in_matic": [],
+        "type_differences": {}
       },
       "Tick": {
         "missing_from_matic": [
@@ -203,22 +332,30 @@
           "volumeToken1",
           "volumeUSD"
         ],
+        "extra_in_matic": [],
         "type_differences": {
-          "poolAddress": [
-            "Bytes!",
-            "String"
-          ]
+          "poolAddress": {
+            "matic_type": "Bytes!",
+            "qma8_type": "String",
+            "matic_non_null": true,
+            "qma8_non_null": false
+          }
         }
       },
       "Token": {
+        "missing_from_matic": [],
+        "extra_in_matic": [],
         "type_differences": {
-          "id": [
-            "Bytes!",
-            "ID!"
-          ]
+          "id": {
+            "matic_type": "Bytes!",
+            "qma8_type": "ID!",
+            "matic_non_null": true,
+            "qma8_non_null": true
+          }
         }
       }
-    }
+    },
+    "scope": "static_deployed_schema_only_pending_runtime_physical_and_poi_comparison"
   },
   "exact_source": {
     "status": "exact_reproduction",
@@ -267,6 +404,119 @@
         "sha256": "c30aad6dc4e6b0f41168f9acaea889a3fca4bbccb17317e26e4f46bbd55775cd"
       }
     ],
+    "behavior_source_files": [
+      {
+        "path": "config/matic/chain.ts",
+        "bytes": 1702,
+        "sha256": "6d1ef3bfc88a03c6e21c1e683a9f9bfb3ee36dd2510dac59d182d7dcecdc21d5",
+        "git_blob": "2f95123ac3e17681d6c0dc8320f908b4dbb0d2f3"
+      },
+      {
+        "path": "src/common/backfill.ts",
+        "bytes": 4422,
+        "sha256": "8fc8a39a1d4ab4315d2c0e7141a0317fc60a5f4ff79f063b98813b596aecbae6",
+        "git_blob": "81b7c6b2e306eeda0ece0566496e26a90aa99765"
+      },
+      {
+        "path": "src/common/constants.ts",
+        "bytes": 613,
+        "sha256": "1013598433a6418fb7b98854a258db28c12b5be8269a4da3832fc31f3a0c3444",
+        "git_blob": "c204a050f76952742465939b16fdae2792b6f954"
+      },
+      {
+        "path": "src/common/pricing.ts",
+        "bytes": 4854,
+        "sha256": "51a55fb0cd8979647548dec7dad4487df70f80b08263bee9396d0c200414de01",
+        "git_blob": "cb297bad32a767b58fa398e167d6ff5ba0092c34"
+      },
+      {
+        "path": "src/common/staticTokenDefinition.ts",
+        "bytes": 681,
+        "sha256": "467a2910b186524e6b1b54511897f5ff33fecd1a86b41babc93791f1437a4120",
+        "git_blob": "5918aeb0587e696b216c48b94f70d5076115541e"
+      },
+      {
+        "path": "src/common/token.ts",
+        "bytes": 2936,
+        "sha256": "0cb6eecc1a211b420757a0ffcad39ec6112e6d6a75bf82d764c0b61d6f3d64a2",
+        "git_blob": "cc368c72a6ea5f76fdb593b5769f84afde3d66b3"
+      },
+      {
+        "path": "src/common/utils.ts",
+        "bytes": 3422,
+        "sha256": "8512d532e646f26b955ce0bd1a7de869eb6bfb178cf3c448a355feb07c17a369",
+        "git_blob": "3b84fa0f61b63d589917a30d0e7be5f5ea5d22ac"
+      },
+      {
+        "path": "src/v3/mappings/burn.ts",
+        "bytes": 4024,
+        "sha256": "9033c464e1efc1c751cec7c26683c4d4e9fb8a8cf53b4543f1b37c2b06812abc",
+        "git_blob": "597723f47be672198cceff08c449cc8f2e2b7961"
+      },
+      {
+        "path": "src/v3/mappings/collect.ts",
+        "bytes": 4120,
+        "sha256": "81512a4ec26ee63476b66a38f90944838c70f9b799b32c2ed4c18e1dc55520d0",
+        "git_blob": "46a6fce1d06ca6561cb20fad9ec1de3f15ecf8ae"
+      },
+      {
+        "path": "src/v3/mappings/core.ts",
+        "bytes": 278,
+        "sha256": "0e575b5637698c8e87e9633b81d6049aa160908c6d1b5ca57a5aa989941cac28",
+        "git_blob": "6b3a0063815e08e17385f7084806ca494eea1a3c"
+      },
+      {
+        "path": "src/v3/mappings/factory.ts",
+        "bytes": 5179,
+        "sha256": "9cbf2ccab069633de60b1e02c80240f7f0ed6c2dd8e399083d1d1b9729b99864",
+        "git_blob": "be3b4eb9d984ef266f460a9666437ef4e4f0d799"
+      },
+      {
+        "path": "src/v3/mappings/initialize.ts",
+        "bytes": 1098,
+        "sha256": "94ca4b477b7056113c0c7c96267cfbd8e83d13b0dba13ae129618665c6e3db7f",
+        "git_blob": "dcf6d40878b5af384aa97a1dd7fcc76903c1eaaf"
+      },
+      {
+        "path": "src/v3/mappings/intervalUpdates.ts",
+        "bytes": 7122,
+        "sha256": "a60ab517237767b5b14dcc55780e08c7790031b0be8832d3d0a31558f4b548a1",
+        "git_blob": "aebbf35b197d0a1f912d56992262f9679c1a11d1"
+      },
+      {
+        "path": "src/v3/mappings/mint.ts",
+        "bytes": 5392,
+        "sha256": "344febaf65808d50206e65b25a43472430bbce7eae96a48c841a72f5b50b6fac",
+        "git_blob": "fcaa337523e7b1f171fbe540495a718cccc9185c"
+      },
+      {
+        "path": "src/v3/mappings/swap.ts",
+        "bytes": 9525,
+        "sha256": "b8b678cb39b8eb92d9045711005c76e1f66eb8e53c1e189f60aefaaf31bfe271",
+        "git_blob": "5794eeab865f90066b50c0f02bc03aa10ba20315"
+      },
+      {
+        "path": "src/v3/mappings/tick.ts",
+        "bytes": 939,
+        "sha256": "44ced4f509749826509a96726d05cbd091c7cab775f1c58fb2d7f46332490507",
+        "git_blob": "0daab870895ab823fdf1b0aee48251e4a0b49a72"
+      },
+      {
+        "path": "src/v3/mappings/utils.ts",
+        "bytes": 655,
+        "sha256": "e53d7d3a3ea81096e8ce42d3faa5b7783144ac076466f887191b40ab9a232a03",
+        "git_blob": "6e7e9e2973e3b1bc14acaee19fb7b04dfaa555e1"
+      }
+    ],
+    "behavior_source_scope": {
+      "entrypoints": [
+        "src/v3/mappings/factory.ts",
+        "src/v3/mappings/core.ts"
+      ],
+      "transitive_local_import_closure_complete": true,
+      "generated_bindings_and_node_modules_excluded": true,
+      "behavior_claims_require_exact_source_build_match": true
+    },
     "toolchain": {
       "reference_node": "18.18.0",
       "reference_corepack": "0.19.0",
@@ -327,8 +577,31 @@
       "static_token_definitions": []
     }
   },
+  "truth_boundary": {
+    "static_target_layout_complete": true,
+    "qma8_deployed_schema_diff_complete": true,
+    "exact_source_transitive_closure_complete": true,
+    "static_mapping_behavior_profile_complete": true,
+    "reuse_assessment_static_only": true,
+    "full_graph_node_runtime_handler_semantics_complete": false,
+    "implementation_authorized": false,
+    "eligibility_complete": false,
+    "runtime_parity": false,
+    "logical_parity": false,
+    "physical_profile_complete": false,
+    "physical_parity": false,
+    "poi_parity": false,
+    "target_graph_node_runtime_identity_bound": false,
+    "backfill_ready": false,
+    "production_ready": false
+  },
   "remaining_gates": [
-    "Refresh both 24-hour and same-series 72-hour net catch-up forecasts after the current Kan pod identity reaches 72 hours.",
-    "Complete the final comparison against the certified Qma8 family after issue 9."
+    "Fresh 24-hour and same-pod 72-hour Graph Node catch-up forecasts must both remain greater than 28 days.",
+    "M2 must ship the ordered BlockChanges generic loader and release contract.",
+    "M2 must capture and verify the Matic physical schema and loader metadata profile.",
+    "M3 must certify the Qma8 Factory/Pool handler, field-writer, runtime-population, and required-absence contract.",
+    "The Matic runtime must implement this profile and pass fixed-range differential parity.",
+    "Matic physical, VID, PoI, failure, PostgreSQL, and paused-restore certification must pass.",
+    "A paused load requires separate operational validation and activation approval."
   ]
 }

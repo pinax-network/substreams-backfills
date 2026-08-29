@@ -55,14 +55,21 @@ Zero is a valid decoded value but is never substituted for failure. Calls are
 not batched, deduplicated, or cached, including repeated Flash events for the
 same Pool.
 
-The first five mainnet segments treat a reducer error as fatal for this
-diagnostic block: only its Pool and membership state rolls back. Current
-mainnet and both Base segments discard the failing Flash scratch and continue
-through the supplied diagnostic envelope. These rules do not represent Graph
-Node VID allocation, PoI events, persisted dynamic data sources, deterministic
-error streams, transaction acceptance, or physical database rollback. The
-Flash event fields are deliberately ignored. The NPM block/pool guards and the
-swap-only pool guard do not apply to Flash.
+For the first five mainnet segments, the first fatal reducer error returns the
+exact input Pool state as a shortcut for the final persisted Pool user-entity
+projection. Outcomes cover only the consumed diagnostic-envelope prefix and
+report how many later events were omitted. Resetting the reducer's diagnostic
+membership set is not a projection of Graph's persisted dynamic data sources.
+Graph continues remaining runnable triggers and breadth-first dynamic stages,
+and a later retryable failure may still prevent the block transaction. The
+shortcut is therefore neither a complete Graph execution trace nor authority
+for Graph block or checkpoint success. Current mainnet and both Base segments
+discard only the failing Flash scratch and continue through the supplied
+diagnostic envelope. These rules do not represent Graph Node VID allocation,
+PoI events, persisted dynamic data sources, deterministic error streams,
+transaction acceptance, or physical database rollback. The Flash event fields
+are deliberately ignored. The NPM block/pool guards and the swap-only pool
+guard do not apply to Flash.
 
 The output API can represent only Pool updates. It has no Flash, Transaction,
 or aggregate-row type, and it never synthesizes such rows. PoolCreated is

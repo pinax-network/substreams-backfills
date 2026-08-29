@@ -95,6 +95,8 @@ class TransactionReducerContractTests(unittest.TestCase):
         self.assertIn("dynamic Pool", execution["pool_cross_component_execution_order"])
         self.assertIn("entity VIDs", execution["physical_graph_node_side_effects"])
         self.assertIn("PoI and error streams", execution["physical_graph_node_side_effects"])
+        self.assertIn("final persisted NPM Transaction and relation user-entity projection", execution["fatal_error_entity_state"])
+        self.assertIn("Graph continues remaining runnable triggers", execution["post_fatal_execution"])
 
     def test_pool_shared_transaction_writers_and_all_promotion_gates_remain_false(self) -> None:
         truth = self.contract["truth_boundary"]
@@ -104,6 +106,9 @@ class TransactionReducerContractTests(unittest.TestCase):
         self.assertFalse(truth["pool_cross_component_execution_order_certified"])
         self.assertFalse(truth["physical_entity_vid_semantics_certified"])
         self.assertFalse(truth["failed_handler_poi_error_stream_semantics_certified"])
+        self.assertFalse(truth["graph_execution_trace_complete"])
+        self.assertFalse(truth["post_fatal_execution_modeled"])
+        self.assertFalse(truth["checkpoint_or_graph_block_success_authorized"])
         self.assertTrue(all(value is False for key, value in truth.items() if key != "diagnostic_only"))
         self.assertFalse(self.contract["reducer_contract"]["pool_shared_transaction_writers_in_scope"])
         self.assertFalse(self.contract["reducer_contract"]["pool_cross_component_execution_order_certified"])

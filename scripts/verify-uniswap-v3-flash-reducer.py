@@ -16,7 +16,7 @@ from pathlib import Path
 
 
 CONTRACT_PATH = Path("uniswap-v3/flash-reducer/contract-v1.json")
-CONTRACT_SHA256 = "46e397776c332e30d5c74fe5e73803b378ace6bef869f33eb69f055a5b2cd36c"
+CONTRACT_SHA256 = "0b24a14dcf460f9eda75addf7ffd6ae4832cd9c611a56b6f2591972767966168"
 OVERLAY = Path("uniswap-v3/flash-reducer")
 WRITER_VERIFIER_PATH = Path("scripts/verify-uniswap-v3-writer-runtime.py")
 WRITER_RUNTIME_SHA256 = "765806bf19fca7695ef4d97f557593e4f791759589fe55c20f18c6523a5d07ca"
@@ -26,9 +26,9 @@ PROFILE_SHA256 = "2b6635c061a7a0bfce39430c71c41dacc1567f095fe41134e890a697aa27f8
 EXECUTION_ORDER_PATH = Path("uniswap-v3/execution-order/v1/contract.json")
 EXECUTION_ORDER_VERSION = "uniswap-v3-execution-order/v1"
 EXECUTION_ORDER_SHA256 = "241e970cfcec4d76610b29a10141d3bff2512d80454a6308594f3db23621cde2"
-REDUCER_SEMANTICS_SHA256 = "85a3eb1037223dc7794706f860723df0f2897dd043e5e4a9db23f4a2de52af4f"
-REDUCER_SOURCE_SHA256 = "751df82569aff4a232e3c2bbb93d97abe2c6057bb857c08a69f7b832bda40a3f"
-REDUCER_TESTS_SHA256 = "d33e1d5cea4f174d40ed1aab979f59c3c748e55dd2b9376c9cf89b7b969d68b4"
+REDUCER_SEMANTICS_SHA256 = "8951469c026898de69d1a76381539eda3ddfdf094051d2b4b7f4295c860dfa43"
+REDUCER_SOURCE_SHA256 = "6750cd555d50a6e3c3e68cc460f99a4473bbea4181d0d9a7762344a8eae5cf0f"
+REDUCER_TESTS_SHA256 = "e8367f02071a7d537bc2beea2d39ba5e0a71ddb50f86762193497b12cb675819"
 RUNTIME_PATCH_SHA256 = "1d916ba62f75541d8ce36dc986e49e53f9213a8dc3881acdcc19e77f0aead5f9"
 EXPECTED_REDUCER_RUNTIME_DELTA = {
     "configs/flash-reducer-v1.json",
@@ -45,10 +45,13 @@ EXPECTED_TRUTH = {
     "full_pool_handler_semantics": False,
     "graph_node_execution_order_supplement_bound": True,
     "graph_out_replaced": False,
+    "graph_execution_trace_complete": False,
     "live_rpc_added": False,
     "logical_oracle_complete": False,
     "physical_parity_complete": False,
     "poi_parity_complete": False,
+    "post_fatal_execution_modeled": False,
+    "persisted_data_source_projection_complete": False,
     "production_ready": False,
     "rpc_trigger_binding_complete": False,
     "runtime_consumes_execution_order_contract": False,
@@ -57,6 +60,7 @@ EXPECTED_TRUTH = {
     "stores_added": False,
     "substreams_handler_added": False,
     "target_runtime_identity_bound": False,
+    "checkpoint_or_graph_block_success_authorized": False,
 }
 
 
@@ -186,7 +190,10 @@ def load_contract(root: Path) -> dict[str, object]:
             "event_order": "diagnostic envelope ordinal and block_log_index strictly increasing; not Graph Node cross-stage order",
             "membership": "diagnostic creation-ordinal convention; not Graph Node block-scoped activation",
             "graph_node_order_scope": "dynamic-datasource stage order is not implemented; no same-path or cross-component order claim",
-            "fatal_rollback_scope": "diagnostic Pool and membership state only; excludes VID, PoI, persisted data sources, deterministic-error streams, and physical transaction semantics",
+            "fatal_projection_scope": "final persisted Pool user entity only; diagnostic membership reset is not a persisted-data-source projection",
+            "outcome_scope": "consumed diagnostic-envelope prefix; omitted_event_count reports the unprocessed suffix",
+            "post_fatal_execution_modeled": False,
+            "diagnostic_membership_is_persisted_data_source_projection": False,
             "call_order": ["f3058399", "46141319"],
             "call_cache": "none",
             "call_block_scope": "post-block hash when available; number fallback",
@@ -282,8 +289,17 @@ def load_semantics(root: Path) -> dict[str, object]:
     )
     require(
         execution["fatal_error"]
-        == "discard diagnostic Pool and membership changes from this reducer block and stop; excludes Graph Node VID, PoI, persisted-data-source, deterministic-error-stream, and physical transaction semantics",
-        "fatal rollback scope promoted",
+        == "final persisted Pool user-entity projection shortcut: return the exact block-baseline Pool state at the first fatal error; diagnostic membership reset is not a Graph persisted-data-source projection and this is not a Graph execution stop",
+        "fatal Pool projection scope drift",
+    )
+    require(
+        execution["post_fatal_execution"]
+        == "intentionally not modeled: Graph continues remaining runnable triggers and breadth-first dynamic stages and may encounter a later retryable failure that aborts before the block transaction; otherwise the fatal transaction filters user modifications to PoI, passes persisted data sources and deterministic errors, advances the failed block pointer, and stops the deployment",
+        "post-fatal execution scope drift",
+    )
+    require(
+        execution["first_call_failure"] == "stop this Flash handler before fee1; emit no Pool update",
+        "first-call handler short-circuit drift",
     )
     require(execution["fee_growth_0_calldata"] == "f3058399", "fee0 selector drift")
     require(execution["fee_growth_1_calldata"] == "46141319", "fee1 selector drift")
@@ -356,6 +372,14 @@ def verify_execution_order_binding(
         },
         "execution-order supplement truth boundary drift",
     )
+    failure = reference["execution_model"]["failure_modes"]
+    require(
+        failure["deterministic_fatal"]
+        == "discard the failing mapping handler; filter only entity modifications to the PoI entity, still pass persisted data sources and deterministic errors to the block transaction, advance the failed block pointer, then stop"
+        and failure["pretransaction_mapping_decode_or_dynamic_stage_unknown"]
+        == "return before block transaction; do not commit that partial block state",
+        "execution-order fatal transaction truth drift",
+    )
 
 
 def verify_segment_binding(root: Path, semantics: dict[str, object]) -> None:
@@ -405,6 +429,13 @@ def verify_overlay_static(root: Path, writer) -> None:
         "same_path_order_machine_proven: false",
         "cross_component_order_proven: false",
         "target_runtime_identity_bound: false",
+        "FatalPoolUserEntityProjection",
+        "omitted_event_count",
+        "legacy_fatal_failure_returns_pool_baseline_projection_and_omits_later_events",
+        "graph_execution_trace_complete: false",
+        "post_fatal_execution_modeled: false",
+        "persisted_data_source_projection_complete: false",
+        "checkpoint_or_graph_block_success_authorized: false",
     ):
         require(required in source, f"flash-reducer source contract missing `{required}`")
     for forbidden in (

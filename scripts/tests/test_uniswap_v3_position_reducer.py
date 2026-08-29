@@ -71,6 +71,20 @@ class PositionReducerContractTests(unittest.TestCase):
             "fee0-from-fee1-plus-amount1",
         )
 
+    def test_execution_order_and_fatal_projection_limits_are_exact(self) -> None:
+        self.assertEqual(
+            self.semantics["source_execution_order"],
+            {
+                "path": VERIFIER.EXECUTION_ORDER_PATH.as_posix(),
+                "contract_version": VERIFIER.EXECUTION_ORDER_VERSION,
+                "raw_sha256": VERIFIER.EXECUTION_ORDER_SHA256,
+            },
+        )
+        execution = self.semantics["execution_contract"]
+        self.assertIn("final persisted Position and PositionSnapshot user-entity projection", execution["fatal_error"])
+        self.assertIn("Graph continues remaining runnable triggers", execution["post_fatal_execution"])
+        VERIFIER.verify_execution_order_binding(ROOT)
+
     def test_split_origins_and_guard_asymmetry_are_explicit(self) -> None:
         networks = {item["network"]: item for item in self.semantics["network_contracts"]}
         self.assertEqual((networks["mainnet"]["runtime_start_block"], networks["mainnet"]["npm_start_block"]), (12_369_621, 12_369_651))
@@ -97,6 +111,9 @@ class PositionReducerContractTests(unittest.TestCase):
         self.assertTrue(truth["diagnostic_only"])
         self.assertFalse(truth["transaction_entity_effects_implemented"])
         self.assertFalse(truth["full_npm_handler_semantics"])
+        self.assertFalse(truth["graph_execution_trace_complete"])
+        self.assertFalse(truth["post_fatal_execution_modeled"])
+        self.assertFalse(truth["checkpoint_or_graph_block_success_authorized"])
         self.assertTrue(all(value is False for key, value in truth.items() if key != "diagnostic_only"))
 
     def test_patch_applies_as_the_final_host_only_layer(self) -> None:

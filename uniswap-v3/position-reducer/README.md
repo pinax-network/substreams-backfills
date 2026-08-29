@@ -35,8 +35,20 @@ results and ordinal-visible Token entity reads; it does not perform those calls.
 Events are processed in strictly increasing global ordinal and block-log-index
 order. Each event mutates a clone of the ordinal-current state. Accepted events
 commit both Position and Snapshot. Drops and nonfatal errors discard only their
-event scratch. A fatal legacy error returns the exact input Position/Snapshot
-state for the whole block.
+event scratch. On the first fatal legacy error, the reducer returns the exact
+input Position/Snapshot state as a shortcut for the final persisted user-entity
+projection. Its outcomes cover only the consumed event prefix and report how
+many later writer events were omitted.
+
+That shortcut is not a Graph execution stop or a complete Graph trace. The
+exact execution-order contract at `../execution-order/v1/contract.json` (raw
+SHA-256 `241e970cfcec4d76610b29a10141d3bff2512d80454a6308594f3db23621cde2`)
+records that Graph continues remaining runnable triggers and breadth-first
+dynamic stages after the first fatal handler error. A later retryable failure
+may still abort before the block transaction; otherwise user modifications are
+filtered from PoI while persisted data sources and deterministic errors pass,
+the failed block pointer advances, and the deployment stops. Consequently this
+reducer cannot authorize Graph block or checkpoint success.
 
 Graph-call results are cached only inside one reducer invocation. The cache key
 contains the target address and exact decoded calldata, and the provider receives

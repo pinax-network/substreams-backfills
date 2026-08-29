@@ -14,7 +14,7 @@ use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use substreams::errors::Error;
 
-const REDUCER_CONTRACT_SHA256: &str = "85a3eb1037223dc7794706f860723df0f2897dd043e5e4a9db23f4a2de52af4f";
+const REDUCER_CONTRACT_SHA256: &str = "8951469c026898de69d1a76381539eda3ddfdf094051d2b4b7f4295c860dfa43";
 const REDUCER_CONTRACT_VERSION: &str = "uniswap-v3-flash-reducer/v1";
 const SOURCE_WRITER_CONTRACT_SHA256: &str = "259481724561d5aa725c17f90b5a19ea93ad6f7cd6074cf2cb8a8661c39f81c4";
 const SOURCE_PROFILE_SHA256: &str = "2b6635c061a7a0bfce39430c71c41dacc1567f095fe41134e890a697aa27f823";
@@ -164,9 +164,13 @@ pub enum BlockDisposition {
     /// Accepted by this in-memory diagnostic reducer only; this says nothing
     /// about a Graph Node transaction or physical database commit.
     Committed,
-    Fatal {
+    /// Final persisted Pool user-entity projection after a fatal handler error.
+    /// The diagnostic membership reset is not a persisted-data-source projection,
+    /// and Graph execution continues outside this host-only reducer.
+    FatalPoolUserEntityProjection {
         ordinal: u64,
         stage: FailureStage,
+        omitted_event_count: usize,
     },
 }
 
@@ -277,6 +281,7 @@ struct ExecutionContract {
     first_call_failure: String,
     second_call_failure: String,
     fatal_error: String,
+    post_fatal_execution: String,
     nonfatal_error: String,
     event_fields: String,
     flash_specific_guards: Vec<String>,
@@ -319,10 +324,13 @@ struct TruthBoundary {
     full_pool_handler_semantics: bool,
     graph_node_execution_order_supplement_bound: bool,
     graph_out_replaced: bool,
+    graph_execution_trace_complete: bool,
     live_rpc_added: bool,
     logical_oracle_complete: bool,
     physical_parity_complete: bool,
     poi_parity_complete: bool,
+    post_fatal_execution_modeled: bool,
+    persisted_data_source_projection_complete: bool,
     production_ready: bool,
     rpc_trigger_binding_complete: bool,
     runtime_consumes_execution_order_contract: bool,
@@ -331,6 +339,7 @@ struct TruthBoundary {
     stores_added: bool,
     substreams_handler_added: bool,
     target_runtime_identity_bound: bool,
+    checkpoint_or_graph_block_success_authorized: bool,
 }
 
 #[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
@@ -412,10 +421,13 @@ impl ReducerContract {
                 full_pool_handler_semantics: false,
                 graph_node_execution_order_supplement_bound: true,
                 graph_out_replaced: false,
+                graph_execution_trace_complete: false,
                 live_rpc_added: false,
                 logical_oracle_complete: false,
                 physical_parity_complete: false,
                 poi_parity_complete: false,
+                post_fatal_execution_modeled: false,
+                persisted_data_source_projection_complete: false,
                 production_ready: false,
                 rpc_trigger_binding_complete: false,
                 runtime_consumes_execution_order_contract: false,
@@ -424,6 +436,7 @@ impl ReducerContract {
                 stores_added: false,
                 substreams_handler_added: false,
                 target_runtime_identity_bound: false,
+                checkpoint_or_graph_block_success_authorized: false,
             })
         {
             return Err(Error::msg("flash-reducer truth boundary promoted"));
@@ -480,11 +493,13 @@ impl ReducerContract {
                 != "set both Pool fee-growth fields and save one Pool update only after both calls decode"
             || execution.missing_pool != "diagnostic reducer error before either contract call"
             || execution.first_call_failure
-                != "stop the diagnostic Flash reduction; do not attempt fee1; emit no Pool update"
+                != "stop this Flash handler before fee1; emit no Pool update"
             || execution.second_call_failure
                 != "both calls attempted; discard fee0 scratch; emit no Pool update"
             || execution.fatal_error
-                != "discard diagnostic Pool and membership changes from this reducer block and stop; excludes Graph Node VID, PoI, persisted-data-source, deterministic-error-stream, and physical transaction semantics"
+                != "final persisted Pool user-entity projection shortcut: return the exact block-baseline Pool state at the first fatal error; diagnostic membership reset is not a Graph persisted-data-source projection and this is not a Graph execution stop"
+            || execution.post_fatal_execution
+                != "intentionally not modeled: Graph continues remaining runnable triggers and breadth-first dynamic stages and may encounter a later retryable failure that aborts before the block transaction; otherwise the fatal transaction filters user modifications to PoI, passes persisted data sources and deterministic errors, advances the failed block pointer, and stops the deployment"
             || execution.nonfatal_error
                 != "discard only the failing Flash scratch and continue with later events in the diagnostic envelope"
             || execution.event_fields
@@ -613,6 +628,9 @@ impl ReducerContract {
     }
 }
 
+/// Reduces the final persisted Pool user-entity projection only. Outcomes are a
+/// consumed diagnostic-envelope prefix and never authorize Graph block or
+/// checkpoint success. Membership is diagnostic, not persisted-DS projection.
 pub fn reduce_flash_block<I: FlashCalls>(
     initial: &ReducerState,
     events: &FlashBlock,
@@ -705,13 +723,15 @@ pub fn reduce_flash_block<I: FlashCalls>(
                             kind: EventKind::Flash,
                             disposition: EventDisposition::FatalError(error.0),
                         });
+                        let omitted_event_count = events.events.len() - outcomes.len();
                         return Ok(BlockReduction {
                             state: initial.clone(),
                             outcomes,
                             pool_updates: Vec::new(),
-                            disposition: BlockDisposition::Fatal {
+                            disposition: BlockDisposition::FatalPoolUserEntityProjection {
                                 ordinal: ordered.ordinal,
                                 stage: error.0,
+                                omitted_event_count,
                             },
                             segment_id: segment.segment_id.clone(),
                         });
@@ -1021,9 +1041,10 @@ mod tests {
             } else {
                 assert_eq!(
                     result.disposition,
-                    BlockDisposition::Fatal {
+                    BlockDisposition::FatalPoolUserEntityProjection {
                         ordinal: 1,
                         stage: FailureStage::FeeGrowth0Call,
+                        omitted_event_count: 0,
                     },
                     "{network}:{number}"
                 );
@@ -1376,7 +1397,7 @@ mod tests {
     }
 
     #[test]
-    fn legacy_fatal_failure_rolls_back_only_diagnostic_pool_and_membership_state() {
+    fn legacy_fatal_failure_returns_pool_baseline_projection_and_omits_later_events() {
         let number = 14_000_000;
         let mut initial = state(&[POOL_A]);
         initial.pools.insert(POOL_B, pool(POOL_B, 7, 9));
@@ -1387,6 +1408,7 @@ mod tests {
                 flash(1, number, 1, POOL_A),
                 created(2, number, 2, factory("mainnet"), POOL_B),
                 flash(3, number, 3, POOL_B),
+                flash(4, number, 4, POOL_A),
             ],
         );
         let mut calls = FakeCalls::default();
@@ -1400,11 +1422,13 @@ mod tests {
         assert!(result.pool_updates.is_empty());
         assert_eq!(
             result.disposition,
-            BlockDisposition::Fatal {
+            BlockDisposition::FatalPoolUserEntityProjection {
                 ordinal: 3,
                 stage: FailureStage::FeeGrowth0Call,
+                omitted_event_count: 1,
             }
         );
+        assert_eq!(result.outcomes.len(), 3);
     }
 
     #[test]

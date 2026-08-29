@@ -18,11 +18,12 @@ use substreams::errors::Error;
 use crate::pb::writer::writer_event::Event;
 use crate::pb::writer::{WriterEvent, WriterEvents};
 
-const REDUCER_CONTRACT_SHA256: &str = "7b734cca8bf10038c73fd11a9af1a29e0aa7d7082ad621658485fec4bf947d2b";
+const REDUCER_CONTRACT_SHA256: &str = "f449c4612413f381486de25c8045ea9d46899942b5d78ab12e477a77b261dec0";
 const REDUCER_CONTRACT_VERSION: &str = "uniswap-v3-position-reducer/v1";
 const SOURCE_WRITER_CONTRACT_SHA256: &str = "259481724561d5aa725c17f90b5a19ea93ad6f7cd6074cf2cb8a8661c39f81c4";
 const SOURCE_PROFILE_SHA256: &str = "2b6635c061a7a0bfce39430c71c41dacc1567f095fe41134e890a697aa27f823";
 const SOURCE_WRITER_RUNTIME_SHA256: &str = "765806bf19fca7695ef4d97f557593e4f791759589fe55c20f18c6523a5d07ca";
+const SOURCE_EXECUTION_ORDER_RAW_SHA256: &str = "241e970cfcec4d76610b29a10141d3bff2512d80454a6308594f3db23621cde2";
 const WRITER_DESCRIPTOR_SHA256: &str = "22b899f9eeffc8dcfb608eea7ab93884a1756897aba62dc7107507c50a4ac3f0";
 const HISTORICAL_GUARD_BLOCK: u64 = 14_317_993;
 const EXCLUDED_POOL: Address = [
@@ -318,7 +319,13 @@ pub struct EventOutcome {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum BlockDisposition {
     Committed,
-    Fatal { ordinal: u64, message: String },
+    /// Final persisted Position/PositionSnapshot projection after a fatal handler error.
+    /// Graph execution itself continues outside this host-only reducer.
+    FatalPositionUserEntityProjection {
+        ordinal: u64,
+        message: String,
+        omitted_event_count: usize,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -404,6 +411,14 @@ struct SourceContract {
 
 #[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
+struct SourceRawContract {
+    path: String,
+    contract_version: String,
+    raw_sha256: String,
+}
+
+#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 struct SourceWriterRuntime {
     path: String,
     contract_version: String,
@@ -440,6 +455,7 @@ struct ExecutionContract {
     event_state: String,
     nonfatal_error: String,
     fatal_error: String,
+    post_fatal_execution: String,
     graph_call_scope: String,
     graph_call_cache: String,
     token_read_scope: String,
@@ -494,14 +510,17 @@ struct TruthBoundary {
     boundary_state_continuity_complete: bool,
     diagnostic_only: bool,
     graph_out_replaced: bool,
+    graph_execution_trace_complete: bool,
     live_calls_added: bool,
     logical_oracle_complete: bool,
     physical_parity_complete: bool,
     poi_parity_complete: bool,
+    post_fatal_execution_modeled: bool,
     production_ready: bool,
     runtime_population_complete: bool,
     stores_added: bool,
     substreams_handler_added: bool,
+    checkpoint_or_graph_block_success_authorized: bool,
     transaction_entity_effects_implemented: bool,
     full_npm_handler_semantics: bool,
 }
@@ -515,6 +534,7 @@ struct ReducerContract {
     source_writer_contract: SourceContract,
     source_segment_profiles: SourceContract,
     source_writer_runtime: SourceWriterRuntime,
+    source_execution_order: SourceRawContract,
     network_contracts: Vec<NetworkContract>,
     execution_contract: ExecutionContract,
     npm_profiles: Vec<NpmProfile>,
@@ -551,6 +571,9 @@ impl ReducerContract {
             || self.source_writer_runtime.contract_version != "uniswap-v3-writer-runtime/v1"
             || self.source_writer_runtime.sha256 != SOURCE_WRITER_RUNTIME_SHA256
             || self.source_writer_runtime.writer_descriptor_sha256 != WRITER_DESCRIPTOR_SHA256
+            || self.source_execution_order.path != "uniswap-v3/execution-order/v1/contract.json"
+            || self.source_execution_order.contract_version != "uniswap-v3-execution-order/v1"
+            || self.source_execution_order.raw_sha256 != SOURCE_EXECUTION_ORDER_RAW_SHA256
         {
             return Err(Error::msg("position-reducer source binding drift"));
         }
@@ -564,14 +587,17 @@ impl ReducerContract {
                 boundary_state_continuity_complete: false,
                 diagnostic_only: true,
                 graph_out_replaced: false,
+                graph_execution_trace_complete: false,
                 live_calls_added: false,
                 logical_oracle_complete: false,
                 physical_parity_complete: false,
                 poi_parity_complete: false,
+                post_fatal_execution_modeled: false,
                 production_ready: false,
                 runtime_population_complete: false,
                 stores_added: false,
                 substreams_handler_added: false,
+                checkpoint_or_graph_block_success_authorized: false,
                 transaction_entity_effects_implemented: false,
                 full_npm_handler_semantics: false,
             })
@@ -593,7 +619,9 @@ impl ReducerContract {
                 != "clone-on-write; only a fully accepted handler commits Position and PositionSnapshot"
             || execution.nonfatal_error != "discard the failing event scratch state and continue"
             || execution.fatal_error
-                != "discard every Position and PositionSnapshot change from the block and stop"
+                != "final persisted Position and PositionSnapshot user-entity projection shortcut: return the exact block baseline at the first fatal error; this is not a Graph execution stop"
+            || execution.post_fatal_execution
+                != "intentionally not modeled: Graph continues remaining runnable triggers and breadth-first dynamic stages and may encounter a later retryable failure that aborts before the block transaction; otherwise the fatal transaction filters user modifications to PoI, passes persisted data sources and deterministic errors, advances the failed block pointer, and stops the deployment"
             || execution.graph_call_scope
                 != "one reducer invocation and its exact block pointer; hash-bound when available and number fallback otherwise; never event ordinal"
             || execution.graph_call_cache
@@ -834,6 +862,8 @@ impl<'a, I: ReducerInputs> GraphCallCache<'a, I> {
     }
 }
 
+/// Reduces only the final persisted Position/PositionSnapshot projection. Event
+/// outcomes are a consumed prefix and never authorize Graph block or checkpoint success.
 pub fn reduce_position_block<I: ReducerInputs>(
     initial: &ReducerState,
     events: &WriterEvents,
@@ -918,12 +948,14 @@ pub fn reduce_position_block<I: ReducerInputs>(
                     kind,
                     disposition: EventDisposition::FatalError(message.clone()),
                 });
+                let omitted_event_count = events.events.len() - outcomes.len();
                 return Ok(BlockReduction {
                     state: initial.clone(),
                     outcomes,
-                    disposition: BlockDisposition::Fatal {
+                    disposition: BlockDisposition::FatalPositionUserEntityProjection {
                         ordinal: event.ordinal,
                         message,
+                        omitted_event_count,
                     },
                     segment_id: segment.segment_id.clone(),
                 });
@@ -1732,7 +1764,7 @@ mod tests {
             if fatal {
                 assert!(matches!(
                     result.disposition,
-                    BlockDisposition::Fatal { ordinal: 10, .. }
+                    BlockDisposition::FatalPositionUserEntityProjection { ordinal: 10, .. }
                 ));
                 assert!(matches!(
                     result.outcomes[0].disposition,
@@ -1816,7 +1848,7 @@ mod tests {
     }
 
     #[test]
-    fn fatal_legacy_error_rolls_back_prior_block_commits_and_stops() {
+    fn fatal_legacy_error_returns_baseline_projection_and_omits_later_events() {
         let block = 12_400_000;
         let events = writer_events(
             "mainnet",
@@ -1835,7 +1867,11 @@ mod tests {
         assert_eq!(result.state, initial);
         assert!(matches!(
             result.disposition,
-            BlockDisposition::Fatal { ordinal: 20, .. }
+            BlockDisposition::FatalPositionUserEntityProjection {
+                ordinal: 20,
+                omitted_event_count: 1,
+                ..
+            }
         ));
         assert_eq!(result.outcomes.len(), 2);
     }
@@ -1882,7 +1918,7 @@ mod tests {
             if fatal {
                 assert!(matches!(
                     result.disposition,
-                    BlockDisposition::Fatal { ordinal: 10, .. }
+                    BlockDisposition::FatalPositionUserEntityProjection { ordinal: 10, .. }
                 ));
             } else {
                 assert_eq!(result.disposition, BlockDisposition::Committed);

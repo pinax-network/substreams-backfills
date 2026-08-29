@@ -11,22 +11,22 @@
     {
       "path": "uniswap-v3/transaction-reducer/transaction-reducer-v1.json",
       "contract_version": "uniswap-v3-transaction-reducer/v1",
-      "sha256": "59c78d12d25fcd38a55a73fae447eadaa1b56588d57eb681ea599844b1a950aa"
+      "sha256": "83268d10f0ef3008d6d30fc3b6fd304fd46a067866b4284344fe468397878246"
     }
   ],
   "repository_artifacts": {
     "readme": {
       "path": "uniswap-v3/transaction-reducer/README.md",
-      "sha256": "353a7621beb87e73c2a2b7cc80120ea930e1c9a5cfd018bcf8984b1f0877e59e"
+      "sha256": "54c0da527c4a0594a30737bd56ad8a9326182147badf511b5d76d2d4f0159e20"
     },
     "reducer_contract": {
       "path": "uniswap-v3/transaction-reducer/transaction-reducer-v1.json",
       "contract_version": "uniswap-v3-transaction-reducer/v1",
-      "sha256": "59c78d12d25fcd38a55a73fae447eadaa1b56588d57eb681ea599844b1a950aa"
+      "sha256": "83268d10f0ef3008d6d30fc3b6fd304fd46a067866b4284344fe468397878246"
     },
     "reducer_source": {
       "path": "uniswap-v3/transaction-reducer/src/transaction_reducer.rs",
-      "sha256": "c21ce020f4c5dcfc73f0c8bdd30cfcb8098088b21c4d11d8f962d42972852f7e"
+      "sha256": "520a35e4b23aed231d538e484093655f6cbb3f6f129cbd44d2582ea6d46154cc"
     },
     "reducer_test_harness": {
       "path": "uniswap-v3/transaction-reducer/tests/transaction_reducer.rs",
@@ -54,9 +54,9 @@
     }
   },
   "materialized_runtime_artifacts": {
-    "configs/transaction-reducer-v1.json": "59c78d12d25fcd38a55a73fae447eadaa1b56588d57eb681ea599844b1a950aa",
+    "configs/transaction-reducer-v1.json": "83268d10f0ef3008d6d30fc3b6fd304fd46a067866b4284344fe468397878246",
     "src/lib.rs": "91a2330a1a1016ab00fae61e8d25fde244591159ab4efd848ecc08b2623aca63",
-    "src/transaction_reducer.rs": "c21ce020f4c5dcfc73f0c8bdd30cfcb8098088b21c4d11d8f962d42972852f7e",
+    "src/transaction_reducer.rs": "520a35e4b23aed231d538e484093655f6cbb3f6f129cbd44d2582ea6d46154cc",
     "tests/transaction_reducer.rs": "7884aec740177765f50a7f151a90f305b307dcc9d13a373afcf05c0706ab6075"
   },
   "producer_contract": {
@@ -101,7 +101,10 @@
     "pool_shared_transaction_writers_in_scope": false,
     "pool_cross_component_execution_order_certified": false,
     "entity_state_discard_scope_only": true,
-    "physical_vid_and_poi_error_stream_effects_modeled": false
+    "physical_vid_and_poi_error_stream_effects_modeled": false,
+    "fatal_projection_scope": "final persisted NPM Transaction and relation user entities only",
+    "outcome_scope": "consumed NPM WriterEvents prefix; omitted_event_count reports the unprocessed suffix",
+    "post_fatal_execution_modeled": false
   },
   "package_contract": {
     "module_count": 23,
@@ -121,10 +124,12 @@
     "diagnostic_only": true,
     "full_npm_handler_semantics": false,
     "graph_out_replaced": false,
+    "graph_execution_trace_complete": false,
     "live_calls_added": false,
     "logical_oracle_complete": false,
     "physical_parity_complete": false,
     "poi_parity_complete": false,
+    "post_fatal_execution_modeled": false,
     "failed_handler_poi_error_stream_semantics_certified": false,
     "physical_entity_vid_semantics_certified": false,
     "pool_cross_component_execution_order_certified": false,
@@ -133,6 +138,7 @@
     "runtime_population_complete": false,
     "shared_transaction_last_writer_semantics_certified": false,
     "stores_added": false,
-    "substreams_handler_added": false
+    "substreams_handler_added": false,
+    "checkpoint_or_graph_block_success_authorized": false
   }
 }

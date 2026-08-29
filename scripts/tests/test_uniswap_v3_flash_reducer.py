@@ -132,9 +132,11 @@ class FlashReducerContractTests(unittest.TestCase):
         self.assertIn("does not model Graph Node block-scoped activation", execution["membership"])
         self.assertIn("does not model Graph Node dynamic-datasource stage order", execution["graph_node_order_scope"])
         self.assertIn("no same-path or cross-component order claim", execution["graph_node_order_scope"])
-        for excluded in ("VID", "PoI", "persisted-data-source", "deterministic-error-stream", "physical"):
-            self.assertIn(excluded, execution["fatal_error"])
-        self.assertIn("do not attempt fee1", execution["first_call_failure"])
+        self.assertIn("final persisted Pool user-entity projection", execution["fatal_error"])
+        self.assertIn("diagnostic membership reset is not a Graph persisted-data-source projection", execution["fatal_error"])
+        self.assertIn("not a Graph execution stop", execution["fatal_error"])
+        self.assertIn("Graph continues remaining runnable triggers", execution["post_fatal_execution"])
+        self.assertIn("before fee1", execution["first_call_failure"])
         self.assertIn("discard fee0 scratch", execution["second_call_failure"])
         self.assertEqual(execution["flash_specific_guards"], [])
         self.assertEqual(execution["emitted_row_types"], ["Pool"])
@@ -152,6 +154,10 @@ class FlashReducerContractTests(unittest.TestCase):
         self.assertFalse(truth["same_path_order_machine_proven"])
         self.assertFalse(truth["full_pool_handler_semantics"])
         self.assertFalse(truth["target_runtime_identity_bound"])
+        self.assertFalse(truth["graph_execution_trace_complete"])
+        self.assertFalse(truth["post_fatal_execution_modeled"])
+        self.assertFalse(truth["persisted_data_source_projection_complete"])
+        self.assertFalse(truth["checkpoint_or_graph_block_success_authorized"])
         self.assertTrue(
             all(
                 value is False
@@ -175,6 +181,10 @@ class FlashReducerContractTests(unittest.TestCase):
             "poi_parity_complete",
             "backfill_ready",
             "production_ready",
+            "graph_execution_trace_complete",
+            "post_fatal_execution_modeled",
+            "persisted_data_source_projection_complete",
+            "checkpoint_or_graph_block_success_authorized",
         ):
             with self.subTest(flag=flag), tempfile.TemporaryDirectory(
                 prefix="flash-truth-promotion-"
@@ -414,11 +424,11 @@ class FlashReducerContractTests(unittest.TestCase):
         )
         self.assertEqual(
             VERIFIER.REDUCER_SEMANTICS_SHA256,
-            "85a3eb1037223dc7794706f860723df0f2897dd043e5e4a9db23f4a2de52af4f",
+            "8951469c026898de69d1a76381539eda3ddfdf094051d2b4b7f4295c860dfa43",
         )
         self.assertEqual(
             VERIFIER.REDUCER_SOURCE_SHA256,
-            "751df82569aff4a232e3c2bbb93d97abe2c6057bb857c08a69f7b832bda40a3f",
+            "6750cd555d50a6e3c3e68cc460f99a4473bbea4181d0d9a7762344a8eae5cf0f",
         )
 
     def test_source_profile_relabel_cannot_pass_cross_binding(self) -> None:

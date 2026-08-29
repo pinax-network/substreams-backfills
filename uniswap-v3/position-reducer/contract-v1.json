@@ -16,16 +16,16 @@
   "repository_artifacts": {
     "readme": {
       "path": "uniswap-v3/position-reducer/README.md",
-      "sha256": "48c7186cd0faffa7793cc7a57bac7c479a4733e5f5aac45a07806df6f697fd48"
+      "sha256": "5a864e36122bb483a8c04f75bdd2920ffb113c1b17be293f7d5cab722eba08c9"
     },
     "reducer_contract": {
       "path": "uniswap-v3/position-reducer/position-reducer-v1.json",
       "contract_version": "uniswap-v3-position-reducer/v1",
-      "sha256": "7b734cca8bf10038c73fd11a9af1a29e0aa7d7082ad621658485fec4bf947d2b"
+      "sha256": "f449c4612413f381486de25c8045ea9d46899942b5d78ab12e477a77b261dec0"
     },
     "reducer_source": {
       "path": "uniswap-v3/position-reducer/src/position_reducer.rs",
-      "sha256": "55beaef4e69e073ad8c1888901e9b16275c4dcfc038cbff05670aec2342dfdc2"
+      "sha256": "b5bae97fdd19a36e1380319997a841ae8a172d02e5a7a4c30328adf5085b2895"
     },
     "segment_profiles": {
       "path": "uniswap-v3/writer-runtime/segment-profiles-v1.json",
@@ -36,15 +36,20 @@
       "path": "uniswap-v3/graft-ancestry/v2/writer-compatibility.json",
       "contract_version": "uniswap-v3-writer-compatibility/v3",
       "sha256": "259481724561d5aa725c17f90b5a19ea93ad6f7cd6074cf2cb8a8661c39f81c4"
+    },
+    "execution_order": {
+      "path": "uniswap-v3/execution-order/v1/contract.json",
+      "contract_version": "uniswap-v3-execution-order/v1",
+      "sha256": "241e970cfcec4d76610b29a10141d3bff2512d80454a6308594f3db23621cde2"
     }
   },
   "materialized_runtime_artifacts": {
     "Cargo.lock": "e6ae45abd9438e699c3c42b505fd67bbd7335acf81ffd006dbb187d2b17dc315",
     "Cargo.toml": "becb407bfb3642e8e73a82bdfacb1801094683b12fc91d98e556378fe49dc90b",
-    "configs/position-reducer-v1.json": "7b734cca8bf10038c73fd11a9af1a29e0aa7d7082ad621658485fec4bf947d2b",
+    "configs/position-reducer-v1.json": "f449c4612413f381486de25c8045ea9d46899942b5d78ab12e477a77b261dec0",
     "rust-toolchain.toml": "efa0faa3c4987d0cd1df72b56623b94ffb15f0ab5e5617536f43980d02bc9a2c",
     "src/lib.rs": "e1d138cbbb03464c982358a0dc44ad5b4d37b5b18a40a176189374c979ec8af1",
-    "src/position_reducer.rs": "55beaef4e69e073ad8c1888901e9b16275c4dcfc038cbff05670aec2342dfdc2",
+    "src/position_reducer.rs": "b5bae97fdd19a36e1380319997a841ae8a172d02e5a7a4c30328adf5085b2895",
     "substreams.base.yaml": "2f5e73f0f80424aca284256d1067dde8001c541c657433c2187bc56d0705733b",
     "substreams.mainnet.yaml": "36379225d7a28df0b772524c370126e481a9a1c9724503131907548db60dac22"
   },
@@ -53,6 +58,7 @@
     "writer_descriptor_sha256": "22b899f9eeffc8dcfb608eea7ab93884a1756897aba62dc7107507c50a4ac3f0",
     "writer_source_contract_sha256": "259481724561d5aa725c17f90b5a19ea93ad6f7cd6074cf2cb8a8661c39f81c4",
     "segment_profiles_sha256": "2b6635c061a7a0bfce39430c71c41dacc1567f095fe41134e890a697aa27f823",
+    "execution_order_contract_sha256": "241e970cfcec4d76610b29a10141d3bff2512d80454a6308594f3db23621cde2",
     "mainnet_runtime_start_block": 12369621,
     "mainnet_npm_start_block": 12369651,
     "base_runtime_start_block": 1371679,
@@ -71,7 +77,10 @@
     "uint_width_bits": 256,
     "segment_count": 8,
     "npm_profile_count": 5,
-    "transaction_entity_side_effects": false
+    "transaction_entity_side_effects": false,
+    "fatal_projection_scope": "final persisted Position and PositionSnapshot user entities only",
+    "outcome_scope": "consumed WriterEvents prefix; omitted_event_count reports the unprocessed suffix",
+    "post_fatal_execution_modeled": false
   },
   "package_contract": {
     "module_count": 23,
@@ -91,14 +100,17 @@
     "diagnostic_only": true,
     "full_npm_handler_semantics": false,
     "graph_out_replaced": false,
+    "graph_execution_trace_complete": false,
     "live_calls_added": false,
     "logical_oracle_complete": false,
     "physical_parity_complete": false,
     "poi_parity_complete": false,
+    "post_fatal_execution_modeled": false,
     "production_ready": false,
     "runtime_population_complete": false,
     "stores_added": false,
     "substreams_handler_added": false,
-    "transaction_entity_effects_implemented": false
+    "transaction_entity_effects_implemented": false,
+    "checkpoint_or_graph_block_success_authorized": false
   }
 }

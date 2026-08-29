@@ -46,9 +46,12 @@ The first helper save precedes the ignored-pool return and modern
 Increase/Decrease missing-token return. Those successful early returns can
 therefore leave an orphan Transaction when the Position identity was new.
 Deterministic errors are different at the entity-state boundary modeled here:
-the failing handler's staged Transaction changes are discarded. Historical
-mainnet segments fail the block; current mainnet and both Base segments discard
-only the failing handler's entity-state scratch and continue. The
+the failing handler's staged Transaction changes are discarded. For historical
+mainnet segments, the first fatal error returns the exact input Transaction and
+relation state as a shortcut for the final persisted NPM user-entity
+projection. Outcomes cover only the consumed NPM-event prefix and include the
+number of later writer events omitted. Current mainnet and both Base segments
+discard only the failing handler's entity-state scratch and continue. The
 block-14,317,993 Base-root Increase/Decrease guard runs before identity
 construction and therefore before any helper call.
 
@@ -59,7 +62,11 @@ Graph Node ordering, VID, PoI, and failure evidence under raw SHA-256
 It proves that a failed handler can consume VIDs and remain represented in PoI
 and error channels even though its entity-state scratch is discarded. This
 reducer reports attempted helper calls but does not reproduce those physical
-side effects.
+side effects. Graph continues remaining runnable triggers and breadth-first
+dynamic stages after the first fatal handler error, and a later retryable
+failure may still prevent the block transaction. The fatal projection therefore
+is not a complete execution trace and cannot authorize Graph block or
+checkpoint success.
 
 ## Explicit limits
 

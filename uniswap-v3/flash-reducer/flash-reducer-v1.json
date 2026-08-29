@@ -51,9 +51,10 @@
     "abi_decode": "exactly one 32-byte big-endian uint256 return value",
     "atomicity": "set both Pool fee-growth fields and save one Pool update only after both calls decode",
     "missing_pool": "diagnostic reducer error before either contract call",
-    "first_call_failure": "stop the diagnostic Flash reduction; do not attempt fee1; emit no Pool update",
+    "first_call_failure": "stop this Flash handler before fee1; emit no Pool update",
     "second_call_failure": "both calls attempted; discard fee0 scratch; emit no Pool update",
-    "fatal_error": "discard diagnostic Pool and membership changes from this reducer block and stop; excludes Graph Node VID, PoI, persisted-data-source, deterministic-error-stream, and physical transaction semantics",
+    "fatal_error": "final persisted Pool user-entity projection shortcut: return the exact block-baseline Pool state at the first fatal error; diagnostic membership reset is not a Graph persisted-data-source projection and this is not a Graph execution stop",
+    "post_fatal_execution": "intentionally not modeled: Graph continues remaining runnable triggers and breadth-first dynamic stages and may encounter a later retryable failure that aborts before the block transaction; otherwise the fatal transaction filters user modifications to PoI, passes persisted data sources and deterministic errors, advances the failed block pointer, and stops the deployment",
     "nonfatal_error": "discard only the failing Flash scratch and continue with later events in the diagnostic envelope",
     "event_fields": "sender, recipient, amount0, amount1, paid0, and paid1 are decoded upstream and ignored",
     "flash_specific_guards": [],
@@ -167,10 +168,13 @@
     "full_pool_handler_semantics": false,
     "graph_node_execution_order_supplement_bound": true,
     "graph_out_replaced": false,
+    "graph_execution_trace_complete": false,
     "live_rpc_added": false,
     "logical_oracle_complete": false,
     "physical_parity_complete": false,
     "poi_parity_complete": false,
+    "post_fatal_execution_modeled": false,
+    "persisted_data_source_projection_complete": false,
     "production_ready": false,
     "rpc_trigger_binding_complete": false,
     "runtime_consumes_execution_order_contract": false,
@@ -178,6 +182,7 @@
     "same_path_order_machine_proven": false,
     "stores_added": false,
     "substreams_handler_added": false,
-    "target_runtime_identity_bound": false
+    "target_runtime_identity_bound": false,
+    "checkpoint_or_graph_block_success_authorized": false
   }
 }

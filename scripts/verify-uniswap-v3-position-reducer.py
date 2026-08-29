@@ -16,15 +16,18 @@ from pathlib import Path
 
 
 CONTRACT_PATH = Path("uniswap-v3/position-reducer/contract-v1.json")
-CONTRACT_SHA256 = "6cbe12850889f4cf5538ac8bbf938618656c29efbb8b6ea40823def84a111526"
+CONTRACT_SHA256 = "3099c3f08208cf46ce68df3433dd5b757436a3a7e315daec3f0d96bf242185c1"
 OVERLAY = Path("uniswap-v3/position-reducer")
 WRITER_VERIFIER_PATH = Path("scripts/verify-uniswap-v3-writer-runtime.py")
 WRITER_RUNTIME_SHA256 = "765806bf19fca7695ef4d97f557593e4f791759589fe55c20f18c6523a5d07ca"
 WRITER_DESCRIPTOR_SHA256 = "22b899f9eeffc8dcfb608eea7ab93884a1756897aba62dc7107507c50a4ac3f0"
 WRITER_SOURCE_SHA256 = "259481724561d5aa725c17f90b5a19ea93ad6f7cd6074cf2cb8a8661c39f81c4"
 PROFILE_SHA256 = "2b6635c061a7a0bfce39430c71c41dacc1567f095fe41134e890a697aa27f823"
-REDUCER_SEMANTICS_SHA256 = "7b734cca8bf10038c73fd11a9af1a29e0aa7d7082ad621658485fec4bf947d2b"
-REDUCER_SOURCE_SHA256 = "55beaef4e69e073ad8c1888901e9b16275c4dcfc038cbff05670aec2342dfdc2"
+EXECUTION_ORDER_PATH = Path("uniswap-v3/execution-order/v1/contract.json")
+EXECUTION_ORDER_VERSION = "uniswap-v3-execution-order/v1"
+EXECUTION_ORDER_SHA256 = "241e970cfcec4d76610b29a10141d3bff2512d80454a6308594f3db23621cde2"
+REDUCER_SEMANTICS_SHA256 = "f449c4612413f381486de25c8045ea9d46899942b5d78ab12e477a77b261dec0"
+REDUCER_SOURCE_SHA256 = "b5bae97fdd19a36e1380319997a841ae8a172d02e5a7a4c30328adf5085b2895"
 RUNTIME_PATCH_SHA256 = "281836847abbc800528d487777757e1ffd44a7962bdb8c686aaeae4a874dd717"
 EXPECTED_REDUCER_RUNTIME_DELTA = {
     "configs/position-reducer-v1.json",
@@ -122,6 +125,7 @@ def load_contract(root: Path) -> dict[str, object]:
             "uniswap-v3/graft-ancestry/v2/writer-compatibility.json",
             "uniswap-v3-writer-compatibility/v3",
         ),
+        "execution_order": (EXECUTION_ORDER_PATH.as_posix(), EXECUTION_ORDER_VERSION),
     }
     require(set(contract["repository_artifacts"]) == set(expected_artifacts), "repository artifact set drift")
     for name, (relative, version) in expected_artifacts.items():
@@ -136,7 +140,8 @@ def load_contract(root: Path) -> dict[str, object]:
         contract["repository_artifacts"]["reducer_contract"]["sha256"] == REDUCER_SEMANTICS_SHA256
         and contract["repository_artifacts"]["reducer_source"]["sha256"] == REDUCER_SOURCE_SHA256
         and contract["repository_artifacts"]["segment_profiles"]["sha256"] == PROFILE_SHA256
-        and contract["repository_artifacts"]["source_writer_contract"]["sha256"] == WRITER_SOURCE_SHA256,
+        and contract["repository_artifacts"]["source_writer_contract"]["sha256"] == WRITER_SOURCE_SHA256
+        and contract["repository_artifacts"]["execution_order"]["sha256"] == EXECUTION_ORDER_SHA256,
         "position-reducer pinned repository digest drift",
     )
     require(
@@ -146,6 +151,7 @@ def load_contract(root: Path) -> dict[str, object]:
             "writer_descriptor_sha256": WRITER_DESCRIPTOR_SHA256,
             "writer_source_contract_sha256": WRITER_SOURCE_SHA256,
             "segment_profiles_sha256": PROFILE_SHA256,
+            "execution_order_contract_sha256": EXECUTION_ORDER_SHA256,
             "mainnet_runtime_start_block": 12_369_621,
             "mainnet_npm_start_block": 12_369_651,
             "base_runtime_start_block": 1_371_679,
@@ -166,6 +172,9 @@ def load_contract(root: Path) -> dict[str, object]:
             "segment_count": 8,
             "npm_profile_count": 5,
             "transaction_entity_side_effects": False,
+            "fatal_projection_scope": "final persisted Position and PositionSnapshot user entities only",
+            "outcome_scope": "consumed WriterEvents prefix; omitted_event_count reports the unprocessed suffix",
+            "post_fatal_execution_modeled": False,
         },
         "position-reducer execution summary drift",
     )
@@ -193,15 +202,18 @@ def load_contract(root: Path) -> dict[str, object]:
             "diagnostic_only": True,
             "full_npm_handler_semantics": False,
             "graph_out_replaced": False,
+            "graph_execution_trace_complete": False,
             "live_calls_added": False,
             "logical_oracle_complete": False,
             "physical_parity_complete": False,
             "poi_parity_complete": False,
+            "post_fatal_execution_modeled": False,
             "production_ready": False,
             "runtime_population_complete": False,
             "stores_added": False,
             "substreams_handler_added": False,
             "transaction_entity_effects_implemented": False,
+            "checkpoint_or_graph_block_success_authorized": False,
         },
         "position-reducer truth boundary promoted",
     )
@@ -222,6 +234,26 @@ def load_semantics(root: Path) -> dict[str, object]:
     )
     require(contract["source_writer_contract"]["sha256"] == WRITER_SOURCE_SHA256, "writer source binding drift")
     require(contract["source_segment_profiles"]["sha256"] == PROFILE_SHA256, "segment profile binding drift")
+    require(
+        contract["source_execution_order"]
+        == {
+            "path": EXECUTION_ORDER_PATH.as_posix(),
+            "contract_version": EXECUTION_ORDER_VERSION,
+            "raw_sha256": EXECUTION_ORDER_SHA256,
+        },
+        "execution-order binding drift",
+    )
+    execution = contract["execution_contract"]
+    require(
+        execution["fatal_error"]
+        == "final persisted Position and PositionSnapshot user-entity projection shortcut: return the exact block baseline at the first fatal error; this is not a Graph execution stop",
+        "fatal Position projection scope drift",
+    )
+    require(
+        execution["post_fatal_execution"]
+        == "intentionally not modeled: Graph continues remaining runnable triggers and breadth-first dynamic stages and may encounter a later retryable failure that aborts before the block transaction; otherwise the fatal transaction filters user modifications to PoI, passes persisted data sources and deterministic errors, advances the failed block pointer, and stops the deployment",
+        "post-fatal execution scope drift",
+    )
     require(len(contract["segments"]) == 8, "position-reducer requires exactly eight segments")
     require(len(contract["npm_profiles"]) == 5, "position-reducer requires exactly five NPM profiles")
     base_root = next(profile for profile in contract["npm_profiles"] if profile["profile_id"] == "base-root-amount0-to-both")
@@ -253,6 +285,13 @@ def verify_overlay_static(root: Path, writer) -> None:
         "struct GraphCallCache",
         "transaction_entity_effects_implemented: false",
         "full_npm_handler_semantics: false",
+        "FatalPositionUserEntityProjection",
+        "omitted_event_count",
+        "fatal_legacy_error_returns_baseline_projection_and_omits_later_events",
+        "graph_execution_trace_complete: false",
+        "post_fatal_execution_modeled: false",
+        "checkpoint_or_graph_block_success_authorized: false",
+        "SOURCE_EXECUTION_ORDER_RAW_SHA256",
     ):
         require(required in source, f"position-reducer source contract missing `{required}`")
     for forbidden in (
@@ -266,7 +305,6 @@ def verify_overlay_static(root: Path, writer) -> None:
         "std::net",
     ):
         require(forbidden not in source, f"position-reducer source contains forbidden runtime capability `{forbidden}`")
-
     with tempfile.TemporaryDirectory(prefix="uniswap-v3-position-patch-") as temporary:
         writer_runtime = Path(temporary) / "writer"
         writer.materialize_expected(root, writer_runtime)
@@ -289,6 +327,35 @@ def verify_overlay_static(root: Path, writer) -> None:
             stderr=subprocess.STDOUT,
         )
         require(result.returncode == 0, "position-reducer patch does not apply after exact writer runtime")
+
+
+def verify_execution_order_binding(root: Path) -> None:
+    path = root / EXECUTION_ORDER_PATH
+    require(path.is_file(), "execution-order supplement missing")
+    require(sha256(path) == EXECUTION_ORDER_SHA256, "execution-order supplement digest drift")
+    reference = json.loads(path.read_text())
+    require(
+        (reference.get("format_version"), reference.get("contract_version"), reference.get("mode"))
+        == (1, EXECUTION_ORDER_VERSION, "reference-truth-supplement"),
+        "execution-order supplement identity drift",
+    )
+    dynamic = reference["execution_model"]["dynamic_data_sources"]
+    require(
+        dynamic["stage_scope"] == "stage_local"
+        and dynamic["traversal"] == "breadth_first"
+        and dynamic["activation_scope"] == "entire_creation_block"
+        and dynamic["raw_global_flattening"] is False
+        and dynamic["creation_log_ordinal_gate"] is False,
+        "execution-order dynamic-stage truth drift",
+    )
+    failure = reference["execution_model"]["failure_modes"]
+    require(
+        failure["deterministic_fatal"]
+        == "discard the failing mapping handler; filter only entity modifications to the PoI entity, still pass persisted data sources and deterministic errors to the block transaction, advance the failed block pointer, then stop"
+        and failure["pretransaction_mapping_decode_or_dynamic_stage_unknown"]
+        == "return before block transaction; do not commit that partial block state",
+        "execution-order fatal transaction truth drift",
+    )
 
 
 def materialize_expected(root: Path, destination: Path, writer=None) -> None:
@@ -386,6 +453,7 @@ def main() -> int:
         writer = load_writer_verifier(root)
         contract = load_contract(root)
         load_semantics(root)
+        verify_execution_order_binding(root)
         verify_writer_runtime(root, writer)
         verify_overlay_static(root, writer)
         runtime_wasm = None

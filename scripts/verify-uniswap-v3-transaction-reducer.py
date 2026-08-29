@@ -15,7 +15,7 @@ from pathlib import Path
 
 
 CONTRACT_PATH = Path("uniswap-v3/transaction-reducer/contract-v1.json")
-CONTRACT_SHA256 = "977424fb7db87ebb91e819f51ae55540e7700303b2c649bec28766c65223a809"
+CONTRACT_SHA256 = "c9f355d141720dfda4347b4ef6cb5350a96803db31cf4770f035b5efca9def7f"
 OVERLAY = Path("uniswap-v3/transaction-reducer")
 WRITER_VERIFIER_PATH = Path("scripts/verify-uniswap-v3-writer-runtime.py")
 WRITER_RUNTIME_SHA256 = "765806bf19fca7695ef4d97f557593e4f791759589fe55c20f18c6523a5d07ca"
@@ -32,8 +32,8 @@ GRAPH_NODE_TREE = "1f372b47e4de659ddbf503cdbc31ebe4d54df239"
 GRAPH_NODE_TRANSACTION_ABI_SHA256 = "86932f5228b303ea15121767a5cc5d39417208346a351a2e057e4ac430a6d6c9"
 GRAPH_NODE_TRIGGER_SHA256 = "6b31d65fa9c0289d76a5bb7d812965e51e26054bb4fad417aa641843c531700f"
 GRAPH_NODE_RECEIPT_SHA256 = "4f491ddc90f16f4aff919dde803ba0ba47cdccf979db5904366b4bc4ca82ec36"
-SEMANTICS_SHA256 = "59c78d12d25fcd38a55a73fae447eadaa1b56588d57eb681ea599844b1a950aa"
-REDUCER_SOURCE_SHA256 = "c21ce020f4c5dcfc73f0c8bdd30cfcb8098088b21c4d11d8f962d42972852f7e"
+SEMANTICS_SHA256 = "83268d10f0ef3008d6d30fc3b6fd304fd46a067866b4284344fe468397878246"
+REDUCER_SOURCE_SHA256 = "520a35e4b23aed231d538e484093655f6cbb3f6f129cbd44d2582ea6d46154cc"
 REDUCER_TEST_HARNESS_SHA256 = "7884aec740177765f50a7f151a90f305b307dcc9d13a373afcf05c0706ab6075"
 EXPECTED_RUNTIME_DELTA = {
     "configs/transaction-reducer-v1.json",
@@ -75,10 +75,12 @@ def expected_truth() -> dict[str, bool]:
         "diagnostic_only": True,
         "full_npm_handler_semantics": False,
         "graph_out_replaced": False,
+        "graph_execution_trace_complete": False,
         "live_calls_added": False,
         "logical_oracle_complete": False,
         "physical_parity_complete": False,
         "poi_parity_complete": False,
+        "post_fatal_execution_modeled": False,
         "failed_handler_poi_error_stream_semantics_certified": False,
         "physical_entity_vid_semantics_certified": False,
         "pool_cross_component_execution_order_certified": False,
@@ -88,6 +90,7 @@ def expected_truth() -> dict[str, bool]:
         "shared_transaction_last_writer_semantics_certified": False,
         "stores_added": False,
         "substreams_handler_added": False,
+        "checkpoint_or_graph_block_success_authorized": False,
     }
 
 
@@ -207,6 +210,14 @@ def load_execution_order(root: Path) -> dict[str, object]:
         poi["failed_handler_set_entity_events_physically_erased"] is False
         and poi["set_entity_written_before_entity_cache_set"] is True,
         "execution-order PoI boundary drift",
+    )
+    failure = execution["failure_modes"]
+    require(
+        failure["deterministic_fatal"]
+        == "discard the failing mapping handler; filter only entity modifications to the PoI entity, still pass persisted data sources and deterministic errors to the block transaction, advance the failed block pointer, then stop"
+        and failure["pretransaction_mapping_decode_or_dynamic_stage_unknown"]
+        == "return before block transaction; do not commit that partial block state",
+        "execution-order fatal transaction boundary drift",
     )
     truth = contract["truth_boundary"]
     require(
@@ -352,6 +363,9 @@ def load_contract(root: Path) -> dict[str, object]:
             "pool_cross_component_execution_order_certified": False,
             "entity_state_discard_scope_only": True,
             "physical_vid_and_poi_error_stream_effects_modeled": False,
+            "fatal_projection_scope": "final persisted NPM Transaction and relation user entities only",
+            "outcome_scope": "consumed NPM WriterEvents prefix; omitted_event_count reports the unprocessed suffix",
+            "post_fatal_execution_modeled": False,
         },
         "transaction-reducer execution summary drift",
     )
@@ -446,6 +460,16 @@ def load_semantics(root: Path) -> dict[str, object]:
         semantics["execution_contract"]["deterministic_error_entity_state"]
         == "discard all attempted entity-state writes from the failing handler",
         "deterministic-error entity-state scope drift",
+    )
+    require(
+        semantics["execution_contract"]["fatal_error_entity_state"]
+        == "final persisted NPM Transaction and relation user-entity projection shortcut: return the exact block baseline at the first fatal error; this is not a Graph execution stop",
+        "fatal Transaction projection scope drift",
+    )
+    require(
+        semantics["execution_contract"]["post_fatal_execution"]
+        == "intentionally not modeled: Graph continues remaining runnable triggers and breadth-first dynamic stages and may encounter a later retryable failure that aborts before the block transaction; otherwise the fatal transaction filters user modifications to PoI, passes persisted data sources and deterministic errors, advances the failed block pointer, and stops the deployment",
+        "post-fatal execution scope drift",
     )
     require(
         semantics["execution_contract"]["npm_writer_event_order"]
@@ -554,6 +578,12 @@ def verify_overlay_static(root: Path, writer) -> None:
         "failed_handler_poi_error_stream_semantics_certified",
         "pool_transaction_writers_audited",
         "shared_transaction_last_writer_semantics_certified",
+        "FatalTransactionUserEntityProjection",
+        "omitted_event_count",
+        "fatal_legacy_error_returns_baseline_projection_and_omits_later_events",
+        "graph_execution_trace_complete",
+        "post_fatal_execution_modeled",
+        "checkpoint_or_graph_block_success_authorized",
     ):
         require(required in source, f"transaction-reducer source contract missing `{required}`")
     for forbidden in (

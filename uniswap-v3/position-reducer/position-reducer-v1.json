@@ -18,6 +18,11 @@
     "sha256": "765806bf19fca7695ef4d97f557593e4f791759589fe55c20f18c6523a5d07ca",
     "writer_descriptor_sha256": "22b899f9eeffc8dcfb608eea7ab93884a1756897aba62dc7107507c50a4ac3f0"
   },
+  "source_execution_order": {
+    "path": "uniswap-v3/execution-order/v1/contract.json",
+    "contract_version": "uniswap-v3-execution-order/v1",
+    "raw_sha256": "241e970cfcec4d76610b29a10141d3bff2512d80454a6308594f3db23621cde2"
+  },
   "network_contracts": [
     {
       "network": "mainnet",
@@ -40,7 +45,8 @@
     "producer_corruption": "reject before event execution and before applying segment nonfatal policy",
     "event_state": "clone-on-write; only a fully accepted handler commits Position and PositionSnapshot",
     "nonfatal_error": "discard the failing event scratch state and continue",
-    "fatal_error": "discard every Position and PositionSnapshot change from the block and stop",
+    "fatal_error": "final persisted Position and PositionSnapshot user-entity projection shortcut: return the exact block baseline at the first fatal error; this is not a Graph execution stop",
+    "post_fatal_execution": "intentionally not modeled: Graph continues remaining runnable triggers and breadth-first dynamic stages and may encounter a later retryable failure that aborts before the block transaction; otherwise the fatal transaction filters user modifications to PoI, passes persisted data sources and deterministic errors, advances the failed block pointer, and stops the deployment",
     "graph_call_scope": "one reducer invocation and its exact block pointer; hash-bound when available and number fallback otherwise; never event ordinal",
     "graph_call_cache": "invocation-local raw results keyed by target address and exact positions or getPool calldata",
     "token_read_scope": "event ordinal; never block-only",
@@ -213,14 +219,17 @@
     "boundary_state_continuity_complete": false,
     "diagnostic_only": true,
     "graph_out_replaced": false,
+    "graph_execution_trace_complete": false,
     "live_calls_added": false,
     "logical_oracle_complete": false,
     "physical_parity_complete": false,
     "poi_parity_complete": false,
+    "post_fatal_execution_modeled": false,
     "production_ready": false,
     "runtime_population_complete": false,
     "stores_added": false,
     "substreams_handler_added": false,
+    "checkpoint_or_graph_block_success_authorized": false,
     "transaction_entity_effects_implemented": false,
     "full_npm_handler_semantics": false
   }

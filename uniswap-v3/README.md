@@ -59,8 +59,12 @@ path to `graph_out`; all promotion gates remain false.
 The third sibling [`position-reducer/`](position-reducer/README.md) overlay adds
 a pure host-only sequential model for Position and PositionSnapshot transitions
 after the diagnostic writer contract. It binds all eight segment boundaries and
-five NPM profiles, including event-local versus block-fatal rollback, ordinal
-Token reads, block-scoped call caching, and graph-node v0.44 decimal precision.
+five NPM profiles, including event-local discard versus the final fatal
+Position/PositionSnapshot user-entity projection, ordinal Token reads,
+block-scoped call caching, and graph-node v0.44 decimal precision. Fatal
+outcomes are consumed-event prefixes with omitted counts; they do not model a
+Graph execution stop or authorize block/checkpoint success. The reducer binds
+the exact execution-order supplement for those limits.
 It is excluded from the WASM target, so the writer WASM and 23-module packages
 remain byte-identical. It does not implement Transaction entity side effects,
 Substreams stores, live calls, `graph_out`, or any promotion gate.
@@ -71,9 +75,11 @@ PoolCreated/Flash envelope and creation-ordinal membership are diagnostic input
 conventions, not Graph Node dynamic-datasource stage order or block-scoped
 activation. It makes no same-path or cross-component order claim. The reducer
 performs the two exact fee-growth calls sequentially and emits one atomic Pool
-update only after both uint256 results decode. Its fatal rollback covers only
-diagnostic Pool/membership state, not VID, PoI, persisted data sources, error
-streams, or physical transactions. It produces no Flash, Transaction, or
+update only after both uint256 results decode. Its fatal shortcut returns only
+the final Pool user-entity baseline projection; diagnostic membership reset is
+not persisted-data-source projection. Outcomes are prefixes with omitted
+counts, and no Graph execution-trace or block/checkpoint success claim is made.
+It produces no Flash, Transaction, or
 aggregate rows and is excluded from the WASM target, so it cannot change either
 diagnostic package. It binds the Graph Node v0.44 execution-order supplement,
 while all implementation, runtime, continuity, parity, production, and
@@ -110,7 +116,10 @@ duplicating its Graph Node source evidence. It adds no Substreams module,
 store, live call, or `graph_out` path. Pool writers of the shared `Transaction`
 entity remain unaudited; new dynamic Pool triggers do not follow a raw global
 cross-component log order, and final last-writer, VID, and PoI/error-stream
-parity are uncertified. Every readiness gate remains false.
+parity are uncertified. A fatal result is only the final NPM
+Transaction/relation user-entity baseline projection plus a consumed-event
+prefix and omitted count; it is not a Graph execution stop or block/checkpoint
+success authority. Every readiness gate remains false.
 
 The sibling [`oracle/`](oracle/README.md) contract retains deployment-scoped
 current-head responses and the asymmetric graft-boundary discovery result:

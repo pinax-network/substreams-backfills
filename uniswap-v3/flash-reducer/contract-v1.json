@@ -16,20 +16,20 @@
   "repository_artifacts": {
     "readme": {
       "path": "uniswap-v3/flash-reducer/README.md",
-      "sha256": "c57b0e4f51df24a63954480eb585c6e5dbe9969af4830fef6b75461c43647bda"
+      "sha256": "d80f288b89e09e20b316be6b63590a52d4f7cd15fae10e920751dc6d766bd12d"
     },
     "reducer_contract": {
       "path": "uniswap-v3/flash-reducer/flash-reducer-v1.json",
       "contract_version": "uniswap-v3-flash-reducer/v1",
-      "sha256": "85a3eb1037223dc7794706f860723df0f2897dd043e5e4a9db23f4a2de52af4f"
+      "sha256": "8951469c026898de69d1a76381539eda3ddfdf094051d2b4b7f4295c860dfa43"
     },
     "reducer_source": {
       "path": "uniswap-v3/flash-reducer/src/flash_reducer.rs",
-      "sha256": "751df82569aff4a232e3c2bbb93d97abe2c6057bb857c08a69f7b832bda40a3f"
+      "sha256": "6750cd555d50a6e3c3e68cc460f99a4473bbea4181d0d9a7762344a8eae5cf0f"
     },
     "reducer_tests": {
       "path": "scripts/tests/test_uniswap_v3_flash_reducer.py",
-      "sha256": "d33e1d5cea4f174d40ed1aab979f59c3c748e55dd2b9376c9cf89b7b969d68b4"
+      "sha256": "e8367f02071a7d537bc2beea2d39ba5e0a71ddb50f86762193497b12cb675819"
     },
     "source_execution_order_contract": {
       "path": "uniswap-v3/execution-order/v1/contract.json",
@@ -50,9 +50,9 @@
   "materialized_runtime_artifacts": {
     "Cargo.lock": "e6ae45abd9438e699c3c42b505fd67bbd7335acf81ffd006dbb187d2b17dc315",
     "Cargo.toml": "becb407bfb3642e8e73a82bdfacb1801094683b12fc91d98e556378fe49dc90b",
-    "configs/flash-reducer-v1.json": "85a3eb1037223dc7794706f860723df0f2897dd043e5e4a9db23f4a2de52af4f",
+    "configs/flash-reducer-v1.json": "8951469c026898de69d1a76381539eda3ddfdf094051d2b4b7f4295c860dfa43",
     "rust-toolchain.toml": "efa0faa3c4987d0cd1df72b56623b94ffb15f0ab5e5617536f43980d02bc9a2c",
-    "src/flash_reducer.rs": "751df82569aff4a232e3c2bbb93d97abe2c6057bb857c08a69f7b832bda40a3f",
+    "src/flash_reducer.rs": "6750cd555d50a6e3c3e68cc460f99a4473bbea4181d0d9a7762344a8eae5cf0f",
     "src/lib.rs": "183f1fc15a32a2ab08d1489feefcbba4fcc55f1eb855276fbff1d3ef222672fc",
     "substreams.base.yaml": "2f5e73f0f80424aca284256d1067dde8001c541c657433c2187bc56d0705733b",
     "substreams.mainnet.yaml": "36379225d7a28df0b772524c370126e481a9a1c9724503131907548db60dac22"
@@ -74,7 +74,10 @@
     "event_order": "diagnostic envelope ordinal and block_log_index strictly increasing; not Graph Node cross-stage order",
     "membership": "diagnostic creation-ordinal convention; not Graph Node block-scoped activation",
     "graph_node_order_scope": "dynamic-datasource stage order is not implemented; no same-path or cross-component order claim",
-    "fatal_rollback_scope": "diagnostic Pool and membership state only; excludes VID, PoI, persisted data sources, deterministic-error streams, and physical transaction semantics",
+    "fatal_projection_scope": "final persisted Pool user entity only; diagnostic membership reset is not a persisted-data-source projection",
+    "outcome_scope": "consumed diagnostic-envelope prefix; omitted_event_count reports the unprocessed suffix",
+    "post_fatal_execution_modeled": false,
+    "diagnostic_membership_is_persisted_data_source_projection": false,
     "call_order": [
       "f3058399",
       "46141319"
@@ -112,10 +115,13 @@
     "full_pool_handler_semantics": false,
     "graph_node_execution_order_supplement_bound": true,
     "graph_out_replaced": false,
+    "graph_execution_trace_complete": false,
     "live_rpc_added": false,
     "logical_oracle_complete": false,
     "physical_parity_complete": false,
     "poi_parity_complete": false,
+    "post_fatal_execution_modeled": false,
+    "persisted_data_source_projection_complete": false,
     "production_ready": false,
     "rpc_trigger_binding_complete": false,
     "runtime_consumes_execution_order_contract": false,
@@ -123,6 +129,7 @@
     "same_path_order_machine_proven": false,
     "stores_added": false,
     "substreams_handler_added": false,
-    "target_runtime_identity_bound": false
+    "target_runtime_identity_bound": false,
+    "checkpoint_or_graph_block_success_authorized": false
   }
 }

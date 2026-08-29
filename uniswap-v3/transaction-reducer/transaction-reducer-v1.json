@@ -81,7 +81,8 @@
       "new identity followed by current Increase or Decrease missing-token return"
     ],
     "deterministic_error_entity_state": "discard all attempted entity-state writes from the failing handler",
-    "fatal_error_entity_state": "discard all NPM Transaction and relation entity-state changes from the block and stop",
+    "fatal_error_entity_state": "final persisted NPM Transaction and relation user-entity projection shortcut: return the exact block baseline at the first fatal error; this is not a Graph execution stop",
+    "post_fatal_execution": "intentionally not modeled: Graph continues remaining runnable triggers and breadth-first dynamic stages and may encounter a later retryable failure that aborts before the block transaction; otherwise the fatal transaction filters user modifications to PoI, passes persisted data sources and deterministic errors, advances the failed block pointer, and stops the deployment",
     "nonfatal_error_entity_state": "discard the failing handler entity-state scratch and continue",
     "npm_writer_event_order": "strictly increasing global ordinal and block_log_index within the NPM WriterEvents envelope",
     "pool_cross_component_execution_order": "uncertified; newly Factory-created dynamic Pool data-source triggers execute after initial static and existing-data-source triggers, so raw global log order is not a complete cross-component execution order",
@@ -217,10 +218,12 @@
     "diagnostic_only": true,
     "full_npm_handler_semantics": false,
     "graph_out_replaced": false,
+    "graph_execution_trace_complete": false,
     "live_calls_added": false,
     "logical_oracle_complete": false,
     "physical_parity_complete": false,
     "poi_parity_complete": false,
+    "post_fatal_execution_modeled": false,
     "failed_handler_poi_error_stream_semantics_certified": false,
     "physical_entity_vid_semantics_certified": false,
     "pool_cross_component_execution_order_certified": false,
@@ -229,6 +232,7 @@
     "runtime_population_complete": false,
     "shared_transaction_last_writer_semantics_certified": false,
     "stores_added": false,
-    "substreams_handler_added": false
+    "substreams_handler_added": false,
+    "checkpoint_or_graph_block_success_authorized": false
   }
 }

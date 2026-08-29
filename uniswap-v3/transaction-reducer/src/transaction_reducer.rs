@@ -16,7 +16,7 @@ use substreams::errors::Error;
 use crate::pb::writer::writer_event::Event;
 use crate::pb::writer::{WriterEvent, WriterEvents};
 
-const REDUCER_CONTRACT_SHA256: &str = "59c78d12d25fcd38a55a73fae447eadaa1b56588d57eb681ea599844b1a950aa";
+const REDUCER_CONTRACT_SHA256: &str = "83268d10f0ef3008d6d30fc3b6fd304fd46a067866b4284344fe468397878246";
 const REDUCER_CONTRACT_VERSION: &str = "uniswap-v3-transaction-reducer/v1";
 const SOURCE_MATRIX_SHA256: &str = "7f6d1a34a8c885fe5ddcd81895818ba7ae8a0d736d541b881c1cc7cd54275161";
 const SOURCE_PROFILE_SHA256: &str = "2b6635c061a7a0bfce39430c71c41dacc1567f095fe41134e890a697aa27f823";
@@ -197,7 +197,13 @@ pub struct EventOutcome {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum BlockDisposition {
     Committed,
-    Fatal { ordinal: u64, message: String },
+    /// Final persisted Transaction/relation projection after a fatal handler
+    /// error. Graph execution itself continues outside this host-only reducer.
+    FatalTransactionUserEntityProjection {
+        ordinal: u64,
+        message: String,
+        omitted_event_count: usize,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -321,6 +327,7 @@ struct ExecutionContract {
     normal_return_orphans: Vec<String>,
     deterministic_error_entity_state: String,
     fatal_error_entity_state: String,
+    post_fatal_execution: String,
     nonfatal_error_entity_state: String,
     npm_writer_event_order: String,
     pool_cross_component_execution_order: String,
@@ -363,10 +370,12 @@ struct TruthBoundary {
     diagnostic_only: bool,
     full_npm_handler_semantics: bool,
     graph_out_replaced: bool,
+    graph_execution_trace_complete: bool,
     live_calls_added: bool,
     logical_oracle_complete: bool,
     physical_parity_complete: bool,
     poi_parity_complete: bool,
+    post_fatal_execution_modeled: bool,
     failed_handler_poi_error_stream_semantics_certified: bool,
     physical_entity_vid_semantics_certified: bool,
     pool_cross_component_execution_order_certified: bool,
@@ -376,6 +385,7 @@ struct TruthBoundary {
     shared_transaction_last_writer_semantics_certified: bool,
     stores_added: bool,
     substreams_handler_added: bool,
+    checkpoint_or_graph_block_success_authorized: bool,
 }
 
 #[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
@@ -634,6 +644,10 @@ impl ReducerContract {
                 != "not consumed by either deployed NPM loadTransaction generation"
             || self.execution_contract.deterministic_error_entity_state
                 != "discard all attempted entity-state writes from the failing handler"
+            || self.execution_contract.fatal_error_entity_state
+                != "final persisted NPM Transaction and relation user-entity projection shortcut: return the exact block baseline at the first fatal error; this is not a Graph execution stop"
+            || self.execution_contract.post_fatal_execution
+                != "intentionally not modeled: Graph continues remaining runnable triggers and breadth-first dynamic stages and may encounter a later retryable failure that aborts before the block transaction; otherwise the fatal transaction filters user modifications to PoI, passes persisted data sources and deterministic errors, advances the failed block pointer, and stops the deployment"
             || self.execution_contract.npm_writer_event_order
                 != "strictly increasing global ordinal and block_log_index within the NPM WriterEvents envelope"
             || !self
@@ -654,10 +668,12 @@ impl ReducerContract {
             || truth.boundary_state_continuity_complete
             || truth.full_npm_handler_semantics
             || truth.graph_out_replaced
+            || truth.graph_execution_trace_complete
             || truth.live_calls_added
             || truth.logical_oracle_complete
             || truth.physical_parity_complete
             || truth.poi_parity_complete
+            || truth.post_fatal_execution_modeled
             || truth.failed_handler_poi_error_stream_semantics_certified
             || truth.physical_entity_vid_semantics_certified
             || truth.pool_cross_component_execution_order_certified
@@ -667,6 +683,7 @@ impl ReducerContract {
             || truth.shared_transaction_last_writer_semantics_certified
             || truth.stores_added
             || truth.substreams_handler_added
+            || truth.checkpoint_or_graph_block_success_authorized
         {
             return Err(Error::msg("transaction-reducer conservative gate promoted"));
         }
@@ -737,9 +754,10 @@ struct SuccessfulExecution {
     snapshot_transaction_written: Option<String>,
 }
 
-/// Apply the NPM-local Transaction helper-call and final entity-state contract
-/// to one validated writer envelope. Pool shared-Transaction writers, Graph
-/// Node VID allocation, and PoI/error-stream effects are deliberately absent.
+/// Apply the NPM-local Transaction helper-call and final user-entity projection
+/// contract to one validated writer envelope. Outcomes are a consumed prefix;
+/// they never authorize Graph block or checkpoint success. Pool shared-Transaction
+/// writers, Graph Node VID allocation, and PoI/error-stream effects are absent.
 pub fn reduce_transaction_block(
     input: &DiagnosticInput,
     initial_state: &ReducerState,
@@ -829,12 +847,14 @@ pub fn reduce_transaction_block(
                     position_transaction_written: None,
                     snapshot_transaction_written: None,
                 });
+                let omitted_event_count = input.writer_events.events.len() - outcomes.len();
                 return Ok(BlockReduction {
                     state: baseline,
                     outcomes,
-                    disposition: BlockDisposition::Fatal {
+                    disposition: BlockDisposition::FatalTransactionUserEntityProjection {
                         ordinal: event.ordinal,
                         message,
+                        omitted_event_count,
                     },
                     segment_id: segment.segment_id.clone(),
                 });
@@ -1632,7 +1652,14 @@ mod tests {
         );
         let result =
             reduce_transaction_block(&input(0, 12_400_000, &[missing_fatal]), &ReducerState::default()).unwrap();
-        assert!(matches!(result.disposition, BlockDisposition::Fatal { ordinal: 1, .. }));
+        assert!(matches!(
+            result.disposition,
+            BlockDisposition::FatalTransactionUserEntityProjection {
+                ordinal: 1,
+                omitted_event_count: 0,
+                ..
+            }
+        ));
         assert_eq!(result.state, ReducerState::default());
         assert_eq!(
             result.outcomes[0].attempted_loads,
@@ -1662,7 +1689,7 @@ mod tests {
     }
 
     #[test]
-    fn fatal_legacy_error_discards_prior_and_current_final_entity_state() {
+    fn fatal_legacy_error_returns_baseline_projection_and_omits_later_events() {
         let first = TestEvent::transfer(1, 0x31, "1", PositionLookupPlan::NewIdentity);
         let second = TestEvent::increase(
             2,
@@ -1671,10 +1698,19 @@ mod tests {
             PositionLookupPlan::NewIdentity,
             TokenAvailability::Token0Only,
         );
+        let third = TestEvent::transfer(3, 0x33, "3", PositionLookupPlan::NewIdentity);
         let baseline = ReducerState::default();
-        let result = reduce_transaction_block(&input(0, 12_400_000, &[first, second]), &baseline).unwrap();
-        assert!(matches!(result.disposition, BlockDisposition::Fatal { ordinal: 2, .. }));
+        let result = reduce_transaction_block(&input(0, 12_400_000, &[first, second, third]), &baseline).unwrap();
+        assert!(matches!(
+            result.disposition,
+            BlockDisposition::FatalTransactionUserEntityProjection {
+                ordinal: 2,
+                omitted_event_count: 1,
+                ..
+            }
+        ));
         assert_eq!(result.state, baseline);
+        assert_eq!(result.outcomes.len(), 2);
         assert!(!result.outcomes[0].block_state_committed);
         assert_eq!(
             result.outcomes[1].attempted_loads,

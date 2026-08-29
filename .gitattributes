@@ -1,2 +1,3 @@
 # IPFS objects are retained byte-for-byte; do not normalize or text-diff them.
 uniswap-v3/graft-ancestry/v1/artifacts/* binary
+artifacts/releases/uniswap-v4/**/*.spkg binary

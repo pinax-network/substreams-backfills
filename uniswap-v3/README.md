@@ -196,6 +196,18 @@ integrated scheduling, runtime/oracle/parity, package consumption, backfill,
 and production gates false. It preserves the v1 and writer-compatibility v3
 inputs byte-for-byte.
 
+The additive [`factory-guard/v1`](factory-guard/v1/README.md) supplement then
+closes only the two retained modern Factory excluded-pool guard paths. It pins
+the exact v2 contract, modern Base/mainnet WASM and WAT, complete guard slices,
+and helper bodies. A fresh bounded proof accounts for every structured-control
+edge and mutable local, reconstructs the excluded address through its 20-byte
+parser loop, and enumerates the length mismatch, twenty first-byte mismatch,
+and all-equal return paths. Cumulative Factory closure is therefore six of 18,
+with twelve paths still unresolved. Effect order and arguments, dynamic
+template identity, rollback, `totalSupply`, complete static/initialized-field
+semantics, runtime consumption, continuity, parity, backfill, and production
+remain false.
+
 The next sibling [`npm-observation-plan/`](npm-observation-plan/README.md)
 closes the repository-only host request set before joint reduction. It first
 enumerates every unique Position key from the complete event envelope, then,

@@ -121,6 +121,22 @@ Transaction/relation user-entity baseline projection plus a consumed-event
 prefix and omitted count; it is not a Graph execution stop or block/checkpoint
 success authority. Every readiness gate remains false.
 
+The next sibling [`npm-handler-reducer/`](npm-handler-reducer/README.md)
+overlay joins the reviewed NPM Transaction, Position, and PositionSnapshot
+effects in one host-only event scratch. It derives identity, excluded-pool,
+Token, and failure decisions from the same inputs; it does not merge the final
+maps of the two standalone reducers. Its ordered diagnostic trace preserves
+both identical Transaction saves for a new Position, Transaction-only normal
+returns, Position-before-snapshot-helper ordering, handler-atomic nonfatal
+discard, and the final persisted NPM user-entity baseline projection after a
+fatal handler error. Fatal outcomes are consumed WriterEvents prefixes with an
+exact omitted-suffix count; Graph continues outside this reducer, and no modeled
+or fatal projection authorizes block/checkpoint success. All eight segments and
+five profiles execute in adversarial tests. Flash, Stores, Substreams handlers,
+dynamic-data-source stages, Pool Transaction writers, and `graph_out` remain
+outside this tranche, and the writer WASM, descriptors, manifests, 23-module
+graph, and packages stay byte-identical.
+
 The sibling [`oracle/`](oracle/README.md) contract retains deployment-scoped
 current-head responses and the asymmetric graft-boundary discovery result:
 mainnet history was queryable without canonical block hashes, while Base

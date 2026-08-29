@@ -638,6 +638,10 @@ jobs:
           refs/heads/upstream/uniswap-v4-v0.4.1:refs/remotes/origin/upstream/uniswap-v4-v0.4.1
       - name: Verify isolated history mirror and exact source import
         run: ./scripts/verify-uniswap-v4-import.sh
+      - name: Verify offline V4 engine and retained 100K reference closure
+        run: |
+          python3 scripts/verify-uniswap-v4-engine-reference.py
+          python3 -m unittest scripts.tests.test_uniswap_v4_engine_reference
       - uses: dtolnay/rust-toolchain@1.90.0
         with:
           targets: wasm32-unknown-unknown

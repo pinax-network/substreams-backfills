@@ -1,0 +1,73 @@
+{
+  "format_version": 1,
+  "measured_at": "2026-08-08",
+  "deployment": "Qmbsc6XQWbiv4DfLVfaNciScqYLyDWUYjWzrFBbzzmRsMB",
+  "cluster": "kan-subgraphs-a",
+  "schema": "sgd2",
+  "graph_node_image": "graphprotocol/graph-node:v0.44.0@sha256:c14c6d8e2b2b1ed89f6a89babf48d807b18a43e372fda7fb495d3a9050b65b8b",
+  "candidate": {
+    "git_commit": "7ad00eb2f546095d5ecf943926bead653f76d25c",
+    "image": "ghcr.io/pinax-network/substreams-graph-node-backfill@sha256:72168ce8d74749de96b8ea4c79b01513d40aadb6d87c5cd7d3ee929244b95466",
+    "state_replay_sha256": "d3ba5b001bf748167fa30baa82520badbbe10bf76d80b0c1f6cf0930ce0bbfbc",
+    "substreams_native_sha256": "4d8bdd9077551b4f7b55105828721d6fca252de96e30c625c4912d5bb2097ddf",
+    "spkg_sha256": "44520f81a7177af201aa89cd0645f3c9fdf8a50200da1a9232e6335bfecf1a0d"
+  },
+  "seed": {
+    "block": 32474154,
+    "hash": "e2c6b741291ec233e265848784944b7ea33469dd7422b013e537967d0ad79bf9",
+    "graphql_sha256": "336c7e85baa68501dfaf5a12d764aa9f9ea9fd3f9668696944a9d008fc6fe982"
+  },
+  "target": {
+    "block": 32474343,
+    "hash": "557b198d0d119ee77d148311d34d59a01b0c1803b9737865d5bc87705ff5dfd4",
+    "blocks": 189,
+    "graphql_sha256": "6399b7b349729e0e66654fde166061d55e81e5b5f07b226edffac70e984a04c5"
+  },
+  "direct_candidate": {
+    "versions_inserted": 8832,
+    "prior_versions_clamped": 2030,
+    "new_logical_entities": 6802,
+    "checkpoint_sha256": "1356af5a86217c71f228fa85f874dae535ba2684557a323764bdfe3dfc6ca3af",
+    "manifest_sha256": "39ede0ba23a0ae6d635e42aec13aa1910946f21a3bdbbb5c048ff77abffde6bf",
+    "second_driver_invocation_noop": true,
+    "vid_sequences_valid": 20,
+    "matched_tables": 20,
+    "mismatched_tables": 0,
+    "physical_rows": 9359,
+    "poi_rows": 127,
+    "graphql_exact": true
+  },
+  "graph_node_continuation": {
+    "observed_head": 32474372,
+    "elapsed_to_observed_head_seconds": 152,
+    "observed_processed_blocks": 218,
+    "observed_blocks_per_second": 1.43,
+    "checkpointed_to_target": true,
+    "matched_tables": 20,
+    "mismatched_tables": 0,
+    "physical_rows": 9359,
+    "poi_rows": 127,
+    "graphql_exact": true
+  },
+  "restart": {
+    "query_node_restarted": true,
+    "head_exact": true,
+    "graphql_exact": true
+  },
+  "rewind": {
+    "head_exact": true,
+    "graphql_exact": true,
+    "future_rows": 0
+  },
+  "replay": {
+    "observed_head": 32474372,
+    "elapsed_to_observed_head_seconds": 151,
+    "checkpointed_to_target": true,
+    "matched_tables": 20,
+    "mismatched_tables": 0,
+    "physical_rows": 9359,
+    "poi_rows": 127,
+    "graphql_exact": true
+  },
+  "status": "complete"
+}

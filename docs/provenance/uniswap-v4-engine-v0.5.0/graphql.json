@@ -1,0 +1,19 @@
+{
+  "deployment": "Qmbsc6XQWbiv4DfLVfaNciScqYLyDWUYjWzrFBbzzmRsMB",
+  "block": {
+    "number": 32474154,
+    "hash": "e2c6b741291ec233e265848784944b7ea33469dd7422b013e537967d0ad79bf9"
+  },
+  "local_subgraph": "prototype/uniswap-v4-base-substreams-kan",
+  "source_subgraph": "transplant/sgd1246",
+  "response": {
+    "pool_managers": 1,
+    "bundles": 1,
+    "tokens": 25,
+    "pools": 25,
+    "normalized_sha256": "336c7e85baa68501dfaf5a12d764aa9f9ea9fd3f9668696944a9d008fc6fe982"
+  },
+  "match": true,
+  "local_head_exact": true,
+  "status": "complete"
+}

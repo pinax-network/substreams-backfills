@@ -1,0 +1,50 @@
+{
+  "format_version": 1,
+  "measured_at": "2026-08-07",
+  "network": "base",
+  "deployment": "Qmbsc6XQWbiv4DfLVfaNciScqYLyDWUYjWzrFBbzzmRsMB",
+  "cluster": "kan-subgraphs-a",
+  "schema": "sgd2",
+  "graft_parent_seed": {
+    "source_schema": "sgd1246",
+    "source_block": 32374154,
+    "source_hash": "b4b30252f3b6c183c9b5b36341bd5c1ebb50a87811753d1976b69c01c09e05d4",
+    "graphman_full_history_rows": 136719596,
+    "working_metadata_sha256": "673e108baa806e63eee804e830d0bc3a4d1e5842dae6e43488dc77ed5ab2e9a8",
+    "immutable_seed_metadata_sha256": "ea24cf8e4594de8092dae16fb979777000a7b2a211d80b6ce00a968adcaf5c8d",
+    "certificate": "docs/kan-production-validation.md"
+  },
+  "input": "store-state-protobuf-framed",
+  "image": "ghcr.io/pinax-network/substreams-graph-node-backfill@sha256:a9b86810c218567d8f5edd0cdabec48971e74d6f72f2e14098f7ba372b93cde8",
+  "spkg_sha256": "44520f81a7177af201aa89cd0645f3c9fdf8a50200da1a9232e6335bfecf1a0d",
+  "substreams_parallel_workers_requested": 500,
+  "range": {
+    "seed": 32374154,
+    "start": 32374155,
+    "end": 32474154,
+    "blocks": 100000,
+    "seed_hash": "b4b30252f3b6c183c9b5b36341bd5c1ebb50a87811753d1976b69c01c09e05d4",
+    "end_hash": "e2c6b741291ec233e265848784944b7ea33469dd7422b013e537967d0ad79bf9"
+  },
+  "cold_cache": {
+    "started_at": "2026-08-07T20:26:28Z",
+    "completed_at": "2026-08-07T23:56:58Z",
+    "elapsed_seconds": 12630,
+    "requested_blocks_per_second": 7.92,
+    "event_bearing_frames": 86342,
+    "protobuf_payload_bytes": 1069268806
+  },
+  "postgres": {
+    "versions_inserted": 5056453,
+    "prior_versions_clamped": 2085292,
+    "new_logical_entities": 2971161,
+    "entity_count": 47382436,
+    "vid_sequences_valid": 20,
+    "vid_sequences_total": 20
+  },
+  "checkpoint": {
+    "bytes": 5942403462,
+    "sha256": "69b69f4f44f7344f64bddb798f393fbc7411be044fc98932579a36d1ff66231a"
+  },
+  "status": "complete"
+}

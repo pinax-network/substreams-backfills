@@ -1,0 +1,280 @@
+{
+  "format_version": 1,
+  "contract": "uniswap-v4-engine-v0.5.0-reference/v1",
+  "status": "pre-execution-reference-only",
+  "scope": {
+    "repository": "pinax-network/substreams-backfills",
+    "github_issue": 26,
+    "supports_acceptance_criteria": [
+      1,
+      2
+    ],
+    "fully_satisfied_acceptance_criteria": [
+      1
+    ],
+    "partially_satisfied_acceptance_criteria": [
+      2
+    ],
+    "unsupported_acceptance_criteria": [
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ]
+  },
+  "source": {
+    "repository": "pinax-network/substreams-graph-node-backfill",
+    "tag": "v0.5.0",
+    "commit": "2b5ef82e2db987a5bfe861330aba0a222956122e",
+    "tree": "d1f8c5973ee2177a3a4cdae75717efb939e5da95"
+  },
+  "files": [
+    {
+      "local_path": "compatibility.json",
+      "source_path": "adapters/uniswap-v4-base/compatibility.json",
+      "role": "engine-compatibility-contract",
+      "bytes": 7490,
+      "sha256": "fafd21c63a23925327a17db315cb8a5cf7a8127c07401ab08e0c37b8920ea65c",
+      "git_blob": "c309986c1b70443111541705d97663b1c15d1068"
+    },
+    {
+      "local_path": "certificate.json",
+      "source_path": "fixtures/kan-base-v4-store-state-100k-certificate.json",
+      "role": "retained-100k-certificate",
+      "bytes": 1976,
+      "sha256": "2ee4bd2986269361a3490c2dd87e1c775d4ac528fa898ab6093c1a1fa356ff33",
+      "git_blob": "594a383fca4e18823f28bf96f377bc61af64d274"
+    },
+    {
+      "local_path": "benchmark.json",
+      "source_path": "fixtures/kan-base-v4-store-state-100k-benchmark.json",
+      "role": "retained-frame-checkpoint-benchmark",
+      "bytes": 1899,
+      "sha256": "a5ab9fbfc75a2d00698d49da648d7d0b9b1b5d3f209ac9eb685a4991f58248ae",
+      "git_blob": "a983471b329a11a51be14376ffd4af46733aa19b"
+    },
+    {
+      "local_path": "parity.json",
+      "source_path": "fixtures/kan-base-v4-store-state-100k-parity.json",
+      "role": "retained-20-table-physical-and-poi-parity",
+      "bytes": 5623,
+      "sha256": "f337a01844fafd45881ad4b24fdfa6220d4a37598afe506ab5c8552813a10388",
+      "git_blob": "ce2fe3367846ba2d622d5eb7a46d1a9ebfa3fb58"
+    },
+    {
+      "local_path": "graphql.json",
+      "source_path": "fixtures/kan-base-v4-store-state-graphql.json",
+      "role": "retained-head-and-graphql-parity",
+      "bytes": 556,
+      "sha256": "3cc7aee86dadf4dbb5abbf454e897a469bc24ca7050f39e64b9c300640497d96",
+      "git_blob": "d285d18c04b3fa3d767885042fab289a9c0b05ce"
+    },
+    {
+      "local_path": "lifecycle.json",
+      "source_path": "fixtures/kan-base-v4-store-state-lifecycle.json",
+      "role": "historical-legacy-candidate-lifecycle-support",
+      "bytes": 2598,
+      "sha256": "45fef8b545251e912c7e4e6dac517b2c2f4e6452d61a09af5eeadb7f206857ea",
+      "git_blob": "8710ab18321a057324679f7871ffaa49198ed522"
+    },
+    {
+      "local_path": "overlap.json",
+      "source_path": "fixtures/kan-base-v4-store-state-sharded-overlap.json",
+      "role": "separate-range-sharded-package-overlap-support",
+      "bytes": 686,
+      "sha256": "8a5f67a511d219be9e361b1661e13320903ae94a13a31788c0cb60bf25e3df61",
+      "git_blob": "73a9c55ffed0769ed591c84074f34b4db65e5e4c"
+    }
+  ],
+  "engine": {
+    "release": "v0.5.0",
+    "platform": "linux/amd64",
+    "image": "ghcr.io/pinax-network/substreams-graph-node-backfill@sha256:dbb88e451dbd44fd3e412f1d6814939cbc2a0b93c539837ebfb1f28d3dd1711e",
+    "binary_sha256": {
+      "state-replay": "de05b611bc53e99ff695d8e0426ed619c27244947130b8b12ca4591c6fa68390",
+      "parquet-backfill": "82554a1ab6573279ff564937cd50a5b7fb52ae39837c0f88fba6d341517709b9",
+      "postgres-spool-load": "34886bb9c868974eb5f4844a323d76960ff9730fd4dd024e778ed6375d2824e5",
+      "substreams-native": "4d8bdd9077551b4f7b55105828721d6fca252de96e30c625c4912d5bb2097ddf"
+    },
+    "graph_node": {
+      "version": "v0.44.0",
+      "commit": "77823b5a7adc4eac4abf03202c8dd7cb00dea31d",
+      "dump_format": 1
+    }
+  },
+  "imported_package": {
+    "path": "uniswap-v4/release/v0.4.0/uniswap-v4-base-store-state-reducer-v0.4.0.spkg",
+    "bytes": 1458573,
+    "sha256": "bc8a841dbb74f9bbc7d90826251ab766ad350170a4832fc3e9b084664d22254a",
+    "git_blob": "c1b32733c3949bb754bffc773d954aa3008c72b6",
+    "repository": "pinax-network/substreams-v4-subgraph",
+    "source_tag": "v0.4.1",
+    "source_commit": "6812a4deaa5a520020e8d727e17f6d0b7113d0a9",
+    "source_tree": "2d60d30242443adc2c021a5b609c27edcb75128a",
+    "production_release_tag": "v0.4.0",
+    "production_release_commit": "7609dc67ce83865a16e441ff2b3b56db6c46ee2a",
+    "package_name": "uniswap_v4_base_store_state_reducer",
+    "package_version": "v0.4.0",
+    "network": "base",
+    "module": "map_store_state_inputs",
+    "module_hash": "223408b90abae80960c41e11205fad2294accfa9",
+    "output_type": "proto:pinax.uniswap.v4.base.store.v1.ReducerInputs",
+    "initial_block": 25350988
+  },
+  "selected_reference": {
+    "classification": "historical-retained-certificate-not-v0.5.0-reproduction",
+    "deployment": "Qmbsc6XQWbiv4DfLVfaNciScqYLyDWUYjWzrFBbzzmRsMB",
+    "network": "base",
+    "range": {
+      "seed_block": 32374154,
+      "start_block": 32374155,
+      "end_block": 32474154,
+      "blocks": 100000,
+      "seed_hash": "b4b30252f3b6c183c9b5b36341bd5c1ebb50a87811753d1976b69c01c09e05d4",
+      "end_hash": "e2c6b741291ec233e265848784944b7ea33469dd7422b013e537967d0ad79bf9"
+    },
+    "frame_stream": {
+      "input": "store-state-protobuf-framed",
+      "event_bearing_frames": 86342,
+      "protobuf_payload_bytes": 1069268806
+    },
+    "retained_manifest": {
+      "kind": "certificate-artifact-digest-manifest",
+      "path": "certificate.json",
+      "sha256": "2ee4bd2986269361a3490c2dd87e1c775d4ac528fa898ab6093c1a1fa356ff33"
+    },
+    "runtime_checkpoint_manifest": {
+      "retained": false,
+      "sha256": null,
+      "bytes": null
+    },
+    "copy_inventory": {
+      "classification": "table-level-parity-inventory-not-copy-spool-file-set",
+      "matched_tables": 20,
+      "mismatched_tables": 0,
+      "tables": [
+        "pool_manager",
+        "bundle",
+        "token",
+        "pool",
+        "tick",
+        "uniswap_day_data",
+        "pool_day_data",
+        "pool_hour_data",
+        "token_day_data",
+        "token_hour_data",
+        "position",
+        "arrakis_hook",
+        "poi2$",
+        "transaction",
+        "swap",
+        "modify_liquidity",
+        "subscribe",
+        "unsubscribe",
+        "transfer",
+        "data_sources$"
+      ],
+      "copy_spool_file_set_retained": false
+    },
+    "checkpoint": {
+      "bytes": 5942403462,
+      "sha256": "69b69f4f44f7344f64bddb798f393fbc7411be044fc98932579a36d1ff66231a"
+    },
+    "physical_rows": {
+      "local": 12393562,
+      "source": 12393562
+    },
+    "poi": {
+      "table": "poi2$",
+      "local_rows": 86343,
+      "source_rows": 86343,
+      "local_digest": "906139fe973ba753f93bdc6ac41ee42a8d1dfa33857b065c02007bd08feb41cc",
+      "source_digest": "906139fe973ba753f93bdc6ac41ee42a8d1dfa33857b065c02007bd08feb41cc"
+    },
+    "graphql": {
+      "block": 32474154,
+      "block_hash": "e2c6b741291ec233e265848784944b7ea33469dd7422b013e537967d0ad79bf9",
+      "normalized_sha256": "336c7e85baa68501dfaf5a12d764aa9f9ea9fd3f9668696944a9d008fc6fe982"
+    },
+    "historical_target_evidence": {
+      "cluster": "kan-subgraphs-a",
+      "schema": "sgd2",
+      "source_schema": "sgd1246",
+      "classification": "prior-certificate-context-only-not-a-new-authorized-target"
+    }
+  },
+  "supporting_evidence": {
+    "lifecycle": {
+      "classification": "historical-189-block-legacy-candidate-continuation-only",
+      "seed_block": 32474154,
+      "seed_hash": "e2c6b741291ec233e265848784944b7ea33469dd7422b013e537967d0ad79bf9",
+      "target_block": 32474343,
+      "target_hash": "557b198d0d119ee77d148311d34d59a01b0c1803b9737865d5bc87705ff5dfd4",
+      "legacy_spkg_sha256": "44520f81a7177af201aa89cd0645f3c9fdf8a50200da1a9232e6335bfecf1a0d"
+    },
+    "sharded_overlap": {
+      "classification": "separate-range-immutable-package-equivalence-only",
+      "start_block": 33174155,
+      "end_block": 33274154,
+      "blocks": 100000,
+      "spkg_sha256": "bc8a841dbb74f9bbc7d90826251ab766ad350170a4832fc3e9b084664d22254a",
+      "checkpoint_sha256": "c6b628649bac24c0afefd08d55557f1a99c83b652a982afb993e84ed6f0fcf50",
+      "checkpoint_bytes": 9774275629,
+      "byte_identical_to_legacy_checkpoint": true,
+      "postgres_default_transaction_read_only": true,
+      "database_head_unchanged": true
+    }
+  },
+  "protected_resources": {
+    "source_database": {
+      "schema": "sgd1246",
+      "mutation_authorized": false,
+      "mutation_performed": false
+    },
+    "recovery_database": {
+      "schema": "sgd5303",
+      "mutation_authorized": false,
+      "mutation_performed": false
+    },
+    "existing_v4_workflow": {
+      "identifier": null,
+      "mutation_authorized": false,
+      "mutation_performed": false
+    }
+  },
+  "missing_reference_bytes": [
+    "selected 100k runtime checkpoint manifest bytes and SHA-256",
+    "selected 100k literal COPY spool filenames and file digests",
+    "selected 100k frame payload bytes",
+    "selected 100k checkpoint bytes"
+  ],
+  "gates": {
+    "reproduction_complete": false,
+    "scratch_target_named": false,
+    "scratch_target_disposable": false,
+    "scratch_target_stopped": false,
+    "independent_zero_writer_proven": false,
+    "k3_runtime_contract_approved": false,
+    "workflow_submission_authorized": false,
+    "workflow_submitted": false,
+    "database_write_authorized": false,
+    "database_mutation_performed": false,
+    "source_database_mutation_performed": false,
+    "recovery_database_mutation_performed": false,
+    "existing_v4_workflow_mutation_performed": false,
+    "readiness": false,
+    "backfill_ready": false,
+    "production_ready": false,
+    "promotion_eligible": false
+  },
+  "non_claims": [
+    "The retained 100k range has not been reproduced with engine v0.5.0 or the imported sharded package.",
+    "The historical sgd2 target is not authorization to reuse it and no new scratch target is named.",
+    "No independent zero-writer evidence, K3 approval, workflow authorization, workflow submission, or database write is represented.",
+    "The lifecycle fixture is historical support from a 189-block legacy-candidate continuation, not v0.5.0 evidence.",
+    "The overlap fixture is a separate-range package-equivalence result, not reproduction of the selected 100k range.",
+    "This capsule does not establish backfill, production, release, or promotion readiness."
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "deployment": "Qmbsc6XQWbiv4DfLVfaNciScqYLyDWUYjWzrFBbzzmRsMB",
+  "local_schema": "sgd2",
+  "source_schema": "sgd1246",
+  "range": {
+    "seed": 32374154,
+    "start": 32374155,
+    "end": 32474154
+  },
+  "vid_policy": "excluded: VIDs are database-assigned and are not part of mapping, POI, or GraphQL output; target sequences are audited separately",
+  "row_comparison": "SHA-256 of the C-sorted stream of per-row SHA-256 fingerprints and UTF-8 lengths, with row counts compared independently",
+  "future_range_policy": "upper bounds after the checkpoint are normalized to open ranges",
+  "source_policy": "healthy advanced read-only historical oracle",
+  "seed_policy": "complete active seed",
+  "matched_tables": 20,
+  "mismatched_tables": 0,
+  "local_rows": 12393562,
+  "source_rows": 12393562,
+  "tables": [
+    {"table":"pool_manager","status":"match","local_rows":86340,"source_rows":86340,"local_digest":"b89a91655c44064d145db08d486d2625929affe4b737a2a212149b73177124d8","source_digest":"b89a91655c44064d145db08d486d2625929affe4b737a2a212149b73177124d8"},
+    {"table":"bundle","status":"match","local_rows":31,"source_rows":31,"local_digest":"34460386aab1c5a58e1781532ad7aaa202ec258130c036d06c4a30276a40ced7","source_digest":"34460386aab1c5a58e1781532ad7aaa202ec258130c036d06c4a30276a40ced7"},
+    {"table":"token","status":"match","local_rows":518586,"source_rows":518586,"local_digest":"152b36481567a20b6e0761a354828d4334fbf7df056a634d289ad12e9b3868b9","source_digest":"152b36481567a20b6e0761a354828d4334fbf7df056a634d289ad12e9b3868b9"},
+    {"table":"pool","status":"match","local_rows":497099,"source_rows":497099,"local_digest":"49b4def4d5ca5cd94f7630b2a3c6906978562d245e9ae1b8b99f783fe10214bb","source_digest":"49b4def4d5ca5cd94f7630b2a3c6906978562d245e9ae1b8b99f783fe10214bb"},
+    {"table":"tick","status":"match","local_rows":4848468,"source_rows":4848468,"local_digest":"a56029f41cc2af2a244f99fd5a5fea60c290b75f23b0e4caea03ab7a5f691f83","source_digest":"a56029f41cc2af2a244f99fd5a5fea60c290b75f23b0e4caea03ab7a5f691f83"},
+    {"table":"uniswap_day_data","status":"match","local_rows":86488,"source_rows":86488,"local_digest":"833b0ef2e3137507aeac37c62d3e43244376ee0d61bbb37a285cc7478a018567","source_digest":"833b0ef2e3137507aeac37c62d3e43244376ee0d61bbb37a285cc7478a018567"},
+    {"table":"pool_day_data","status":"match","local_rows":646801,"source_rows":646801,"local_digest":"38eb99d592f7b4ebe0093ab06d0fe9a27c5e05ef61ed492e7b6816ce1f4baddf","source_digest":"38eb99d592f7b4ebe0093ab06d0fe9a27c5e05ef61ed492e7b6816ce1f4baddf"},
+    {"table":"pool_hour_data","status":"match","local_rows":1436873,"source_rows":1436873,"local_digest":"608336676302961f9b4702f9cf2d40c64c5420d6da3df522cb03181722c51317","source_digest":"608336676302961f9b4702f9cf2d40c64c5420d6da3df522cb03181722c51317"},
+    {"table":"token_day_data","status":"match","local_rows":618642,"source_rows":618642,"local_digest":"7f3e67b2d7e39a9ebeda7d4c1fd0e48053c293720f1818efa542793521045517","source_digest":"7f3e67b2d7e39a9ebeda7d4c1fd0e48053c293720f1818efa542793521045517"},
+    {"table":"token_hour_data","status":"match","local_rows":1135689,"source_rows":1135689,"local_digest":"59b6d0d51a8b165e502fa7016e47d7a6ff1d97c5268b39720b06eaab5eabe866","source_digest":"59b6d0d51a8b165e502fa7016e47d7a6ff1d97c5268b39720b06eaab5eabe866"},
+    {"table":"position","status":"match","local_rows":77901,"source_rows":77901,"local_digest":"d500cf80aba0377836010a802d793145359322d892bdd6ac33cc175f1bc33628","source_digest":"d500cf80aba0377836010a802d793145359322d892bdd6ac33cc175f1bc33628"},
+    {"table":"arrakis_hook","status":"match","local_rows":5,"source_rows":5,"local_digest":"7d527bd76c088d8bf1a3742dc0a79b1d0c8c6999ff80e8dcb384f6403af090e0","source_digest":"7d527bd76c088d8bf1a3742dc0a79b1d0c8c6999ff80e8dcb384f6403af090e0"},
+    {"table":"poi2$","status":"match","local_rows":86343,"source_rows":86343,"local_digest":"906139fe973ba753f93bdc6ac41ee42a8d1dfa33857b065c02007bd08feb41cc","source_digest":"906139fe973ba753f93bdc6ac41ee42a8d1dfa33857b065c02007bd08feb41cc"},
+    {"table":"transaction","status":"match","local_rows":370438,"source_rows":370438,"local_digest":"1135cb6d197afe1d3e4b51ee650d235cf5f5d746f055f321b53200df0fb2fbe6","source_digest":"1135cb6d197afe1d3e4b51ee650d235cf5f5d746f055f321b53200df0fb2fbe6"},
+    {"table":"swap","status":"match","local_rows":500117,"source_rows":500117,"local_digest":"a60f4dff43d7c1b7a4b26cd5bd3e20ce25a0557c213847aa682849e536ee7157","source_digest":"a60f4dff43d7c1b7a4b26cd5bd3e20ce25a0557c213847aa682849e536ee7157"},
+    {"table":"modify_liquidity","status":"match","local_rows":1483121,"source_rows":1483121,"local_digest":"82290a359d6b9c5bab5ed163991f6f12692525c552fefee7c238092bcf14f0a5","source_digest":"82290a359d6b9c5bab5ed163991f6f12692525c552fefee7c238092bcf14f0a5"},
+    {"table":"subscribe","status":"match","local_rows":2,"source_rows":2,"local_digest":"fa75822b44c59056060b953e643620cbcb94d02d63fcb3bbd67f132cdd803a26","source_digest":"fa75822b44c59056060b953e643620cbcb94d02d63fcb3bbd67f132cdd803a26"},
+    {"table":"unsubscribe","status":"match","local_rows":0,"source_rows":0,"local_digest":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","source_digest":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
+    {"table":"transfer","status":"match","local_rows":618,"source_rows":618,"local_digest":"8975df1298975d894f4a39d81aca7fc1674f41958c96c343b1f9dfb11c23a1f5","source_digest":"8975df1298975d894f4a39d81aca7fc1674f41958c96c343b1f9dfb11c23a1f5"},
+    {"table":"data_sources$","status":"match","local_rows":0,"source_rows":0}
+  ]
+}

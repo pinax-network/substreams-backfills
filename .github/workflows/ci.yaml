@@ -130,6 +130,10 @@ jobs:
         run: |
           python3 scripts/verify-uniswap-v3-segment-field-semantics.py
           python3 -m unittest scripts.tests.test_uniswap_v3_segment_field_semantics
+      - name: Verify host-only NPM observation-plan contract and refusals
+        run: |
+          python3 scripts/verify-uniswap-v3-npm-observation-plan.py
+          python3 -m unittest scripts.tests.test_uniswap_v3_npm_observation_plan
       - name: Test and build the source-pinned protocol-v3 parity client
         working-directory: scripts/parity-client
         run: |
@@ -458,6 +462,48 @@ jobs:
             --base-spkg "$RUNNER_TEMP/uniswap-v3-base-npm-resolved-inputs-diagnostic.spkg" \
             --writer-mainnet-spkg "$RUNNER_TEMP/uniswap-v3-mainnet-writer-diagnostic.spkg" \
             --writer-base-spkg "$RUNNER_TEMP/uniswap-v3-base-writer-diagnostic.spkg"
+      - name: Release only the completed resolved-input target
+        run: |
+          cargo +1.79.0 clean --manifest-path "$RUNNER_TEMP/uniswap-v3-npm-resolved-inputs/Cargo.toml"
+          test ! -e "$RUNNER_TEMP/uniswap-v3-npm-resolved-inputs/target"
+      - name: Materialize the host-only NPM observation plan
+        run: ./scripts/materialize-uniswap-v3-npm-observation-plan.sh "$RUNNER_TEMP/uniswap-v3-npm-observation-plan"
+      - name: Test and format-check staged planning, preflight, and joint reduction
+        working-directory: ${{ runner.temp }}/uniswap-v3-npm-observation-plan
+        run: |
+          cargo +1.79.0 test --locked --target x86_64-unknown-linux-gnu
+          rustfmt +1.79.0 --edition 2021 --config-path rustfmt.toml --check \
+            src/npm_observation_plan.rs src/uniswap.npm.plan.v1.rs tests/npm_observation_plan.rs
+      - name: Enforce inherited Clippy inventory for the NPM observation plan
+        run: >-
+          python3 scripts/verify-uniswap-v3-writer-clippy.py
+          --baseline "$RUNNER_TEMP/uniswap-v3-configured"
+          --runtime "$RUNNER_TEMP/uniswap-v3-npm-observation-plan"
+          --target x86_64-unknown-linux-gnu
+      - name: Prove the observation plan leaves writer WASM and packages unchanged
+        working-directory: ${{ runner.temp }}/uniswap-v3-npm-observation-plan
+        run: |
+          cargo +1.79.0 build --locked --target wasm32-unknown-unknown --release
+          substreams pack -o "$RUNNER_TEMP/uniswap-v3-mainnet-npm-observation-plan-diagnostic.spkg" substreams.mainnet.yaml
+          substreams pack -o "$RUNNER_TEMP/uniswap-v3-base-npm-observation-plan-diagnostic.spkg" substreams.base.yaml
+          cmp "$RUNNER_TEMP/uniswap-v3-writer-runtime/target/wasm32-unknown-unknown/release/substreams_uniswap_v3.wasm" \
+            "$RUNNER_TEMP/uniswap-v3-npm-observation-plan/target/wasm32-unknown-unknown/release/substreams_uniswap_v3.wasm"
+          cmp "$RUNNER_TEMP/uniswap-v3-mainnet-writer-diagnostic.spkg" \
+            "$RUNNER_TEMP/uniswap-v3-mainnet-npm-observation-plan-diagnostic.spkg"
+          cmp "$RUNNER_TEMP/uniswap-v3-base-writer-diagnostic.spkg" \
+            "$RUNNER_TEMP/uniswap-v3-base-npm-observation-plan-diagnostic.spkg"
+          python3 "$GITHUB_WORKSPACE/scripts/verify-uniswap-v3-npm-observation-plan.py" \
+            --root "$GITHUB_WORKSPACE" \
+            --runtime "$RUNNER_TEMP/uniswap-v3-npm-observation-plan" \
+            --writer-runtime "$RUNNER_TEMP/uniswap-v3-writer-runtime" \
+            --mainnet-spkg "$RUNNER_TEMP/uniswap-v3-mainnet-npm-observation-plan-diagnostic.spkg" \
+            --base-spkg "$RUNNER_TEMP/uniswap-v3-base-npm-observation-plan-diagnostic.spkg" \
+            --writer-mainnet-spkg "$RUNNER_TEMP/uniswap-v3-mainnet-writer-diagnostic.spkg" \
+            --writer-base-spkg "$RUNNER_TEMP/uniswap-v3-base-writer-diagnostic.spkg"
+      - name: Release only the completed observation-plan target
+        run: |
+          cargo +1.79.0 clean --manifest-path "$RUNNER_TEMP/uniswap-v3-npm-observation-plan/Cargo.toml"
+          test ! -e "$RUNNER_TEMP/uniswap-v3-npm-observation-plan/target"
       - name: Test the parity client against all three real controlled-build packages
         working-directory: scripts/parity-client
         env:

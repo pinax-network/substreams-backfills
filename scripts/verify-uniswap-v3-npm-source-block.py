@@ -455,7 +455,8 @@ def verify_static_source(root: Path) -> None:
     production = source.split("#[cfg(test)]", 1)[0]
     require("#[substreams::handlers::map]" in lib and "pub fn map_npm_source_block(" in lib, "NPM source handler missing")
     require("build_npm_source_block(&block, &writer_events)" in lib, "NPM source handler composition drift")
-    for forbidden in ("ProviderUnavailable", "PossibleReorg", "reqwest::", "rpc::", "StoreGet", "EntityChanges"):
+    unstable_sentinel = "Provider" + "Unavailable"
+    for forbidden in (unstable_sentinel, "PossibleReorg", "reqwest::", "rpc::", "StoreGet", "EntityChanges"):
         require(forbidden not in production, f"forbidden host/provider symbol in NPM source runtime: {forbidden}")
     require("transaction.gas_used" not in production and "receipt.gas_used" not in production, "NPM source reads gas_used")
     expected_tests = {

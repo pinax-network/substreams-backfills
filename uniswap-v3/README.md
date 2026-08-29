@@ -151,6 +151,19 @@ dynamic-data-source stages, Pool Transaction writers, and `graph_out` remain
 outside this tranche, and the writer WASM, descriptors, manifests, 23-module
 graph, and packages stay byte-identical.
 
+The following sibling [`npm-resolved-inputs/`](npm-resolved-inputs/README.md)
+connects the complete validated `NpmSourceBlock` to the joint reducer through a
+canonical host-only resolved-observation frame. It embeds the source frame,
+binds calls to its exact hash or explicit block-number fallback, and serializes
+only Position value/None, pool address (zero included)/None, and Token
+Found(u8)/Missing results. A transient Resolved/PossibleReorg/Unknown gate is
+not protobuf data; either unstable state aborts before frame construction.
+Every supplied row is validated before the reducer runs, including rows after
+a would-be fatal reducer prefix. The integrated engine, complete required-read
+evaluation, post-fatal Graph execution, continuity, physical/PoI parity,
+checkpoint authority, production, and backfill gates remain false. The writer
+WASM, descriptors, manifests, module graph, and packages remain unchanged.
+
 The sibling [`oracle/`](oracle/README.md) contract retains deployment-scoped
 current-head responses and the asymmetric graft-boundary discovery result:
 mainnet history was queryable without canonical block hashes, while Base

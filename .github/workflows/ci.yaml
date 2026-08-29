@@ -118,6 +118,10 @@ jobs:
         run: |
           python3 scripts/verify-uniswap-v3-npm-handler-reducer.py
           python3 -m unittest scripts.tests.test_uniswap_v3_npm_handler_reducer
+      - name: Verify host-only resolved NPM input contract and refusals
+        run: |
+          python3 scripts/verify-uniswap-v3-npm-resolved-inputs.py
+          python3 -m unittest scripts.tests.test_uniswap_v3_npm_resolved_inputs
       - name: Test and build the source-pinned protocol-v3 parity client
         working-directory: scripts/parity-client
         run: |
@@ -408,6 +412,44 @@ jobs:
             --writer-runtime "$RUNNER_TEMP/uniswap-v3-writer-runtime" \
             --mainnet-spkg "$RUNNER_TEMP/uniswap-v3-mainnet-npm-handler-reducer-diagnostic.spkg" \
             --base-spkg "$RUNNER_TEMP/uniswap-v3-base-npm-handler-reducer-diagnostic.spkg"
+      - name: Release only the completed joint NPM reducer target
+        run: |
+          cargo +1.79.0 clean --manifest-path "$RUNNER_TEMP/uniswap-v3-npm-handler-reducer/Cargo.toml"
+          test ! -e "$RUNNER_TEMP/uniswap-v3-npm-handler-reducer/target"
+      - name: Materialize the host-only resolved NPM input adapter
+        run: ./scripts/materialize-uniswap-v3-npm-resolved-inputs.sh "$RUNNER_TEMP/uniswap-v3-npm-resolved-inputs"
+      - name: Test and format-check the combined source, adapter, and joint reducer
+        working-directory: ${{ runner.temp }}/uniswap-v3-npm-resolved-inputs
+        run: |
+          cargo +1.79.0 test --locked --target x86_64-unknown-linux-gnu
+          rustfmt +1.79.0 --edition 2021 --config-path rustfmt.toml --check \
+            src/npm_resolved_inputs.rs tests/npm_resolved_inputs.rs
+      - name: Enforce inherited Clippy inventory for the resolved NPM adapter
+        run: >-
+          python3 scripts/verify-uniswap-v3-writer-clippy.py
+          --baseline "$RUNNER_TEMP/uniswap-v3-configured"
+          --runtime "$RUNNER_TEMP/uniswap-v3-npm-resolved-inputs"
+          --target x86_64-unknown-linux-gnu
+      - name: Prove resolved inputs leave writer WASM and packages unchanged
+        working-directory: ${{ runner.temp }}/uniswap-v3-npm-resolved-inputs
+        run: |
+          cargo +1.79.0 build --locked --target wasm32-unknown-unknown --release
+          substreams pack -o "$RUNNER_TEMP/uniswap-v3-mainnet-npm-resolved-inputs-diagnostic.spkg" substreams.mainnet.yaml
+          substreams pack -o "$RUNNER_TEMP/uniswap-v3-base-npm-resolved-inputs-diagnostic.spkg" substreams.base.yaml
+          cmp "$RUNNER_TEMP/uniswap-v3-writer-runtime/target/wasm32-unknown-unknown/release/substreams_uniswap_v3.wasm" \
+            "$RUNNER_TEMP/uniswap-v3-npm-resolved-inputs/target/wasm32-unknown-unknown/release/substreams_uniswap_v3.wasm"
+          cmp "$RUNNER_TEMP/uniswap-v3-mainnet-writer-diagnostic.spkg" \
+            "$RUNNER_TEMP/uniswap-v3-mainnet-npm-resolved-inputs-diagnostic.spkg"
+          cmp "$RUNNER_TEMP/uniswap-v3-base-writer-diagnostic.spkg" \
+            "$RUNNER_TEMP/uniswap-v3-base-npm-resolved-inputs-diagnostic.spkg"
+          python3 "$GITHUB_WORKSPACE/scripts/verify-uniswap-v3-npm-resolved-inputs.py" \
+            --root "$GITHUB_WORKSPACE" \
+            --runtime "$RUNNER_TEMP/uniswap-v3-npm-resolved-inputs" \
+            --writer-runtime "$RUNNER_TEMP/uniswap-v3-writer-runtime" \
+            --mainnet-spkg "$RUNNER_TEMP/uniswap-v3-mainnet-npm-resolved-inputs-diagnostic.spkg" \
+            --base-spkg "$RUNNER_TEMP/uniswap-v3-base-npm-resolved-inputs-diagnostic.spkg" \
+            --writer-mainnet-spkg "$RUNNER_TEMP/uniswap-v3-mainnet-writer-diagnostic.spkg" \
+            --writer-base-spkg "$RUNNER_TEMP/uniswap-v3-base-writer-diagnostic.spkg"
       - name: Test the parity client against all three real controlled-build packages
         working-directory: scripts/parity-client
         env:

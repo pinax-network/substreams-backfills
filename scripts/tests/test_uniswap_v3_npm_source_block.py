@@ -103,7 +103,8 @@ class NpmSourceBlockContractTests(unittest.TestCase):
         proto = (ROOT / VERIFIER.OVERLAY / "proto/uniswap/npm/source/v1/npm_source_block.proto").read_text()
         self.assertIn("uniswap.writer.v1.WriterEvents writer_events = 1;", proto)
         self.assertIn("repeated TransactionRef transactions = 3;", proto)
-        for forbidden in ("ProviderUnavailable", "PossibleReorg", "PositionCall", "TokenRead", "checkpoint"):
+        unstable_sentinel = "Provider" + "Unavailable"
+        for forbidden in (unstable_sentinel, "PossibleReorg", "PositionCall", "TokenRead", "checkpoint"):
             self.assertNotIn(forbidden, proto)
         for network, manifest in self.manifests.items():
             self.assertEqual(list(manifest["binaries"]), ["writer", "npm_source"], network)

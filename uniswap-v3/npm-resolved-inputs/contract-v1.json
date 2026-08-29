@@ -1,0 +1,186 @@
+{
+  "format_version": 1,
+  "contract_version": "uniswap-v3-npm-resolved-inputs-runtime/v1",
+  "mode": "host-diagnostic-only",
+  "ordered_materialization": [
+    {
+      "path": "uniswap-v3/npm-source-block/contract-v1.json",
+      "contract_version": "uniswap-v3-npm-source-block-runtime/v1",
+      "sha256": "701e83d3833356cff75ad4455553894e7695fb9f75f03e7c53eaa3da616b57d5"
+    },
+    {
+      "path": "uniswap-v3/npm-handler-reducer/contract-v1.json",
+      "contract_version": "uniswap-v3-npm-handler-reducer-runtime/v1",
+      "sha256": "6f46d5cca49506c3ee0622351324ccb62a459916f0e41f3772fe021e0e185dd6"
+    },
+    {
+      "path": "uniswap-v3/npm-resolved-inputs/npm-resolved-inputs-v1.json",
+      "contract_version": "uniswap-v3-npm-resolved-inputs/v1",
+      "sha256": "01f7e87b22f52d84f8bb2fe806e963ecfb9dc196ab29804baee4c156eabbdbd9"
+    }
+  ],
+  "repository_artifacts": {
+    "readme": {
+      "path": "uniswap-v3/npm-resolved-inputs/README.md",
+      "sha256": "6531c8cd98f713da1f036f8bbfbba212163ff34a9acf2ac2a072838aee872845"
+    },
+    "eligibility": {
+      "path": "uniswap-v3/npm-resolved-inputs/docs/eligibility.md",
+      "sha256": "ffa5dc51a669ba8a4b8d548bb3c24c9588260fb3f0a21c7b7173129605460bb2"
+    },
+    "provenance": {
+      "path": "uniswap-v3/npm-resolved-inputs/docs/provenance.md",
+      "sha256": "9f3d94cc29ce9d523fbd91b40806be1971d1cbaadefd3a626065c926bb01349b"
+    },
+    "semantics": {
+      "path": "uniswap-v3/npm-resolved-inputs/npm-resolved-inputs-v1.json",
+      "sha256": "01f7e87b22f52d84f8bb2fe806e963ecfb9dc196ab29804baee4c156eabbdbd9",
+      "contract_version": "uniswap-v3-npm-resolved-inputs/v1"
+    },
+    "input_proto": {
+      "path": "uniswap-v3/npm-resolved-inputs/proto/uniswap/npm/inputs/v1/npm_resolved_inputs.proto",
+      "sha256": "e4859b67d590b1bcd2ce2d51ef90775c3729002300269a61b49d4bc31df6b299"
+    },
+    "input_binding": {
+      "path": "uniswap-v3/npm-resolved-inputs/src/uniswap.npm.inputs.v1.rs",
+      "sha256": "d7979c2e98750c8fa1a5fbe4efcb11d7033e5b12b9c239a13963d20f485f3b66"
+    },
+    "input_source": {
+      "path": "uniswap-v3/npm-resolved-inputs/src/npm_resolved_inputs.rs",
+      "sha256": "24fe3e9f7f94f156782394b5fc48407735cad2127ad9eec5bb9572fee35c4650"
+    },
+    "combined_harness": {
+      "path": "uniswap-v3/npm-resolved-inputs/tests/npm_resolved_inputs.rs",
+      "sha256": "b549e08bba3bef8ae18f6f0440a01efad0c811b2cfde50652446fd2dfd1a8f94"
+    },
+    "materializer": {
+      "path": "scripts/materialize-uniswap-v3-npm-resolved-inputs.sh",
+      "sha256": "47273f52c892c7e491974e16a1199105516d1ef27f910d08b32a9a3a17e7227f"
+    },
+    "npm_source_runtime": {
+      "path": "uniswap-v3/npm-source-block/contract-v1.json",
+      "sha256": "701e83d3833356cff75ad4455553894e7695fb9f75f03e7c53eaa3da616b57d5",
+      "contract_version": "uniswap-v3-npm-source-block-runtime/v1"
+    },
+    "npm_source_semantics": {
+      "path": "uniswap-v3/npm-source-block/npm-source-block-v1.json",
+      "sha256": "267dfc6b7240c36cdf345553e02a4f7b5332fa70548349bc6ef4b3075b4fcb4b",
+      "contract_version": "uniswap-v3-npm-source-block/v1"
+    },
+    "npm_source_proto": {
+      "path": "uniswap-v3/npm-source-block/proto/uniswap/npm/source/v1/npm_source_block.proto",
+      "sha256": "bd394a11de37449710f0fd7dc10eac4e7f4ad299141a9fd54ec156980246fe1e"
+    },
+    "npm_source_validator": {
+      "path": "uniswap-v3/npm-source-block/runtime/src/npm_source_block.rs",
+      "sha256": "5dac40f6f81223b0e373eb69e12a652754bc92879c0da28244ba80849b95c177"
+    },
+    "npm_source_binding": {
+      "path": "uniswap-v3/npm-source-block/runtime/src/pb/uniswap.npm.source.v1.rs",
+      "sha256": "0dba8501e790d4efd0cda3cf64c9eddbca01cb9ce90da3931568224b38c7be3d"
+    },
+    "joint_reducer_runtime": {
+      "path": "uniswap-v3/npm-handler-reducer/contract-v1.json",
+      "sha256": "6f46d5cca49506c3ee0622351324ccb62a459916f0e41f3772fe021e0e185dd6",
+      "contract_version": "uniswap-v3-npm-handler-reducer-runtime/v1"
+    },
+    "joint_reducer_semantics": {
+      "path": "uniswap-v3/npm-handler-reducer/npm-handler-reducer-v1.json",
+      "sha256": "86cf89d8ffe66ac9f4aeda468988306ccc9dca1dbfd2641f132f12529207b143",
+      "contract_version": "uniswap-v3-npm-handler-reducer/v1"
+    }
+  },
+  "materialized_runtime_artifacts": {
+    "configs/npm-handler-reducer-v1.json": "86cf89d8ffe66ac9f4aeda468988306ccc9dca1dbfd2641f132f12529207b143",
+    "configs/npm-source-block-v1.json": "267dfc6b7240c36cdf345553e02a4f7b5332fa70548349bc6ef4b3075b4fcb4b",
+    "configs/npm-resolved-inputs-v1.json": "01f7e87b22f52d84f8bb2fe806e963ecfb9dc196ab29804baee4c156eabbdbd9",
+    "src/lib.rs": "91a2330a1a1016ab00fae61e8d25fde244591159ab4efd848ecc08b2623aca63",
+    "src/npm_handler_reducer.rs": "49f5302181c48fb25268bf64c6a53038c4b1f2dc891cd6180cbd94b602239a7b",
+    "src/npm_source_block.rs": "5dac40f6f81223b0e373eb69e12a652754bc92879c0da28244ba80849b95c177",
+    "src/uniswap.npm.source.v1.rs": "0dba8501e790d4efd0cda3cf64c9eddbca01cb9ce90da3931568224b38c7be3d",
+    "src/npm_resolved_inputs.rs": "24fe3e9f7f94f156782394b5fc48407735cad2127ad9eec5bb9572fee35c4650",
+    "src/uniswap.npm.inputs.v1.rs": "d7979c2e98750c8fa1a5fbe4efcb11d7033e5b12b9c239a13963d20f485f3b66",
+    "tests/npm_resolved_inputs.rs": "b549e08bba3bef8ae18f6f0440a01efad0c811b2cfde50652446fd2dfd1a8f94"
+  },
+  "protobuf_contract": {
+    "namespace": "uniswap.npm.inputs.v1",
+    "repository_only": true,
+    "copied_into_runtime_proto_directory": false,
+    "NpmResolvedInputs": {
+      "source": 1,
+      "call_scope": 2,
+      "position_calls": 3,
+      "pool_calls": 4,
+      "token_reads": 5,
+      "input_contract_sha256": 6,
+      "npm_source_contract_sha256": 7,
+      "npm_handler_reducer_contract_sha256": 8
+    },
+    "ResolvedCallScope": {
+      "eip1898_hash": 1,
+      "block_number_fallback": 2
+    },
+    "PositionObservation": {
+      "position_manager": 1,
+      "token_id": 2,
+      "value": 3,
+      "none": 4
+    },
+    "PoolObservation": {
+      "factory": 1,
+      "token0": 2,
+      "token1": 3,
+      "fee": 4,
+      "pool": 5,
+      "none": 6
+    },
+    "TokenObservation": {
+      "address": 1,
+      "ordinal": 2,
+      "found": 3,
+      "missing": 4
+    }
+  },
+  "adapter_contract": {
+    "map_function": "map_resolved_npm_inputs",
+    "replay_function": "reduce_npm_resolved_input_frame",
+    "substreams_handler": false,
+    "manifest_module": false,
+    "source_frame_embedded": true,
+    "source_frame_recomputed": false,
+    "transient_resolution_gate_serialized": false,
+    "all_supplied_rows_validated_before_reducer": true,
+    "source_frame_checkpoint_authority": false,
+    "resolved_frame_checkpoint_authority": false,
+    "normal_projection_checkpoint_authority": false,
+    "fatal_projection_checkpoint_authority": false
+  },
+  "package_contract": {
+    "module_count": 23,
+    "diagnostic_module": "map_writer_events",
+    "resolved_input_substreams_module": false,
+    "manifests_changed_from_writer_runtime": false,
+    "runtime_protobuf_descriptors_changed_from_writer_runtime": false,
+    "writer_wasm_identical": true,
+    "writer_packages_identical": true
+  },
+  "truth_boundary": {
+    "all_eight_npm_segments_executable": true,
+    "diagnostic_only": true,
+    "host_resolved_input_frame_implemented": true,
+    "integrated_host_engine_added": false,
+    "post_fatal_execution_modeled": false,
+    "all_required_observations_evaluated": false,
+    "graph_execution_trace_complete": false,
+    "checkpoint_or_graph_block_success_authorized": false,
+    "boundary_state_continuity_complete": false,
+    "physical_parity_complete": false,
+    "physical_entity_vid_semantics_certified": false,
+    "poi_parity_complete": false,
+    "dynamic_datasource_stage_order_implemented": false,
+    "runtime_population_complete": false,
+    "shared_transaction_last_writer_semantics_certified": false,
+    "backfill_ready": false,
+    "production_ready": false
+  }
+}

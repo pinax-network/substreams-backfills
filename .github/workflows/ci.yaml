@@ -110,6 +110,10 @@ jobs:
         run: |
           python3 scripts/verify-uniswap-v3-transaction-reducer.py
           python3 -m unittest scripts.tests.test_uniswap_v3_transaction_reducer
+      - name: Verify provider-free NPM source-block contract and refusals
+        run: |
+          python3 scripts/verify-uniswap-v3-npm-source-block.py
+          python3 -m unittest scripts.tests.test_uniswap_v3_npm_source_block
       - name: Verify host-only joint NPM reducer contract and refusals
         run: |
           python3 scripts/verify-uniswap-v3-npm-handler-reducer.py
@@ -205,6 +209,61 @@ jobs:
             --runtime "$RUNNER_TEMP/uniswap-v3-writer-runtime" \
             --mainnet-spkg "$RUNNER_TEMP/uniswap-v3-mainnet-writer-diagnostic.spkg" \
             --base-spkg "$RUNNER_TEMP/uniswap-v3-base-writer-diagnostic.spkg"
+      - name: Materialize the provider-free NPM source-block package
+        run: ./scripts/materialize-uniswap-v3-npm-source-block.sh "$RUNNER_TEMP/uniswap-v3-npm-source-block"
+      - name: Test, lint, and format-check the standalone NPM source runtime
+        working-directory: ${{ runner.temp }}/uniswap-v3-npm-source-block/npm-source-block-runtime
+        run: |
+          cargo +1.79.0 metadata --locked --no-deps --format-version 1 >/dev/null
+          cargo +1.79.0 test --locked --target x86_64-unknown-linux-gnu
+          cargo +1.79.0 clippy --locked --target x86_64-unknown-linux-gnu --all-targets -- -D warnings
+          rustfmt +1.79.0 --edition 2021 --config-path rustfmt.toml --check \
+            src/lib.rs src/npm_source_block.rs src/pb/mod.rs \
+            src/pb/uniswap.npm.source.v1.rs src/pb/uniswap.writer.v1.rs
+      - name: Build both NPM source WASMs and preserve the writer binary
+        working-directory: ${{ runner.temp }}/uniswap-v3-npm-source-block
+        run: |
+          cargo +1.79.0 build --locked --target wasm32-unknown-unknown --release
+          cargo +1.79.0 build --locked --target wasm32-unknown-unknown --release \
+            --manifest-path npm-source-block-runtime/Cargo.toml
+          cmp \
+            "$RUNNER_TEMP/uniswap-v3-writer-runtime/target/wasm32-unknown-unknown/release/substreams_uniswap_v3.wasm" \
+            target/wasm32-unknown-unknown/release/substreams_uniswap_v3.wasm
+      - name: Pack provider-free NPM source packages twice and preserve writer packages
+        working-directory: ${{ runner.temp }}/uniswap-v3-npm-source-block
+        run: |
+          substreams pack -o "$RUNNER_TEMP/uniswap-v3-mainnet-npm-source.spkg" npm-source-package/substreams.npm-source.mainnet.yaml
+          substreams pack -o "$RUNNER_TEMP/uniswap-v3-base-npm-source.spkg" npm-source-package/substreams.npm-source.base.yaml
+          substreams pack -o "$RUNNER_TEMP/uniswap-v3-mainnet-npm-source-repeat.spkg" npm-source-package/substreams.npm-source.mainnet.yaml
+          substreams pack -o "$RUNNER_TEMP/uniswap-v3-base-npm-source-repeat.spkg" npm-source-package/substreams.npm-source.base.yaml
+          cmp "$RUNNER_TEMP/uniswap-v3-mainnet-npm-source.spkg" \
+            "$RUNNER_TEMP/uniswap-v3-mainnet-npm-source-repeat.spkg"
+          cmp "$RUNNER_TEMP/uniswap-v3-base-npm-source.spkg" \
+            "$RUNNER_TEMP/uniswap-v3-base-npm-source-repeat.spkg"
+          substreams pack -o "$RUNNER_TEMP/uniswap-v3-mainnet-writer-from-source-runtime.spkg" substreams.mainnet.yaml
+          substreams pack -o "$RUNNER_TEMP/uniswap-v3-base-writer-from-source-runtime.spkg" substreams.base.yaml
+          cmp "$RUNNER_TEMP/uniswap-v3-mainnet-writer-diagnostic.spkg" \
+            "$RUNNER_TEMP/uniswap-v3-mainnet-writer-from-source-runtime.spkg"
+          cmp "$RUNNER_TEMP/uniswap-v3-base-writer-diagnostic.spkg" \
+            "$RUNNER_TEMP/uniswap-v3-base-writer-from-source-runtime.spkg"
+          cmp "$RUNNER_TEMP/uniswap-v3-writer-runtime/substreams.mainnet.yaml" substreams.mainnet.yaml
+          cmp "$RUNNER_TEMP/uniswap-v3-writer-runtime/substreams.base.yaml" substreams.base.yaml
+          python3 "$GITHUB_WORKSPACE/scripts/verify-uniswap-v3-npm-source-block.py" \
+            --root "$GITHUB_WORKSPACE" \
+            --runtime "$RUNNER_TEMP/uniswap-v3-npm-source-block" \
+            --mainnet-spkg "$RUNNER_TEMP/uniswap-v3-mainnet-npm-source.spkg" \
+            --base-spkg "$RUNNER_TEMP/uniswap-v3-base-npm-source.spkg" \
+            --writer-mainnet-spkg "$RUNNER_TEMP/uniswap-v3-mainnet-writer-diagnostic.spkg" \
+            --writer-base-spkg "$RUNNER_TEMP/uniswap-v3-base-writer-diagnostic.spkg"
+      - name: Release only the NPM source Cargo targets
+        run: |
+          source_root="$RUNNER_TEMP/uniswap-v3-npm-source-block"
+          test -d "$source_root/target"
+          test -d "$source_root/npm-source-block-runtime/target"
+          cargo +1.79.0 clean --manifest-path "$source_root/Cargo.toml"
+          cargo +1.79.0 clean --manifest-path "$source_root/npm-source-block-runtime/Cargo.toml"
+          test ! -e "$source_root/target"
+          test ! -e "$source_root/npm-source-block-runtime/target"
       - name: Materialize the host-only Position reducer after the writer
         run: ./scripts/materialize-uniswap-v3-position-reducer.sh "$RUNNER_TEMP/uniswap-v3-position-reducer"
       - name: Test and format-check the Position reducer

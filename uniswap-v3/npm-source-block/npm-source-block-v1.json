@@ -1,0 +1,19 @@
+{
+  "format_version": 1,
+  "contract_version": "uniswap-v3-npm-source-block/v1",
+  "mode": "provider-free-source-only",
+  "source_writer_runtime_sha256": "765806bf19fca7695ef4d97f557593e4f791759589fe55c20f18c6523a5d07ca",
+  "source_writer_profiles_sha256": "2b6635c061a7a0bfce39430c71c41dacc1567f095fe41134e890a697aa27f823",
+  "source_writer_contract_sha256": "259481724561d5aa725c17f90b5a19ea93ad6f7cd6074cf2cb8a8661c39f81c4",
+  "source_writer_proto_sha256": "f87b4bc718349bae2ff8fe799e4a4dadbb507240b7b6e9bc8d7a199299e33c59",
+  "source_segment_matrix_sha256": "7f6d1a34a8c885fe5ddcd81895818ba7ae8a0d736d541b881c1cc7cd54275161",
+  "source_execution_order_sha256": "241e970cfcec4d76610b29a10141d3bff2512d80454a6308594f3db23621cde2",
+  "protobuf_namespace": "uniswap.npm.source.v1",
+  "output_type": "proto:uniswap.npm.source.v1.NpmSourceBlock",
+  "provider_observations_serialized": false,
+  "unresolved_errors_serialized": false,
+  "checkpoint_authority": false,
+  "graph_block_success_authority": false,
+  "backfill_ready": false,
+  "production_ready": false
+}

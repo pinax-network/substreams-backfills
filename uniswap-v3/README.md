@@ -56,6 +56,20 @@ runtime/Factory origin to 1,371,679 while keeping the direct NPM gate at
 independent bytecode-creation proof. The new map has no consumer or transitive
 path to `graph_out`; all promotion gates remain false.
 
+The standalone [`npm-source-block/`](npm-source-block/README.md) package
+composes that exact `map_writer_events` output with the Firehose block in a
+second, provider-free WASM. It emits the block hash, parent hash, positive
+whole-second timestamp, and gas-limit/gas-price metadata for the successful
+transactions referenced by NPM events. Dedicated mainnet and Base manifests
+contain exactly `map_writer_events` and `map_npm_source_block`; the original
+writer manifests, WASM, 23-module graph, descriptors, and packages remain
+byte-identical. The source protobuf carries no provider observations or
+unresolved error classes,
+and a successful projection is neither checkpoint authority nor Graph block
+success. Host execution, provider resolution, Stores, `graph_out`, continuity,
+parity, production, and backfill gates all remain outside this tranche and
+false.
+
 The third sibling [`position-reducer/`](position-reducer/README.md) overlay adds
 a pure host-only sequential model for Position and PositionSnapshot transitions
 after the diagnostic writer contract. It binds all eight segment boundaries and

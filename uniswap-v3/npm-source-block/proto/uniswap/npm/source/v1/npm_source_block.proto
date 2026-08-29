@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package uniswap.npm.source.v1;
+
+import "uniswap/v1/writer.proto";
+
+// Deterministic Firehose-derived input for a host-side NPM execution engine.
+// Provider observations and Graph Node execution outcomes never enter this
+// source message.
+message NpmSourceBlock {
+  uniswap.writer.v1.WriterEvents writer_events = 1;
+  BlockRef block = 2;
+  repeated TransactionRef transactions = 3;
+  string source_contract_sha256 = 4;
+}
+
+message BlockRef {
+  uint64 number = 1;
+  bytes hash = 2;
+  bytes parent_hash = 3;
+  uint64 timestamp_seconds = 4;
+}
+
+message TransactionRef {
+  bytes hash = 1;
+  uint32 index = 2;
+  uint64 gas_limit = 3;
+  // Minimal unsigned big-endian bytes. Zero is the empty byte string.
+  bytes gas_price_be = 4;
+}

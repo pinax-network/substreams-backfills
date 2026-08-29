@@ -164,6 +164,19 @@ evaluation, post-fatal Graph execution, continuity, physical/PoI parity,
 checkpoint authority, production, and backfill gates remain false. The writer
 WASM, descriptors, manifests, module graph, and packages remain unchanged.
 
+The versioned
+[`segment-field-semantics/`](segment-field-semantics/README.md) supplement
+then binds that joint NPM projection and the Flash projection back to every
+retained mapping segment. It completes exact selected-handler rules for 34
+conditional stored fields and the static no-writer proof for all 33 stored
+fields on `Collect`, `Flash`, and `TickHourData`. Each of the eight segments
+retains exact handler-body, export, store-target, profile, call, failure,
+exclusion, ordering, gas, and deployed-quirk evidence; all 28 pairwise semantic
+and provenance diffs are regenerated recursively. This does not complete the
+omitted link fields, Factory or non-Flash Pool handlers, shared-field histories,
+Graph execution order, runtime population, oracle/parity work, package wiring,
+or backfill eligibility, so every broad gate remains false.
+
 The sibling [`oracle/`](oracle/README.md) contract retains deployment-scoped
 current-head responses and the asymmetric graft-boundary discovery result:
 mainnet history was queryable without canonical block hashes, while Base

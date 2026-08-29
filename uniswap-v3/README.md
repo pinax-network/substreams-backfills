@@ -177,6 +177,25 @@ omitted link fields, Factory or non-Flash Pool handlers, shared-field histories,
 Graph execution order, runtime population, oracle/parity work, package wiring,
 or backfill eligibility, so every broad gate remains false.
 
+Its immutable
+[`v2/`](segment-field-semantics/v2/README.md) supplement expands that boundary
+to a complete offline inventory and proof-status ledger: all 299 stored fields,
+80 segment handlers, six unique Factory mappings, eight unique Pool mappings,
+and all 28 full evidence-surface pairwise diffs. The retained deployed WASM and
+checksum-pinned WAT projection remain authority; source anchors are
+corroboration only. The bounded retained-WAT analyzer closes exactly four of
+the original 18 Factory proof gaps: the excluded-pool equality and early-return
+direction for the four legacy binaries. Both modern guard paths, all six
+effect-order/argument paths, and all six complete-static-handler paths remain
+false. The upstream `totalSupply` models are retained as digest-bound
+provenance, but their success/failure value dataflow is not promoted. Pool
+calls/failures, Initialize persistence, pricing, fee spacing, hour resaves, and
+TickDay relation evidence also remain explicit. V2 therefore leaves 232
+conditional fields, full Factory/non-Flash Pool completeness, shared histories,
+integrated scheduling, runtime/oracle/parity, package consumption, backfill,
+and production gates false. It preserves the v1 and writer-compatibility v3
+inputs byte-for-byte.
+
 The next sibling [`npm-observation-plan/`](npm-observation-plan/README.md)
 closes the repository-only host request set before joint reduction. It first
 enumerates every unique Position key from the complete event envelope, then,

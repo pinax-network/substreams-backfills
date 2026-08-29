@@ -68,6 +68,10 @@ only after this gate passes.
   ancestry segments. It proves the three saving profiles and recomputes the
   five historical no-save closures while leaving complete Pool history,
   runtime, parity, backfill, and production gates false.
+- **`uniswap-v3/factory-effects/v1/`** — the retained-WASM proof for the six
+  Factory effect-order and exact-argument paths. It closes those paths without
+  promoting Graph rollback, complete handler semantics, parity, backfill, or
+  production readiness.
 - **`common/`** — shared contracts extracted only after they reproduce the V4 reference.
   A family boundary must preserve ordered mapping operations and the inputs required for
   exact PoI; a coalesced `EntityChanges` stream is not assumed sufficient.

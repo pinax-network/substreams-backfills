@@ -220,6 +220,19 @@ cumulative selected-handler field count from 34 to 36, but Mint/Burn/Swap,
 complete Pool histories, runtime/oracle/parity, package consumption, backfill,
 and production remain false.
 
+The following additive
+[`factory-effects/v1`](factory-effects/v1/README.md) supplement closes only the
+six retained Factory effect-order and exact-argument paths. A shared handler-
+local CFG, SSA, heap-alias, and effect-trace engine plus a reachable persistent-
+effect scan uses separate legacy and modern frontends. Every normal fallthrough
+must invoke Pool save, the `Pool` template with `event.pool`, token0 save,
+token1 save, and Factory save exactly once in that order; reviewed pre-effect
+returns remain empty. Handler-local explicit traps and reviewed save-helper
+pre-store trap boundaries may stop only at a prefix; complete interprocedural
+trap projection is not claimed. Cumulative Factory closure is twelve of 18.
+Graph rollback, `totalSupply`, the six complete-static-handler paths, runtime
+consumption, continuity, parity, backfill, and production remain false.
+
 The next sibling [`npm-observation-plan/`](npm-observation-plan/README.md)
 closes the repository-only host request set before joint reduction. It first
 enumerates every unique Position key from the complete event envelope, then,

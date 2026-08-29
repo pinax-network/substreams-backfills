@@ -1,0 +1,3050 @@
+{
+  "authority_contract": {
+    "fail_closed_rule": "any unmodeled control edge, local definition, heap write, call target, helper body, table target, persistent effect, receiver, ID, template name, or template argument leaves the claims false",
+    "host_boundary": "the proof reaches Graph host-effect invocation; import/helper traps outside the reviewed save-helper boundaries, Graph Node transaction rollback, and host memory behavior are not projected by retained WAT",
+    "modeled_trap_boundary_rule": "handler-local explicit unreachable exits and reviewed save-helper pre-store trap boundaries project only to ordered prefixes",
+    "normal_trace_rule": "every handler-local normal exit projects to empty or exactly Pool.save, Pool template create, Token0.save, Token1.save, Factory.save once",
+    "proof_model": "shared structured CFG, typed i32 call operands, SSA reaching definitions, path predicates, bounded heap aliases, interprocedural save-helper summaries, and complete direct/indirect persistent-effect closure with separate legacy and modern frontends",
+    "semantic_authority": "the six exact retained deployed Factory WASM artifacts and checksum-pinned WABT 1.0.35 --generate-names WAT projections"
+  },
+  "contract_version": "uniswap-v3-factory-effects/v1",
+  "factory_effect_proofs": [
+    {
+      "argument_identity_machine_proven": true,
+      "authority": {
+        "effect_suffix_sha256": "deb707003e724038e5a19323f32d6de270404c0617e8ba2548e89d1869925b51",
+        "handler_body_sha256": "8c2c0b729892664f7f57430de9a933ec594899ce14d17a70ad0eee8b28b1c006",
+        "handler_function": "src/mappings/factory/handlePoolCreated",
+        "handler_wat_start_line": 4000,
+        "wabt_version": "1.0.35",
+        "wasm_sha256": "0855ce1d5260cd8395628dfac2e18db063909168c58e7d5de118612fee9f9a4e",
+        "wat_sha256": "c2e7425784b498481ee8a822be18b59edd7aa6dd27712d8d093696cf0b8b1684"
+      },
+      "effect_trace_proof": {
+        "all_handler_local_normal_and_explicit_trap_exits_machine_checked": true,
+        "modeled_trap_boundary_scope": "handler-local explicit unreachable exits plus reviewed save-helper pre-store trap boundaries",
+        "modeled_trap_boundary_trace_rule": "an ordered prefix only",
+        "modeled_trap_boundary_traces": [
+          [],
+          [
+            "Pool.save",
+            "PoolTemplate.create"
+          ],
+          [
+            "Pool.save",
+            "PoolTemplate.create",
+            "Token[token0].save"
+          ],
+          [
+            "Pool.save",
+            "PoolTemplate.create",
+            "Token[token0].save",
+            "Token[token1].save"
+          ]
+        ],
+        "normal_exit_trace_rule": "empty or the exact five-effect sequence once",
+        "normal_exit_traces": [
+          [],
+          [
+            "Pool.save",
+            "PoolTemplate.create",
+            "Token[token0].save",
+            "Token[token1].save",
+            "Factory.save"
+          ]
+        ],
+        "projection": [
+          "Pool.save",
+          "PoolTemplate.create",
+          "Token[token0].save",
+          "Token[token1].save",
+          "Factory.save"
+        ],
+        "reviewed_save_helper_pre_store_trap_boundaries_projected": true,
+        "same_path_and_order_machine_proven": true
+      },
+      "generation": "legacy",
+      "generation_frontend": {
+        "argument_identity_machine_proven": true,
+        "effect_argument_definition_identities": {
+          "constructor_body_certificate": {
+            "body_sha256": "15a42bc481a223c54f4c2b31c2ec471c86e5464f90bf6c232867739b45d9ecd8",
+            "constructor_id_and_receiver_machine_proven": true,
+            "fresh_entity_local": "$l1",
+            "function": "src/types/schema/Factory#constructor",
+            "id_key": "id",
+            "id_map_set_call": "~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#set",
+            "id_value_constructor": "~lib/@graphprotocol/graph-ts/index/Value.fromString",
+            "input_id_parameter": "$p0",
+            "returned_entity_local": "$l1",
+            "same_fresh_receiver_used_for_map_set_and_return": true,
+            "same_input_id_encoded_in_map_value": true
+          },
+          "every_alternative_reaching_definition_identity_proven": true,
+          "every_constructor_alternative_body_semantics_proven": true,
+          "receiver_definition_proofs": [
+            {
+              "binding_slice_sha256": "e29ee02582698d960339c9f080f461a9db90f0e97d8b62d7f99d33f624f3f95c",
+              "constructor_body_certificate": {
+                "body_sha256": "15a42bc481a223c54f4c2b31c2ec471c86e5464f90bf6c232867739b45d9ecd8",
+                "constructor_id_and_receiver_machine_proven": true,
+                "function": "src/types/schema/Factory#constructor",
+                "same_fresh_receiver_used_for_map_set_and_return": true,
+                "same_input_id_encoded_in_map_value": true
+              },
+              "definition_kind": "constructor",
+              "identity": "Pool.save",
+              "immutable_id_source": "bytesToHex(PoolCreated.event.pool)",
+              "reaching_definition_wat_line": 89,
+              "receiver_local": "$l1",
+              "terminal_call": "src/types/schema/Factory#constructor"
+            },
+            {
+              "binding_slice_sha256": "dcabde0e617f42786c5386989910c242de94d37a59922444e95ebb678257410c",
+              "definition_kind": "store.get",
+              "identity": "Token[token0].save",
+              "immutable_id_source": "bytesToHex(PoolCreated.event.token0)",
+              "reaching_definition_wat_line": 95,
+              "receiver_local": "$l2",
+              "terminal_call": "src/types/schema/Token.load"
+            },
+            {
+              "binding_slice_sha256": "5e21eb72a0745bcbb9a2001175d3fdbebfe41e9e264fdf9ccf53b19e4395b3ef",
+              "constructor_body_certificate": {
+                "body_sha256": "15a42bc481a223c54f4c2b31c2ec471c86e5464f90bf6c232867739b45d9ecd8",
+                "constructor_id_and_receiver_machine_proven": true,
+                "function": "src/types/schema/Factory#constructor",
+                "same_fresh_receiver_used_for_map_set_and_return": true,
+                "same_input_id_encoded_in_map_value": true
+              },
+              "definition_kind": "constructor",
+              "identity": "Token[token0].save",
+              "immutable_id_source": "bytesToHex(PoolCreated.event.token0)",
+              "reaching_definition_wat_line": 110,
+              "receiver_local": "$l2",
+              "terminal_call": "src/types/schema/Factory#constructor"
+            },
+            {
+              "binding_slice_sha256": "be5c156784afab5cac204945fea3934555c1b33935972c5322b6b58460147236",
+              "definition_kind": "store.get",
+              "identity": "Token[token1].save",
+              "immutable_id_source": "bytesToHex(PoolCreated.event.token1)",
+              "reaching_definition_wat_line": 101,
+              "receiver_local": "$l3",
+              "terminal_call": "src/types/schema/Token.load"
+            },
+            {
+              "binding_slice_sha256": "497bccc62e2d66f6afa7cef82c9cfe3f95db5188d923aca3c729cf0d7909adee",
+              "constructor_body_certificate": {
+                "body_sha256": "15a42bc481a223c54f4c2b31c2ec471c86e5464f90bf6c232867739b45d9ecd8",
+                "constructor_id_and_receiver_machine_proven": true,
+                "function": "src/types/schema/Factory#constructor",
+                "same_fresh_receiver_used_for_map_set_and_return": true,
+                "same_input_id_encoded_in_map_value": true
+              },
+              "definition_kind": "constructor",
+              "identity": "Token[token1].save",
+              "immutable_id_source": "bytesToHex(PoolCreated.event.token1)",
+              "reaching_definition_wat_line": 184,
+              "receiver_local": "$l3",
+              "terminal_call": "src/types/schema/Factory#constructor"
+            },
+            {
+              "binding_slice_sha256": "a9032b385b12c6a2b87e0ce8f434ca6305f2a3241fd5c7181d7beae99e3ad4ed",
+              "definition_kind": "store.get",
+              "identity": "Factory.save",
+              "immutable_id_source": "0x33128a8fC17869897dcE68Ed026d694621f6FDfD",
+              "reaching_definition_wat_line": 13,
+              "receiver_local": "$l4",
+              "terminal_call": "~lib/@graphprotocol/graph-ts/index/store.get"
+            },
+            {
+              "binding_slice_sha256": "404f86fbe89077eb3974a8fcb7d924edffe24679e5190d46907bd4a70ee67f00",
+              "constructor_body_certificate": {
+                "body_sha256": "15a42bc481a223c54f4c2b31c2ec471c86e5464f90bf6c232867739b45d9ecd8",
+                "constructor_id_and_receiver_machine_proven": true,
+                "function": "src/types/schema/Factory#constructor",
+                "same_fresh_receiver_used_for_map_set_and_return": true,
+                "same_input_id_encoded_in_map_value": true
+              },
+              "definition_kind": "constructor",
+              "identity": "Factory.save",
+              "immutable_id_source": "0x33128a8fC17869897dcE68Ed026d694621f6FDfD",
+              "reaching_definition_wat_line": 18,
+              "receiver_local": "$l4",
+              "terminal_call": "src/types/schema/Factory#constructor"
+            }
+          ]
+        },
+        "effect_argument_reaching_definitions": [
+          {
+            "argument_local": "$l1",
+            "argument_read_wat_line": 419,
+            "identity": "Pool.save",
+            "reaching_definition_wat_lines": [
+              89
+            ]
+          },
+          {
+            "argument_local": "$l1",
+            "argument_read_wat_line": 435,
+            "identity": "PoolTemplate.create",
+            "reaching_definition_wat_lines": [
+              428
+            ]
+          },
+          {
+            "argument_local": "$l2",
+            "argument_read_wat_line": 437,
+            "identity": "Token[token0].save",
+            "reaching_definition_wat_lines": [
+              95,
+              110
+            ]
+          },
+          {
+            "argument_local": "$l3",
+            "argument_read_wat_line": 439,
+            "identity": "Token[token1].save",
+            "reaching_definition_wat_lines": [
+              101,
+              184
+            ]
+          },
+          {
+            "argument_local": "$l4",
+            "argument_read_wat_line": 441,
+            "identity": "Factory.save",
+            "reaching_definition_wat_lines": [
+              13,
+              18
+            ]
+          }
+        ],
+        "entity_identity_locals": {
+          "event_identity_bindings": {
+            "pool": {
+              "binding_slice_sha256": "e29ee02582698d960339c9f080f461a9db90f0e97d8b62d7f99d33f624f3f95c",
+              "entity_local": "$l1",
+              "event_parameter": "pool"
+            },
+            "token0": {
+              "binding_slice_sha256": "dcabde0e617f42786c5386989910c242de94d37a59922444e95ebb678257410c",
+              "entity_local": "$l2",
+              "event_parameter": "token0"
+            },
+            "token1": {
+              "binding_slice_sha256": "be5c156784afab5cac204945fea3934555c1b33935972c5322b6b58460147236",
+              "entity_local": "$l3",
+              "event_parameter": "token1"
+            }
+          },
+          "factory": "$l4",
+          "factory_id": "0x33128a8fC17869897dcE68Ed026d694621f6FDfD",
+          "pool": "$l1",
+          "pool_event_parameter": "pool",
+          "token0": "$l2",
+          "token0_event_parameter": "token0",
+          "token1": "$l3",
+          "token1_event_parameter": "token1"
+        },
+        "exact_receiver_and_id_bindings_machine_proven": true,
+        "frontend": "legacy-named-event-getters-and-generated-save-helpers",
+        "save_helper_proofs": [
+          {
+            "body_sha256": "c718f4d0f930b733fbf3212321702fa2364c52c117c15c21efed55ec9468044d",
+            "entity": "Pool",
+            "function": "src/types/schema/Pool#save",
+            "instruction_count": 32,
+            "normal_return_requires_exactly_one_store": true,
+            "receiver_parameter": "$p0",
+            "required_id_key": "id",
+            "same_receiver_used_for_id_lookup_and_store": true,
+            "store_site": 31,
+            "target": "Pool",
+            "trap_before_store_is_allowed": true,
+            "trap_sites": [
+              13,
+              25
+            ]
+          },
+          {
+            "body_sha256": "a9e18df79cfc8e8874c6b50e38409c70960f071456ebb5ad390789bf6e201aa7",
+            "entity": "Token",
+            "function": "src/types/schema/Token#save",
+            "instruction_count": 32,
+            "normal_return_requires_exactly_one_store": true,
+            "receiver_parameter": "$p0",
+            "required_id_key": "id",
+            "same_receiver_used_for_id_lookup_and_store": true,
+            "store_site": 31,
+            "target": "Token",
+            "trap_before_store_is_allowed": true,
+            "trap_sites": [
+              13,
+              25
+            ]
+          },
+          {
+            "body_sha256": "8295b2edb3a01487e36682684eb1eba70322d5d899d1bd7ea535f61f27bef769",
+            "entity": "Factory",
+            "function": "src/types/schema/Factory#save",
+            "instruction_count": 32,
+            "normal_return_requires_exactly_one_store": true,
+            "receiver_parameter": "$p0",
+            "required_id_key": "id",
+            "same_receiver_used_for_id_lookup_and_store": true,
+            "store_site": 31,
+            "target": "Factory",
+            "trap_before_store_is_allowed": true,
+            "trap_sites": [
+              13,
+              25
+            ]
+          }
+        ],
+        "shared_entity_constructor_proof": {
+          "body_sha256": "15a42bc481a223c54f4c2b31c2ec471c86e5464f90bf6c232867739b45d9ecd8",
+          "constructor_id_and_receiver_machine_proven": true,
+          "fresh_entity_local": "$l1",
+          "function": "src/types/schema/Factory#constructor",
+          "id_key": "id",
+          "id_map_set_call": "~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#set",
+          "id_value_constructor": "~lib/@graphprotocol/graph-ts/index/Value.fromString",
+          "input_id_parameter": "$p0",
+          "returned_entity_local": "$l1",
+          "same_fresh_receiver_used_for_map_set_and_return": true,
+          "same_input_id_encoded_in_map_value": true
+        },
+        "template": {
+          "active_literal_wat_line": 425,
+          "argument_array_local": "$l1",
+          "argument_count": 1,
+          "argument_zero": "bytesToHex(PoolCreated.event.pool)",
+          "converted_value_local": "$p0",
+          "event_parameter": "pool",
+          "event_value_local": "$p0",
+          "fresh_array_and_backing_slot_machine_proven": true,
+          "heap_alias_certificate": {
+            "array_allocation_wat_line": 427,
+            "array_local_definition_wat_line": 428,
+            "backing_slot_write_wat_line": 434,
+            "converted_pool_definition_wat_line": 431,
+            "event_pool_definition_wat_line": 424
+          },
+          "name": "Pool",
+          "no_post_write_alias_mutation_before_create": true,
+          "template_identity_and_argument_machine_proven": true
+        }
+      },
+      "graph_handler_rollback_proven_by_retained_wat": false,
+      "handler_effect_region_policy": {
+        "bounded_direct_receiver_heap_aliases_machine_checked": true,
+        "direct_raw_receiver_heap_store_alias_sites": [],
+        "effect_region_start_wat_line": 420,
+        "handler_call_indirect_sites": [],
+        "handler_local_effect_region_bypasses_machine_checked": true,
+        "normal_return_bypass_sites": [],
+        "select_identity_control_sites": []
+      },
+      "instruction_and_ssa_inventory": {
+        "all_handler_local_control_local_call_and_heap_write_sites_accounted": true,
+        "branch_site_count": 0,
+        "branch_sites_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "direct_call_count": 182,
+        "direct_call_inventory_sha256": "49dbf90ec56d56b8339410698e5bb08389252db4d81ef4ac730c9a1a421c55e8",
+        "direct_heap_store_count": 1,
+        "direct_heap_store_inventory_sha256": "7d421111cf1b88fcdd826c67299e247dcdf5ad0725049d796c1cc896b303eb06",
+        "explicit_unreachable_sites": [],
+        "handler_call_indirect_sites": [],
+        "handler_instruction_count": 443,
+        "local_write_count": 15,
+        "local_write_inventory_sha256": "29e1de5c8913be08cbc7b1afd5454c3f43206f1dfcd3a1c95f7c7945d26fa5fe",
+        "normal_return_sites": [
+          8,
+          137,
+          211
+        ],
+        "select_sites": [],
+        "structured_control_start_count": 8,
+        "structured_control_starts_sha256": "ff72ddd836e42b1d85c1fa01e5c72ad98f8491f173793317d36ad412cc1e4700"
+      },
+      "mapping_cid": "QmUN4pxwjMTfNem7rf1sKNFNHDsfzpbcTP93RxPAczgkvj",
+      "profile_id": "legacy-base-root",
+      "reachable_effect_closure": {
+        "complete_direct_and_indirect_effect_site_scan": true,
+        "conservative_indirect_targets": [
+          "null"
+        ],
+        "dynamic_persistent_target_count": 0,
+        "reachable_call_indirect_sites": [],
+        "reachable_data_source_create_sites": [
+          {
+            "function": "src/mappings/factory/handlePoolCreated",
+            "wat_line": 436
+          }
+        ],
+        "reachable_function_body_bindings_sha256": "1cdcdf861ec9dfaf3373ebf04a48882e8a71dbdea6b3b9daf9fe870d3d73a4c4",
+        "reachable_function_count": 101,
+        "reachable_store_set_sites": [
+          {
+            "function": "src/types/schema/Bundle#save",
+            "target": "Bundle",
+            "wat_line": 31
+          },
+          {
+            "function": "src/types/schema/Factory#save",
+            "target": "Factory",
+            "wat_line": 31
+          },
+          {
+            "function": "src/types/schema/Pool#save",
+            "target": "Pool",
+            "wat_line": 31
+          },
+          {
+            "function": "src/types/schema/Token#save",
+            "target": "Token",
+            "wat_line": 31
+          }
+        ],
+        "reachable_store_set_targets": [
+          "Bundle",
+          "Factory",
+          "Pool",
+          "Token"
+        ]
+      },
+      "reviewed_effect_order": [
+        "Pool.save",
+        "PoolTemplate.create",
+        "Token[token0].save",
+        "Token[token1].save",
+        "Factory.save"
+      ],
+      "same_path_or_dataflow_machine_proven": true,
+      "structured_control": {
+        "all_handler_local_edges_branch_targets_and_explicit_exits_machine_checked": true,
+        "forced_true_path_predicate_ifs": [],
+        "graph_sha256": "6de8bb70beb29198465ca39bbefac87b37322a7bbdc3d263fc81f1f5497b0410",
+        "node_count": 8
+      },
+      "template_identity_and_argument_machine_proven": true,
+      "typed_effect_operand_stack": [
+        {
+          "all_operand_wasm_types": "i32",
+          "call": "src/types/schema/Pool#save",
+          "effect": "Pool.save",
+          "operand_count": 1,
+          "operands_bottom_to_top": [
+            "i32:entity-ref($l1)"
+          ],
+          "wat_line": 420
+        },
+        {
+          "all_operand_wasm_types": "i32",
+          "call": "~lib/@graphprotocol/graph-ts/index/dataSource.create",
+          "effect": "PoolTemplate.create",
+          "operand_count": 2,
+          "operands_bottom_to_top": [
+            "i32:static-string(Pool)",
+            "i32:fresh-array(event.pool)"
+          ],
+          "wat_line": 436
+        },
+        {
+          "all_operand_wasm_types": "i32",
+          "call": "src/types/schema/Token#save",
+          "effect": "Token[token0].save",
+          "operand_count": 1,
+          "operands_bottom_to_top": [
+            "i32:entity-ref($l2)"
+          ],
+          "wat_line": 438
+        },
+        {
+          "all_operand_wasm_types": "i32",
+          "call": "src/types/schema/Token#save",
+          "effect": "Token[token1].save",
+          "operand_count": 1,
+          "operands_bottom_to_top": [
+            "i32:entity-ref($l3)"
+          ],
+          "wat_line": 440
+        },
+        {
+          "all_operand_wasm_types": "i32",
+          "call": "src/types/schema/Factory#save",
+          "effect": "Factory.save",
+          "operand_count": 1,
+          "operands_bottom_to_top": [
+            "i32:entity-ref($l4)"
+          ],
+          "wat_line": 442
+        }
+      ]
+    },
+    {
+      "argument_identity_machine_proven": true,
+      "authority": {
+        "effect_suffix_sha256": "551eac873df42d04fa48227ab9c921a0917aa2e88c922333d606ae6e43bd9233",
+        "handler_body_sha256": "e28b09377fd2e7fa10dfa0a7afaccd7f120b35d4b9be5f4be6a5c6c819a41f2c",
+        "handler_function": "src/mappings/factory/handlePoolCreated",
+        "handler_wat_start_line": 4087,
+        "wabt_version": "1.0.35",
+        "wasm_sha256": "c90c4b86b184d8ffed606f3264d6f3b921421ef7dce2cb35484dd7faaf452cd4",
+        "wat_sha256": "4263d51999d58769c06bef6da1aed4c24c1c846f4b0aaed9142bf3bd912ecf9b"
+      },
+      "effect_trace_proof": {
+        "all_handler_local_normal_and_explicit_trap_exits_machine_checked": true,
+        "modeled_trap_boundary_scope": "handler-local explicit unreachable exits plus reviewed save-helper pre-store trap boundaries",
+        "modeled_trap_boundary_trace_rule": "an ordered prefix only",
+        "modeled_trap_boundary_traces": [
+          [],
+          [
+            "Pool.save",
+            "PoolTemplate.create"
+          ],
+          [
+            "Pool.save",
+            "PoolTemplate.create",
+            "Token[token0].save"
+          ],
+          [
+            "Pool.save",
+            "PoolTemplate.create",
+            "Token[token0].save",
+            "Token[token1].save"
+          ]
+        ],
+        "normal_exit_trace_rule": "empty or the exact five-effect sequence once",
+        "normal_exit_traces": [
+          [],
+          [
+            "Pool.save",
+            "PoolTemplate.create",
+            "Token[token0].save",
+            "Token[token1].save",
+            "Factory.save"
+          ]
+        ],
+        "projection": [
+          "Pool.save",
+          "PoolTemplate.create",
+          "Token[token0].save",
+          "Token[token1].save",
+          "Factory.save"
+        ],
+        "reviewed_save_helper_pre_store_trap_boundaries_projected": true,
+        "same_path_and_order_machine_proven": true
+      },
+      "generation": "legacy",
+      "generation_frontend": {
+        "argument_identity_machine_proven": true,
+        "effect_argument_definition_identities": {
+          "constructor_body_certificate": {
+            "body_sha256": "f8fa45c869143c601df6e63b9961a01b6c834d81b5ef7b52de720380eae248aa",
+            "constructor_id_and_receiver_machine_proven": true,
+            "fresh_entity_local": "$l1",
+            "function": "src/types/schema/Factory#constructor",
+            "id_key": "id",
+            "id_map_set_call": "~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#set",
+            "id_value_constructor": "~lib/@graphprotocol/graph-ts/index/Value.fromString",
+            "input_id_parameter": "$p0",
+            "returned_entity_local": "$l1",
+            "same_fresh_receiver_used_for_map_set_and_return": true,
+            "same_input_id_encoded_in_map_value": true
+          },
+          "every_alternative_reaching_definition_identity_proven": true,
+          "every_constructor_alternative_body_semantics_proven": true,
+          "receiver_definition_proofs": [
+            {
+              "binding_slice_sha256": "e29ee02582698d960339c9f080f461a9db90f0e97d8b62d7f99d33f624f3f95c",
+              "constructor_body_certificate": {
+                "body_sha256": "f8fa45c869143c601df6e63b9961a01b6c834d81b5ef7b52de720380eae248aa",
+                "constructor_id_and_receiver_machine_proven": true,
+                "function": "src/types/schema/Factory#constructor",
+                "same_fresh_receiver_used_for_map_set_and_return": true,
+                "same_input_id_encoded_in_map_value": true
+              },
+              "definition_kind": "constructor",
+              "identity": "Pool.save",
+              "immutable_id_source": "bytesToHex(PoolCreated.event.pool)",
+              "reaching_definition_wat_line": 89,
+              "receiver_local": "$l1",
+              "terminal_call": "src/types/schema/Factory#constructor"
+            },
+            {
+              "binding_slice_sha256": "dcabde0e617f42786c5386989910c242de94d37a59922444e95ebb678257410c",
+              "definition_kind": "store.get",
+              "identity": "Token[token0].save",
+              "immutable_id_source": "bytesToHex(PoolCreated.event.token0)",
+              "reaching_definition_wat_line": 95,
+              "receiver_local": "$l2",
+              "terminal_call": "src/types/schema/Token.load"
+            },
+            {
+              "binding_slice_sha256": "5e21eb72a0745bcbb9a2001175d3fdbebfe41e9e264fdf9ccf53b19e4395b3ef",
+              "constructor_body_certificate": {
+                "body_sha256": "f8fa45c869143c601df6e63b9961a01b6c834d81b5ef7b52de720380eae248aa",
+                "constructor_id_and_receiver_machine_proven": true,
+                "function": "src/types/schema/Factory#constructor",
+                "same_fresh_receiver_used_for_map_set_and_return": true,
+                "same_input_id_encoded_in_map_value": true
+              },
+              "definition_kind": "constructor",
+              "identity": "Token[token0].save",
+              "immutable_id_source": "bytesToHex(PoolCreated.event.token0)",
+              "reaching_definition_wat_line": 110,
+              "receiver_local": "$l2",
+              "terminal_call": "src/types/schema/Factory#constructor"
+            },
+            {
+              "binding_slice_sha256": "be5c156784afab5cac204945fea3934555c1b33935972c5322b6b58460147236",
+              "definition_kind": "store.get",
+              "identity": "Token[token1].save",
+              "immutable_id_source": "bytesToHex(PoolCreated.event.token1)",
+              "reaching_definition_wat_line": 101,
+              "receiver_local": "$l3",
+              "terminal_call": "src/types/schema/Token.load"
+            },
+            {
+              "binding_slice_sha256": "497bccc62e2d66f6afa7cef82c9cfe3f95db5188d923aca3c729cf0d7909adee",
+              "constructor_body_certificate": {
+                "body_sha256": "f8fa45c869143c601df6e63b9961a01b6c834d81b5ef7b52de720380eae248aa",
+                "constructor_id_and_receiver_machine_proven": true,
+                "function": "src/types/schema/Factory#constructor",
+                "same_fresh_receiver_used_for_map_set_and_return": true,
+                "same_input_id_encoded_in_map_value": true
+              },
+              "definition_kind": "constructor",
+              "identity": "Token[token1].save",
+              "immutable_id_source": "bytesToHex(PoolCreated.event.token1)",
+              "reaching_definition_wat_line": 184,
+              "receiver_local": "$l3",
+              "terminal_call": "src/types/schema/Factory#constructor"
+            },
+            {
+              "binding_slice_sha256": "a9032b385b12c6a2b87e0ce8f434ca6305f2a3241fd5c7181d7beae99e3ad4ed",
+              "definition_kind": "store.get",
+              "identity": "Factory.save",
+              "immutable_id_source": "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+              "reaching_definition_wat_line": 13,
+              "receiver_local": "$l4",
+              "terminal_call": "~lib/@graphprotocol/graph-ts/index/store.get"
+            },
+            {
+              "binding_slice_sha256": "404f86fbe89077eb3974a8fcb7d924edffe24679e5190d46907bd4a70ee67f00",
+              "constructor_body_certificate": {
+                "body_sha256": "f8fa45c869143c601df6e63b9961a01b6c834d81b5ef7b52de720380eae248aa",
+                "constructor_id_and_receiver_machine_proven": true,
+                "function": "src/types/schema/Factory#constructor",
+                "same_fresh_receiver_used_for_map_set_and_return": true,
+                "same_input_id_encoded_in_map_value": true
+              },
+              "definition_kind": "constructor",
+              "identity": "Factory.save",
+              "immutable_id_source": "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+              "reaching_definition_wat_line": 18,
+              "receiver_local": "$l4",
+              "terminal_call": "src/types/schema/Factory#constructor"
+            }
+          ]
+        },
+        "effect_argument_reaching_definitions": [
+          {
+            "argument_local": "$l1",
+            "argument_read_wat_line": 419,
+            "identity": "Pool.save",
+            "reaching_definition_wat_lines": [
+              89
+            ]
+          },
+          {
+            "argument_local": "$l1",
+            "argument_read_wat_line": 435,
+            "identity": "PoolTemplate.create",
+            "reaching_definition_wat_lines": [
+              428
+            ]
+          },
+          {
+            "argument_local": "$l2",
+            "argument_read_wat_line": 437,
+            "identity": "Token[token0].save",
+            "reaching_definition_wat_lines": [
+              95,
+              110
+            ]
+          },
+          {
+            "argument_local": "$l3",
+            "argument_read_wat_line": 439,
+            "identity": "Token[token1].save",
+            "reaching_definition_wat_lines": [
+              101,
+              184
+            ]
+          },
+          {
+            "argument_local": "$l4",
+            "argument_read_wat_line": 441,
+            "identity": "Factory.save",
+            "reaching_definition_wat_lines": [
+              13,
+              18
+            ]
+          }
+        ],
+        "entity_identity_locals": {
+          "event_identity_bindings": {
+            "pool": {
+              "binding_slice_sha256": "e29ee02582698d960339c9f080f461a9db90f0e97d8b62d7f99d33f624f3f95c",
+              "entity_local": "$l1",
+              "event_parameter": "pool"
+            },
+            "token0": {
+              "binding_slice_sha256": "dcabde0e617f42786c5386989910c242de94d37a59922444e95ebb678257410c",
+              "entity_local": "$l2",
+              "event_parameter": "token0"
+            },
+            "token1": {
+              "binding_slice_sha256": "be5c156784afab5cac204945fea3934555c1b33935972c5322b6b58460147236",
+              "entity_local": "$l3",
+              "event_parameter": "token1"
+            }
+          },
+          "factory": "$l4",
+          "factory_id": "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+          "pool": "$l1",
+          "pool_event_parameter": "pool",
+          "token0": "$l2",
+          "token0_event_parameter": "token0",
+          "token1": "$l3",
+          "token1_event_parameter": "token1"
+        },
+        "exact_receiver_and_id_bindings_machine_proven": true,
+        "frontend": "legacy-named-event-getters-and-generated-save-helpers",
+        "save_helper_proofs": [
+          {
+            "body_sha256": "d9e40b5591d57db0db268e836ba92ca92370a47bbc18705d416f41329dfe7323",
+            "entity": "Pool",
+            "function": "src/types/schema/Pool#save",
+            "instruction_count": 32,
+            "normal_return_requires_exactly_one_store": true,
+            "receiver_parameter": "$p0",
+            "required_id_key": "id",
+            "same_receiver_used_for_id_lookup_and_store": true,
+            "store_site": 31,
+            "target": "Pool",
+            "trap_before_store_is_allowed": true,
+            "trap_sites": [
+              13,
+              25
+            ]
+          },
+          {
+            "body_sha256": "58cc0df17c1b17349b9cc5700352f2cf6033563223a207958de4571d4d654fe1",
+            "entity": "Token",
+            "function": "src/types/schema/Token#save",
+            "instruction_count": 32,
+            "normal_return_requires_exactly_one_store": true,
+            "receiver_parameter": "$p0",
+            "required_id_key": "id",
+            "same_receiver_used_for_id_lookup_and_store": true,
+            "store_site": 31,
+            "target": "Token",
+            "trap_before_store_is_allowed": true,
+            "trap_sites": [
+              13,
+              25
+            ]
+          },
+          {
+            "body_sha256": "812fba7f76cb220015fc832e7f745b2ae31e592d9bf30f2431d4ce306fb2ad9f",
+            "entity": "Factory",
+            "function": "src/types/schema/Factory#save",
+            "instruction_count": 32,
+            "normal_return_requires_exactly_one_store": true,
+            "receiver_parameter": "$p0",
+            "required_id_key": "id",
+            "same_receiver_used_for_id_lookup_and_store": true,
+            "store_site": 31,
+            "target": "Factory",
+            "trap_before_store_is_allowed": true,
+            "trap_sites": [
+              13,
+              25
+            ]
+          }
+        ],
+        "shared_entity_constructor_proof": {
+          "body_sha256": "f8fa45c869143c601df6e63b9961a01b6c834d81b5ef7b52de720380eae248aa",
+          "constructor_id_and_receiver_machine_proven": true,
+          "fresh_entity_local": "$l1",
+          "function": "src/types/schema/Factory#constructor",
+          "id_key": "id",
+          "id_map_set_call": "~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#set",
+          "id_value_constructor": "~lib/@graphprotocol/graph-ts/index/Value.fromString",
+          "input_id_parameter": "$p0",
+          "returned_entity_local": "$l1",
+          "same_fresh_receiver_used_for_map_set_and_return": true,
+          "same_input_id_encoded_in_map_value": true
+        },
+        "template": {
+          "active_literal_wat_line": 425,
+          "argument_array_local": "$l1",
+          "argument_count": 1,
+          "argument_zero": "bytesToHex(PoolCreated.event.pool)",
+          "converted_value_local": "$p0",
+          "event_parameter": "pool",
+          "event_value_local": "$p0",
+          "fresh_array_and_backing_slot_machine_proven": true,
+          "heap_alias_certificate": {
+            "array_allocation_wat_line": 427,
+            "array_local_definition_wat_line": 428,
+            "backing_slot_write_wat_line": 434,
+            "converted_pool_definition_wat_line": 431,
+            "event_pool_definition_wat_line": 424
+          },
+          "name": "Pool",
+          "no_post_write_alias_mutation_before_create": true,
+          "template_identity_and_argument_machine_proven": true
+        }
+      },
+      "graph_handler_rollback_proven_by_retained_wat": false,
+      "handler_effect_region_policy": {
+        "bounded_direct_receiver_heap_aliases_machine_checked": true,
+        "direct_raw_receiver_heap_store_alias_sites": [],
+        "effect_region_start_wat_line": 420,
+        "handler_call_indirect_sites": [],
+        "handler_local_effect_region_bypasses_machine_checked": true,
+        "normal_return_bypass_sites": [],
+        "select_identity_control_sites": []
+      },
+      "instruction_and_ssa_inventory": {
+        "all_handler_local_control_local_call_and_heap_write_sites_accounted": true,
+        "branch_site_count": 0,
+        "branch_sites_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "direct_call_count": 182,
+        "direct_call_inventory_sha256": "49dbf90ec56d56b8339410698e5bb08389252db4d81ef4ac730c9a1a421c55e8",
+        "direct_heap_store_count": 1,
+        "direct_heap_store_inventory_sha256": "7d421111cf1b88fcdd826c67299e247dcdf5ad0725049d796c1cc896b303eb06",
+        "explicit_unreachable_sites": [],
+        "handler_call_indirect_sites": [],
+        "handler_instruction_count": 443,
+        "local_write_count": 15,
+        "local_write_inventory_sha256": "29e1de5c8913be08cbc7b1afd5454c3f43206f1dfcd3a1c95f7c7945d26fa5fe",
+        "normal_return_sites": [
+          8,
+          137,
+          211
+        ],
+        "select_sites": [],
+        "structured_control_start_count": 8,
+        "structured_control_starts_sha256": "ff72ddd836e42b1d85c1fa01e5c72ad98f8491f173793317d36ad412cc1e4700"
+      },
+      "mapping_cid": "QmT8CKmLDFFCgwYnubFhKXUsuer5rfJKPT4PrCsv9tTwjV",
+      "profile_id": "legacy-mainnet-qmrv",
+      "reachable_effect_closure": {
+        "complete_direct_and_indirect_effect_site_scan": true,
+        "conservative_indirect_targets": [
+          "null"
+        ],
+        "dynamic_persistent_target_count": 0,
+        "reachable_call_indirect_sites": [],
+        "reachable_data_source_create_sites": [
+          {
+            "function": "src/mappings/factory/handlePoolCreated",
+            "wat_line": 436
+          }
+        ],
+        "reachable_function_body_bindings_sha256": "c7296eae5fd3e6d462ef9a1c00c6eff2af2f0b780ea56b94c165a987ae0f3d88",
+        "reachable_function_count": 103,
+        "reachable_store_set_sites": [
+          {
+            "function": "src/types/schema/Bundle#save",
+            "target": "Bundle",
+            "wat_line": 31
+          },
+          {
+            "function": "src/types/schema/Factory#save",
+            "target": "Factory",
+            "wat_line": 31
+          },
+          {
+            "function": "src/types/schema/Pool#save",
+            "target": "Pool",
+            "wat_line": 31
+          },
+          {
+            "function": "src/types/schema/Token#save",
+            "target": "Token",
+            "wat_line": 31
+          }
+        ],
+        "reachable_store_set_targets": [
+          "Bundle",
+          "Factory",
+          "Pool",
+          "Token"
+        ]
+      },
+      "reviewed_effect_order": [
+        "Pool.save",
+        "PoolTemplate.create",
+        "Token[token0].save",
+        "Token[token1].save",
+        "Factory.save"
+      ],
+      "same_path_or_dataflow_machine_proven": true,
+      "structured_control": {
+        "all_handler_local_edges_branch_targets_and_explicit_exits_machine_checked": true,
+        "forced_true_path_predicate_ifs": [],
+        "graph_sha256": "6de8bb70beb29198465ca39bbefac87b37322a7bbdc3d263fc81f1f5497b0410",
+        "node_count": 8
+      },
+      "template_identity_and_argument_machine_proven": true,
+      "typed_effect_operand_stack": [
+        {
+          "all_operand_wasm_types": "i32",
+          "call": "src/types/schema/Pool#save",
+          "effect": "Pool.save",
+          "operand_count": 1,
+          "operands_bottom_to_top": [
+            "i32:entity-ref($l1)"
+          ],
+          "wat_line": 420
+        },
+        {
+          "all_operand_wasm_types": "i32",
+          "call": "~lib/@graphprotocol/graph-ts/index/dataSource.create",
+          "effect": "PoolTemplate.create",
+          "operand_count": 2,
+          "operands_bottom_to_top": [
+            "i32:static-string(Pool)",
+            "i32:fresh-array(event.pool)"
+          ],
+          "wat_line": 436
+        },
+        {
+          "all_operand_wasm_types": "i32",
+          "call": "src/types/schema/Token#save",
+          "effect": "Token[token0].save",
+          "operand_count": 1,
+          "operands_bottom_to_top": [
+            "i32:entity-ref($l2)"
+          ],
+          "wat_line": 438
+        },
+        {
+          "all_operand_wasm_types": "i32",
+          "call": "src/types/schema/Token#save",
+          "effect": "Token[token1].save",
+          "operand_count": 1,
+          "operands_bottom_to_top": [
+            "i32:entity-ref($l3)"
+          ],
+          "wat_line": 440
+        },
+        {
+          "all_operand_wasm_types": "i32",
+          "call": "src/types/schema/Factory#save",
+          "effect": "Factory.save",
+          "operand_count": 1,
+          "operands_bottom_to_top": [
+            "i32:entity-ref($l4)"
+          ],
+          "wat_line": 442
+        }
+      ]
+    },
+    {
+      "argument_identity_machine_proven": true,
+      "authority": {
+        "effect_suffix_sha256": "40715084bfe0336b5c9f4c9e02b92c77aca2c2773ea2cd774abbe3dede74e6bf",
+        "handler_body_sha256": "266f6faad4b727316ecdb49a8fd0994fb9f33a0d007dad32c6308a6305529417",
+        "handler_function": "src/mappings/factory/handlePoolCreated",
+        "handler_wat_start_line": 4087,
+        "wabt_version": "1.0.35",
+        "wasm_sha256": "ab7c84297665ab608ce3c6b8cc71f1c584ae7f2a94ebe674993b069d6b8b5c98",
+        "wat_sha256": "1fbcd7b7305dd0e0eb2e9de2e64ecb023e9aa5abe29f7562be4dad72bf561f4d"
+      },
+      "effect_trace_proof": {
+        "all_handler_local_normal_and_explicit_trap_exits_machine_checked": true,
+        "modeled_trap_boundary_scope": "handler-local explicit unreachable exits plus reviewed save-helper pre-store trap boundaries",
+        "modeled_trap_boundary_trace_rule": "an ordered prefix only",
+        "modeled_trap_boundary_traces": [
+          [],
+          [
+            "Pool.save",
+            "PoolTemplate.create"
+          ],
+          [
+            "Pool.save",
+            "PoolTemplate.create",
+            "Token[token0].save"
+          ],
+          [
+            "Pool.save",
+            "PoolTemplate.create",
+            "Token[token0].save",
+            "Token[token1].save"
+          ]
+        ],
+        "normal_exit_trace_rule": "empty or the exact five-effect sequence once",
+        "normal_exit_traces": [
+          [],
+          [
+            "Pool.save",
+            "PoolTemplate.create",
+            "Token[token0].save",
+            "Token[token1].save",
+            "Factory.save"
+          ]
+        ],
+        "projection": [
+          "Pool.save",
+          "PoolTemplate.create",
+          "Token[token0].save",
+          "Token[token1].save",
+          "Factory.save"
+        ],
+        "reviewed_save_helper_pre_store_trap_boundaries_projected": true,
+        "same_path_and_order_machine_proven": true
+      },
+      "generation": "legacy",
+      "generation_frontend": {
+        "argument_identity_machine_proven": true,
+        "effect_argument_definition_identities": {
+          "constructor_body_certificate": {
+            "body_sha256": "df4449b5dc9aa60c5afdcfabf89a8a44e682fbc093d9dab42627ddda59563206",
+            "constructor_id_and_receiver_machine_proven": true,
+            "fresh_entity_local": "$l1",
+            "function": "src/types/schema/Factory#constructor",
+            "id_key": "id",
+            "id_map_set_call": "~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#set",
+            "id_value_constructor": "~lib/@graphprotocol/graph-ts/index/Value.fromString",
+            "input_id_parameter": "$p0",
+            "returned_entity_local": "$l1",
+            "same_fresh_receiver_used_for_map_set_and_return": true,
+            "same_input_id_encoded_in_map_value": true
+          },
+          "every_alternative_reaching_definition_identity_proven": true,
+          "every_constructor_alternative_body_semantics_proven": true,
+          "receiver_definition_proofs": [
+            {
+              "binding_slice_sha256": "e29ee02582698d960339c9f080f461a9db90f0e97d8b62d7f99d33f624f3f95c",
+              "constructor_body_certificate": {
+                "body_sha256": "df4449b5dc9aa60c5afdcfabf89a8a44e682fbc093d9dab42627ddda59563206",
+                "constructor_id_and_receiver_machine_proven": true,
+                "function": "src/types/schema/Factory#constructor",
+                "same_fresh_receiver_used_for_map_set_and_return": true,
+                "same_input_id_encoded_in_map_value": true
+              },
+              "definition_kind": "constructor",
+              "identity": "Pool.save",
+              "immutable_id_source": "bytesToHex(PoolCreated.event.pool)",
+              "reaching_definition_wat_line": 89,
+              "receiver_local": "$l1",
+              "terminal_call": "src/types/schema/Factory#constructor"
+            },
+            {
+              "binding_slice_sha256": "dcabde0e617f42786c5386989910c242de94d37a59922444e95ebb678257410c",
+              "definition_kind": "store.get",
+              "identity": "Token[token0].save",
+              "immutable_id_source": "bytesToHex(PoolCreated.event.token0)",
+              "reaching_definition_wat_line": 95,
+              "receiver_local": "$l2",
+              "terminal_call": "src/types/schema/Token.load"
+            },
+            {
+              "binding_slice_sha256": "5e21eb72a0745bcbb9a2001175d3fdbebfe41e9e264fdf9ccf53b19e4395b3ef",
+              "constructor_body_certificate": {
+                "body_sha256": "df4449b5dc9aa60c5afdcfabf89a8a44e682fbc093d9dab42627ddda59563206",
+                "constructor_id_and_receiver_machine_proven": true,
+                "function": "src/types/schema/Factory#constructor",
+                "same_fresh_receiver_used_for_map_set_and_return": true,
+                "same_input_id_encoded_in_map_value": true
+              },
+              "definition_kind": "constructor",
+              "identity": "Token[token0].save",
+              "immutable_id_source": "bytesToHex(PoolCreated.event.token0)",
+              "reaching_definition_wat_line": 110,
+              "receiver_local": "$l2",
+              "terminal_call": "src/types/schema/Factory#constructor"
+            },
+            {
+              "binding_slice_sha256": "be5c156784afab5cac204945fea3934555c1b33935972c5322b6b58460147236",
+              "definition_kind": "store.get",
+              "identity": "Token[token1].save",
+              "immutable_id_source": "bytesToHex(PoolCreated.event.token1)",
+              "reaching_definition_wat_line": 101,
+              "receiver_local": "$l3",
+              "terminal_call": "src/types/schema/Token.load"
+            },
+            {
+              "binding_slice_sha256": "497bccc62e2d66f6afa7cef82c9cfe3f95db5188d923aca3c729cf0d7909adee",
+              "constructor_body_certificate": {
+                "body_sha256": "df4449b5dc9aa60c5afdcfabf89a8a44e682fbc093d9dab42627ddda59563206",
+                "constructor_id_and_receiver_machine_proven": true,
+                "function": "src/types/schema/Factory#constructor",
+                "same_fresh_receiver_used_for_map_set_and_return": true,
+                "same_input_id_encoded_in_map_value": true
+              },
+              "definition_kind": "constructor",
+              "identity": "Token[token1].save",
+              "immutable_id_source": "bytesToHex(PoolCreated.event.token1)",
+              "reaching_definition_wat_line": 184,
+              "receiver_local": "$l3",
+              "terminal_call": "src/types/schema/Factory#constructor"
+            },
+            {
+              "binding_slice_sha256": "a9032b385b12c6a2b87e0ce8f434ca6305f2a3241fd5c7181d7beae99e3ad4ed",
+              "definition_kind": "store.get",
+              "identity": "Factory.save",
+              "immutable_id_source": "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+              "reaching_definition_wat_line": 13,
+              "receiver_local": "$l4",
+              "terminal_call": "~lib/@graphprotocol/graph-ts/index/store.get"
+            },
+            {
+              "binding_slice_sha256": "404f86fbe89077eb3974a8fcb7d924edffe24679e5190d46907bd4a70ee67f00",
+              "constructor_body_certificate": {
+                "body_sha256": "df4449b5dc9aa60c5afdcfabf89a8a44e682fbc093d9dab42627ddda59563206",
+                "constructor_id_and_receiver_machine_proven": true,
+                "function": "src/types/schema/Factory#constructor",
+                "same_fresh_receiver_used_for_map_set_and_return": true,
+                "same_input_id_encoded_in_map_value": true
+              },
+              "definition_kind": "constructor",
+              "identity": "Factory.save",
+              "immutable_id_source": "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+              "reaching_definition_wat_line": 18,
+              "receiver_local": "$l4",
+              "terminal_call": "src/types/schema/Factory#constructor"
+            }
+          ]
+        },
+        "effect_argument_reaching_definitions": [
+          {
+            "argument_local": "$l1",
+            "argument_read_wat_line": 419,
+            "identity": "Pool.save",
+            "reaching_definition_wat_lines": [
+              89
+            ]
+          },
+          {
+            "argument_local": "$l1",
+            "argument_read_wat_line": 435,
+            "identity": "PoolTemplate.create",
+            "reaching_definition_wat_lines": [
+              428
+            ]
+          },
+          {
+            "argument_local": "$l2",
+            "argument_read_wat_line": 437,
+            "identity": "Token[token0].save",
+            "reaching_definition_wat_lines": [
+              95,
+              110
+            ]
+          },
+          {
+            "argument_local": "$l3",
+            "argument_read_wat_line": 439,
+            "identity": "Token[token1].save",
+            "reaching_definition_wat_lines": [
+              101,
+              184
+            ]
+          },
+          {
+            "argument_local": "$l4",
+            "argument_read_wat_line": 441,
+            "identity": "Factory.save",
+            "reaching_definition_wat_lines": [
+              13,
+              18
+            ]
+          }
+        ],
+        "entity_identity_locals": {
+          "event_identity_bindings": {
+            "pool": {
+              "binding_slice_sha256": "e29ee02582698d960339c9f080f461a9db90f0e97d8b62d7f99d33f624f3f95c",
+              "entity_local": "$l1",
+              "event_parameter": "pool"
+            },
+            "token0": {
+              "binding_slice_sha256": "dcabde0e617f42786c5386989910c242de94d37a59922444e95ebb678257410c",
+              "entity_local": "$l2",
+              "event_parameter": "token0"
+            },
+            "token1": {
+              "binding_slice_sha256": "be5c156784afab5cac204945fea3934555c1b33935972c5322b6b58460147236",
+              "entity_local": "$l3",
+              "event_parameter": "token1"
+            }
+          },
+          "factory": "$l4",
+          "factory_id": "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+          "pool": "$l1",
+          "pool_event_parameter": "pool",
+          "token0": "$l2",
+          "token0_event_parameter": "token0",
+          "token1": "$l3",
+          "token1_event_parameter": "token1"
+        },
+        "exact_receiver_and_id_bindings_machine_proven": true,
+        "frontend": "legacy-named-event-getters-and-generated-save-helpers",
+        "save_helper_proofs": [
+          {
+            "body_sha256": "1c51965d0530b2abf946b398e383aae4fe60b575270b91b7ff815789c49bd4a1",
+            "entity": "Pool",
+            "function": "src/types/schema/Pool#save",
+            "instruction_count": 32,
+            "normal_return_requires_exactly_one_store": true,
+            "receiver_parameter": "$p0",
+            "required_id_key": "id",
+            "same_receiver_used_for_id_lookup_and_store": true,
+            "store_site": 31,
+            "target": "Pool",
+            "trap_before_store_is_allowed": true,
+            "trap_sites": [
+              13,
+              25
+            ]
+          },
+          {
+            "body_sha256": "aa8fe896abbf447b77b79dd01146546a07a6b1e1cbed3e4e9f22e02a8129c022",
+            "entity": "Token",
+            "function": "src/types/schema/Token#save",
+            "instruction_count": 32,
+            "normal_return_requires_exactly_one_store": true,
+            "receiver_parameter": "$p0",
+            "required_id_key": "id",
+            "same_receiver_used_for_id_lookup_and_store": true,
+            "store_site": 31,
+            "target": "Token",
+            "trap_before_store_is_allowed": true,
+            "trap_sites": [
+              13,
+              25
+            ]
+          },
+          {
+            "body_sha256": "9c64309e133c66671393d5e1f915b3e2b441e06626ec336fae7deda7007c5364",
+            "entity": "Factory",
+            "function": "src/types/schema/Factory#save",
+            "instruction_count": 32,
+            "normal_return_requires_exactly_one_store": true,
+            "receiver_parameter": "$p0",
+            "required_id_key": "id",
+            "same_receiver_used_for_id_lookup_and_store": true,
+            "store_site": 31,
+            "target": "Factory",
+            "trap_before_store_is_allowed": true,
+            "trap_sites": [
+              13,
+              25
+            ]
+          }
+        ],
+        "shared_entity_constructor_proof": {
+          "body_sha256": "df4449b5dc9aa60c5afdcfabf89a8a44e682fbc093d9dab42627ddda59563206",
+          "constructor_id_and_receiver_machine_proven": true,
+          "fresh_entity_local": "$l1",
+          "function": "src/types/schema/Factory#constructor",
+          "id_key": "id",
+          "id_map_set_call": "~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#set",
+          "id_value_constructor": "~lib/@graphprotocol/graph-ts/index/Value.fromString",
+          "input_id_parameter": "$p0",
+          "returned_entity_local": "$l1",
+          "same_fresh_receiver_used_for_map_set_and_return": true,
+          "same_input_id_encoded_in_map_value": true
+        },
+        "template": {
+          "active_literal_wat_line": 425,
+          "argument_array_local": "$l1",
+          "argument_count": 1,
+          "argument_zero": "bytesToHex(PoolCreated.event.pool)",
+          "converted_value_local": "$p0",
+          "event_parameter": "pool",
+          "event_value_local": "$p0",
+          "fresh_array_and_backing_slot_machine_proven": true,
+          "heap_alias_certificate": {
+            "array_allocation_wat_line": 427,
+            "array_local_definition_wat_line": 428,
+            "backing_slot_write_wat_line": 434,
+            "converted_pool_definition_wat_line": 431,
+            "event_pool_definition_wat_line": 424
+          },
+          "name": "Pool",
+          "no_post_write_alias_mutation_before_create": true,
+          "template_identity_and_argument_machine_proven": true
+        }
+      },
+      "graph_handler_rollback_proven_by_retained_wat": false,
+      "handler_effect_region_policy": {
+        "bounded_direct_receiver_heap_aliases_machine_checked": true,
+        "direct_raw_receiver_heap_store_alias_sites": [],
+        "effect_region_start_wat_line": 420,
+        "handler_call_indirect_sites": [],
+        "handler_local_effect_region_bypasses_machine_checked": true,
+        "normal_return_bypass_sites": [],
+        "select_identity_control_sites": []
+      },
+      "instruction_and_ssa_inventory": {
+        "all_handler_local_control_local_call_and_heap_write_sites_accounted": true,
+        "branch_site_count": 0,
+        "branch_sites_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "direct_call_count": 182,
+        "direct_call_inventory_sha256": "49dbf90ec56d56b8339410698e5bb08389252db4d81ef4ac730c9a1a421c55e8",
+        "direct_heap_store_count": 1,
+        "direct_heap_store_inventory_sha256": "7d421111cf1b88fcdd826c67299e247dcdf5ad0725049d796c1cc896b303eb06",
+        "explicit_unreachable_sites": [],
+        "handler_call_indirect_sites": [],
+        "handler_instruction_count": 443,
+        "local_write_count": 15,
+        "local_write_inventory_sha256": "29e1de5c8913be08cbc7b1afd5454c3f43206f1dfcd3a1c95f7c7945d26fa5fe",
+        "normal_return_sites": [
+          8,
+          137,
+          211
+        ],
+        "select_sites": [],
+        "structured_control_start_count": 8,
+        "structured_control_starts_sha256": "ff72ddd836e42b1d85c1fa01e5c72ad98f8491f173793317d36ad412cc1e4700"
+      },
+      "mapping_cid": "QmUu9rnGvUiBbF9pLnuJQab1wHXqjooo3bY5cZDVTyQQgr",
+      "profile_id": "legacy-mainnet-root",
+      "reachable_effect_closure": {
+        "complete_direct_and_indirect_effect_site_scan": true,
+        "conservative_indirect_targets": [
+          "null"
+        ],
+        "dynamic_persistent_target_count": 0,
+        "reachable_call_indirect_sites": [],
+        "reachable_data_source_create_sites": [
+          {
+            "function": "src/mappings/factory/handlePoolCreated",
+            "wat_line": 436
+          }
+        ],
+        "reachable_function_body_bindings_sha256": "3ae22ab5bc71f14befb82a144d54d0e45c7b001f4d84ea690048fdea69c59f29",
+        "reachable_function_count": 103,
+        "reachable_store_set_sites": [
+          {
+            "function": "src/types/schema/Bundle#save",
+            "target": "Bundle",
+            "wat_line": 31
+          },
+          {
+            "function": "src/types/schema/Factory#save",
+            "target": "Factory",
+            "wat_line": 31
+          },
+          {
+            "function": "src/types/schema/Pool#save",
+            "target": "Pool",
+            "wat_line": 31
+          },
+          {
+            "function": "src/types/schema/Token#save",
+            "target": "Token",
+            "wat_line": 31
+          }
+        ],
+        "reachable_store_set_targets": [
+          "Bundle",
+          "Factory",
+          "Pool",
+          "Token"
+        ]
+      },
+      "reviewed_effect_order": [
+        "Pool.save",
+        "PoolTemplate.create",
+        "Token[token0].save",
+        "Token[token1].save",
+        "Factory.save"
+      ],
+      "same_path_or_dataflow_machine_proven": true,
+      "structured_control": {
+        "all_handler_local_edges_branch_targets_and_explicit_exits_machine_checked": true,
+        "forced_true_path_predicate_ifs": [],
+        "graph_sha256": "6de8bb70beb29198465ca39bbefac87b37322a7bbdc3d263fc81f1f5497b0410",
+        "node_count": 8
+      },
+      "template_identity_and_argument_machine_proven": true,
+      "typed_effect_operand_stack": [
+        {
+          "all_operand_wasm_types": "i32",
+          "call": "src/types/schema/Pool#save",
+          "effect": "Pool.save",
+          "operand_count": 1,
+          "operands_bottom_to_top": [
+            "i32:entity-ref($l1)"
+          ],
+          "wat_line": 420
+        },
+        {
+          "all_operand_wasm_types": "i32",
+          "call": "~lib/@graphprotocol/graph-ts/index/dataSource.create",
+          "effect": "PoolTemplate.create",
+          "operand_count": 2,
+          "operands_bottom_to_top": [
+            "i32:static-string(Pool)",
+            "i32:fresh-array(event.pool)"
+          ],
+          "wat_line": 436
+        },
+        {
+          "all_operand_wasm_types": "i32",
+          "call": "src/types/schema/Token#save",
+          "effect": "Token[token0].save",
+          "operand_count": 1,
+          "operands_bottom_to_top": [
+            "i32:entity-ref($l2)"
+          ],
+          "wat_line": 438
+        },
+        {
+          "all_operand_wasm_types": "i32",
+          "call": "src/types/schema/Token#save",
+          "effect": "Token[token1].save",
+          "operand_count": 1,
+          "operands_bottom_to_top": [
+            "i32:entity-ref($l3)"
+          ],
+          "wat_line": 440
+        },
+        {
+          "all_operand_wasm_types": "i32",
+          "call": "src/types/schema/Factory#save",
+          "effect": "Factory.save",
+          "operand_count": 1,
+          "operands_bottom_to_top": [
+            "i32:entity-ref($l4)"
+          ],
+          "wat_line": 442
+        }
+      ]
+    },
+    {
+      "argument_identity_machine_proven": true,
+      "authority": {
+        "effect_suffix_sha256": "cd8bdbd841717cdb918f1ee6e7ac2a0e60da6a31d0c5c725f47cc3dcb77a8c96",
+        "handler_body_sha256": "cfaa881acf0c9a45f3f71af203c0587f86bad622083db6c15c2c4f77a8274a09",
+        "handler_function": "src/mappings/factory/handlePoolCreated",
+        "handler_wat_start_line": 4087,
+        "wabt_version": "1.0.35",
+        "wasm_sha256": "1bde476d96fd4ba7720246a351c4de0f129693d838f9a39a660097c85d1edead",
+        "wat_sha256": "d44ed8c0bbd1bdf62635871b475fbe1a22c8d3a4b88e5d77e6827e3e61b70f81"
+      },
+      "effect_trace_proof": {
+        "all_handler_local_normal_and_explicit_trap_exits_machine_checked": true,
+        "modeled_trap_boundary_scope": "handler-local explicit unreachable exits plus reviewed save-helper pre-store trap boundaries",
+        "modeled_trap_boundary_trace_rule": "an ordered prefix only",
+        "modeled_trap_boundary_traces": [
+          [],
+          [
+            "Pool.save",
+            "PoolTemplate.create"
+          ],
+          [
+            "Pool.save",
+            "PoolTemplate.create",
+            "Token[token0].save"
+          ],
+          [
+            "Pool.save",
+            "PoolTemplate.create",
+            "Token[token0].save",
+            "Token[token1].save"
+          ]
+        ],
+        "normal_exit_trace_rule": "empty or the exact five-effect sequence once",
+        "normal_exit_traces": [
+          [],
+          [
+            "Pool.save",
+            "PoolTemplate.create",
+            "Token[token0].save",
+            "Token[token1].save",
+            "Factory.save"
+          ]
+        ],
+        "projection": [
+          "Pool.save",
+          "PoolTemplate.create",
+          "Token[token0].save",
+          "Token[token1].save",
+          "Factory.save"
+        ],
+        "reviewed_save_helper_pre_store_trap_boundaries_projected": true,
+        "same_path_and_order_machine_proven": true
+      },
+      "generation": "legacy",
+      "generation_frontend": {
+        "argument_identity_machine_proven": true,
+        "effect_argument_definition_identities": {
+          "constructor_body_certificate": {
+            "body_sha256": "ec0bcc5ed6c841a72638cb8311501d994c5565b3a6b339999b870397a943503c",
+            "constructor_id_and_receiver_machine_proven": true,
+            "fresh_entity_local": "$l1",
+            "function": "src/types/schema/Factory#constructor",
+            "id_key": "id",
+            "id_map_set_call": "~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#set",
+            "id_value_constructor": "~lib/@graphprotocol/graph-ts/index/Value.fromString",
+            "input_id_parameter": "$p0",
+            "returned_entity_local": "$l1",
+            "same_fresh_receiver_used_for_map_set_and_return": true,
+            "same_input_id_encoded_in_map_value": true
+          },
+          "every_alternative_reaching_definition_identity_proven": true,
+          "every_constructor_alternative_body_semantics_proven": true,
+          "receiver_definition_proofs": [
+            {
+              "binding_slice_sha256": "e29ee02582698d960339c9f080f461a9db90f0e97d8b62d7f99d33f624f3f95c",
+              "constructor_body_certificate": {
+                "body_sha256": "ec0bcc5ed6c841a72638cb8311501d994c5565b3a6b339999b870397a943503c",
+                "constructor_id_and_receiver_machine_proven": true,
+                "function": "src/types/schema/Factory#constructor",
+                "same_fresh_receiver_used_for_map_set_and_return": true,
+                "same_input_id_encoded_in_map_value": true
+              },
+              "definition_kind": "constructor",
+              "identity": "Pool.save",
+              "immutable_id_source": "bytesToHex(PoolCreated.event.pool)",
+              "reaching_definition_wat_line": 89,
+              "receiver_local": "$l1",
+              "terminal_call": "src/types/schema/Factory#constructor"
+            },
+            {
+              "binding_slice_sha256": "dcabde0e617f42786c5386989910c242de94d37a59922444e95ebb678257410c",
+              "definition_kind": "store.get",
+              "identity": "Token[token0].save",
+              "immutable_id_source": "bytesToHex(PoolCreated.event.token0)",
+              "reaching_definition_wat_line": 95,
+              "receiver_local": "$l2",
+              "terminal_call": "src/types/schema/Token.load"
+            },
+            {
+              "binding_slice_sha256": "5e21eb72a0745bcbb9a2001175d3fdbebfe41e9e264fdf9ccf53b19e4395b3ef",
+              "constructor_body_certificate": {
+                "body_sha256": "ec0bcc5ed6c841a72638cb8311501d994c5565b3a6b339999b870397a943503c",
+                "constructor_id_and_receiver_machine_proven": true,
+                "function": "src/types/schema/Factory#constructor",
+                "same_fresh_receiver_used_for_map_set_and_return": true,
+                "same_input_id_encoded_in_map_value": true
+              },
+              "definition_kind": "constructor",
+              "identity": "Token[token0].save",
+              "immutable_id_source": "bytesToHex(PoolCreated.event.token0)",
+              "reaching_definition_wat_line": 110,
+              "receiver_local": "$l2",
+              "terminal_call": "src/types/schema/Factory#constructor"
+            },
+            {
+              "binding_slice_sha256": "be5c156784afab5cac204945fea3934555c1b33935972c5322b6b58460147236",
+              "definition_kind": "store.get",
+              "identity": "Token[token1].save",
+              "immutable_id_source": "bytesToHex(PoolCreated.event.token1)",
+              "reaching_definition_wat_line": 101,
+              "receiver_local": "$l3",
+              "terminal_call": "src/types/schema/Token.load"
+            },
+            {
+              "binding_slice_sha256": "497bccc62e2d66f6afa7cef82c9cfe3f95db5188d923aca3c729cf0d7909adee",
+              "constructor_body_certificate": {
+                "body_sha256": "ec0bcc5ed6c841a72638cb8311501d994c5565b3a6b339999b870397a943503c",
+                "constructor_id_and_receiver_machine_proven": true,
+                "function": "src/types/schema/Factory#constructor",
+                "same_fresh_receiver_used_for_map_set_and_return": true,
+                "same_input_id_encoded_in_map_value": true
+              },
+              "definition_kind": "constructor",
+              "identity": "Token[token1].save",
+              "immutable_id_source": "bytesToHex(PoolCreated.event.token1)",
+              "reaching_definition_wat_line": 184,
+              "receiver_local": "$l3",
+              "terminal_call": "src/types/schema/Factory#constructor"
+            },
+            {
+              "binding_slice_sha256": "a9032b385b12c6a2b87e0ce8f434ca6305f2a3241fd5c7181d7beae99e3ad4ed",
+              "definition_kind": "store.get",
+              "identity": "Factory.save",
+              "immutable_id_source": "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+              "reaching_definition_wat_line": 13,
+              "receiver_local": "$l4",
+              "terminal_call": "~lib/@graphprotocol/graph-ts/index/store.get"
+            },
+            {
+              "binding_slice_sha256": "404f86fbe89077eb3974a8fcb7d924edffe24679e5190d46907bd4a70ee67f00",
+              "constructor_body_certificate": {
+                "body_sha256": "ec0bcc5ed6c841a72638cb8311501d994c5565b3a6b339999b870397a943503c",
+                "constructor_id_and_receiver_machine_proven": true,
+                "function": "src/types/schema/Factory#constructor",
+                "same_fresh_receiver_used_for_map_set_and_return": true,
+                "same_input_id_encoded_in_map_value": true
+              },
+              "definition_kind": "constructor",
+              "identity": "Factory.save",
+              "immutable_id_source": "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+              "reaching_definition_wat_line": 18,
+              "receiver_local": "$l4",
+              "terminal_call": "src/types/schema/Factory#constructor"
+            }
+          ]
+        },
+        "effect_argument_reaching_definitions": [
+          {
+            "argument_local": "$l1",
+            "argument_read_wat_line": 419,
+            "identity": "Pool.save",
+            "reaching_definition_wat_lines": [
+              89
+            ]
+          },
+          {
+            "argument_local": "$l1",
+            "argument_read_wat_line": 435,
+            "identity": "PoolTemplate.create",
+            "reaching_definition_wat_lines": [
+              428
+            ]
+          },
+          {
+            "argument_local": "$l2",
+            "argument_read_wat_line": 437,
+            "identity": "Token[token0].save",
+            "reaching_definition_wat_lines": [
+              95,
+              110
+            ]
+          },
+          {
+            "argument_local": "$l3",
+            "argument_read_wat_line": 439,
+            "identity": "Token[token1].save",
+            "reaching_definition_wat_lines": [
+              101,
+              184
+            ]
+          },
+          {
+            "argument_local": "$l4",
+            "argument_read_wat_line": 441,
+            "identity": "Factory.save",
+            "reaching_definition_wat_lines": [
+              13,
+              18
+            ]
+          }
+        ],
+        "entity_identity_locals": {
+          "event_identity_bindings": {
+            "pool": {
+              "binding_slice_sha256": "e29ee02582698d960339c9f080f461a9db90f0e97d8b62d7f99d33f624f3f95c",
+              "entity_local": "$l1",
+              "event_parameter": "pool"
+            },
+            "token0": {
+              "binding_slice_sha256": "dcabde0e617f42786c5386989910c242de94d37a59922444e95ebb678257410c",
+              "entity_local": "$l2",
+              "event_parameter": "token0"
+            },
+            "token1": {
+              "binding_slice_sha256": "be5c156784afab5cac204945fea3934555c1b33935972c5322b6b58460147236",
+              "entity_local": "$l3",
+              "event_parameter": "token1"
+            }
+          },
+          "factory": "$l4",
+          "factory_id": "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+          "pool": "$l1",
+          "pool_event_parameter": "pool",
+          "token0": "$l2",
+          "token0_event_parameter": "token0",
+          "token1": "$l3",
+          "token1_event_parameter": "token1"
+        },
+        "exact_receiver_and_id_bindings_machine_proven": true,
+        "frontend": "legacy-named-event-getters-and-generated-save-helpers",
+        "save_helper_proofs": [
+          {
+            "body_sha256": "04167d2b1470287c00c69402ae80ca14018c2c407f41f875e52ec3a2621e0c05",
+            "entity": "Pool",
+            "function": "src/types/schema/Pool#save",
+            "instruction_count": 32,
+            "normal_return_requires_exactly_one_store": true,
+            "receiver_parameter": "$p0",
+            "required_id_key": "id",
+            "same_receiver_used_for_id_lookup_and_store": true,
+            "store_site": 31,
+            "target": "Pool",
+            "trap_before_store_is_allowed": true,
+            "trap_sites": [
+              13,
+              25
+            ]
+          },
+          {
+            "body_sha256": "0bf2d1b35cfe30aff749597dcd39291bc2cbdc9907581b315078149b166d073c",
+            "entity": "Token",
+            "function": "src/types/schema/Token#save",
+            "instruction_count": 32,
+            "normal_return_requires_exactly_one_store": true,
+            "receiver_parameter": "$p0",
+            "required_id_key": "id",
+            "same_receiver_used_for_id_lookup_and_store": true,
+            "store_site": 31,
+            "target": "Token",
+            "trap_before_store_is_allowed": true,
+            "trap_sites": [
+              13,
+              25
+            ]
+          },
+          {
+            "body_sha256": "387eaad9ffd731486ec9b86b7daaae4cfd50d76c3788ba512d27a063d8854f69",
+            "entity": "Factory",
+            "function": "src/types/schema/Factory#save",
+            "instruction_count": 32,
+            "normal_return_requires_exactly_one_store": true,
+            "receiver_parameter": "$p0",
+            "required_id_key": "id",
+            "same_receiver_used_for_id_lookup_and_store": true,
+            "store_site": 31,
+            "target": "Factory",
+            "trap_before_store_is_allowed": true,
+            "trap_sites": [
+              13,
+              25
+            ]
+          }
+        ],
+        "shared_entity_constructor_proof": {
+          "body_sha256": "ec0bcc5ed6c841a72638cb8311501d994c5565b3a6b339999b870397a943503c",
+          "constructor_id_and_receiver_machine_proven": true,
+          "fresh_entity_local": "$l1",
+          "function": "src/types/schema/Factory#constructor",
+          "id_key": "id",
+          "id_map_set_call": "~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#set",
+          "id_value_constructor": "~lib/@graphprotocol/graph-ts/index/Value.fromString",
+          "input_id_parameter": "$p0",
+          "returned_entity_local": "$l1",
+          "same_fresh_receiver_used_for_map_set_and_return": true,
+          "same_input_id_encoded_in_map_value": true
+        },
+        "template": {
+          "active_literal_wat_line": 425,
+          "argument_array_local": "$l1",
+          "argument_count": 1,
+          "argument_zero": "bytesToHex(PoolCreated.event.pool)",
+          "converted_value_local": "$p0",
+          "event_parameter": "pool",
+          "event_value_local": "$p0",
+          "fresh_array_and_backing_slot_machine_proven": true,
+          "heap_alias_certificate": {
+            "array_allocation_wat_line": 427,
+            "array_local_definition_wat_line": 428,
+            "backing_slot_write_wat_line": 434,
+            "converted_pool_definition_wat_line": 431,
+            "event_pool_definition_wat_line": 424
+          },
+          "name": "Pool",
+          "no_post_write_alias_mutation_before_create": true,
+          "template_identity_and_argument_machine_proven": true
+        }
+      },
+      "graph_handler_rollback_proven_by_retained_wat": false,
+      "handler_effect_region_policy": {
+        "bounded_direct_receiver_heap_aliases_machine_checked": true,
+        "direct_raw_receiver_heap_store_alias_sites": [],
+        "effect_region_start_wat_line": 420,
+        "handler_call_indirect_sites": [],
+        "handler_local_effect_region_bypasses_machine_checked": true,
+        "normal_return_bypass_sites": [],
+        "select_identity_control_sites": []
+      },
+      "instruction_and_ssa_inventory": {
+        "all_handler_local_control_local_call_and_heap_write_sites_accounted": true,
+        "branch_site_count": 0,
+        "branch_sites_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "direct_call_count": 182,
+        "direct_call_inventory_sha256": "49dbf90ec56d56b8339410698e5bb08389252db4d81ef4ac730c9a1a421c55e8",
+        "direct_heap_store_count": 1,
+        "direct_heap_store_inventory_sha256": "7d421111cf1b88fcdd826c67299e247dcdf5ad0725049d796c1cc896b303eb06",
+        "explicit_unreachable_sites": [],
+        "handler_call_indirect_sites": [],
+        "handler_instruction_count": 443,
+        "local_write_count": 15,
+        "local_write_inventory_sha256": "29e1de5c8913be08cbc7b1afd5454c3f43206f1dfcd3a1c95f7c7945d26fa5fe",
+        "normal_return_sites": [
+          8,
+          137,
+          211
+        ],
+        "select_sites": [],
+        "structured_control_start_count": 8,
+        "structured_control_starts_sha256": "ff72ddd836e42b1d85c1fa01e5c72ad98f8491f173793317d36ad412cc1e4700"
+      },
+      "mapping_cid": "QmcsaU3DrUqZHZLzrrWT9aW4EVQuS54wxNHynq8g1PvESL",
+      "profile_id": "legacy-mainnet-stable",
+      "reachable_effect_closure": {
+        "complete_direct_and_indirect_effect_site_scan": true,
+        "conservative_indirect_targets": [
+          "null"
+        ],
+        "dynamic_persistent_target_count": 0,
+        "reachable_call_indirect_sites": [],
+        "reachable_data_source_create_sites": [
+          {
+            "function": "src/mappings/factory/handlePoolCreated",
+            "wat_line": 436
+          }
+        ],
+        "reachable_function_body_bindings_sha256": "55f3f553c2cc35606ffd8b725291c4e28d832c8d44f865f69729d2f6df2ea1c1",
+        "reachable_function_count": 103,
+        "reachable_store_set_sites": [
+          {
+            "function": "src/types/schema/Bundle#save",
+            "target": "Bundle",
+            "wat_line": 31
+          },
+          {
+            "function": "src/types/schema/Factory#save",
+            "target": "Factory",
+            "wat_line": 31
+          },
+          {
+            "function": "src/types/schema/Pool#save",
+            "target": "Pool",
+            "wat_line": 31
+          },
+          {
+            "function": "src/types/schema/Token#save",
+            "target": "Token",
+            "wat_line": 31
+          }
+        ],
+        "reachable_store_set_targets": [
+          "Bundle",
+          "Factory",
+          "Pool",
+          "Token"
+        ]
+      },
+      "reviewed_effect_order": [
+        "Pool.save",
+        "PoolTemplate.create",
+        "Token[token0].save",
+        "Token[token1].save",
+        "Factory.save"
+      ],
+      "same_path_or_dataflow_machine_proven": true,
+      "structured_control": {
+        "all_handler_local_edges_branch_targets_and_explicit_exits_machine_checked": true,
+        "forced_true_path_predicate_ifs": [],
+        "graph_sha256": "6de8bb70beb29198465ca39bbefac87b37322a7bbdc3d263fc81f1f5497b0410",
+        "node_count": 8
+      },
+      "template_identity_and_argument_machine_proven": true,
+      "typed_effect_operand_stack": [
+        {
+          "all_operand_wasm_types": "i32",
+          "call": "src/types/schema/Pool#save",
+          "effect": "Pool.save",
+          "operand_count": 1,
+          "operands_bottom_to_top": [
+            "i32:entity-ref($l1)"
+          ],
+          "wat_line": 420
+        },
+        {
+          "all_operand_wasm_types": "i32",
+          "call": "~lib/@graphprotocol/graph-ts/index/dataSource.create",
+          "effect": "PoolTemplate.create",
+          "operand_count": 2,
+          "operands_bottom_to_top": [
+            "i32:static-string(Pool)",
+            "i32:fresh-array(event.pool)"
+          ],
+          "wat_line": 436
+        },
+        {
+          "all_operand_wasm_types": "i32",
+          "call": "src/types/schema/Token#save",
+          "effect": "Token[token0].save",
+          "operand_count": 1,
+          "operands_bottom_to_top": [
+            "i32:entity-ref($l2)"
+          ],
+          "wat_line": 438
+        },
+        {
+          "all_operand_wasm_types": "i32",
+          "call": "src/types/schema/Token#save",
+          "effect": "Token[token1].save",
+          "operand_count": 1,
+          "operands_bottom_to_top": [
+            "i32:entity-ref($l3)"
+          ],
+          "wat_line": 440
+        },
+        {
+          "all_operand_wasm_types": "i32",
+          "call": "src/types/schema/Factory#save",
+          "effect": "Factory.save",
+          "operand_count": 1,
+          "operands_bottom_to_top": [
+            "i32:entity-ref($l4)"
+          ],
+          "wat_line": 442
+        }
+      ]
+    },
+    {
+      "argument_identity_machine_proven": true,
+      "authority": {
+        "effect_suffix_sha256": "2c84db80958a7ed4556198980487cf67486b940e310aa66c599849ec4c8ea41d",
+        "handler_body_sha256": "485b7aab032b388184d0fe5535d40cd80176f0bc5cfd2682676824eff3f98dc8",
+        "handler_function": "src/mappings/factory/handlePoolCreated",
+        "handler_wat_start_line": 4482,
+        "wabt_version": "1.0.35",
+        "wasm_sha256": "296eb1ad59dca0ef5000e7e48971cb4c39ce8a3d8cfeb7541f6e8b924d049694",
+        "wat_sha256": "ea8185d6d94ff68dbb041684f29d23d528c6784a3396542657f9708d73d70972"
+      },
+      "effect_trace_proof": {
+        "all_handler_local_normal_and_explicit_trap_exits_machine_checked": true,
+        "modeled_trap_boundary_scope": "handler-local explicit unreachable exits plus reviewed save-helper pre-store trap boundaries",
+        "modeled_trap_boundary_trace_rule": "an ordered prefix only",
+        "modeled_trap_boundary_traces": [
+          [],
+          [
+            "Pool.save",
+            "PoolTemplate.create"
+          ],
+          [
+            "Pool.save",
+            "PoolTemplate.create",
+            "Token[token0].save"
+          ],
+          [
+            "Pool.save",
+            "PoolTemplate.create",
+            "Token[token0].save",
+            "Token[token1].save"
+          ]
+        ],
+        "normal_exit_trace_rule": "empty or the exact five-effect sequence once",
+        "normal_exit_traces": [
+          [],
+          [
+            "Pool.save",
+            "PoolTemplate.create",
+            "Token[token0].save",
+            "Token[token1].save",
+            "Factory.save"
+          ]
+        ],
+        "projection": [
+          "Pool.save",
+          "PoolTemplate.create",
+          "Token[token0].save",
+          "Token[token1].save",
+          "Factory.save"
+        ],
+        "reviewed_save_helper_pre_store_trap_boundaries_projected": true,
+        "same_path_and_order_machine_proven": true
+      },
+      "generation": "modern",
+      "generation_frontend": {
+        "argument_identity_machine_proven": true,
+        "effect_argument_definition_identities": {
+          "direct_store_id_reaching_definitions": {
+            "Factory.save.id": [
+              1976
+            ],
+            "Pool.save.id": [
+              1889
+            ]
+          },
+          "every_alternative_reaching_definition_identity_proven": true,
+          "every_constructor_alternative_body_or_inline_semantics_proven": true,
+          "receiver_definition_proofs": [
+            {
+              "binding_slice_sha256": "502e8a204de1957919113684278f987f4d2a4d924f6127b36762327c5e1522da",
+              "definition_kind": "constructor-and-id-field-set",
+              "identity": "Pool.save",
+              "immutable_id_source": "bytesToHex(PoolCreated.event[4])",
+              "inline_constructor_id_and_receiver_machine_proven": true,
+              "reaching_definition_wat_line": 522,
+              "receiver_local": "$l6"
+            },
+            {
+              "binding_slice_sha256": "196eb51efdee4ae249c47d18ac1d215493ed093d0f8a19a79c276f3a5737ed89",
+              "definition_kind": "store.get",
+              "identity": "Token[token0].save",
+              "immutable_id_source": "bytesToHex(PoolCreated.event[0])",
+              "reaching_definition_wat_line": 558,
+              "receiver_local": "$l3",
+              "terminal_call": "~lib/@graphprotocol/graph-ts/index/store.get"
+            },
+            {
+              "binding_slice_sha256": "3ec6bd99c2b081860fcd30128640b69f8b1393f07b92b593db3ea3259528ac27",
+              "constructor_body_certificate": {
+                "body_sha256": "b0d614ab062922a181e44d3649ba6b9555b3871473c3374207ee6ce596993e83",
+                "constructor_id_and_receiver_machine_proven": true,
+                "function": "generated/schema/Token#constructor",
+                "same_fresh_receiver_used_for_map_set_and_return": true,
+                "same_input_id_encoded_in_string_value_payload": true
+              },
+              "definition_kind": "constructor",
+              "identity": "Token[token0].save",
+              "immutable_id_source": "bytesToHex(PoolCreated.event[0])",
+              "reaching_definition_wat_line": 600,
+              "receiver_local": "$l3",
+              "terminal_call": "src/types/schema/Token#constructor"
+            },
+            {
+              "binding_slice_sha256": "f089c53855179fcfc2d600c4cf8d2cc8be5eea859b3e6d3c3d863055e635db42",
+              "definition_kind": "store.get",
+              "identity": "Token[token1].save",
+              "immutable_id_source": "bytesToHex(PoolCreated.event[1])",
+              "reaching_definition_wat_line": 578,
+              "receiver_local": "$l5",
+              "terminal_call": "~lib/@graphprotocol/graph-ts/index/store.get"
+            },
+            {
+              "binding_slice_sha256": "79ada1316218385418e8fb5530c5e415c7dc12029a5f8565a06a4dfd45b1d4cb",
+              "constructor_body_certificate": {
+                "body_sha256": "b0d614ab062922a181e44d3649ba6b9555b3871473c3374207ee6ce596993e83",
+                "constructor_id_and_receiver_machine_proven": true,
+                "function": "generated/schema/Token#constructor",
+                "same_fresh_receiver_used_for_map_set_and_return": true,
+                "same_input_id_encoded_in_string_value_payload": true
+              },
+              "definition_kind": "constructor",
+              "identity": "Token[token1].save",
+              "immutable_id_source": "bytesToHex(PoolCreated.event[1])",
+              "reaching_definition_wat_line": 933,
+              "receiver_local": "$l5",
+              "terminal_call": "src/types/schema/Token#constructor"
+            },
+            {
+              "binding_slice_sha256": "7cc8c4d55ff40224c9780f409a9009a66df73b86246a9d7ca16348223aba4584",
+              "definition_kind": "store.get",
+              "identity": "Factory.save",
+              "immutable_id_source": "0x33128a8fC17869897dcE68Ed026d694621f6FDfD",
+              "reaching_definition_wat_line": 152,
+              "receiver_local": "$l4",
+              "terminal_call": "~lib/@graphprotocol/graph-ts/index/store.get"
+            },
+            {
+              "binding_slice_sha256": "62f79375a6baf1288b17d9f8f1ffa8eaabeb7b601cfac523d7c3dc4e9699ac1f",
+              "definition_kind": "constructor-and-id-field-set",
+              "identity": "Factory.save",
+              "immutable_id_source": "0x33128a8fC17869897dcE68Ed026d694621f6FDfD",
+              "inline_constructor_id_and_receiver_machine_proven": true,
+              "reaching_definition_wat_line": 159,
+              "receiver_local": "$l4",
+              "terminal_call": "~lib/@graphprotocol/graph-ts/common/collections/Entity#constructor"
+            }
+          ],
+          "token_constructor_body_certificate": {
+            "body_sha256": "b0d614ab062922a181e44d3649ba6b9555b3871473c3374207ee6ce596993e83",
+            "constructor_id_and_receiver_machine_proven": true,
+            "fresh_entity_local": "$l1",
+            "function": "generated/schema/Token#constructor",
+            "id_key": "id",
+            "id_map_set_call": "~lib/@graphprotocol/graph-ts/common/collections/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/common/value/Value>#set",
+            "input_id_parameter": "$p0",
+            "preserved_input_id_local": "$l2",
+            "returned_entity_local": "$l1",
+            "same_fresh_receiver_used_for_map_set_and_return": true,
+            "same_input_id_encoded_in_string_value_payload": true,
+            "value_kind_tag": 0
+          }
+        },
+        "effect_argument_reaching_definitions": [
+          {
+            "argument_local": "$l6",
+            "argument_read_wat_line": 1932,
+            "identity": "Pool.save",
+            "reaching_definition_wat_lines": [
+              522
+            ]
+          },
+          {
+            "argument_local": "$l1",
+            "argument_read_wat_line": 1930,
+            "identity": "Pool.save.id",
+            "reaching_definition_wat_lines": [
+              1889
+            ]
+          },
+          {
+            "argument_local": "$l1",
+            "argument_read_wat_line": 1967,
+            "identity": "PoolTemplate.create",
+            "reaching_definition_wat_lines": [
+              1956
+            ]
+          },
+          {
+            "argument_local": "$l3",
+            "argument_read_wat_line": 1969,
+            "identity": "Token[token0].save",
+            "reaching_definition_wat_lines": [
+              558,
+              600
+            ]
+          },
+          {
+            "argument_local": "$l5",
+            "argument_read_wat_line": 1971,
+            "identity": "Token[token1].save",
+            "reaching_definition_wat_lines": [
+              578,
+              933
+            ]
+          },
+          {
+            "argument_local": "$l4",
+            "argument_read_wat_line": 2019,
+            "identity": "Factory.save",
+            "reaching_definition_wat_lines": [
+              152,
+              159
+            ]
+          },
+          {
+            "argument_local": "$p0",
+            "argument_read_wat_line": 2017,
+            "identity": "Factory.save.id",
+            "reaching_definition_wat_lines": [
+              1976
+            ]
+          }
+        ],
+        "entity_identity_locals": {
+          "factory": "$l4",
+          "factory_id": "0x33128a8fC17869897dcE68Ed026d694621f6FDfD",
+          "pool": "$l6",
+          "pool_event_parameter_index": 4,
+          "pool_event_wrapper_local": "$l1",
+          "pool_id_binding_slice_sha256": "502e8a204de1957919113684278f987f4d2a4d924f6127b36762327c5e1522da",
+          "pool_id_event_value_local": "$l1",
+          "pool_id_wrapped_value_local": "$l1",
+          "pool_normal_path_parameter_reassignments": [
+            {
+              "assignment_wat_line": 416,
+              "normal_continuation": false,
+              "unreachable_wat_line": 437
+            }
+          ],
+          "token0": "$l3",
+          "token0_event_parameter_index": 0,
+          "token1": "$l5",
+          "token1_event_parameter_index": 1,
+          "token_event_store_get_bindings": {
+            "token0": {
+              "binding_slice_sha256": "196eb51efdee4ae249c47d18ac1d215493ed093d0f8a19a79c276f3a5737ed89",
+              "entity_local": "$l3",
+              "event_parameter_index": 0,
+              "event_wrapper_local": "$l1",
+              "normal_path_parameter_reassignments": [
+                {
+                  "assignment_wat_line": 416,
+                  "normal_continuation": false,
+                  "unreachable_wat_line": 437
+                }
+              ]
+            },
+            "token1": {
+              "binding_slice_sha256": "f089c53855179fcfc2d600c4cf8d2cc8be5eea859b3e6d3c3d863055e635db42",
+              "entity_local": "$l5",
+              "event_parameter_index": 1,
+              "event_wrapper_local": "$l1",
+              "normal_path_parameter_reassignments": [
+                {
+                  "assignment_wat_line": 416,
+                  "normal_continuation": false,
+                  "unreachable_wat_line": 437
+                }
+              ]
+            }
+          }
+        },
+        "exact_receiver_and_id_bindings_machine_proven": true,
+        "frontend": "modern-indexed-event-entities-inlined-stores-and-token-helper",
+        "required_id_branch_proofs": [
+          {
+            "entity": "Pool",
+            "entity_local": "$l6",
+            "id_lookup_wat_line": 1888,
+            "id_value_local": "$l1",
+            "missing_and_wrong_type_paths_trap": true,
+            "missing_id_if_wat_line": 1891,
+            "present_id_if_wat_line": 1900,
+            "same_ssa_id_value_forces_present_branch": true,
+            "store_wat_line": 1933,
+            "wrong_type_if_wat_line": 1903
+          },
+          {
+            "entity": "Factory",
+            "entity_local": "$l4",
+            "id_lookup_wat_line": 1975,
+            "id_value_local": "$p0",
+            "missing_and_wrong_type_paths_trap": true,
+            "missing_id_if_wat_line": 1978,
+            "present_id_if_wat_line": 1987,
+            "same_ssa_id_value_forces_present_branch": true,
+            "store_wat_line": 2020,
+            "wrong_type_if_wat_line": 1990
+          }
+        ],
+        "template": {
+          "active_literal_wat_line": 1966,
+          "argument_array_local": "$l1",
+          "argument_count": 1,
+          "argument_zero": "bytesToHex(PoolCreated.event.pool)",
+          "converted_value_local": "$p0",
+          "event_parameter": "index 4 (pool)",
+          "event_value_local": "$p0",
+          "fresh_array_and_backing_slot_machine_proven": true,
+          "heap_alias_certificate": {
+            "array_allocation_wat_line": 1955,
+            "array_local_definition_wat_line": 1956,
+            "backing_slot_write_wat_line": 1965,
+            "converted_pool_definition_wat_line": 1961,
+            "event_pool_definition_wat_line": 1951,
+            "event_wrapper_definition_wat_line": 1938,
+            "event_wrapper_heap_writes": [
+              1940,
+              1943
+            ]
+          },
+          "name": "Pool",
+          "no_post_write_alias_mutation_before_create": true,
+          "template_identity_and_argument_machine_proven": true
+        },
+        "token_constructor_proof": {
+          "body_sha256": "b0d614ab062922a181e44d3649ba6b9555b3871473c3374207ee6ce596993e83",
+          "constructor_id_and_receiver_machine_proven": true,
+          "fresh_entity_local": "$l1",
+          "function": "generated/schema/Token#constructor",
+          "id_key": "id",
+          "id_map_set_call": "~lib/@graphprotocol/graph-ts/common/collections/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/common/value/Value>#set",
+          "input_id_parameter": "$p0",
+          "preserved_input_id_local": "$l2",
+          "returned_entity_local": "$l1",
+          "same_fresh_receiver_used_for_map_set_and_return": true,
+          "same_input_id_encoded_in_string_value_payload": true,
+          "value_kind_tag": 0
+        },
+        "token_save_helper_proof": {
+          "body_sha256": "2d97dc677c65092502aeda69100d6373450d45dbdff809a178a4188cbafc6905",
+          "entity": "Token",
+          "function": "generated/schema/Token#save",
+          "instruction_count": 51,
+          "normal_return_requires_exactly_one_store": true,
+          "receiver_parameter": "$p0",
+          "required_id_key": "id",
+          "same_receiver_used_for_id_lookup_and_store": true,
+          "store_site": 49,
+          "target": "Token",
+          "trap_before_store_is_allowed": true,
+          "trap_sites": [
+            13,
+            43
+          ]
+        }
+      },
+      "graph_handler_rollback_proven_by_retained_wat": false,
+      "handler_effect_region_policy": {
+        "bounded_direct_receiver_heap_aliases_machine_checked": true,
+        "direct_raw_receiver_heap_store_alias_sites": [],
+        "effect_region_start_wat_line": 1933,
+        "handler_call_indirect_sites": [],
+        "handler_local_effect_region_bypasses_machine_checked": true,
+        "normal_return_bypass_sites": [],
+        "select_identity_control_sites": []
+      },
+      "instruction_and_ssa_inventory": {
+        "all_handler_local_control_local_call_and_heap_write_sites_accounted": true,
+        "branch_site_count": 6,
+        "branch_sites_sha256": "e6260a34fa3b839a34b9dff34c67c88de25d0ca5ae12b4c2319c4c278058b20a",
+        "direct_call_count": 312,
+        "direct_call_inventory_sha256": "27cf324034dcdf9c502d61405f92e5e4d14cd308a5e68ebec9eae9ab629bb0d4",
+        "direct_heap_store_count": 183,
+        "direct_heap_store_inventory_sha256": "fb98debaac81b614ce5717f626b4fe7a94d944cacf29cb26de6d1a763feab49f",
+        "explicit_unreachable_sites": [
+          36,
+          407,
+          437,
+          464,
+          480,
+          1345,
+          1397,
+          1897,
+          1927,
+          1984,
+          2014
+        ],
+        "handler_call_indirect_sites": [],
+        "handler_instruction_count": 2022,
+        "local_write_count": 206,
+        "local_write_inventory_sha256": "f5cb6b4bda25050578b66d4970f6f536ba9add32bacf9334fc5e7e3719eae400",
+        "normal_return_sites": [
+          147,
+          725,
+          1058
+        ],
+        "select_sites": [
+          1371,
+          1434
+        ],
+        "structured_control_start_count": 37,
+        "structured_control_starts_sha256": "efe48afd9be1e191d4d75cfecd47d56d2c71c8f3451971c1759a20459080386b"
+      },
+      "mapping_cid": "QmXFDgK3qLnmsLFcPWobXbdnqV9gESL9BvYY29si4vpTjr",
+      "profile_id": "modern-base",
+      "reachable_effect_closure": {
+        "complete_direct_and_indirect_effect_site_scan": true,
+        "conservative_indirect_targets": [
+          "~lib/@graphprotocol/graph-ts/common/value/Value#displayData~anonymous|0"
+        ],
+        "dynamic_persistent_target_count": 0,
+        "reachable_call_indirect_sites": [
+          {
+            "function": "~lib/@graphprotocol/graph-ts/common/value/Value#displayData",
+            "instruction": "call_indirect $0 (type $t3)",
+            "wat_line": 162
+          }
+        ],
+        "reachable_data_source_create_sites": [
+          {
+            "function": "src/mappings/factory/handlePoolCreated",
+            "wat_line": 1968
+          }
+        ],
+        "reachable_function_body_bindings_sha256": "1f256219acf2667e6f51d25dac435e1f33af4d2f5570cdfd7c12fc2ce7925fa0",
+        "reachable_function_count": 56,
+        "reachable_store_set_sites": [
+          {
+            "function": "src/mappings/factory/handlePoolCreated",
+            "target": "Bundle",
+            "wat_line": 443
+          },
+          {
+            "function": "src/mappings/factory/handlePoolCreated",
+            "target": "Pool",
+            "wat_line": 1933
+          },
+          {
+            "function": "src/mappings/factory/handlePoolCreated",
+            "target": "Factory",
+            "wat_line": 2020
+          },
+          {
+            "function": "src/types/schema/Token#save",
+            "target": "Token",
+            "wat_line": 49
+          }
+        ],
+        "reachable_store_set_targets": [
+          "Bundle",
+          "Factory",
+          "Pool",
+          "Token"
+        ]
+      },
+      "reviewed_effect_order": [
+        "Pool.save",
+        "PoolTemplate.create",
+        "Token[token0].save",
+        "Token[token1].save",
+        "Factory.save"
+      ],
+      "same_path_or_dataflow_machine_proven": true,
+      "structured_control": {
+        "all_handler_local_edges_branch_targets_and_explicit_exits_machine_checked": true,
+        "forced_true_path_predicate_ifs": [
+          1900,
+          1987
+        ],
+        "graph_sha256": "ceb5340cef6b8a64ad5ef2dc3aa3f4f21179b3880d7feb83901de877e9a0c13d",
+        "node_count": 37
+      },
+      "template_identity_and_argument_machine_proven": true,
+      "typed_effect_operand_stack": [
+        {
+          "all_operand_wasm_types": "i32",
+          "call": "~lib/@graphprotocol/graph-ts/index/store.set",
+          "effect": "Pool.save",
+          "operand_count": 3,
+          "operands_bottom_to_top": [
+            "i32:static-string(Pool)",
+            "i32:id-string($l1)",
+            "i32:entity-ref($l6)"
+          ],
+          "wat_line": 1933
+        },
+        {
+          "all_operand_wasm_types": "i32",
+          "call": "~lib/@graphprotocol/graph-ts/common/datasource/dataSource.create",
+          "effect": "PoolTemplate.create",
+          "operand_count": 2,
+          "operands_bottom_to_top": [
+            "i32:static-string(Pool)",
+            "i32:fresh-array(event.pool)"
+          ],
+          "wat_line": 1968
+        },
+        {
+          "all_operand_wasm_types": "i32",
+          "call": "src/types/schema/Token#save",
+          "effect": "Token[token0].save",
+          "operand_count": 1,
+          "operands_bottom_to_top": [
+            "i32:entity-ref($l3)"
+          ],
+          "wat_line": 1970
+        },
+        {
+          "all_operand_wasm_types": "i32",
+          "call": "src/types/schema/Token#save",
+          "effect": "Token[token1].save",
+          "operand_count": 1,
+          "operands_bottom_to_top": [
+            "i32:entity-ref($l5)"
+          ],
+          "wat_line": 1972
+        },
+        {
+          "all_operand_wasm_types": "i32",
+          "call": "~lib/@graphprotocol/graph-ts/index/store.set",
+          "effect": "Factory.save",
+          "operand_count": 3,
+          "operands_bottom_to_top": [
+            "i32:static-string(Factory)",
+            "i32:id-string($p0)",
+            "i32:entity-ref($l4)"
+          ],
+          "wat_line": 2020
+        }
+      ]
+    },
+    {
+      "argument_identity_machine_proven": true,
+      "authority": {
+        "effect_suffix_sha256": "00fdcfa79a387a568c21b254b630072c45187545fa0d24aa23d7f3b6bcf3c079",
+        "handler_body_sha256": "245ffe7ad61554106f9a5c748bb2cd629287a4fb0ecffa72c956d94915272dd5",
+        "handler_function": "src/mappings/factory/handlePoolCreated",
+        "handler_wat_start_line": 4617,
+        "wabt_version": "1.0.35",
+        "wasm_sha256": "9a33e52667ce538278f9ab88ac9818f5442021e8a2ddb22fd5994a9643148887",
+        "wat_sha256": "84064b99fa818216ac5090dcf2a8f6b16acfe5f93edcc9819d0cb88d84526449"
+      },
+      "effect_trace_proof": {
+        "all_handler_local_normal_and_explicit_trap_exits_machine_checked": true,
+        "modeled_trap_boundary_scope": "handler-local explicit unreachable exits plus reviewed save-helper pre-store trap boundaries",
+        "modeled_trap_boundary_trace_rule": "an ordered prefix only",
+        "modeled_trap_boundary_traces": [
+          [],
+          [
+            "Pool.save",
+            "PoolTemplate.create"
+          ],
+          [
+            "Pool.save",
+            "PoolTemplate.create",
+            "Token[token0].save"
+          ],
+          [
+            "Pool.save",
+            "PoolTemplate.create",
+            "Token[token0].save",
+            "Token[token1].save"
+          ]
+        ],
+        "normal_exit_trace_rule": "empty or the exact five-effect sequence once",
+        "normal_exit_traces": [
+          [],
+          [
+            "Pool.save",
+            "PoolTemplate.create",
+            "Token[token0].save",
+            "Token[token1].save",
+            "Factory.save"
+          ]
+        ],
+        "projection": [
+          "Pool.save",
+          "PoolTemplate.create",
+          "Token[token0].save",
+          "Token[token1].save",
+          "Factory.save"
+        ],
+        "reviewed_save_helper_pre_store_trap_boundaries_projected": true,
+        "same_path_and_order_machine_proven": true
+      },
+      "generation": "modern",
+      "generation_frontend": {
+        "argument_identity_machine_proven": true,
+        "effect_argument_definition_identities": {
+          "direct_store_id_reaching_definitions": {
+            "Factory.save.id": [
+              1976
+            ],
+            "Pool.save.id": [
+              1889
+            ]
+          },
+          "every_alternative_reaching_definition_identity_proven": true,
+          "every_constructor_alternative_body_or_inline_semantics_proven": true,
+          "receiver_definition_proofs": [
+            {
+              "binding_slice_sha256": "3c1960c1edba9487ac1afd7a88b2c37bb05f5792918c0816ad6b22f6167e3647",
+              "definition_kind": "constructor-and-id-field-set",
+              "identity": "Pool.save",
+              "immutable_id_source": "bytesToHex(PoolCreated.event[4])",
+              "inline_constructor_id_and_receiver_machine_proven": true,
+              "reaching_definition_wat_line": 522,
+              "receiver_local": "$l6"
+            },
+            {
+              "binding_slice_sha256": "25cabf013e786e4869466c228fa0b840079db5e2914f4c7e8f69c4a432c128d7",
+              "definition_kind": "store.get",
+              "identity": "Token[token0].save",
+              "immutable_id_source": "bytesToHex(PoolCreated.event[0])",
+              "reaching_definition_wat_line": 558,
+              "receiver_local": "$l3",
+              "terminal_call": "~lib/@graphprotocol/graph-ts/index/store.get"
+            },
+            {
+              "binding_slice_sha256": "d3b4c8330d319b97e97b31ace392e25c71bff938ebb9a6aa398689411e4aefbd",
+              "constructor_body_certificate": {
+                "body_sha256": "44e94b0a2a9be6341273b4d71fb1306864b40ed0c677131339066eb1d1e2af83",
+                "constructor_id_and_receiver_machine_proven": true,
+                "function": "src/types/schema/Token#constructor",
+                "same_fresh_receiver_used_for_map_set_and_return": true,
+                "same_input_id_encoded_in_string_value_payload": true
+              },
+              "definition_kind": "constructor",
+              "identity": "Token[token0].save",
+              "immutable_id_source": "bytesToHex(PoolCreated.event[0])",
+              "reaching_definition_wat_line": 600,
+              "receiver_local": "$l3",
+              "terminal_call": "src/types/schema/Token#constructor"
+            },
+            {
+              "binding_slice_sha256": "1c88cc7559d78a44373710993e902806d5565487527c01651f765b43003c8848",
+              "definition_kind": "store.get",
+              "identity": "Token[token1].save",
+              "immutable_id_source": "bytesToHex(PoolCreated.event[1])",
+              "reaching_definition_wat_line": 578,
+              "receiver_local": "$l5",
+              "terminal_call": "~lib/@graphprotocol/graph-ts/index/store.get"
+            },
+            {
+              "binding_slice_sha256": "2c3bd7e1a804e9f11cbcd87fadb949eebc8edfd1abd3bb722e8b4ef1d0f2ee2b",
+              "constructor_body_certificate": {
+                "body_sha256": "44e94b0a2a9be6341273b4d71fb1306864b40ed0c677131339066eb1d1e2af83",
+                "constructor_id_and_receiver_machine_proven": true,
+                "function": "src/types/schema/Token#constructor",
+                "same_fresh_receiver_used_for_map_set_and_return": true,
+                "same_input_id_encoded_in_string_value_payload": true
+              },
+              "definition_kind": "constructor",
+              "identity": "Token[token1].save",
+              "immutable_id_source": "bytesToHex(PoolCreated.event[1])",
+              "reaching_definition_wat_line": 933,
+              "receiver_local": "$l5",
+              "terminal_call": "src/types/schema/Token#constructor"
+            },
+            {
+              "binding_slice_sha256": "7cc8c4d55ff40224c9780f409a9009a66df73b86246a9d7ca16348223aba4584",
+              "definition_kind": "store.get",
+              "identity": "Factory.save",
+              "immutable_id_source": "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+              "reaching_definition_wat_line": 152,
+              "receiver_local": "$l4",
+              "terminal_call": "~lib/@graphprotocol/graph-ts/index/store.get"
+            },
+            {
+              "binding_slice_sha256": "37ad7068edc2c2c9f8f523872ca02561edbef47eb0d6884f05f3d39a58f14392",
+              "definition_kind": "constructor-and-id-field-set",
+              "identity": "Factory.save",
+              "immutable_id_source": "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+              "inline_constructor_id_and_receiver_machine_proven": true,
+              "reaching_definition_wat_line": 159,
+              "receiver_local": "$l4",
+              "terminal_call": "~lib/@graphprotocol/graph-ts/common/collections/Entity#constructor"
+            }
+          ],
+          "token_constructor_body_certificate": {
+            "body_sha256": "44e94b0a2a9be6341273b4d71fb1306864b40ed0c677131339066eb1d1e2af83",
+            "constructor_id_and_receiver_machine_proven": true,
+            "fresh_entity_local": "$l1",
+            "function": "src/types/schema/Token#constructor",
+            "id_key": "id",
+            "id_map_set_call": "~lib/@graphprotocol/graph-ts/common/collections/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/common/value/Value>#set",
+            "input_id_parameter": "$p0",
+            "preserved_input_id_local": "$l2",
+            "returned_entity_local": "$l1",
+            "same_fresh_receiver_used_for_map_set_and_return": true,
+            "same_input_id_encoded_in_string_value_payload": true,
+            "value_kind_tag": 0
+          }
+        },
+        "effect_argument_reaching_definitions": [
+          {
+            "argument_local": "$l6",
+            "argument_read_wat_line": 1932,
+            "identity": "Pool.save",
+            "reaching_definition_wat_lines": [
+              522
+            ]
+          },
+          {
+            "argument_local": "$l1",
+            "argument_read_wat_line": 1930,
+            "identity": "Pool.save.id",
+            "reaching_definition_wat_lines": [
+              1889
+            ]
+          },
+          {
+            "argument_local": "$l1",
+            "argument_read_wat_line": 1967,
+            "identity": "PoolTemplate.create",
+            "reaching_definition_wat_lines": [
+              1956
+            ]
+          },
+          {
+            "argument_local": "$l3",
+            "argument_read_wat_line": 1969,
+            "identity": "Token[token0].save",
+            "reaching_definition_wat_lines": [
+              558,
+              600
+            ]
+          },
+          {
+            "argument_local": "$l5",
+            "argument_read_wat_line": 1971,
+            "identity": "Token[token1].save",
+            "reaching_definition_wat_lines": [
+              578,
+              933
+            ]
+          },
+          {
+            "argument_local": "$l4",
+            "argument_read_wat_line": 2019,
+            "identity": "Factory.save",
+            "reaching_definition_wat_lines": [
+              152,
+              159
+            ]
+          },
+          {
+            "argument_local": "$p0",
+            "argument_read_wat_line": 2017,
+            "identity": "Factory.save.id",
+            "reaching_definition_wat_lines": [
+              1976
+            ]
+          }
+        ],
+        "entity_identity_locals": {
+          "factory": "$l4",
+          "factory_id": "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+          "pool": "$l6",
+          "pool_event_parameter_index": 4,
+          "pool_event_wrapper_local": "$l1",
+          "pool_id_binding_slice_sha256": "3c1960c1edba9487ac1afd7a88b2c37bb05f5792918c0816ad6b22f6167e3647",
+          "pool_id_event_value_local": "$l1",
+          "pool_id_wrapped_value_local": "$l1",
+          "pool_normal_path_parameter_reassignments": [
+            {
+              "assignment_wat_line": 416,
+              "normal_continuation": false,
+              "unreachable_wat_line": 437
+            }
+          ],
+          "token0": "$l3",
+          "token0_event_parameter_index": 0,
+          "token1": "$l5",
+          "token1_event_parameter_index": 1,
+          "token_event_store_get_bindings": {
+            "token0": {
+              "binding_slice_sha256": "25cabf013e786e4869466c228fa0b840079db5e2914f4c7e8f69c4a432c128d7",
+              "entity_local": "$l3",
+              "event_parameter_index": 0,
+              "event_wrapper_local": "$l1",
+              "normal_path_parameter_reassignments": [
+                {
+                  "assignment_wat_line": 416,
+                  "normal_continuation": false,
+                  "unreachable_wat_line": 437
+                }
+              ]
+            },
+            "token1": {
+              "binding_slice_sha256": "1c88cc7559d78a44373710993e902806d5565487527c01651f765b43003c8848",
+              "entity_local": "$l5",
+              "event_parameter_index": 1,
+              "event_wrapper_local": "$l1",
+              "normal_path_parameter_reassignments": [
+                {
+                  "assignment_wat_line": 416,
+                  "normal_continuation": false,
+                  "unreachable_wat_line": 437
+                }
+              ]
+            }
+          }
+        },
+        "exact_receiver_and_id_bindings_machine_proven": true,
+        "frontend": "modern-indexed-event-entities-inlined-stores-and-token-helper",
+        "required_id_branch_proofs": [
+          {
+            "entity": "Pool",
+            "entity_local": "$l6",
+            "id_lookup_wat_line": 1888,
+            "id_value_local": "$l1",
+            "missing_and_wrong_type_paths_trap": true,
+            "missing_id_if_wat_line": 1891,
+            "present_id_if_wat_line": 1900,
+            "same_ssa_id_value_forces_present_branch": true,
+            "store_wat_line": 1933,
+            "wrong_type_if_wat_line": 1903
+          },
+          {
+            "entity": "Factory",
+            "entity_local": "$l4",
+            "id_lookup_wat_line": 1975,
+            "id_value_local": "$p0",
+            "missing_and_wrong_type_paths_trap": true,
+            "missing_id_if_wat_line": 1978,
+            "present_id_if_wat_line": 1987,
+            "same_ssa_id_value_forces_present_branch": true,
+            "store_wat_line": 2020,
+            "wrong_type_if_wat_line": 1990
+          }
+        ],
+        "template": {
+          "active_literal_wat_line": 1966,
+          "argument_array_local": "$l1",
+          "argument_count": 1,
+          "argument_zero": "bytesToHex(PoolCreated.event.pool)",
+          "converted_value_local": "$p0",
+          "event_parameter": "index 4 (pool)",
+          "event_value_local": "$p0",
+          "fresh_array_and_backing_slot_machine_proven": true,
+          "heap_alias_certificate": {
+            "array_allocation_wat_line": 1955,
+            "array_local_definition_wat_line": 1956,
+            "backing_slot_write_wat_line": 1965,
+            "converted_pool_definition_wat_line": 1961,
+            "event_pool_definition_wat_line": 1951,
+            "event_wrapper_definition_wat_line": 1938,
+            "event_wrapper_heap_writes": [
+              1940,
+              1943
+            ]
+          },
+          "name": "Pool",
+          "no_post_write_alias_mutation_before_create": true,
+          "template_identity_and_argument_machine_proven": true
+        },
+        "token_constructor_proof": {
+          "body_sha256": "44e94b0a2a9be6341273b4d71fb1306864b40ed0c677131339066eb1d1e2af83",
+          "constructor_id_and_receiver_machine_proven": true,
+          "fresh_entity_local": "$l1",
+          "function": "src/types/schema/Token#constructor",
+          "id_key": "id",
+          "id_map_set_call": "~lib/@graphprotocol/graph-ts/common/collections/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/common/value/Value>#set",
+          "input_id_parameter": "$p0",
+          "preserved_input_id_local": "$l2",
+          "returned_entity_local": "$l1",
+          "same_fresh_receiver_used_for_map_set_and_return": true,
+          "same_input_id_encoded_in_string_value_payload": true,
+          "value_kind_tag": 0
+        },
+        "token_save_helper_proof": {
+          "body_sha256": "86f2bbb199d22ef54b7a5de58551b2c4bcc4bf6448b4a18d852de878f012931b",
+          "entity": "Token",
+          "function": "src/types/schema/Token#save",
+          "instruction_count": 51,
+          "normal_return_requires_exactly_one_store": true,
+          "receiver_parameter": "$p0",
+          "required_id_key": "id",
+          "same_receiver_used_for_id_lookup_and_store": true,
+          "store_site": 49,
+          "target": "Token",
+          "trap_before_store_is_allowed": true,
+          "trap_sites": [
+            13,
+            43
+          ]
+        }
+      },
+      "graph_handler_rollback_proven_by_retained_wat": false,
+      "handler_effect_region_policy": {
+        "bounded_direct_receiver_heap_aliases_machine_checked": true,
+        "direct_raw_receiver_heap_store_alias_sites": [],
+        "effect_region_start_wat_line": 1933,
+        "handler_call_indirect_sites": [],
+        "handler_local_effect_region_bypasses_machine_checked": true,
+        "normal_return_bypass_sites": [],
+        "select_identity_control_sites": []
+      },
+      "instruction_and_ssa_inventory": {
+        "all_handler_local_control_local_call_and_heap_write_sites_accounted": true,
+        "branch_site_count": 6,
+        "branch_sites_sha256": "e6260a34fa3b839a34b9dff34c67c88de25d0ca5ae12b4c2319c4c278058b20a",
+        "direct_call_count": 312,
+        "direct_call_inventory_sha256": "27cf324034dcdf9c502d61405f92e5e4d14cd308a5e68ebec9eae9ab629bb0d4",
+        "direct_heap_store_count": 183,
+        "direct_heap_store_inventory_sha256": "fb98debaac81b614ce5717f626b4fe7a94d944cacf29cb26de6d1a763feab49f",
+        "explicit_unreachable_sites": [
+          36,
+          407,
+          437,
+          464,
+          480,
+          1345,
+          1397,
+          1897,
+          1927,
+          1984,
+          2014
+        ],
+        "handler_call_indirect_sites": [],
+        "handler_instruction_count": 2022,
+        "local_write_count": 206,
+        "local_write_inventory_sha256": "f5cb6b4bda25050578b66d4970f6f536ba9add32bacf9334fc5e7e3719eae400",
+        "normal_return_sites": [
+          147,
+          725,
+          1058
+        ],
+        "select_sites": [
+          1371,
+          1434
+        ],
+        "structured_control_start_count": 37,
+        "structured_control_starts_sha256": "efe48afd9be1e191d4d75cfecd47d56d2c71c8f3451971c1759a20459080386b"
+      },
+      "mapping_cid": "QmbJGLb6sXkN11djxLvKGb2zDk3s7ddgEsULwzC7TVyrEb",
+      "profile_id": "modern-mainnet",
+      "reachable_effect_closure": {
+        "complete_direct_and_indirect_effect_site_scan": true,
+        "conservative_indirect_targets": [
+          "~lib/@graphprotocol/graph-ts/common/value/Value#displayData~anonymous|0"
+        ],
+        "dynamic_persistent_target_count": 0,
+        "reachable_call_indirect_sites": [
+          {
+            "function": "~lib/@graphprotocol/graph-ts/common/value/Value#displayData",
+            "instruction": "call_indirect $0 (type $t3)",
+            "wat_line": 162
+          }
+        ],
+        "reachable_data_source_create_sites": [
+          {
+            "function": "src/mappings/factory/handlePoolCreated",
+            "wat_line": 1968
+          }
+        ],
+        "reachable_function_body_bindings_sha256": "3832b4a8cefe2dbe6dad6603f102f5a2bec89cfc4a9651a747a6b7b610a3e2e6",
+        "reachable_function_count": 57,
+        "reachable_store_set_sites": [
+          {
+            "function": "src/mappings/factory/handlePoolCreated",
+            "target": "Bundle",
+            "wat_line": 443
+          },
+          {
+            "function": "src/mappings/factory/handlePoolCreated",
+            "target": "Pool",
+            "wat_line": 1933
+          },
+          {
+            "function": "src/mappings/factory/handlePoolCreated",
+            "target": "Factory",
+            "wat_line": 2020
+          },
+          {
+            "function": "src/types/schema/Token#save",
+            "target": "Token",
+            "wat_line": 49
+          }
+        ],
+        "reachable_store_set_targets": [
+          "Bundle",
+          "Factory",
+          "Pool",
+          "Token"
+        ]
+      },
+      "reviewed_effect_order": [
+        "Pool.save",
+        "PoolTemplate.create",
+        "Token[token0].save",
+        "Token[token1].save",
+        "Factory.save"
+      ],
+      "same_path_or_dataflow_machine_proven": true,
+      "structured_control": {
+        "all_handler_local_edges_branch_targets_and_explicit_exits_machine_checked": true,
+        "forced_true_path_predicate_ifs": [
+          1900,
+          1987
+        ],
+        "graph_sha256": "ceb5340cef6b8a64ad5ef2dc3aa3f4f21179b3880d7feb83901de877e9a0c13d",
+        "node_count": 37
+      },
+      "template_identity_and_argument_machine_proven": true,
+      "typed_effect_operand_stack": [
+        {
+          "all_operand_wasm_types": "i32",
+          "call": "~lib/@graphprotocol/graph-ts/index/store.set",
+          "effect": "Pool.save",
+          "operand_count": 3,
+          "operands_bottom_to_top": [
+            "i32:static-string(Pool)",
+            "i32:id-string($l1)",
+            "i32:entity-ref($l6)"
+          ],
+          "wat_line": 1933
+        },
+        {
+          "all_operand_wasm_types": "i32",
+          "call": "~lib/@graphprotocol/graph-ts/common/datasource/dataSource.create",
+          "effect": "PoolTemplate.create",
+          "operand_count": 2,
+          "operands_bottom_to_top": [
+            "i32:static-string(Pool)",
+            "i32:fresh-array(event.pool)"
+          ],
+          "wat_line": 1968
+        },
+        {
+          "all_operand_wasm_types": "i32",
+          "call": "src/types/schema/Token#save",
+          "effect": "Token[token0].save",
+          "operand_count": 1,
+          "operands_bottom_to_top": [
+            "i32:entity-ref($l3)"
+          ],
+          "wat_line": 1970
+        },
+        {
+          "all_operand_wasm_types": "i32",
+          "call": "src/types/schema/Token#save",
+          "effect": "Token[token1].save",
+          "operand_count": 1,
+          "operands_bottom_to_top": [
+            "i32:entity-ref($l5)"
+          ],
+          "wat_line": 1972
+        },
+        {
+          "all_operand_wasm_types": "i32",
+          "call": "~lib/@graphprotocol/graph-ts/index/store.set",
+          "effect": "Factory.save",
+          "operand_count": 3,
+          "operands_bottom_to_top": [
+            "i32:static-string(Factory)",
+            "i32:id-string($p0)",
+            "i32:entity-ref($l4)"
+          ],
+          "wat_line": 2020
+        }
+      ]
+    }
+  ],
+  "provenance": {
+    "base_commit": "3d99ce161bfc4703d17c4bb7ccbd6ab7451b567d",
+    "modern_guard_contract": {
+      "contract_version": "uniswap-v3-factory-guard/v1",
+      "path": "uniswap-v3/factory-guard/v1/contract.json",
+      "raw_sha256": "8b9637519a4debc9d875245ca3318ad8269bc7a440837e716750dd007ffd3216"
+    },
+    "v2_contract": {
+      "contract_version": "uniswap-v3-segment-field-semantics/v2",
+      "path": "uniswap-v3/segment-field-semantics/v2/contract.json",
+      "raw_sha256": "0ca8708bd2ed60d4799559d52b3f7e0602abfd7c3edbd35f579476f00baba6ef"
+    },
+    "wabt_version": "1.0.35",
+    "wasm2wat_command": [
+      "wasm2wat",
+      "--generate-names",
+      "<retained-factory-wasm>"
+    ]
+  },
+  "residuals": [
+    "retained WAT does not prove Graph handler transaction rollback after a later trap",
+    "the trace engine is handler-local and does not claim a complete interprocedural trap projection across host imports or unreviewed helpers",
+    "all six complete static Factory handler contracts and all initialized field values remain unproved",
+    "all six totalSupply success/failure value flows remain unproved",
+    "the optional earlier Bundle write is inventoried but is outside the reviewed five-effect suffix projection",
+    "no runtime consumes this proof and no scheduling, continuity, oracle, parity, proof-of-indexing, backfill, or production gate is promoted"
+  ],
+  "scope": {
+    "closed_before_this_supplement": 6,
+    "cumulative_closed_after_this_supplement": 12,
+    "factory_upstream_path_count": 18,
+    "legacy_mapping_count": 4,
+    "mapping_count": 6,
+    "modern_mapping_count": 2,
+    "newly_closed_factory_effect_paths": 6,
+    "newly_closed_path": "$.pool_created_effect_order_observation.same_path_or_dataflow_machine_proven",
+    "residual_after_this_supplement": 6,
+    "residual_path": "$.complete_static_handler_contract"
+  },
+  "truth_boundary": {
+    "all_six_factory_effect_argument_identity_proven": true,
+    "all_six_factory_effect_same_path_proven": true,
+    "all_six_factory_normal_return_effect_order_and_arguments_proven": true,
+    "all_six_factory_template_identity_and_pool_argument_proven": true,
+    "backfill_ready": false,
+    "boundary_state_continuity_complete": false,
+    "combined_handler_order_implemented": false,
+    "complete_handler_control_local_call_and_heap_write_inventories_bound": true,
+    "cumulative_factory_paths_closed_is_12_of_18": true,
+    "cumulative_factory_paths_residual_is_6_of_18": true,
+    "dynamic_datasource_stage_order_implemented": false,
+    "exact_six_factory_wasm_wat_and_handlers_pinned": true,
+    "exact_v2_and_modern_guard_contract_bytes_pinned": true,
+    "exactly_six_factory_effect_paths_closed": true,
+    "factory_all_initialized_field_values_proven": false,
+    "factory_complete_static_handler_contract_proven": false,
+    "factory_handler_semantics_complete": false,
+    "factory_total_supply_success_failure_dataflow_proven": false,
+    "full_factory_entity_histories_complete": false,
+    "graph_execution_trace_complete": false,
+    "graph_handler_rollback_proven_by_retained_wat": false,
+    "graph_oracle_complete": false,
+    "logical_parity_complete": false,
+    "physical_parity_complete": false,
+    "poi_parity_complete": false,
+    "post_fatal_execution_modeled": false,
+    "production_ready": false,
+    "runtime_population_complete": false,
+    "target_runtime_identity_bound": false,
+    "writer_runtime_consumes_this_contract": false
+  }
+}

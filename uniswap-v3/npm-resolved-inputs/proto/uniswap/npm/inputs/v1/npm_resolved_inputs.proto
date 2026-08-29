@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package uniswap.npm.inputs.v1;
+
+import "uniswap/npm/source/v1/npm_source_block.proto";
+
+// Canonical host-built frame joining a complete validated provider-free
+// source block with deterministic resolved Graph call/entity observations.
+// This message is not a Substreams module output and is never checkpoint
+// authority.
+message NpmResolvedInputs {
+  uniswap.npm.source.v1.NpmSourceBlock source = 1;
+  ResolvedCallScope call_scope = 2;
+  repeated PositionObservation position_calls = 3;
+  repeated PoolObservation pool_calls = 4;
+  repeated TokenObservation token_reads = 5;
+  string input_contract_sha256 = 6;
+  string npm_source_contract_sha256 = 7;
+  string npm_handler_reducer_contract_sha256 = 8;
+}
+
+// The host records the exact call pointer used for all block-scoped calls.
+message ResolvedCallScope {
+  oneof scope {
+    bytes eip1898_hash = 1;
+    uint64 block_number_fallback = 2;
+  }
+}
+
+message PositionObservation {
+  bytes position_manager = 1;
+  // Canonical fixed-width ABI uint256 word.
+  bytes token_id = 2;
+  oneof result {
+    PositionValue value = 3;
+    ResolvedNone none = 4;
+  }
+}
+
+message PositionValue {
+  bytes token0 = 1;
+  bytes token1 = 2;
+  uint32 fee = 3;
+  sint32 tick_lower = 4;
+  sint32 tick_upper = 5;
+  bytes fee_growth_inside0_last_x128 = 6;
+  bytes fee_growth_inside1_last_x128 = 7;
+}
+
+message PoolObservation {
+  bytes factory = 1;
+  bytes token0 = 2;
+  bytes token1 = 3;
+  uint32 fee = 4;
+  oneof result {
+    // A successful zero address remains an explicit resolved value.
+    bytes pool = 5;
+    ResolvedNone none = 6;
+  }
+}
+
+message TokenObservation {
+  bytes address = 1;
+  uint64 ordinal = 2;
+  oneof result {
+    TokenFound found = 3;
+    ResolvedNone missing = 4;
+  }
+}
+
+message TokenFound {
+  uint32 decimals = 1;
+}
+
+message ResolvedNone {}

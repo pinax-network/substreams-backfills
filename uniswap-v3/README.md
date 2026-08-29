@@ -208,6 +208,18 @@ template identity, rollback, `totalSupply`, complete static/initialized-field
 semantics, runtime consumption, continuity, parity, backfill, and production
 remain false.
 
+The additive [`pool-initialize/v1/`](pool-initialize/v1/README.md) supplement
+then closes the exact selected-handler persistence rule for `Pool.sqrtPrice`
+and `Pool.tick`. Across all eight retained Pool mappings it proves the trigger
+address-to-Pool load and both event-value/setter receiver flows. Current
+mainnet, Base root, and current Base save that same Pool after both setters;
+the five historical mainnet profiles have no Pool store anywhere in the
+recomputed transitive Initialize call closure. Its adversarial fixtures must
+round-trip through checksum-pinned `wat2wasm` before rejection. This raises the
+cumulative selected-handler field count from 34 to 36, but Mint/Burn/Swap,
+complete Pool histories, runtime/oracle/parity, package consumption, backfill,
+and production remain false.
+
 The next sibling [`npm-observation-plan/`](npm-observation-plan/README.md)
 closes the repository-only host request set before joint reduction. It first
 enumerates every unique Position key from the complete event envelope, then,

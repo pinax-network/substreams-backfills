@@ -66,6 +66,10 @@ jobs:
         run: |
           python3 scripts/verify-uniswap-v3-modern-factory-guard.py --wasm2wat "$WASM2WAT"
           python3 -m unittest scripts.tests.test_uniswap_v3_modern_factory_guard
+      - name: Recompute retained-WAT Uniswap V3 Pool Initialize semantics
+        run: |
+          python3 scripts/verify-uniswap-v3-pool-initialize.py --wasm2wat "$WASM2WAT"
+          python3 -m unittest scripts.tests.test_uniswap_v3_pool_initialize
       - name: Test eligibility decisions and freshness gates
         run: python3 -m unittest discover -s scripts/tests -p 'test_*.py'
 

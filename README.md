@@ -63,6 +63,11 @@ only after this gate passes.
   manifest ancestry through graft-free roots, with exact boundary ownership,
   handler/schema inventories, static writer-target matrices, and deliberately
   false logical/physical/PoI promotion gates.
+- **`uniswap-v3/pool-initialize/v1/`** — the retained-WAT proof for the exact
+  `Pool.handleInitialize` projection of `sqrtPrice` and `tick` across all eight
+  ancestry segments. It proves the three saving profiles and recomputes the
+  five historical no-save closures while leaving complete Pool history,
+  runtime, parity, backfill, and production gates false.
 - **`common/`** — shared contracts extracted only after they reproduce the V4 reference.
   A family boundary must preserve ordered mapping operations and the inputs required for
   exact PoI; a coalesced `EntityChanges` stream is not assumed sufficient.

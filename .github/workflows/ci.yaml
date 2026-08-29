@@ -58,6 +58,10 @@ jobs:
         run: |
           python3 scripts/verify-uniswap-v3-segment-field-semantics.py
           python3 -m unittest scripts.tests.test_uniswap_v3_segment_field_semantics
+      - name: Recompute full-inventory Uniswap V3 segment field-semantics v2
+        run: |
+          python3 scripts/verify-uniswap-v3-segment-field-semantics-v2.py --wasm2wat "$WASM2WAT"
+          python3 -m unittest scripts.tests.test_uniswap_v3_segment_field_semantics_v2
       - name: Test eligibility decisions and freshness gates
         run: python3 -m unittest discover -s scripts/tests -p 'test_*.py'
 

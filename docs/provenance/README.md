@@ -7,3 +7,9 @@ or identity no longer matches.
 
 Update a provenance record only as part of a reviewed source or target change.
 Do not rewrite a record merely to match unexpected local output.
+
+The
+[`uniswap-v4-engine-v0.5.0`](uniswap-v4-engine-v0.5.0/README.md)
+directory is a closed, repository-only pre-execution capsule. Its copied JSON
+files remain byte-identical to the engine's `v0.5.0` tag; `closure.json`
+records the explicit evidence gaps and all-false operational gates.

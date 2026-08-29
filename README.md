@@ -125,6 +125,16 @@ the history without allowing its old repository-local `Closes #…` commit messa
 unrelated roadmap issues here. Run `./scripts/verify-uniswap-v4-import.sh` to prove the mirror,
 imported tree, file modes, frozen package bytes, and release lock are unchanged.
 
+The repository-only
+[`v0.5.0 pre-execution reference`](docs/provenance/uniswap-v4-engine-v0.5.0/README.md)
+pins the engine OCI/binary compatibility contract and one retained 100,000-block
+certificate before any authorized replay. Its fail-closed verifier binds the
+imported Store-state SPKG to the range, canonical hashes, frame summary,
+20-table/PoI inventory, checkpoint, and historical GraphQL evidence while
+keeping every scratch, zero-writer, K3, workflow, database, and readiness gate
+false. The capsule is preparation evidence only; it is not a reproduction or
+execution certificate.
+
 The original repository and releases remain available until the active V4 backfill reaches
 its terminal certificate, the imported package reproduces a certified 100,000-block segment,
 and every engine/release consumer is deliberately transferred. Historical release URLs and

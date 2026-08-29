@@ -177,6 +177,23 @@ omitted link fields, Factory or non-Flash Pool handlers, shared-field histories,
 Graph execution order, runtime population, oracle/parity work, package wiring,
 or backfill eligibility, so every broad gate remains false.
 
+The next sibling [`npm-observation-plan/`](npm-observation-plan/README.md)
+closes the repository-only host request set before joint reduction. It first
+enumerates every unique Position key from the complete event envelope, then,
+after all Position rows resolve, derives Pool and ordinal-scoped Token keys
+from the immutable block-start Position projection and the exact segment
+profile. The plan includes the suffix after a would-be fatal reducer prefix;
+sorted keys, reason masks, contributing ordinals, exact cached-key consumption
+maxima, source digest, and planning-state digest are canonical. A gated call
+scope must resolve before planning. Preflight requires exact equality between
+planned and resolved key sets, rejects unstable rows before reduction, and
+audits actual reducer consumption against the exact maxima. Provider failures
+and resolution status are never serialized. This adds no integrated executor,
+RPC, database, Graph call trace, Factory/Pool combined schedule, dynamic-stage
+or BlockChanges model, checkpoint authority, continuity, parity, backfill, or
+production gate. Writer code, manifests, descriptors, WASM, and packages stay
+unchanged.
+
 The sibling [`oracle/`](oracle/README.md) contract retains deployment-scoped
 current-head responses and the asymmetric graft-boundary discovery result:
 mainnet history was queryable without canonical block hashes, while Base

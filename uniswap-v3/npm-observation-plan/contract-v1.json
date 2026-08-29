@@ -1,0 +1,181 @@
+{
+  "format_version": 1,
+  "contract_version": "uniswap-v3-npm-observation-plan-runtime/v1",
+  "mode": "host-diagnostic-only",
+  "ordered_materialization": [
+    {
+      "path": "uniswap-v3/npm-resolved-inputs/contract-v1.json",
+      "contract_version": "uniswap-v3-npm-resolved-inputs-runtime/v1",
+      "sha256": "c5ad1556273b0c532f8d00e27c257250b596d022dc25dc4f9443c429303c0a1a"
+    },
+    {
+      "path": "uniswap-v3/npm-observation-plan/npm-observation-plan-v1.json",
+      "contract_version": "uniswap-v3-npm-observation-plan/v1",
+      "sha256": "6e80d215e6e8fb22a8b1bf69172f973fb065d6a5605e5cdcb7d69298fbed41c9"
+    }
+  ],
+  "repository_artifacts": {
+    "readme": {
+      "path": "uniswap-v3/npm-observation-plan/README.md",
+      "sha256": "f1ec3cb87a9dfba8cbef864252927506465cf7cd52c47b5ca52929ff691b0527"
+    },
+    "eligibility": {
+      "path": "uniswap-v3/npm-observation-plan/docs/eligibility.md",
+      "sha256": "fb28b06ed8ba2808a4a167e49e6a59f75e1626943dca8cafaaea41684c9b579d"
+    },
+    "provenance": {
+      "path": "uniswap-v3/npm-observation-plan/docs/provenance.md",
+      "sha256": "6e5556b6e29639a2cb53be897b2b5730bad13f738340a23659eb8ab1466577be"
+    },
+    "semantics": {
+      "path": "uniswap-v3/npm-observation-plan/npm-observation-plan-v1.json",
+      "sha256": "6e80d215e6e8fb22a8b1bf69172f973fb065d6a5605e5cdcb7d69298fbed41c9",
+      "contract_version": "uniswap-v3-npm-observation-plan/v1"
+    },
+    "plan_proto": {
+      "path": "uniswap-v3/npm-observation-plan/proto/uniswap/npm/plan/v1/npm_observation_plan.proto",
+      "sha256": "20f983a984aa732c9ae9950f193428d45d212b168b840964af0823e5fce7092a"
+    },
+    "plan_binding": {
+      "path": "uniswap-v3/npm-observation-plan/src/uniswap.npm.plan.v1.rs",
+      "sha256": "5a69fd0772ca4c2166e37f8afbb00727bbb8a4a5304c3bdd6dcab4db71a819c5"
+    },
+    "plan_source": {
+      "path": "uniswap-v3/npm-observation-plan/src/npm_observation_plan.rs",
+      "sha256": "f3f854992b262e87c4fef3fbc660a2b0c2ffa8a87344848a6421b6ad3602dc36"
+    },
+    "combined_harness": {
+      "path": "uniswap-v3/npm-observation-plan/tests/npm_observation_plan.rs",
+      "sha256": "8bd218ad3d8fbf2e5cb64232698f8e12c273d45a5eff8dcca05b8250a55180fa"
+    },
+    "materializer": {
+      "path": "scripts/materialize-uniswap-v3-npm-observation-plan.sh",
+      "sha256": "85d4b77762f319712ef43baeb1697b4be1272fd217a4da90079f71d725a9bd8c"
+    },
+    "resolved_input_runtime": {
+      "path": "uniswap-v3/npm-resolved-inputs/contract-v1.json",
+      "sha256": "c5ad1556273b0c532f8d00e27c257250b596d022dc25dc4f9443c429303c0a1a",
+      "contract_version": "uniswap-v3-npm-resolved-inputs-runtime/v1"
+    },
+    "resolved_input_semantics": {
+      "path": "uniswap-v3/npm-resolved-inputs/npm-resolved-inputs-v1.json",
+      "sha256": "01f7e87b22f52d84f8bb2fe806e963ecfb9dc196ab29804baee4c156eabbdbd9",
+      "contract_version": "uniswap-v3-npm-resolved-inputs/v1"
+    },
+    "resolved_input_proto": {
+      "path": "uniswap-v3/npm-resolved-inputs/proto/uniswap/npm/inputs/v1/npm_resolved_inputs.proto",
+      "sha256": "e4859b67d590b1bcd2ce2d51ef90775c3729002300269a61b49d4bc31df6b299"
+    },
+    "resolved_input_binding": {
+      "path": "uniswap-v3/npm-resolved-inputs/src/uniswap.npm.inputs.v1.rs",
+      "sha256": "d7979c2e98750c8fa1a5fbe4efcb11d7033e5b12b9c239a13963d20f485f3b66"
+    },
+    "resolved_input_source": {
+      "path": "uniswap-v3/npm-resolved-inputs/src/npm_resolved_inputs.rs",
+      "sha256": "24fe3e9f7f94f156782394b5fc48407735cad2127ad9eec5bb9572fee35c4650"
+    },
+    "resolved_input_harness": {
+      "path": "uniswap-v3/npm-resolved-inputs/tests/npm_resolved_inputs.rs",
+      "sha256": "b549e08bba3bef8ae18f6f0440a01efad0c811b2cfde50652446fd2dfd1a8f94"
+    }
+  },
+  "materialized_runtime_artifacts": {
+    "configs/npm-observation-plan-v1.json": "6e80d215e6e8fb22a8b1bf69172f973fb065d6a5605e5cdcb7d69298fbed41c9",
+    "configs/npm-resolved-inputs-v1.json": "01f7e87b22f52d84f8bb2fe806e963ecfb9dc196ab29804baee4c156eabbdbd9",
+    "src/lib.rs": "91a2330a1a1016ab00fae61e8d25fde244591159ab4efd848ecc08b2623aca63",
+    "src/npm_resolved_inputs.rs": "24fe3e9f7f94f156782394b5fc48407735cad2127ad9eec5bb9572fee35c4650",
+    "src/uniswap.npm.inputs.v1.rs": "d7979c2e98750c8fa1a5fbe4efcb11d7033e5b12b9c239a13963d20f485f3b66",
+    "src/npm_observation_plan.rs": "f3f854992b262e87c4fef3fbc660a2b0c2ffa8a87344848a6421b6ad3602dc36",
+    "src/uniswap.npm.plan.v1.rs": "5a69fd0772ca4c2166e37f8afbb00727bbb8a4a5304c3bdd6dcab4db71a819c5",
+    "tests/npm_observation_plan.rs": "8bd218ad3d8fbf2e5cb64232698f8e12c273d45a5eff8dcca05b8250a55180fa"
+  },
+  "protobuf_contract": {
+    "namespace": "uniswap.npm.plan.v1",
+    "repository_only": true,
+    "copied_into_runtime_proto_directory": false,
+    "provider_status_or_errors_serialized": false,
+    "NpmObservationPlan": {
+      "source_frame_sha256": 1,
+      "planning_state_sha256": 2,
+      "call_scope": 3,
+      "network": 4,
+      "block_number": 5,
+      "block_hash": 6,
+      "segment_id": 7,
+      "segment_semantic_contract_sha256": 8,
+      "npm_profile_id": 9,
+      "position_requests": 10,
+      "pool_requests": 11,
+      "token_requests": 12,
+      "plan_contract_sha256": 13,
+      "resolved_input_runtime_sha256": 14
+    },
+    "PositionRequest": {
+      "position_manager": 1,
+      "token_id": 2,
+      "event_ordinals": 3,
+      "reason_mask": 4,
+      "expected_consumption_count": 5
+    },
+    "PoolRequest": {
+      "factory": 1,
+      "token0": 2,
+      "token1": 3,
+      "fee": 4,
+      "event_ordinals": 5,
+      "reason_mask": 6,
+      "expected_consumption_count": 7
+    },
+    "TokenRequest": {
+      "address": 1,
+      "ordinal": 2,
+      "reason_mask": 3,
+      "expected_consumption_count": 4
+    }
+  },
+  "host_contract": {
+    "position_phase": "full envelope unique Position closure",
+    "completion_phase": "resolved Position results plus immutable block-start state and segment profile derive Pool and Token closure",
+    "preflight": "resolved call scope before planning plus exact Position, Pool, and Token key-set equality before reducer",
+    "reducer_entrypoint": "private-field PreflightedResolvedFrame only",
+    "audit": "consumed keys are a subset of planned keys and cannot exceed exact cached-key or role-count maxima",
+    "post_fatal_suffix_resolved": true,
+    "provider_status_serialized": false,
+    "provider_errors_serialized": false,
+    "substreams_handler": false,
+    "manifest_module": false,
+    "database_or_provider_integration": false,
+    "checkpoint_authority": false
+  },
+  "package_contract": {
+    "module_count": 23,
+    "diagnostic_module": "map_writer_events",
+    "observation_plan_substreams_module": false,
+    "manifests_changed_from_writer_runtime": false,
+    "runtime_protobuf_descriptors_changed_from_writer_runtime": false,
+    "writer_wasm_identical": true,
+    "writer_packages_identical": true
+  },
+  "truth_boundary": {
+    "host_observation_plan_implemented": true,
+    "complete_conservative_npm_request_closure": true,
+    "post_fatal_writer_event_suffix_in_plan": true,
+    "exact_plan_resolved_frame_key_equality_enforced": true,
+    "all_planned_rows_resolved_before_certified_reducer_path": true,
+    "all_eight_npm_segment_profiles_bound": true,
+    "integrated_provider_executor_added": false,
+    "all_required_observations_evaluated": false,
+    "exact_graph_call_trace_complete": false,
+    "post_fatal_execution_modeled": false,
+    "graph_execution_trace_complete": false,
+    "factory_pool_combined_schedule_implemented": false,
+    "dynamic_datasource_stage_order_implemented": false,
+    "entity_changes_or_block_changes_implemented": false,
+    "checkpoint_or_graph_block_success_authorized": false,
+    "boundary_state_continuity_complete": false,
+    "physical_parity_complete": false,
+    "poi_parity_complete": false,
+    "backfill_ready": false,
+    "production_ready": false
+  }
+}

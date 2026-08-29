@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package uniswap.npm.plan.v1;
+
+import "uniswap/npm/inputs/v1/npm_resolved_inputs.proto";
+
+// Canonical host-only request closure for one NPM source frame. It contains
+// request identities and contract/state commitments only. Provider status,
+// retry metadata, endpoint identity, and failure text never enter this message.
+message NpmObservationPlan {
+  bytes source_frame_sha256 = 1;
+  bytes planning_state_sha256 = 2;
+  uniswap.npm.inputs.v1.ResolvedCallScope call_scope = 3;
+  string network = 4;
+  uint64 block_number = 5;
+  bytes block_hash = 6;
+  string segment_id = 7;
+  string segment_semantic_contract_sha256 = 8;
+  string npm_profile_id = 9;
+  repeated PositionRequest position_requests = 10;
+  repeated PoolRequest pool_requests = 11;
+  repeated TokenRequest token_requests = 12;
+  string plan_contract_sha256 = 13;
+  string resolved_input_runtime_sha256 = 14;
+}
+
+message PositionRequest {
+  bytes position_manager = 1;
+  bytes token_id = 2;
+  repeated uint64 event_ordinals = 3;
+  uint32 reason_mask = 4;
+  uint32 expected_consumption_count = 5;
+}
+
+message PoolRequest {
+  bytes factory = 1;
+  bytes token0 = 2;
+  bytes token1 = 3;
+  uint32 fee = 4;
+  repeated uint64 event_ordinals = 5;
+  uint32 reason_mask = 6;
+  uint32 expected_consumption_count = 7;
+}
+
+message TokenRequest {
+  bytes address = 1;
+  uint64 ordinal = 2;
+  uint32 reason_mask = 3;
+  uint32 expected_consumption_count = 4;
+}

@@ -135,6 +135,13 @@ keeping every scratch, zero-writer, K3, workflow, database, and readiness gate
 false. The capsule is preparation evidence only; it is not a reproduction or
 execution certificate.
 
+The two release packages that were intentionally outside the imported Git tree are mirrored
+under `artifacts/releases/uniswap-v4/`. Their source release identities, byte sizes, and
+SHA-256 digests are locked by
+`docs/provenance/uniswap-v4-release-assets-v1.json` and checked by
+`scripts/verify-uniswap-v4-release-assets.py`. This preserves the v0.1.0 event package and
+v0.4.1 NUL-audit package without claiming that release authority has transferred.
+
 The original repository and releases remain available until the active V4 backfill reaches
 its terminal certificate, the imported package reproduces a certified 100,000-block segment,
 and every engine/release consumer is deliberately transferred. Historical release URLs and

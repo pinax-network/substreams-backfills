@@ -43,6 +43,7 @@ git diff --cached --quiet -- "$import_path" || fail "index modifies the imported
 
 python3 scripts/build-uniswap-v4-import-inventory.py \
     --check docs/provenance/uniswap-v4-v0.4.1-files.json
+python3 scripts/verify-uniswap-v4-release-assets.py
 
 verify_sha256() {
     expected=$1
@@ -61,4 +62,4 @@ verify_sha256 \
     bc8a841dbb74f9bbc7d90826251ab766ad350170a4832fc3e9b084664d22254a \
     "$import_path/release/v0.4.0/uniswap-v4-base-store-state-reducer-v0.4.0.spkg"
 
-echo "verified mirrored Uniswap V4 history, exact imported tree, 98 files, 13 executable modes, and frozen v0.4.0 packages"
+echo "verified mirrored Uniswap V4 history, exact imported tree, 98 files, 13 executable modes, frozen v0.4.0 packages, and external release assets"

@@ -1,4 +1,5 @@
 target/
 *.spkg
+!artifacts/releases/uniswap-v4/**/*.spkg
 __pycache__/
 *.py[cod]

@@ -13,3 +13,8 @@ The
 directory is a closed, repository-only pre-execution capsule. Its copied JSON
 files remain byte-identical to the engine's `v0.5.0` tag; `closure.json`
 records the explicit evidence gaps and all-false operational gates.
+
+`uniswap-v4-release-assets-v1.json` locks the two historical V4 packages that were release
+assets rather than tracked files in the imported source tree. The corresponding bytes live
+under `artifacts/releases/uniswap-v4/`; mirroring them does not transfer future-release
+authority or make the old releases disposable.

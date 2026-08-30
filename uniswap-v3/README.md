@@ -294,6 +294,23 @@ Complete Swap, persistence, no-later-overwrite, alias, rollback, history,
 parity, checkpoint, backfill, production, and readiness remain false. The slice
 is based on exact Pool Mint squash merge `fa1c8d842712e53d363615062ecf1374e52bb854`.
 
+The [`pool-flash/v1`](pool-flash/v1/README.md) certificate then
+digest-pins and recomputes Swap plus Mint, Pool runtime, Initialize,
+field-semantics v2, and the segment writer matrix. Across all eight retained
+Pool mappings it proves the exact `feeGrowthGlobal0X128` non-try call,
+result-zero BigInt decode, `feeGrowthGlobal1X128` non-try call, result-zero
+BigInt decode, matching fee0 setter, fee1 setter, and same-receiver Pool save
+order, plus null-result closed traps and exact reachable mutation and Pool-only
+Graph store inventories. It
+independently derives selectors `f3058399` and `46141319` and retains `Flash` as
+a required-absent row. The candidate still disables Flash output; host call
+semantics, persistence, complete history, parity, backfill, production, and
+readiness remain false, and the ledger stays 36 selected / 230 residual. This
+slice is based on exact canonical Pool Swap squash merge
+`71d554fa9676d8c77437c0366a9859e13834e235`, with its merge tree verified
+identical to the audited candidate before deterministic regeneration and full
+revalidation.
+
 The next sibling [`npm-observation-plan/`](npm-observation-plan/README.md)
 closes the repository-only host request set before joint reduction. It first
 enumerates every unique Position key from the complete event envelope, then,

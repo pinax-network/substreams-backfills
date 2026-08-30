@@ -330,6 +330,189 @@ EVENT_PARAM_GET_CALL = (
 )
 STUB_NEW_CALL = "~lib/rt/stub/__new"
 
+
+def function_declaration(suffix: str, *lines: str) -> Any:
+    return RUNTIME.FunctionDeclarationSpec(suffix, tuple(lines))
+
+
+MODERN_POOL_FUNCTION_DECLARATIONS = {
+    "stub_alloc": function_declaration(
+        "~lib/rt/stub/__alloc",
+        "(func $~lib/rt/stub/__alloc (type $t0) (param $p0 i32) (result i32)",
+        "(local $l1 i32) (local $l2 i32) (local $l3 i32) (local $l4 i32) (local $l5 i32)",
+    ),
+    "stub_new": function_declaration(
+        "~lib/rt/stub/__new",
+        "(func $~lib/rt/stub/__new (type $t1) (param $p0 i32) (param $p1 i32) (result i32)",
+        "(local $l2 i32) (local $l3 i32)",
+    ),
+    "ensure_capacity": function_declaration(
+        "~lib/array/ensureCapacity",
+        "(func $~lib/array/ensureCapacity (type $t3) (param $p0 i32) (param $p1 i32)",
+        "(local $l2 i32) (local $l3 i32) (local $l4 i32) (local $l5 i32) (local $l6 i32) (local $l7 i32) (local $l8 i32) (local $l9 i32) (local $l10 i32)",
+    ),
+    "typed_map_set": function_declaration(
+        TYPED_MAP_SET_CALL,
+        f"(func ${TYPED_MAP_SET_CALL} (type $t4) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+        "(local $l3 i32)",
+    ),
+    "entity_constructor": function_declaration(
+        "common/collections/Entity#constructor",
+        "(func $~lib/@graphprotocol/graph-ts/common/collections/Entity#constructor (type $t0) (param $p0 i32) (result i32)",
+        "(local $l1 i32) (local $l2 i32)",
+    ),
+    "memory_fill": function_declaration(
+        "~lib/memory/memory.fill",
+        "(func $~lib/memory/memory.fill (type $t3) (param $p0 i32) (param $p1 i32)",
+        "(local $l2 i32)",
+    ),
+    "memory_copy": function_declaration(
+        "~lib/memory/memory.copy",
+        "(func $~lib/memory/memory.copy (type $t4) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+        "(local $l3 i32) (local $l4 i32)",
+    ),
+    "memcpy": function_declaration(
+        "~lib/util/memory/memcpy",
+        "(func $~lib/util/memory/memcpy (type $t4) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+        "(local $l3 i32) (local $l4 i32) (local $l5 i32)",
+    ),
+    "event_param_get": function_declaration(
+        EVENT_PARAM_GET_CALL,
+        f"(func ${EVENT_PARAM_GET_CALL} (type $t1) (param $p0 i32) (param $p1 i32) (result i32)",
+    ),
+    "typed_map_get": function_declaration(
+        TYPED_MAP_GET_CALL,
+        f"(func ${TYPED_MAP_GET_CALL} (type $t1) (param $p0 i32) (param $p1 i32) (result i32)",
+        "(local $l2 i32)",
+    ),
+    "string_eq": function_declaration(
+        "~lib/string/String.__eq",
+        "(func $~lib/string/String.__eq (type $t1) (param $p0 i32) (param $p1 i32) (result i32)",
+        "(local $l2 i32) (local $l3 i32) (local $l4 i32) (local $l5 i32)",
+    ),
+}
+
+
+LEGACY_FUNCTION_DECLARATIONS = {
+    "native_start": function_declaration("start", "(func $start (type $t0)"),
+    "constants_start": function_declaration(
+        "start:src/utils/constants", "(func $start:src/utils/constants (type $t0)"
+    ),
+    "byte_array_from_i32": function_declaration(
+        "index/ByteArray.fromI32",
+        "(func $~lib/@graphprotocol/graph-ts/index/ByteArray.fromI32 (type $t1) (param $p0 i32) (result i32)",
+        "(local $l1 i32)",
+    ),
+    "factory_constructor": function_declaration(
+        "templates/Pool/Factory/Factory#constructor",
+        "(func $src/types/templates/Pool/Factory/Factory#constructor (type $t2) (param $p0 i32) (param $p1 i32) (result i32)",
+    ),
+    "native_math_pow": function_declaration(
+        "~lib/math/NativeMath.pow",
+        "(func $~lib/math/NativeMath.pow (type $t15) (result f64)",
+        "(local $l0 i32) (local $l1 i32) (local $l2 i32) (local $l3 i32) (local $l4 i64) (local $l5 f64) (local $l6 f64) (local $l7 f64) (local $l8 f64)",
+    ),
+    "arena_allocate": function_declaration(
+        "allocator/arena/__memory_allocate",
+        "(func $~lib/allocator/arena/__memory_allocate (type $t1) (param $p0 i32) (result i32)",
+        "(local $l1 i32) (local $l2 i32) (local $l3 i32) (local $l4 i32)",
+    ),
+    "compute_size": function_declaration(
+        "internal/arraybuffer/computeSize",
+        "(func $~lib/internal/arraybuffer/computeSize (type $t1) (param $p0 i32) (result i32)",
+    ),
+    "allocate_unsafe": function_declaration(
+        "internal/arraybuffer/allocateUnsafe",
+        "(func $~lib/internal/arraybuffer/allocateUnsafe (type $t1) (param $p0 i32) (result i32)",
+        "(local $l1 i32)",
+    ),
+    "reallocate_unsafe": function_declaration(
+        "internal/arraybuffer/reallocateUnsafe",
+        "(func $~lib/internal/arraybuffer/reallocateUnsafe (type $t2) (param $p0 i32) (param $p1 i32) (result i32)",
+        "(local $l2 i32) (local $l3 i32)",
+    ),
+    "event_param_get": function_declaration(
+        "EventParam>#__get",
+        "(func $~lib/array/Array<~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.EventParam>#__get (type $t2) (param $p0 i32) (param $p1 i32) (result i32)",
+    ),
+    "value_constructor": function_declaration(
+        "index/Value#constructor",
+        "(func $~lib/@graphprotocol/graph-ts/index/Value#constructor (type $t10) (result i32)",
+        "(local $l0 i32)",
+    ),
+    "value_from_big_decimal": function_declaration(
+        "index/Value.fromBigDecimal",
+        "(func $~lib/@graphprotocol/graph-ts/index/Value.fromBigDecimal (type $t1) (param $p0 i32) (result i32)",
+        "(local $l1 i32)",
+    ),
+    "typed_map_get": function_declaration(
+        "index/Value>#get",
+        "(func $~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#get (type $t2) (param $p0 i32) (param $p1 i32) (result i32)",
+        "(local $l2 i32)",
+    ),
+    "typed_map_get_entry": function_declaration(
+        "index/Value>#getEntry",
+        "(func $~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#getEntry (type $t2) (param $p0 i32) (param $p1 i32) (result i32)",
+        "(local $l2 i32)",
+    ),
+    "typed_map_set": function_declaration(
+        "index/Value>#set",
+        "(func $~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#set (type $t4) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+        "(local $l3 i32)",
+    ),
+    "entry_constructor": function_declaration(
+        "ethereum.SmartContract#constructor",
+        "(func $~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.SmartContract#constructor (type $t5) (param $p0 i32) (param $p1 i32) (param $p2 i32) (result i32)",
+    ),
+    "string_eq": function_declaration(
+        "~lib/string/String.__eq",
+        "(func $~lib/string/String.__eq (type $t2) (param $p0 i32) (param $p1 i32) (result i32)",
+        "(local $l2 i32)",
+    ),
+    "compare_unsafe": function_declaration(
+        "internal/string/compareUnsafe",
+        "(func $~lib/internal/string/compareUnsafe (type $t5) (param $p0 i32) (param $p1 i32) (param $p2 i32) (result i32)",
+        "(local $l3 i32)",
+    ),
+    "memcpy": function_declaration(
+        "internal/memory/memcpy",
+        "(func $~lib/internal/memory/memcpy (type $t4) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+        "(local $l3 i32) (local $l4 i32) (local $l5 i32)",
+    ),
+    "memmove": function_declaration(
+        "internal/memory/memmove",
+        "(func $~lib/internal/memory/memmove (type $t4) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+        "(local $l3 i32)",
+    ),
+    "memset": function_declaration(
+        "internal/memory/memset",
+        "(func $~lib/internal/memory/memset (type $t8) (param $p0 i32) (param $p1 i32)",
+        "(local $l2 i32)",
+    ),
+    "memory_allocate": function_declaration(
+        "~lib/memory/memory.allocate",
+        "(func $~lib/memory/memory.allocate (type $t1) (param $p0 i32) (result i32)",
+    ),
+    "memory_reset": function_declaration(
+        "~lib/memory/memory.reset", "(func $~lib/memory/memory.reset (type $t0)"
+    ),
+    "array_constructor": function_declaration(
+        "TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#constructor",
+        "(func $~lib/array/Array<~lib/@graphprotocol/graph-ts/index/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#constructor (type $t1) (param $p0 i32) (result i32)",
+        "(local $l1 i32) (local $l2 i32) (local $l3 i32)",
+    ),
+    "array_push": function_declaration(
+        "TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#push",
+        "(func $~lib/array/Array<~lib/@graphprotocol/graph-ts/index/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#push (type $t8) (param $p0 i32) (param $p1 i32)",
+        "(local $l2 i32) (local $l3 i32) (local $l4 i32)",
+    ),
+    "string_allocate": function_declaration(
+        "internal/string/allocateUnsafe",
+        "(func $~lib/internal/string/allocateUnsafe (type $t1) (param $p0 i32) (result i32)",
+        "(local $l1 i32)",
+    ),
+}
+
 POOL_COLLECTION_SPEC = RUNTIME.ModernPoolCollectionSpec(
     typed_map_set_call=TYPED_MAP_SET_CALL,
     typed_map_get_call=TYPED_MAP_GET_CALL,
@@ -342,6 +525,7 @@ POOL_COLLECTION_SPEC = RUNTIME.ModernPoolCollectionSpec(
     entity_constructor_body_sha256="df453669386fdd214d23b561c134fdc0b1fe4e8c9bb46a3b6bec63e22e51d032",
     entity_constructor_type_ids=(25, 27, 29),
     string_eq_body_sha256="f7967b738553ba98aba24f869e968d73e8013f99e83d02e106cad52306aa3c3f",
+    function_declarations=MODERN_POOL_FUNCTION_DECLARATIONS,
     profiles={
         item.profile_id: RUNTIME.ModernPoolCollectionProfileSpec(
             ensure_capacity_body_sha256=item.ensure_capacity_body_sha256,
@@ -377,6 +561,7 @@ LEGACY_COLLECTION_SPEC = RUNTIME.LegacyCollectionSpec(
     memset_body_sha256="d501c434f3cb81a087c2da86432a0b4054083d8860eae61ac85841082675f940",
     memory_allocate_body_sha256="ae57abfa142d50c8539b89b63ec1790b25722d7ecdda61aee91a97026daf237d",
     memory_reset_body_sha256="9767c060a0ccee2ec358b573bf2c7334e08e0cca9e14f7618c01cffa39d50c1c",
+    function_declarations=LEGACY_FUNCTION_DECLARATIONS,
     profiles={
         profile.profile_id: LEGACY_GROUP_SPECS[profile.group_id].collection
         for profile in LEGACY_PROFILE_SPECS
@@ -404,6 +589,7 @@ TRUE_FLAGS = {
     "six_legacy_pool_allocator_data_floors_proven",
     "six_legacy_pool_complete_import_export_global_inventories_proven",
     "six_legacy_pool_no_indirect_table_and_handler_reset_reachability_proven",
+    "six_legacy_pool_exact_function_declaration_inventories_proven",
     "exact_two_modern_pool_artifact_tuples_selected",
     "candidate_shared_runtime_bytes_equal_executed_bytes",
     "both_modern_pool_public_collection_capsules_proven",
@@ -414,6 +600,7 @@ TRUE_FLAGS = {
     "both_modern_pool_exported_start_and_global_writer_inventories_proven",
     "both_modern_pool_allocator_floors_above_all_initialized_data_proven",
     "both_modern_pool_start_direct_memory_write_absence_proven",
+    "both_modern_pool_exact_function_declaration_inventories_proven",
 }
 
 FALSE_FLAGS = {
@@ -746,6 +933,13 @@ def prove_pool_runtime_context(context: dict[str, Any]) -> dict[str, Any]:
         capsule["modern_collection_capsule_structurally_closed"] is True,
         f"{context['cid']} modern Pool collection capsule did not close",
     )
+    declarations = capsule["exact_function_declarations"]
+    require(
+        declarations["function_count"] == 11
+        and declarations["parameter_local_and_result_declarations_exactly_bound"]
+        is True,
+        f"{context['cid']} modern Pool function declaration inventory did not close",
+    )
     spec: PoolProfileSpec = context["spec"]
     return {
         "profile_id": spec.profile_id,
@@ -876,6 +1070,13 @@ def prove_legacy_pool_runtime_context(context: dict[str, Any]) -> dict[str, Any]
         capsule["legacy_collection_capsule_structurally_closed"] is True,
         f"{spec.cid} legacy Pool collection capsule did not close",
     )
+    declarations = capsule["exact_function_declarations"]
+    require(
+        declarations["function_count"] == 26
+        and declarations["parameter_local_and_result_declarations_exactly_bound"]
+        is True,
+        f"{spec.cid} legacy Pool function declaration inventory did not close",
+    )
     return {
         "profile_id": spec.profile_id,
         "digest_group_id": group.group_id,
@@ -957,7 +1158,7 @@ def expected_contract(root: Path, wasm2wat: Path | None = None) -> dict[str, Any
             "proof_model": "exact artifact tuple selection plus separate modern exported-initializer and legacy native-start module-state proofs and generation-specific public collection capsules",
             "host_boundary": "imported host behavior is not rederived; modern hosts are assumed not to write arbitrary linear memory, and legacy hosts are additionally assumed not to reenter exported memory.reset during a handler",
             "aggregate_body_boundary": "modern capacity/memory bodies and legacy memcpy/memmove/memset remain exact retained-body authority with structural operand callsite checks rather than general memory-semantics proofs",
-            "fail_closed_rule": "any candidate runtime, tuple, WAT, import/export, start, global definition/writer, data floor, reset reachability, allocator, setter/getter/index/equality, Value/Entity/entry/array layout, or exact low-level body drift leaves every scoped runtime claim false",
+            "fail_closed_rule": "any candidate runtime, tuple, WAT, import/export, start, function header or local declaration, global definition/writer, data floor, reset reachability, allocator, setter/getter/index/equality, Value/Entity/entry/array layout, or exact low-level body drift leaves every scoped runtime claim false",
         },
         "provenance": {
             "base_commit": BASE_COMMIT,

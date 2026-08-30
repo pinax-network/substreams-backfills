@@ -500,6 +500,7 @@ TRUE_FLAGS = {
     "cumulative_factory_paths_residual_is_4_of_18",
     "modern_segment_field_projection_count_is_120",
     "global_v2_selected_and_residual_counts_unchanged_by_partial_profile_closure",
+    "both_modern_factory_exact_runtime_function_declaration_inventories_proven",
 }
 
 
@@ -652,6 +653,78 @@ def runtime_ops() -> Any:
     )
 
 
+def function_declaration(suffix: str, *lines: str) -> Any:
+    return RUNTIME.FunctionDeclarationSpec(suffix, tuple(lines))
+
+
+MODERN_FUNCTION_DECLARATIONS = {
+    "stub_alloc": function_declaration(
+        "~lib/rt/stub/__alloc",
+        "(func $~lib/rt/stub/__alloc (type $t0) (param $p0 i32) (result i32)",
+        "(local $l1 i32) (local $l2 i32) (local $l3 i32) (local $l4 i32) (local $l5 i32)",
+    ),
+    "stub_new": function_declaration(
+        "~lib/rt/stub/__new",
+        "(func $~lib/rt/stub/__new (type $t1) (param $p0 i32) (param $p1 i32) (result i32)",
+        "(local $l2 i32) (local $l3 i32)",
+    ),
+    "ensure_capacity": function_declaration(
+        "~lib/array/ensureCapacity",
+        "(func $~lib/array/ensureCapacity (type $t4) (param $p0 i32) (param $p1 i32)",
+        "(local $l2 i32) (local $l3 i32) (local $l4 i32) (local $l5 i32) (local $l6 i32) (local $l7 i32) (local $l8 i32) (local $l9 i32) (local $l10 i32)",
+    ),
+    "typed_map_entry_push": function_declaration(
+        "TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/common/value/Value>>#push",
+        "(func $~lib/array/Array<~lib/@graphprotocol/graph-ts/common/collections/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/common/value/Value>>#push (type $t4) (param $p0 i32) (param $p1 i32)",
+        "(local $l2 i32) (local $l3 i32)",
+    ),
+    "typed_map_set": function_declaration(
+        TYPED_MAP_SET_CALL,
+        f"(func ${TYPED_MAP_SET_CALL} (type $t2) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+        "(local $l3 i32)",
+    ),
+    "entity_constructor": function_declaration(
+        "common/collections/Entity#constructor",
+        "(func $~lib/@graphprotocol/graph-ts/common/collections/Entity#constructor (type $t0) (param $p0 i32) (result i32)",
+        "(local $l1 i32) (local $l2 i32)",
+    ),
+    "memory_fill": function_declaration(
+        "~lib/memory/memory.fill",
+        "(func $~lib/memory/memory.fill (type $t4) (param $p0 i32) (param $p1 i32)",
+        "(local $l2 i32)",
+    ),
+    "memory_copy": function_declaration(
+        "~lib/memory/memory.copy",
+        "(func $~lib/memory/memory.copy (type $t2) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+        "(local $l3 i32) (local $l4 i32)",
+    ),
+    "memcpy": function_declaration(
+        "~lib/util/memory/memcpy",
+        "(func $~lib/util/memory/memcpy (type $t2) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+        "(local $l3 i32) (local $l4 i32) (local $l5 i32)",
+    ),
+    "event_param_get": function_declaration(
+        "Array<~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.EventParam>#__get",
+        "(func $~lib/array/Array<~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.EventParam>#__get (type $t1) (param $p0 i32) (param $p1 i32) (result i32)",
+    ),
+    "value_array_set": function_declaration(
+        "Array<~lib/@graphprotocol/graph-ts/common/value/Value>#__set",
+        "(func $~lib/array/Array<~lib/@graphprotocol/graph-ts/common/value/Value>#__set (type $t2) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+        "(local $l3 i32)",
+    ),
+    "typed_map_get": function_declaration(
+        TYPED_MAP_GET_CALL,
+        f"(func ${TYPED_MAP_GET_CALL} (type $t1) (param $p0 i32) (param $p1 i32) (result i32)",
+        "(local $l2 i32)",
+    ),
+    "string_eq": function_declaration(
+        "~lib/string/String.__eq",
+        "(func $~lib/string/String.__eq (type $t1) (param $p0 i32) (param $p1 i32) (result i32)",
+        "(local $l2 i32) (local $l3 i32) (local $l4 i32) (local $l5 i32)",
+    ),
+}
+
+
 MODERN_COLLECTION_SPEC = RUNTIME.ModernCollectionSpec(
     typed_map_set_call=TYPED_MAP_SET_CALL,
     typed_map_get_call=TYPED_MAP_GET_CALL,
@@ -663,6 +736,7 @@ MODERN_COLLECTION_SPEC = RUNTIME.ModernCollectionSpec(
     memory_copy_body_sha256=FIXED_RUNTIME_BODY_SHA256["memory_copy"],
     memcpy_body_sha256=FIXED_RUNTIME_BODY_SHA256["memcpy"],
     string_eq_body_sha256=STRING_EQ_BODY_SHA256,
+    function_declarations=MODERN_FUNCTION_DECLARATIONS,
 )
 
 
@@ -1415,6 +1489,9 @@ def prove_shared_runtime_primitives(context: dict[str, Any]) -> dict[str, Any]:
         ),
     }
     return {
+        "exact_function_declarations": collection_capsule[
+            "exact_function_declarations"
+        ],
         "typed_map_collection_runtime": collection_runtime,
         "smart_contract_constructor": {
             "same_name_and_address_stored_on_same_receiver": True,
@@ -3171,6 +3248,11 @@ def expected_contract(root: Path, wasm2wat: Path | None = None) -> dict[str, Any
     runtime_sha256 = bind_candidate_runtime(root)
     proofs = [prove_modern_static(context) for context in load_contexts(root, wasm2wat)]
     require(len(proofs) == 2, "modern Factory static proof count drift")
+    declaration_inventories = [
+        proof["token_call_helpers"]["shared_runtime_primitives"]
+        ["exact_function_declarations"]
+        for proof in proofs
+    ]
     require(
         all(
             proof["complete_static_handler_contract"]
@@ -3178,6 +3260,12 @@ def expected_contract(root: Path, wasm2wat: Path | None = None) -> dict[str, Any
             and proof["field_contract"]["written_field_count"] == 59
             and proof["field_contract"]["required_absent_fields"] == ["Pool.tick"]
             for proof in proofs
+        )
+        and all(
+            inventory["function_count"] == 13
+            and inventory["parameter_local_and_result_declarations_exactly_bound"]
+            is True
+            for inventory in declaration_inventories
         ),
         "modern Factory static proof did not close",
     )
@@ -3190,7 +3278,7 @@ def expected_contract(root: Path, wasm2wat: Path | None = None) -> dict[str, Any
             "semantic_authority": "the exact modern Base and modern mainnet deployed Factory WASM artifacts and checksum-pinned WABT 1.0.35 --generate-names WAT projections",
             "proof_model": "the inherited complete handler CFG/SSA/effect proof plus exact exported-initializer dispatch and critical-global writer inventories, a complete direct/indirect reachable TypedMap#set closure, complete 76-handler-set semantic-family inventory, exact entry/local reaching definitions, exact entity receiver and decoded-key bindings, structural helper/runtime/source-to-payload flows, exact Value kind/payload/final-operand/set-call chains, required absence, and handler-local normal-exit effect traces",
             "symbolic_call_boundary": "token helper outcomes are exact functions of the structurally bound SmartContract receiver, selector, argument, retained call-result wrapper, and Graph ethereum.call result; the imported host call result and which outcomes occurred at historic blocks are not asserted",
-            "fail_closed_rule": "any parent-contract, artifact, initializer export, native start section, critical-global initializer or writer, handler, reachable setter, helper or shared runtime primitive, entry-local definition, entity receiver, decoded field key, Value kind, semantic payload source/local, final Value operand, exact map call, event index, early return, persistent effect, static profile, or required-absence drift leaves the scoped claims false",
+            "fail_closed_rule": "any parent-contract, artifact, initializer export, native start section, function header or local declaration, critical-global initializer or writer, handler, reachable setter, helper or shared runtime primitive, entry-local definition, entity receiver, decoded field key, Value kind, semantic payload source/local, final Value operand, exact map call, event index, early return, persistent effect, static profile, or required-absence drift leaves the scoped claims false",
             "host_boundary": "reachable helper bodies retain aggregate exact-body authority rather than a general protected-memory write proof; the proof reaches Graph host-effect invocation, while imported host memory behavior, Graph Node rollback, and other host behavior are not proved by retained WAT",
         },
         "provenance": {

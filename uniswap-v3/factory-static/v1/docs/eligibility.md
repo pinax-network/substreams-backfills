@@ -50,6 +50,12 @@ commits of `ensureCapacity`. The complete retained `ensureCapacity` body and
 the lower-level `memory.fill`, `memory.copy`, and `memcpy` bodies remain exact
 hash boundaries because their general memory semantics are not rederived.
 
+Every shared collection helper used by those claims also has an independently
+exact function declaration. The header, type use, ordered named parameters and
+types, result, and leading local declarations must match. Parameter or local
+label swaps therefore fail even after the enclosing reachable-body authority
+is refreshed.
+
 The exported initializer is bound as `_start -> ~start`; no native start
 section is admitted. The proof requires zero initial values and inventories
 every writer of `~started`, the allocator offset, ZERO_BI, ONE_BI, and ZERO_BD.

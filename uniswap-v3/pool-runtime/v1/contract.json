@@ -1,7 +1,7 @@
 {
   "authority_contract": {
     "aggregate_body_boundary": "modern capacity/memory bodies and legacy memcpy/memmove/memset remain exact retained-body authority with structural operand callsite checks rather than general memory-semantics proofs",
-    "fail_closed_rule": "any candidate runtime, tuple, WAT, import/export, start, global definition/writer, data floor, reset reachability, allocator, setter/getter/index/equality, Value/Entity/entry/array layout, or exact low-level body drift leaves every scoped runtime claim false",
+    "fail_closed_rule": "any candidate runtime, tuple, WAT, import/export, start, function header or local declaration, global definition/writer, data floor, reset reachability, allocator, setter/getter/index/equality, Value/Entity/entry/array layout, or exact low-level body drift leaves every scoped runtime claim false",
     "host_boundary": "imported host behavior is not rederived; modern hosts are assumed not to write arbitrary linear memory, and legacy hosts are additionally assumed not to reenter exported memory.reset during a handler",
     "proof_model": "exact artifact tuple selection plus separate modern exported-initializer and legacy native-start module-state proofs and generation-specific public collection capsules",
     "semantic_authority": "exact retained WASM bytes and checksum-pinned WABT 1.0.35 --generate-names WAT for all eight retained Pool mappings"
@@ -293,6 +293,212 @@
             "capacity_growth_old_index_new_length_and_same_entry_structurally_proven": true,
             "function": "~lib/array/Array<~lib/@graphprotocol/graph-ts/index/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#push"
           }
+        },
+        "exact_function_declarations": {
+          "function_count": 26,
+          "functions": {
+            "allocate_unsafe": {
+              "declaration_lines": [
+                "(func $~lib/internal/arraybuffer/allocateUnsafe (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32)"
+              ],
+              "declaration_sha256": "06bb173f8940db68f1e0825a3f4240662e419fb33652f308bc87710598a25632",
+              "function": "~lib/internal/arraybuffer/allocateUnsafe"
+            },
+            "arena_allocate": {
+              "declaration_lines": [
+                "(func $~lib/allocator/arena/__memory_allocate (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32) (local $l2 i32) (local $l3 i32) (local $l4 i32)"
+              ],
+              "declaration_sha256": "48f9d7e4deeb0a0c273ce02f381040945970643dcfed2bc1e6f1e252b52aaaca",
+              "function": "~lib/allocator/arena/__memory_allocate"
+            },
+            "array_constructor": {
+              "declaration_lines": [
+                "(func $~lib/array/Array<~lib/@graphprotocol/graph-ts/index/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#constructor (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32) (local $l2 i32) (local $l3 i32)"
+              ],
+              "declaration_sha256": "161d3e3e7a57bac882887c57bd15aa06b0f5756ca900d4a85c7e663c2ac8aa9e",
+              "function": "~lib/array/Array<~lib/@graphprotocol/graph-ts/index/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#constructor"
+            },
+            "array_push": {
+              "declaration_lines": [
+                "(func $~lib/array/Array<~lib/@graphprotocol/graph-ts/index/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#push (type $t8) (param $p0 i32) (param $p1 i32)",
+                "(local $l2 i32) (local $l3 i32) (local $l4 i32)"
+              ],
+              "declaration_sha256": "89f235267ce817e9096c3fc70d8d0977eedb5bb060f1a6dcd927ac621ac52c2b",
+              "function": "~lib/array/Array<~lib/@graphprotocol/graph-ts/index/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#push"
+            },
+            "byte_array_from_i32": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/ByteArray.fromI32 (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32)"
+              ],
+              "declaration_sha256": "d54c9315773d75fd2373da723eda4513aef2de7ac8f16e42993807d5caae8ed5",
+              "function": "~lib/@graphprotocol/graph-ts/index/ByteArray.fromI32"
+            },
+            "compare_unsafe": {
+              "declaration_lines": [
+                "(func $~lib/internal/string/compareUnsafe (type $t5) (param $p0 i32) (param $p1 i32) (param $p2 i32) (result i32)",
+                "(local $l3 i32)"
+              ],
+              "declaration_sha256": "64edfc3548e5bd110e39fa7b25adeb5972c28398f8943fcf8623c781dcecf8af",
+              "function": "~lib/internal/string/compareUnsafe"
+            },
+            "compute_size": {
+              "declaration_lines": [
+                "(func $~lib/internal/arraybuffer/computeSize (type $t1) (param $p0 i32) (result i32)"
+              ],
+              "declaration_sha256": "d10ee6da064df4ca75a4d0d6229cf97d218d576ada639711c6bab76a8af41b39",
+              "function": "~lib/internal/arraybuffer/computeSize"
+            },
+            "constants_start": {
+              "declaration_lines": [
+                "(func $start:src/utils/constants (type $t0)"
+              ],
+              "declaration_sha256": "9759811c1ca652f0c1238c4f1fdd9f135c6d6ea3d50e1aca08d67a6859523697",
+              "function": "start:src/utils/constants"
+            },
+            "entry_constructor": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.SmartContract#constructor (type $t5) (param $p0 i32) (param $p1 i32) (param $p2 i32) (result i32)"
+              ],
+              "declaration_sha256": "935b0e36c760cf5b13e64e4f1b671d79d28e24e68098a6b4a3a502b83812c93b",
+              "function": "~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.SmartContract#constructor"
+            },
+            "event_param_get": {
+              "declaration_lines": [
+                "(func $~lib/array/Array<~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.EventParam>#__get (type $t2) (param $p0 i32) (param $p1 i32) (result i32)"
+              ],
+              "declaration_sha256": "5994e927ca95a0919e11c8d826a7ea04793324b613e30933949c67a351767a11",
+              "function": "~lib/array/Array<~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.EventParam>#__get"
+            },
+            "factory_constructor": {
+              "declaration_lines": [
+                "(func $src/types/templates/Pool/Factory/Factory#constructor (type $t2) (param $p0 i32) (param $p1 i32) (result i32)"
+              ],
+              "declaration_sha256": "88464ac9b852ea4ce474fac5770d5cc889605ba6e6047358007b312534b710dd",
+              "function": "src/types/templates/Pool/Factory/Factory#constructor"
+            },
+            "memcpy": {
+              "declaration_lines": [
+                "(func $~lib/internal/memory/memcpy (type $t4) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+                "(local $l3 i32) (local $l4 i32) (local $l5 i32)"
+              ],
+              "declaration_sha256": "a6f8f99b773058d8934b64fe7b99e554f11570b770d0efd32b06409c9023614a",
+              "function": "~lib/internal/memory/memcpy"
+            },
+            "memmove": {
+              "declaration_lines": [
+                "(func $~lib/internal/memory/memmove (type $t4) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+                "(local $l3 i32)"
+              ],
+              "declaration_sha256": "ae2ab0fb76a3b19e3c74734f734149c975c22fafac0db3936f78e14dca098701",
+              "function": "~lib/internal/memory/memmove"
+            },
+            "memory_allocate": {
+              "declaration_lines": [
+                "(func $~lib/memory/memory.allocate (type $t1) (param $p0 i32) (result i32)"
+              ],
+              "declaration_sha256": "18c193b347398433d849c21b316b040fb3a9eb03c6c01c3492944547cb9a7fcb",
+              "function": "~lib/memory/memory.allocate"
+            },
+            "memory_reset": {
+              "declaration_lines": [
+                "(func $~lib/memory/memory.reset (type $t0)"
+              ],
+              "declaration_sha256": "8fef401a4ec64d6446f9158b026d20a1f53c43be77aea881bc4a01e249390360",
+              "function": "~lib/memory/memory.reset"
+            },
+            "memset": {
+              "declaration_lines": [
+                "(func $~lib/internal/memory/memset (type $t8) (param $p0 i32) (param $p1 i32)",
+                "(local $l2 i32)"
+              ],
+              "declaration_sha256": "5729d0c0e5e9006ca9a3de1409e0b1b31460aaf43b20f2839b3cf29fbe15f0e1",
+              "function": "~lib/internal/memory/memset"
+            },
+            "native_math_pow": {
+              "declaration_lines": [
+                "(func $~lib/math/NativeMath.pow (type $t15) (result f64)",
+                "(local $l0 i32) (local $l1 i32) (local $l2 i32) (local $l3 i32) (local $l4 i64) (local $l5 f64) (local $l6 f64) (local $l7 f64) (local $l8 f64)"
+              ],
+              "declaration_sha256": "5c57170ae0e82cdc9a5a220f0240f51f5d346ffc6bd1d5a1560e75338a89723f",
+              "function": "~lib/math/NativeMath.pow"
+            },
+            "native_start": {
+              "declaration_lines": [
+                "(func $start (type $t0)"
+              ],
+              "declaration_sha256": "26abba9aa2a14487c17ed9cca70e6eccaa75346cb17f5b7419fbc6d23f5ea33d",
+              "function": "start"
+            },
+            "reallocate_unsafe": {
+              "declaration_lines": [
+                "(func $~lib/internal/arraybuffer/reallocateUnsafe (type $t2) (param $p0 i32) (param $p1 i32) (result i32)",
+                "(local $l2 i32) (local $l3 i32)"
+              ],
+              "declaration_sha256": "e288291926508c91e1cd730d4a02201a359204f6e21a288f40c6b477521e9ce7",
+              "function": "~lib/internal/arraybuffer/reallocateUnsafe"
+            },
+            "string_allocate": {
+              "declaration_lines": [
+                "(func $~lib/internal/string/allocateUnsafe (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32)"
+              ],
+              "declaration_sha256": "f1bfbf9c36ea756f07ba30ebf518cc79b1a82e680d20f0b4a7d034a1bcf08a05",
+              "function": "~lib/internal/string/allocateUnsafe"
+            },
+            "string_eq": {
+              "declaration_lines": [
+                "(func $~lib/string/String.__eq (type $t2) (param $p0 i32) (param $p1 i32) (result i32)",
+                "(local $l2 i32)"
+              ],
+              "declaration_sha256": "58e301130c94f3f59fae506210b2646b2c8d75b9989be41fe90810831f66598c",
+              "function": "~lib/string/String.__eq"
+            },
+            "typed_map_get": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#get (type $t2) (param $p0 i32) (param $p1 i32) (result i32)",
+                "(local $l2 i32)"
+              ],
+              "declaration_sha256": "75f2638e33832be3bfa034206ee41ffb316dd5c0b01e4ebf3fe66c78e13d642c",
+              "function": "~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#get"
+            },
+            "typed_map_get_entry": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#getEntry (type $t2) (param $p0 i32) (param $p1 i32) (result i32)",
+                "(local $l2 i32)"
+              ],
+              "declaration_sha256": "9f62da8f33f70af129cb1ffa84e1e547fcc2f48b5889942edce5beb09d6ad56b",
+              "function": "~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#getEntry"
+            },
+            "typed_map_set": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#set (type $t4) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+                "(local $l3 i32)"
+              ],
+              "declaration_sha256": "a3b599f070b9c4479067ada4820bf1ba507b11c74ac83683c686e36f6a306a0e",
+              "function": "~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#set"
+            },
+            "value_constructor": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/Value#constructor (type $t10) (result i32)",
+                "(local $l0 i32)"
+              ],
+              "declaration_sha256": "77391fce51e86813c08a080dcd860b64932e4ce1eb0d6f9521d1e47d2a530ed7",
+              "function": "~lib/@graphprotocol/graph-ts/index/Value#constructor"
+            },
+            "value_from_big_decimal": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/Value.fromBigDecimal (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32)"
+              ],
+              "declaration_sha256": "194040963078a0a3637c34294f08d4cae02932aded4d444fdfb81f08d1a76579",
+              "function": "~lib/@graphprotocol/graph-ts/index/Value.fromBigDecimal"
+            }
+          },
+          "parameter_local_and_result_declarations_exactly_bound": true
         },
         "imported_host_behavior_rederived": false,
         "indexed_access_and_value": {
@@ -674,6 +880,212 @@
             "capacity_growth_old_index_new_length_and_same_entry_structurally_proven": true,
             "function": "~lib/array/Array<~lib/@graphprotocol/graph-ts/index/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#push"
           }
+        },
+        "exact_function_declarations": {
+          "function_count": 26,
+          "functions": {
+            "allocate_unsafe": {
+              "declaration_lines": [
+                "(func $~lib/internal/arraybuffer/allocateUnsafe (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32)"
+              ],
+              "declaration_sha256": "06bb173f8940db68f1e0825a3f4240662e419fb33652f308bc87710598a25632",
+              "function": "~lib/internal/arraybuffer/allocateUnsafe"
+            },
+            "arena_allocate": {
+              "declaration_lines": [
+                "(func $~lib/allocator/arena/__memory_allocate (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32) (local $l2 i32) (local $l3 i32) (local $l4 i32)"
+              ],
+              "declaration_sha256": "48f9d7e4deeb0a0c273ce02f381040945970643dcfed2bc1e6f1e252b52aaaca",
+              "function": "~lib/allocator/arena/__memory_allocate"
+            },
+            "array_constructor": {
+              "declaration_lines": [
+                "(func $~lib/array/Array<~lib/@graphprotocol/graph-ts/index/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#constructor (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32) (local $l2 i32) (local $l3 i32)"
+              ],
+              "declaration_sha256": "161d3e3e7a57bac882887c57bd15aa06b0f5756ca900d4a85c7e663c2ac8aa9e",
+              "function": "~lib/array/Array<~lib/@graphprotocol/graph-ts/index/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#constructor"
+            },
+            "array_push": {
+              "declaration_lines": [
+                "(func $~lib/array/Array<~lib/@graphprotocol/graph-ts/index/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#push (type $t8) (param $p0 i32) (param $p1 i32)",
+                "(local $l2 i32) (local $l3 i32) (local $l4 i32)"
+              ],
+              "declaration_sha256": "89f235267ce817e9096c3fc70d8d0977eedb5bb060f1a6dcd927ac621ac52c2b",
+              "function": "~lib/array/Array<~lib/@graphprotocol/graph-ts/index/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#push"
+            },
+            "byte_array_from_i32": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/ByteArray.fromI32 (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32)"
+              ],
+              "declaration_sha256": "d54c9315773d75fd2373da723eda4513aef2de7ac8f16e42993807d5caae8ed5",
+              "function": "~lib/@graphprotocol/graph-ts/index/ByteArray.fromI32"
+            },
+            "compare_unsafe": {
+              "declaration_lines": [
+                "(func $~lib/internal/string/compareUnsafe (type $t5) (param $p0 i32) (param $p1 i32) (param $p2 i32) (result i32)",
+                "(local $l3 i32)"
+              ],
+              "declaration_sha256": "64edfc3548e5bd110e39fa7b25adeb5972c28398f8943fcf8623c781dcecf8af",
+              "function": "~lib/internal/string/compareUnsafe"
+            },
+            "compute_size": {
+              "declaration_lines": [
+                "(func $~lib/internal/arraybuffer/computeSize (type $t1) (param $p0 i32) (result i32)"
+              ],
+              "declaration_sha256": "d10ee6da064df4ca75a4d0d6229cf97d218d576ada639711c6bab76a8af41b39",
+              "function": "~lib/internal/arraybuffer/computeSize"
+            },
+            "constants_start": {
+              "declaration_lines": [
+                "(func $start:src/utils/constants (type $t0)"
+              ],
+              "declaration_sha256": "9759811c1ca652f0c1238c4f1fdd9f135c6d6ea3d50e1aca08d67a6859523697",
+              "function": "start:src/utils/constants"
+            },
+            "entry_constructor": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.SmartContract#constructor (type $t5) (param $p0 i32) (param $p1 i32) (param $p2 i32) (result i32)"
+              ],
+              "declaration_sha256": "935b0e36c760cf5b13e64e4f1b671d79d28e24e68098a6b4a3a502b83812c93b",
+              "function": "~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.SmartContract#constructor"
+            },
+            "event_param_get": {
+              "declaration_lines": [
+                "(func $~lib/array/Array<~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.EventParam>#__get (type $t2) (param $p0 i32) (param $p1 i32) (result i32)"
+              ],
+              "declaration_sha256": "5994e927ca95a0919e11c8d826a7ea04793324b613e30933949c67a351767a11",
+              "function": "~lib/array/Array<~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.EventParam>#__get"
+            },
+            "factory_constructor": {
+              "declaration_lines": [
+                "(func $src/types/templates/Pool/Factory/Factory#constructor (type $t2) (param $p0 i32) (param $p1 i32) (result i32)"
+              ],
+              "declaration_sha256": "88464ac9b852ea4ce474fac5770d5cc889605ba6e6047358007b312534b710dd",
+              "function": "src/types/templates/Pool/Factory/Factory#constructor"
+            },
+            "memcpy": {
+              "declaration_lines": [
+                "(func $~lib/internal/memory/memcpy (type $t4) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+                "(local $l3 i32) (local $l4 i32) (local $l5 i32)"
+              ],
+              "declaration_sha256": "a6f8f99b773058d8934b64fe7b99e554f11570b770d0efd32b06409c9023614a",
+              "function": "~lib/internal/memory/memcpy"
+            },
+            "memmove": {
+              "declaration_lines": [
+                "(func $~lib/internal/memory/memmove (type $t4) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+                "(local $l3 i32)"
+              ],
+              "declaration_sha256": "ae2ab0fb76a3b19e3c74734f734149c975c22fafac0db3936f78e14dca098701",
+              "function": "~lib/internal/memory/memmove"
+            },
+            "memory_allocate": {
+              "declaration_lines": [
+                "(func $~lib/memory/memory.allocate (type $t1) (param $p0 i32) (result i32)"
+              ],
+              "declaration_sha256": "18c193b347398433d849c21b316b040fb3a9eb03c6c01c3492944547cb9a7fcb",
+              "function": "~lib/memory/memory.allocate"
+            },
+            "memory_reset": {
+              "declaration_lines": [
+                "(func $~lib/memory/memory.reset (type $t0)"
+              ],
+              "declaration_sha256": "8fef401a4ec64d6446f9158b026d20a1f53c43be77aea881bc4a01e249390360",
+              "function": "~lib/memory/memory.reset"
+            },
+            "memset": {
+              "declaration_lines": [
+                "(func $~lib/internal/memory/memset (type $t8) (param $p0 i32) (param $p1 i32)",
+                "(local $l2 i32)"
+              ],
+              "declaration_sha256": "5729d0c0e5e9006ca9a3de1409e0b1b31460aaf43b20f2839b3cf29fbe15f0e1",
+              "function": "~lib/internal/memory/memset"
+            },
+            "native_math_pow": {
+              "declaration_lines": [
+                "(func $~lib/math/NativeMath.pow (type $t15) (result f64)",
+                "(local $l0 i32) (local $l1 i32) (local $l2 i32) (local $l3 i32) (local $l4 i64) (local $l5 f64) (local $l6 f64) (local $l7 f64) (local $l8 f64)"
+              ],
+              "declaration_sha256": "5c57170ae0e82cdc9a5a220f0240f51f5d346ffc6bd1d5a1560e75338a89723f",
+              "function": "~lib/math/NativeMath.pow"
+            },
+            "native_start": {
+              "declaration_lines": [
+                "(func $start (type $t0)"
+              ],
+              "declaration_sha256": "26abba9aa2a14487c17ed9cca70e6eccaa75346cb17f5b7419fbc6d23f5ea33d",
+              "function": "start"
+            },
+            "reallocate_unsafe": {
+              "declaration_lines": [
+                "(func $~lib/internal/arraybuffer/reallocateUnsafe (type $t2) (param $p0 i32) (param $p1 i32) (result i32)",
+                "(local $l2 i32) (local $l3 i32)"
+              ],
+              "declaration_sha256": "e288291926508c91e1cd730d4a02201a359204f6e21a288f40c6b477521e9ce7",
+              "function": "~lib/internal/arraybuffer/reallocateUnsafe"
+            },
+            "string_allocate": {
+              "declaration_lines": [
+                "(func $~lib/internal/string/allocateUnsafe (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32)"
+              ],
+              "declaration_sha256": "f1bfbf9c36ea756f07ba30ebf518cc79b1a82e680d20f0b4a7d034a1bcf08a05",
+              "function": "~lib/internal/string/allocateUnsafe"
+            },
+            "string_eq": {
+              "declaration_lines": [
+                "(func $~lib/string/String.__eq (type $t2) (param $p0 i32) (param $p1 i32) (result i32)",
+                "(local $l2 i32)"
+              ],
+              "declaration_sha256": "58e301130c94f3f59fae506210b2646b2c8d75b9989be41fe90810831f66598c",
+              "function": "~lib/string/String.__eq"
+            },
+            "typed_map_get": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#get (type $t2) (param $p0 i32) (param $p1 i32) (result i32)",
+                "(local $l2 i32)"
+              ],
+              "declaration_sha256": "75f2638e33832be3bfa034206ee41ffb316dd5c0b01e4ebf3fe66c78e13d642c",
+              "function": "~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#get"
+            },
+            "typed_map_get_entry": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#getEntry (type $t2) (param $p0 i32) (param $p1 i32) (result i32)",
+                "(local $l2 i32)"
+              ],
+              "declaration_sha256": "9f62da8f33f70af129cb1ffa84e1e547fcc2f48b5889942edce5beb09d6ad56b",
+              "function": "~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#getEntry"
+            },
+            "typed_map_set": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#set (type $t4) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+                "(local $l3 i32)"
+              ],
+              "declaration_sha256": "a3b599f070b9c4479067ada4820bf1ba507b11c74ac83683c686e36f6a306a0e",
+              "function": "~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#set"
+            },
+            "value_constructor": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/Value#constructor (type $t10) (result i32)",
+                "(local $l0 i32)"
+              ],
+              "declaration_sha256": "77391fce51e86813c08a080dcd860b64932e4ce1eb0d6f9521d1e47d2a530ed7",
+              "function": "~lib/@graphprotocol/graph-ts/index/Value#constructor"
+            },
+            "value_from_big_decimal": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/Value.fromBigDecimal (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32)"
+              ],
+              "declaration_sha256": "194040963078a0a3637c34294f08d4cae02932aded4d444fdfb81f08d1a76579",
+              "function": "~lib/@graphprotocol/graph-ts/index/Value.fromBigDecimal"
+            }
+          },
+          "parameter_local_and_result_declarations_exactly_bound": true
         },
         "imported_host_behavior_rederived": false,
         "indexed_access_and_value": {
@@ -1058,6 +1470,212 @@
             "function": "~lib/array/Array<~lib/@graphprotocol/graph-ts/index/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#push"
           }
         },
+        "exact_function_declarations": {
+          "function_count": 26,
+          "functions": {
+            "allocate_unsafe": {
+              "declaration_lines": [
+                "(func $~lib/internal/arraybuffer/allocateUnsafe (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32)"
+              ],
+              "declaration_sha256": "06bb173f8940db68f1e0825a3f4240662e419fb33652f308bc87710598a25632",
+              "function": "~lib/internal/arraybuffer/allocateUnsafe"
+            },
+            "arena_allocate": {
+              "declaration_lines": [
+                "(func $~lib/allocator/arena/__memory_allocate (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32) (local $l2 i32) (local $l3 i32) (local $l4 i32)"
+              ],
+              "declaration_sha256": "48f9d7e4deeb0a0c273ce02f381040945970643dcfed2bc1e6f1e252b52aaaca",
+              "function": "~lib/allocator/arena/__memory_allocate"
+            },
+            "array_constructor": {
+              "declaration_lines": [
+                "(func $~lib/array/Array<~lib/@graphprotocol/graph-ts/index/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#constructor (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32) (local $l2 i32) (local $l3 i32)"
+              ],
+              "declaration_sha256": "161d3e3e7a57bac882887c57bd15aa06b0f5756ca900d4a85c7e663c2ac8aa9e",
+              "function": "~lib/array/Array<~lib/@graphprotocol/graph-ts/index/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#constructor"
+            },
+            "array_push": {
+              "declaration_lines": [
+                "(func $~lib/array/Array<~lib/@graphprotocol/graph-ts/index/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#push (type $t8) (param $p0 i32) (param $p1 i32)",
+                "(local $l2 i32) (local $l3 i32) (local $l4 i32)"
+              ],
+              "declaration_sha256": "89f235267ce817e9096c3fc70d8d0977eedb5bb060f1a6dcd927ac621ac52c2b",
+              "function": "~lib/array/Array<~lib/@graphprotocol/graph-ts/index/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#push"
+            },
+            "byte_array_from_i32": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/ByteArray.fromI32 (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32)"
+              ],
+              "declaration_sha256": "d54c9315773d75fd2373da723eda4513aef2de7ac8f16e42993807d5caae8ed5",
+              "function": "~lib/@graphprotocol/graph-ts/index/ByteArray.fromI32"
+            },
+            "compare_unsafe": {
+              "declaration_lines": [
+                "(func $~lib/internal/string/compareUnsafe (type $t5) (param $p0 i32) (param $p1 i32) (param $p2 i32) (result i32)",
+                "(local $l3 i32)"
+              ],
+              "declaration_sha256": "64edfc3548e5bd110e39fa7b25adeb5972c28398f8943fcf8623c781dcecf8af",
+              "function": "~lib/internal/string/compareUnsafe"
+            },
+            "compute_size": {
+              "declaration_lines": [
+                "(func $~lib/internal/arraybuffer/computeSize (type $t1) (param $p0 i32) (result i32)"
+              ],
+              "declaration_sha256": "d10ee6da064df4ca75a4d0d6229cf97d218d576ada639711c6bab76a8af41b39",
+              "function": "~lib/internal/arraybuffer/computeSize"
+            },
+            "constants_start": {
+              "declaration_lines": [
+                "(func $start:src/utils/constants (type $t0)"
+              ],
+              "declaration_sha256": "9759811c1ca652f0c1238c4f1fdd9f135c6d6ea3d50e1aca08d67a6859523697",
+              "function": "start:src/utils/constants"
+            },
+            "entry_constructor": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.SmartContract#constructor (type $t5) (param $p0 i32) (param $p1 i32) (param $p2 i32) (result i32)"
+              ],
+              "declaration_sha256": "935b0e36c760cf5b13e64e4f1b671d79d28e24e68098a6b4a3a502b83812c93b",
+              "function": "~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.SmartContract#constructor"
+            },
+            "event_param_get": {
+              "declaration_lines": [
+                "(func $~lib/array/Array<~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.EventParam>#__get (type $t2) (param $p0 i32) (param $p1 i32) (result i32)"
+              ],
+              "declaration_sha256": "5994e927ca95a0919e11c8d826a7ea04793324b613e30933949c67a351767a11",
+              "function": "~lib/array/Array<~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.EventParam>#__get"
+            },
+            "factory_constructor": {
+              "declaration_lines": [
+                "(func $src/types/templates/Pool/Factory/Factory#constructor (type $t2) (param $p0 i32) (param $p1 i32) (result i32)"
+              ],
+              "declaration_sha256": "88464ac9b852ea4ce474fac5770d5cc889605ba6e6047358007b312534b710dd",
+              "function": "src/types/templates/Pool/Factory/Factory#constructor"
+            },
+            "memcpy": {
+              "declaration_lines": [
+                "(func $~lib/internal/memory/memcpy (type $t4) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+                "(local $l3 i32) (local $l4 i32) (local $l5 i32)"
+              ],
+              "declaration_sha256": "a6f8f99b773058d8934b64fe7b99e554f11570b770d0efd32b06409c9023614a",
+              "function": "~lib/internal/memory/memcpy"
+            },
+            "memmove": {
+              "declaration_lines": [
+                "(func $~lib/internal/memory/memmove (type $t4) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+                "(local $l3 i32)"
+              ],
+              "declaration_sha256": "ae2ab0fb76a3b19e3c74734f734149c975c22fafac0db3936f78e14dca098701",
+              "function": "~lib/internal/memory/memmove"
+            },
+            "memory_allocate": {
+              "declaration_lines": [
+                "(func $~lib/memory/memory.allocate (type $t1) (param $p0 i32) (result i32)"
+              ],
+              "declaration_sha256": "18c193b347398433d849c21b316b040fb3a9eb03c6c01c3492944547cb9a7fcb",
+              "function": "~lib/memory/memory.allocate"
+            },
+            "memory_reset": {
+              "declaration_lines": [
+                "(func $~lib/memory/memory.reset (type $t0)"
+              ],
+              "declaration_sha256": "8fef401a4ec64d6446f9158b026d20a1f53c43be77aea881bc4a01e249390360",
+              "function": "~lib/memory/memory.reset"
+            },
+            "memset": {
+              "declaration_lines": [
+                "(func $~lib/internal/memory/memset (type $t8) (param $p0 i32) (param $p1 i32)",
+                "(local $l2 i32)"
+              ],
+              "declaration_sha256": "5729d0c0e5e9006ca9a3de1409e0b1b31460aaf43b20f2839b3cf29fbe15f0e1",
+              "function": "~lib/internal/memory/memset"
+            },
+            "native_math_pow": {
+              "declaration_lines": [
+                "(func $~lib/math/NativeMath.pow (type $t15) (result f64)",
+                "(local $l0 i32) (local $l1 i32) (local $l2 i32) (local $l3 i32) (local $l4 i64) (local $l5 f64) (local $l6 f64) (local $l7 f64) (local $l8 f64)"
+              ],
+              "declaration_sha256": "5c57170ae0e82cdc9a5a220f0240f51f5d346ffc6bd1d5a1560e75338a89723f",
+              "function": "~lib/math/NativeMath.pow"
+            },
+            "native_start": {
+              "declaration_lines": [
+                "(func $start (type $t0)"
+              ],
+              "declaration_sha256": "26abba9aa2a14487c17ed9cca70e6eccaa75346cb17f5b7419fbc6d23f5ea33d",
+              "function": "start"
+            },
+            "reallocate_unsafe": {
+              "declaration_lines": [
+                "(func $~lib/internal/arraybuffer/reallocateUnsafe (type $t2) (param $p0 i32) (param $p1 i32) (result i32)",
+                "(local $l2 i32) (local $l3 i32)"
+              ],
+              "declaration_sha256": "e288291926508c91e1cd730d4a02201a359204f6e21a288f40c6b477521e9ce7",
+              "function": "~lib/internal/arraybuffer/reallocateUnsafe"
+            },
+            "string_allocate": {
+              "declaration_lines": [
+                "(func $~lib/internal/string/allocateUnsafe (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32)"
+              ],
+              "declaration_sha256": "f1bfbf9c36ea756f07ba30ebf518cc79b1a82e680d20f0b4a7d034a1bcf08a05",
+              "function": "~lib/internal/string/allocateUnsafe"
+            },
+            "string_eq": {
+              "declaration_lines": [
+                "(func $~lib/string/String.__eq (type $t2) (param $p0 i32) (param $p1 i32) (result i32)",
+                "(local $l2 i32)"
+              ],
+              "declaration_sha256": "58e301130c94f3f59fae506210b2646b2c8d75b9989be41fe90810831f66598c",
+              "function": "~lib/string/String.__eq"
+            },
+            "typed_map_get": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#get (type $t2) (param $p0 i32) (param $p1 i32) (result i32)",
+                "(local $l2 i32)"
+              ],
+              "declaration_sha256": "75f2638e33832be3bfa034206ee41ffb316dd5c0b01e4ebf3fe66c78e13d642c",
+              "function": "~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#get"
+            },
+            "typed_map_get_entry": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#getEntry (type $t2) (param $p0 i32) (param $p1 i32) (result i32)",
+                "(local $l2 i32)"
+              ],
+              "declaration_sha256": "9f62da8f33f70af129cb1ffa84e1e547fcc2f48b5889942edce5beb09d6ad56b",
+              "function": "~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#getEntry"
+            },
+            "typed_map_set": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#set (type $t4) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+                "(local $l3 i32)"
+              ],
+              "declaration_sha256": "a3b599f070b9c4479067ada4820bf1ba507b11c74ac83683c686e36f6a306a0e",
+              "function": "~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#set"
+            },
+            "value_constructor": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/Value#constructor (type $t10) (result i32)",
+                "(local $l0 i32)"
+              ],
+              "declaration_sha256": "77391fce51e86813c08a080dcd860b64932e4ce1eb0d6f9521d1e47d2a530ed7",
+              "function": "~lib/@graphprotocol/graph-ts/index/Value#constructor"
+            },
+            "value_from_big_decimal": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/Value.fromBigDecimal (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32)"
+              ],
+              "declaration_sha256": "194040963078a0a3637c34294f08d4cae02932aded4d444fdfb81f08d1a76579",
+              "function": "~lib/@graphprotocol/graph-ts/index/Value.fromBigDecimal"
+            }
+          },
+          "parameter_local_and_result_declarations_exactly_bound": true
+        },
         "imported_host_behavior_rederived": false,
         "indexed_access_and_value": {
           "event_param_array_get": {
@@ -1440,6 +2058,212 @@
             "capacity_growth_old_index_new_length_and_same_entry_structurally_proven": true,
             "function": "~lib/array/Array<~lib/@graphprotocol/graph-ts/index/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#push"
           }
+        },
+        "exact_function_declarations": {
+          "function_count": 26,
+          "functions": {
+            "allocate_unsafe": {
+              "declaration_lines": [
+                "(func $~lib/internal/arraybuffer/allocateUnsafe (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32)"
+              ],
+              "declaration_sha256": "06bb173f8940db68f1e0825a3f4240662e419fb33652f308bc87710598a25632",
+              "function": "~lib/internal/arraybuffer/allocateUnsafe"
+            },
+            "arena_allocate": {
+              "declaration_lines": [
+                "(func $~lib/allocator/arena/__memory_allocate (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32) (local $l2 i32) (local $l3 i32) (local $l4 i32)"
+              ],
+              "declaration_sha256": "48f9d7e4deeb0a0c273ce02f381040945970643dcfed2bc1e6f1e252b52aaaca",
+              "function": "~lib/allocator/arena/__memory_allocate"
+            },
+            "array_constructor": {
+              "declaration_lines": [
+                "(func $~lib/array/Array<~lib/@graphprotocol/graph-ts/index/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#constructor (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32) (local $l2 i32) (local $l3 i32)"
+              ],
+              "declaration_sha256": "161d3e3e7a57bac882887c57bd15aa06b0f5756ca900d4a85c7e663c2ac8aa9e",
+              "function": "~lib/array/Array<~lib/@graphprotocol/graph-ts/index/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#constructor"
+            },
+            "array_push": {
+              "declaration_lines": [
+                "(func $~lib/array/Array<~lib/@graphprotocol/graph-ts/index/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#push (type $t8) (param $p0 i32) (param $p1 i32)",
+                "(local $l2 i32) (local $l3 i32) (local $l4 i32)"
+              ],
+              "declaration_sha256": "89f235267ce817e9096c3fc70d8d0977eedb5bb060f1a6dcd927ac621ac52c2b",
+              "function": "~lib/array/Array<~lib/@graphprotocol/graph-ts/index/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#push"
+            },
+            "byte_array_from_i32": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/ByteArray.fromI32 (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32)"
+              ],
+              "declaration_sha256": "d54c9315773d75fd2373da723eda4513aef2de7ac8f16e42993807d5caae8ed5",
+              "function": "~lib/@graphprotocol/graph-ts/index/ByteArray.fromI32"
+            },
+            "compare_unsafe": {
+              "declaration_lines": [
+                "(func $~lib/internal/string/compareUnsafe (type $t5) (param $p0 i32) (param $p1 i32) (param $p2 i32) (result i32)",
+                "(local $l3 i32)"
+              ],
+              "declaration_sha256": "64edfc3548e5bd110e39fa7b25adeb5972c28398f8943fcf8623c781dcecf8af",
+              "function": "~lib/internal/string/compareUnsafe"
+            },
+            "compute_size": {
+              "declaration_lines": [
+                "(func $~lib/internal/arraybuffer/computeSize (type $t1) (param $p0 i32) (result i32)"
+              ],
+              "declaration_sha256": "d10ee6da064df4ca75a4d0d6229cf97d218d576ada639711c6bab76a8af41b39",
+              "function": "~lib/internal/arraybuffer/computeSize"
+            },
+            "constants_start": {
+              "declaration_lines": [
+                "(func $start:src/utils/constants (type $t0)"
+              ],
+              "declaration_sha256": "9759811c1ca652f0c1238c4f1fdd9f135c6d6ea3d50e1aca08d67a6859523697",
+              "function": "start:src/utils/constants"
+            },
+            "entry_constructor": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.SmartContract#constructor (type $t5) (param $p0 i32) (param $p1 i32) (param $p2 i32) (result i32)"
+              ],
+              "declaration_sha256": "935b0e36c760cf5b13e64e4f1b671d79d28e24e68098a6b4a3a502b83812c93b",
+              "function": "~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.SmartContract#constructor"
+            },
+            "event_param_get": {
+              "declaration_lines": [
+                "(func $~lib/array/Array<~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.EventParam>#__get (type $t2) (param $p0 i32) (param $p1 i32) (result i32)"
+              ],
+              "declaration_sha256": "5994e927ca95a0919e11c8d826a7ea04793324b613e30933949c67a351767a11",
+              "function": "~lib/array/Array<~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.EventParam>#__get"
+            },
+            "factory_constructor": {
+              "declaration_lines": [
+                "(func $src/types/templates/Pool/Factory/Factory#constructor (type $t2) (param $p0 i32) (param $p1 i32) (result i32)"
+              ],
+              "declaration_sha256": "88464ac9b852ea4ce474fac5770d5cc889605ba6e6047358007b312534b710dd",
+              "function": "src/types/templates/Pool/Factory/Factory#constructor"
+            },
+            "memcpy": {
+              "declaration_lines": [
+                "(func $~lib/internal/memory/memcpy (type $t4) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+                "(local $l3 i32) (local $l4 i32) (local $l5 i32)"
+              ],
+              "declaration_sha256": "a6f8f99b773058d8934b64fe7b99e554f11570b770d0efd32b06409c9023614a",
+              "function": "~lib/internal/memory/memcpy"
+            },
+            "memmove": {
+              "declaration_lines": [
+                "(func $~lib/internal/memory/memmove (type $t4) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+                "(local $l3 i32)"
+              ],
+              "declaration_sha256": "ae2ab0fb76a3b19e3c74734f734149c975c22fafac0db3936f78e14dca098701",
+              "function": "~lib/internal/memory/memmove"
+            },
+            "memory_allocate": {
+              "declaration_lines": [
+                "(func $~lib/memory/memory.allocate (type $t1) (param $p0 i32) (result i32)"
+              ],
+              "declaration_sha256": "18c193b347398433d849c21b316b040fb3a9eb03c6c01c3492944547cb9a7fcb",
+              "function": "~lib/memory/memory.allocate"
+            },
+            "memory_reset": {
+              "declaration_lines": [
+                "(func $~lib/memory/memory.reset (type $t0)"
+              ],
+              "declaration_sha256": "8fef401a4ec64d6446f9158b026d20a1f53c43be77aea881bc4a01e249390360",
+              "function": "~lib/memory/memory.reset"
+            },
+            "memset": {
+              "declaration_lines": [
+                "(func $~lib/internal/memory/memset (type $t8) (param $p0 i32) (param $p1 i32)",
+                "(local $l2 i32)"
+              ],
+              "declaration_sha256": "5729d0c0e5e9006ca9a3de1409e0b1b31460aaf43b20f2839b3cf29fbe15f0e1",
+              "function": "~lib/internal/memory/memset"
+            },
+            "native_math_pow": {
+              "declaration_lines": [
+                "(func $~lib/math/NativeMath.pow (type $t15) (result f64)",
+                "(local $l0 i32) (local $l1 i32) (local $l2 i32) (local $l3 i32) (local $l4 i64) (local $l5 f64) (local $l6 f64) (local $l7 f64) (local $l8 f64)"
+              ],
+              "declaration_sha256": "5c57170ae0e82cdc9a5a220f0240f51f5d346ffc6bd1d5a1560e75338a89723f",
+              "function": "~lib/math/NativeMath.pow"
+            },
+            "native_start": {
+              "declaration_lines": [
+                "(func $start (type $t0)"
+              ],
+              "declaration_sha256": "26abba9aa2a14487c17ed9cca70e6eccaa75346cb17f5b7419fbc6d23f5ea33d",
+              "function": "start"
+            },
+            "reallocate_unsafe": {
+              "declaration_lines": [
+                "(func $~lib/internal/arraybuffer/reallocateUnsafe (type $t2) (param $p0 i32) (param $p1 i32) (result i32)",
+                "(local $l2 i32) (local $l3 i32)"
+              ],
+              "declaration_sha256": "e288291926508c91e1cd730d4a02201a359204f6e21a288f40c6b477521e9ce7",
+              "function": "~lib/internal/arraybuffer/reallocateUnsafe"
+            },
+            "string_allocate": {
+              "declaration_lines": [
+                "(func $~lib/internal/string/allocateUnsafe (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32)"
+              ],
+              "declaration_sha256": "f1bfbf9c36ea756f07ba30ebf518cc79b1a82e680d20f0b4a7d034a1bcf08a05",
+              "function": "~lib/internal/string/allocateUnsafe"
+            },
+            "string_eq": {
+              "declaration_lines": [
+                "(func $~lib/string/String.__eq (type $t2) (param $p0 i32) (param $p1 i32) (result i32)",
+                "(local $l2 i32)"
+              ],
+              "declaration_sha256": "58e301130c94f3f59fae506210b2646b2c8d75b9989be41fe90810831f66598c",
+              "function": "~lib/string/String.__eq"
+            },
+            "typed_map_get": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#get (type $t2) (param $p0 i32) (param $p1 i32) (result i32)",
+                "(local $l2 i32)"
+              ],
+              "declaration_sha256": "75f2638e33832be3bfa034206ee41ffb316dd5c0b01e4ebf3fe66c78e13d642c",
+              "function": "~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#get"
+            },
+            "typed_map_get_entry": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#getEntry (type $t2) (param $p0 i32) (param $p1 i32) (result i32)",
+                "(local $l2 i32)"
+              ],
+              "declaration_sha256": "9f62da8f33f70af129cb1ffa84e1e547fcc2f48b5889942edce5beb09d6ad56b",
+              "function": "~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#getEntry"
+            },
+            "typed_map_set": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#set (type $t4) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+                "(local $l3 i32)"
+              ],
+              "declaration_sha256": "a3b599f070b9c4479067ada4820bf1ba507b11c74ac83683c686e36f6a306a0e",
+              "function": "~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#set"
+            },
+            "value_constructor": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/Value#constructor (type $t10) (result i32)",
+                "(local $l0 i32)"
+              ],
+              "declaration_sha256": "77391fce51e86813c08a080dcd860b64932e4ce1eb0d6f9521d1e47d2a530ed7",
+              "function": "~lib/@graphprotocol/graph-ts/index/Value#constructor"
+            },
+            "value_from_big_decimal": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/Value.fromBigDecimal (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32)"
+              ],
+              "declaration_sha256": "194040963078a0a3637c34294f08d4cae02932aded4d444fdfb81f08d1a76579",
+              "function": "~lib/@graphprotocol/graph-ts/index/Value.fromBigDecimal"
+            }
+          },
+          "parameter_local_and_result_declarations_exactly_bound": true
         },
         "imported_host_behavior_rederived": false,
         "indexed_access_and_value": {
@@ -1824,6 +2648,212 @@
             "function": "~lib/array/Array<~lib/@graphprotocol/graph-ts/index/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#push"
           }
         },
+        "exact_function_declarations": {
+          "function_count": 26,
+          "functions": {
+            "allocate_unsafe": {
+              "declaration_lines": [
+                "(func $~lib/internal/arraybuffer/allocateUnsafe (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32)"
+              ],
+              "declaration_sha256": "06bb173f8940db68f1e0825a3f4240662e419fb33652f308bc87710598a25632",
+              "function": "~lib/internal/arraybuffer/allocateUnsafe"
+            },
+            "arena_allocate": {
+              "declaration_lines": [
+                "(func $~lib/allocator/arena/__memory_allocate (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32) (local $l2 i32) (local $l3 i32) (local $l4 i32)"
+              ],
+              "declaration_sha256": "48f9d7e4deeb0a0c273ce02f381040945970643dcfed2bc1e6f1e252b52aaaca",
+              "function": "~lib/allocator/arena/__memory_allocate"
+            },
+            "array_constructor": {
+              "declaration_lines": [
+                "(func $~lib/array/Array<~lib/@graphprotocol/graph-ts/index/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#constructor (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32) (local $l2 i32) (local $l3 i32)"
+              ],
+              "declaration_sha256": "161d3e3e7a57bac882887c57bd15aa06b0f5756ca900d4a85c7e663c2ac8aa9e",
+              "function": "~lib/array/Array<~lib/@graphprotocol/graph-ts/index/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#constructor"
+            },
+            "array_push": {
+              "declaration_lines": [
+                "(func $~lib/array/Array<~lib/@graphprotocol/graph-ts/index/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#push (type $t8) (param $p0 i32) (param $p1 i32)",
+                "(local $l2 i32) (local $l3 i32) (local $l4 i32)"
+              ],
+              "declaration_sha256": "89f235267ce817e9096c3fc70d8d0977eedb5bb060f1a6dcd927ac621ac52c2b",
+              "function": "~lib/array/Array<~lib/@graphprotocol/graph-ts/index/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#push"
+            },
+            "byte_array_from_i32": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/ByteArray.fromI32 (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32)"
+              ],
+              "declaration_sha256": "d54c9315773d75fd2373da723eda4513aef2de7ac8f16e42993807d5caae8ed5",
+              "function": "~lib/@graphprotocol/graph-ts/index/ByteArray.fromI32"
+            },
+            "compare_unsafe": {
+              "declaration_lines": [
+                "(func $~lib/internal/string/compareUnsafe (type $t5) (param $p0 i32) (param $p1 i32) (param $p2 i32) (result i32)",
+                "(local $l3 i32)"
+              ],
+              "declaration_sha256": "64edfc3548e5bd110e39fa7b25adeb5972c28398f8943fcf8623c781dcecf8af",
+              "function": "~lib/internal/string/compareUnsafe"
+            },
+            "compute_size": {
+              "declaration_lines": [
+                "(func $~lib/internal/arraybuffer/computeSize (type $t1) (param $p0 i32) (result i32)"
+              ],
+              "declaration_sha256": "d10ee6da064df4ca75a4d0d6229cf97d218d576ada639711c6bab76a8af41b39",
+              "function": "~lib/internal/arraybuffer/computeSize"
+            },
+            "constants_start": {
+              "declaration_lines": [
+                "(func $start:src/utils/constants (type $t0)"
+              ],
+              "declaration_sha256": "9759811c1ca652f0c1238c4f1fdd9f135c6d6ea3d50e1aca08d67a6859523697",
+              "function": "start:src/utils/constants"
+            },
+            "entry_constructor": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.SmartContract#constructor (type $t5) (param $p0 i32) (param $p1 i32) (param $p2 i32) (result i32)"
+              ],
+              "declaration_sha256": "935b0e36c760cf5b13e64e4f1b671d79d28e24e68098a6b4a3a502b83812c93b",
+              "function": "~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.SmartContract#constructor"
+            },
+            "event_param_get": {
+              "declaration_lines": [
+                "(func $~lib/array/Array<~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.EventParam>#__get (type $t2) (param $p0 i32) (param $p1 i32) (result i32)"
+              ],
+              "declaration_sha256": "5994e927ca95a0919e11c8d826a7ea04793324b613e30933949c67a351767a11",
+              "function": "~lib/array/Array<~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.EventParam>#__get"
+            },
+            "factory_constructor": {
+              "declaration_lines": [
+                "(func $src/types/templates/Pool/Factory/Factory#constructor (type $t2) (param $p0 i32) (param $p1 i32) (result i32)"
+              ],
+              "declaration_sha256": "88464ac9b852ea4ce474fac5770d5cc889605ba6e6047358007b312534b710dd",
+              "function": "src/types/templates/Pool/Factory/Factory#constructor"
+            },
+            "memcpy": {
+              "declaration_lines": [
+                "(func $~lib/internal/memory/memcpy (type $t4) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+                "(local $l3 i32) (local $l4 i32) (local $l5 i32)"
+              ],
+              "declaration_sha256": "a6f8f99b773058d8934b64fe7b99e554f11570b770d0efd32b06409c9023614a",
+              "function": "~lib/internal/memory/memcpy"
+            },
+            "memmove": {
+              "declaration_lines": [
+                "(func $~lib/internal/memory/memmove (type $t4) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+                "(local $l3 i32)"
+              ],
+              "declaration_sha256": "ae2ab0fb76a3b19e3c74734f734149c975c22fafac0db3936f78e14dca098701",
+              "function": "~lib/internal/memory/memmove"
+            },
+            "memory_allocate": {
+              "declaration_lines": [
+                "(func $~lib/memory/memory.allocate (type $t1) (param $p0 i32) (result i32)"
+              ],
+              "declaration_sha256": "18c193b347398433d849c21b316b040fb3a9eb03c6c01c3492944547cb9a7fcb",
+              "function": "~lib/memory/memory.allocate"
+            },
+            "memory_reset": {
+              "declaration_lines": [
+                "(func $~lib/memory/memory.reset (type $t0)"
+              ],
+              "declaration_sha256": "8fef401a4ec64d6446f9158b026d20a1f53c43be77aea881bc4a01e249390360",
+              "function": "~lib/memory/memory.reset"
+            },
+            "memset": {
+              "declaration_lines": [
+                "(func $~lib/internal/memory/memset (type $t8) (param $p0 i32) (param $p1 i32)",
+                "(local $l2 i32)"
+              ],
+              "declaration_sha256": "5729d0c0e5e9006ca9a3de1409e0b1b31460aaf43b20f2839b3cf29fbe15f0e1",
+              "function": "~lib/internal/memory/memset"
+            },
+            "native_math_pow": {
+              "declaration_lines": [
+                "(func $~lib/math/NativeMath.pow (type $t15) (result f64)",
+                "(local $l0 i32) (local $l1 i32) (local $l2 i32) (local $l3 i32) (local $l4 i64) (local $l5 f64) (local $l6 f64) (local $l7 f64) (local $l8 f64)"
+              ],
+              "declaration_sha256": "5c57170ae0e82cdc9a5a220f0240f51f5d346ffc6bd1d5a1560e75338a89723f",
+              "function": "~lib/math/NativeMath.pow"
+            },
+            "native_start": {
+              "declaration_lines": [
+                "(func $start (type $t0)"
+              ],
+              "declaration_sha256": "26abba9aa2a14487c17ed9cca70e6eccaa75346cb17f5b7419fbc6d23f5ea33d",
+              "function": "start"
+            },
+            "reallocate_unsafe": {
+              "declaration_lines": [
+                "(func $~lib/internal/arraybuffer/reallocateUnsafe (type $t2) (param $p0 i32) (param $p1 i32) (result i32)",
+                "(local $l2 i32) (local $l3 i32)"
+              ],
+              "declaration_sha256": "e288291926508c91e1cd730d4a02201a359204f6e21a288f40c6b477521e9ce7",
+              "function": "~lib/internal/arraybuffer/reallocateUnsafe"
+            },
+            "string_allocate": {
+              "declaration_lines": [
+                "(func $~lib/internal/string/allocateUnsafe (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32)"
+              ],
+              "declaration_sha256": "f1bfbf9c36ea756f07ba30ebf518cc79b1a82e680d20f0b4a7d034a1bcf08a05",
+              "function": "~lib/internal/string/allocateUnsafe"
+            },
+            "string_eq": {
+              "declaration_lines": [
+                "(func $~lib/string/String.__eq (type $t2) (param $p0 i32) (param $p1 i32) (result i32)",
+                "(local $l2 i32)"
+              ],
+              "declaration_sha256": "58e301130c94f3f59fae506210b2646b2c8d75b9989be41fe90810831f66598c",
+              "function": "~lib/string/String.__eq"
+            },
+            "typed_map_get": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#get (type $t2) (param $p0 i32) (param $p1 i32) (result i32)",
+                "(local $l2 i32)"
+              ],
+              "declaration_sha256": "75f2638e33832be3bfa034206ee41ffb316dd5c0b01e4ebf3fe66c78e13d642c",
+              "function": "~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#get"
+            },
+            "typed_map_get_entry": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#getEntry (type $t2) (param $p0 i32) (param $p1 i32) (result i32)",
+                "(local $l2 i32)"
+              ],
+              "declaration_sha256": "9f62da8f33f70af129cb1ffa84e1e547fcc2f48b5889942edce5beb09d6ad56b",
+              "function": "~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#getEntry"
+            },
+            "typed_map_set": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#set (type $t4) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+                "(local $l3 i32)"
+              ],
+              "declaration_sha256": "a3b599f070b9c4479067ada4820bf1ba507b11c74ac83683c686e36f6a306a0e",
+              "function": "~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#set"
+            },
+            "value_constructor": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/Value#constructor (type $t10) (result i32)",
+                "(local $l0 i32)"
+              ],
+              "declaration_sha256": "77391fce51e86813c08a080dcd860b64932e4ce1eb0d6f9521d1e47d2a530ed7",
+              "function": "~lib/@graphprotocol/graph-ts/index/Value#constructor"
+            },
+            "value_from_big_decimal": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/Value.fromBigDecimal (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32)"
+              ],
+              "declaration_sha256": "194040963078a0a3637c34294f08d4cae02932aded4d444fdfb81f08d1a76579",
+              "function": "~lib/@graphprotocol/graph-ts/index/Value.fromBigDecimal"
+            }
+          },
+          "parameter_local_and_result_declarations_exactly_bound": true
+        },
         "imported_host_behavior_rederived": false,
         "indexed_access_and_value": {
           "event_param_array_get": {
@@ -2207,6 +3237,212 @@
             "function": "~lib/array/Array<~lib/@graphprotocol/graph-ts/index/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#push"
           }
         },
+        "exact_function_declarations": {
+          "function_count": 26,
+          "functions": {
+            "allocate_unsafe": {
+              "declaration_lines": [
+                "(func $~lib/internal/arraybuffer/allocateUnsafe (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32)"
+              ],
+              "declaration_sha256": "06bb173f8940db68f1e0825a3f4240662e419fb33652f308bc87710598a25632",
+              "function": "~lib/internal/arraybuffer/allocateUnsafe"
+            },
+            "arena_allocate": {
+              "declaration_lines": [
+                "(func $~lib/allocator/arena/__memory_allocate (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32) (local $l2 i32) (local $l3 i32) (local $l4 i32)"
+              ],
+              "declaration_sha256": "48f9d7e4deeb0a0c273ce02f381040945970643dcfed2bc1e6f1e252b52aaaca",
+              "function": "~lib/allocator/arena/__memory_allocate"
+            },
+            "array_constructor": {
+              "declaration_lines": [
+                "(func $~lib/array/Array<~lib/@graphprotocol/graph-ts/index/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#constructor (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32) (local $l2 i32) (local $l3 i32)"
+              ],
+              "declaration_sha256": "161d3e3e7a57bac882887c57bd15aa06b0f5756ca900d4a85c7e663c2ac8aa9e",
+              "function": "~lib/array/Array<~lib/@graphprotocol/graph-ts/index/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#constructor"
+            },
+            "array_push": {
+              "declaration_lines": [
+                "(func $~lib/array/Array<~lib/@graphprotocol/graph-ts/index/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#push (type $t8) (param $p0 i32) (param $p1 i32)",
+                "(local $l2 i32) (local $l3 i32) (local $l4 i32)"
+              ],
+              "declaration_sha256": "89f235267ce817e9096c3fc70d8d0977eedb5bb060f1a6dcd927ac621ac52c2b",
+              "function": "~lib/array/Array<~lib/@graphprotocol/graph-ts/index/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#push"
+            },
+            "byte_array_from_i32": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/ByteArray.fromI32 (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32)"
+              ],
+              "declaration_sha256": "d54c9315773d75fd2373da723eda4513aef2de7ac8f16e42993807d5caae8ed5",
+              "function": "~lib/@graphprotocol/graph-ts/index/ByteArray.fromI32"
+            },
+            "compare_unsafe": {
+              "declaration_lines": [
+                "(func $~lib/internal/string/compareUnsafe (type $t5) (param $p0 i32) (param $p1 i32) (param $p2 i32) (result i32)",
+                "(local $l3 i32)"
+              ],
+              "declaration_sha256": "64edfc3548e5bd110e39fa7b25adeb5972c28398f8943fcf8623c781dcecf8af",
+              "function": "~lib/internal/string/compareUnsafe"
+            },
+            "compute_size": {
+              "declaration_lines": [
+                "(func $~lib/internal/arraybuffer/computeSize (type $t1) (param $p0 i32) (result i32)"
+              ],
+              "declaration_sha256": "d10ee6da064df4ca75a4d0d6229cf97d218d576ada639711c6bab76a8af41b39",
+              "function": "~lib/internal/arraybuffer/computeSize"
+            },
+            "constants_start": {
+              "declaration_lines": [
+                "(func $start:src/utils/constants (type $t0)"
+              ],
+              "declaration_sha256": "9759811c1ca652f0c1238c4f1fdd9f135c6d6ea3d50e1aca08d67a6859523697",
+              "function": "start:src/utils/constants"
+            },
+            "entry_constructor": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.SmartContract#constructor (type $t5) (param $p0 i32) (param $p1 i32) (param $p2 i32) (result i32)"
+              ],
+              "declaration_sha256": "935b0e36c760cf5b13e64e4f1b671d79d28e24e68098a6b4a3a502b83812c93b",
+              "function": "~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.SmartContract#constructor"
+            },
+            "event_param_get": {
+              "declaration_lines": [
+                "(func $~lib/array/Array<~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.EventParam>#__get (type $t2) (param $p0 i32) (param $p1 i32) (result i32)"
+              ],
+              "declaration_sha256": "5994e927ca95a0919e11c8d826a7ea04793324b613e30933949c67a351767a11",
+              "function": "~lib/array/Array<~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.EventParam>#__get"
+            },
+            "factory_constructor": {
+              "declaration_lines": [
+                "(func $src/types/templates/Pool/Factory/Factory#constructor (type $t2) (param $p0 i32) (param $p1 i32) (result i32)"
+              ],
+              "declaration_sha256": "88464ac9b852ea4ce474fac5770d5cc889605ba6e6047358007b312534b710dd",
+              "function": "src/types/templates/Pool/Factory/Factory#constructor"
+            },
+            "memcpy": {
+              "declaration_lines": [
+                "(func $~lib/internal/memory/memcpy (type $t4) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+                "(local $l3 i32) (local $l4 i32) (local $l5 i32)"
+              ],
+              "declaration_sha256": "a6f8f99b773058d8934b64fe7b99e554f11570b770d0efd32b06409c9023614a",
+              "function": "~lib/internal/memory/memcpy"
+            },
+            "memmove": {
+              "declaration_lines": [
+                "(func $~lib/internal/memory/memmove (type $t4) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+                "(local $l3 i32)"
+              ],
+              "declaration_sha256": "ae2ab0fb76a3b19e3c74734f734149c975c22fafac0db3936f78e14dca098701",
+              "function": "~lib/internal/memory/memmove"
+            },
+            "memory_allocate": {
+              "declaration_lines": [
+                "(func $~lib/memory/memory.allocate (type $t1) (param $p0 i32) (result i32)"
+              ],
+              "declaration_sha256": "18c193b347398433d849c21b316b040fb3a9eb03c6c01c3492944547cb9a7fcb",
+              "function": "~lib/memory/memory.allocate"
+            },
+            "memory_reset": {
+              "declaration_lines": [
+                "(func $~lib/memory/memory.reset (type $t0)"
+              ],
+              "declaration_sha256": "8fef401a4ec64d6446f9158b026d20a1f53c43be77aea881bc4a01e249390360",
+              "function": "~lib/memory/memory.reset"
+            },
+            "memset": {
+              "declaration_lines": [
+                "(func $~lib/internal/memory/memset (type $t8) (param $p0 i32) (param $p1 i32)",
+                "(local $l2 i32)"
+              ],
+              "declaration_sha256": "5729d0c0e5e9006ca9a3de1409e0b1b31460aaf43b20f2839b3cf29fbe15f0e1",
+              "function": "~lib/internal/memory/memset"
+            },
+            "native_math_pow": {
+              "declaration_lines": [
+                "(func $~lib/math/NativeMath.pow (type $t15) (result f64)",
+                "(local $l0 i32) (local $l1 i32) (local $l2 i32) (local $l3 i32) (local $l4 i64) (local $l5 f64) (local $l6 f64) (local $l7 f64) (local $l8 f64)"
+              ],
+              "declaration_sha256": "5c57170ae0e82cdc9a5a220f0240f51f5d346ffc6bd1d5a1560e75338a89723f",
+              "function": "~lib/math/NativeMath.pow"
+            },
+            "native_start": {
+              "declaration_lines": [
+                "(func $start (type $t0)"
+              ],
+              "declaration_sha256": "26abba9aa2a14487c17ed9cca70e6eccaa75346cb17f5b7419fbc6d23f5ea33d",
+              "function": "start"
+            },
+            "reallocate_unsafe": {
+              "declaration_lines": [
+                "(func $~lib/internal/arraybuffer/reallocateUnsafe (type $t2) (param $p0 i32) (param $p1 i32) (result i32)",
+                "(local $l2 i32) (local $l3 i32)"
+              ],
+              "declaration_sha256": "e288291926508c91e1cd730d4a02201a359204f6e21a288f40c6b477521e9ce7",
+              "function": "~lib/internal/arraybuffer/reallocateUnsafe"
+            },
+            "string_allocate": {
+              "declaration_lines": [
+                "(func $~lib/internal/string/allocateUnsafe (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32)"
+              ],
+              "declaration_sha256": "f1bfbf9c36ea756f07ba30ebf518cc79b1a82e680d20f0b4a7d034a1bcf08a05",
+              "function": "~lib/internal/string/allocateUnsafe"
+            },
+            "string_eq": {
+              "declaration_lines": [
+                "(func $~lib/string/String.__eq (type $t2) (param $p0 i32) (param $p1 i32) (result i32)",
+                "(local $l2 i32)"
+              ],
+              "declaration_sha256": "58e301130c94f3f59fae506210b2646b2c8d75b9989be41fe90810831f66598c",
+              "function": "~lib/string/String.__eq"
+            },
+            "typed_map_get": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#get (type $t2) (param $p0 i32) (param $p1 i32) (result i32)",
+                "(local $l2 i32)"
+              ],
+              "declaration_sha256": "75f2638e33832be3bfa034206ee41ffb316dd5c0b01e4ebf3fe66c78e13d642c",
+              "function": "~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#get"
+            },
+            "typed_map_get_entry": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#getEntry (type $t2) (param $p0 i32) (param $p1 i32) (result i32)",
+                "(local $l2 i32)"
+              ],
+              "declaration_sha256": "9f62da8f33f70af129cb1ffa84e1e547fcc2f48b5889942edce5beb09d6ad56b",
+              "function": "~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#getEntry"
+            },
+            "typed_map_set": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#set (type $t4) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+                "(local $l3 i32)"
+              ],
+              "declaration_sha256": "a3b599f070b9c4479067ada4820bf1ba507b11c74ac83683c686e36f6a306a0e",
+              "function": "~lib/@graphprotocol/graph-ts/index/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>#set"
+            },
+            "value_constructor": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/Value#constructor (type $t10) (result i32)",
+                "(local $l0 i32)"
+              ],
+              "declaration_sha256": "77391fce51e86813c08a080dcd860b64932e4ce1eb0d6f9521d1e47d2a530ed7",
+              "function": "~lib/@graphprotocol/graph-ts/index/Value#constructor"
+            },
+            "value_from_big_decimal": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/index/Value.fromBigDecimal (type $t1) (param $p0 i32) (result i32)",
+                "(local $l1 i32)"
+              ],
+              "declaration_sha256": "194040963078a0a3637c34294f08d4cae02932aded4d444fdfb81f08d1a76579",
+              "function": "~lib/@graphprotocol/graph-ts/index/Value.fromBigDecimal"
+            }
+          },
+          "parameter_local_and_result_declarations_exactly_bound": true
+        },
         "imported_host_behavior_rederived": false,
         "indexed_access_and_value": {
           "event_param_array_get": {
@@ -2323,6 +3559,99 @@
         "imported_host_functions_assumed_not_to_write_arbitrary_linear_memory": true
       },
       "public_collection_capsule": {
+        "exact_function_declarations": {
+          "function_count": 11,
+          "functions": {
+            "ensure_capacity": {
+              "declaration_lines": [
+                "(func $~lib/array/ensureCapacity (type $t3) (param $p0 i32) (param $p1 i32)",
+                "(local $l2 i32) (local $l3 i32) (local $l4 i32) (local $l5 i32) (local $l6 i32) (local $l7 i32) (local $l8 i32) (local $l9 i32) (local $l10 i32)"
+              ],
+              "declaration_sha256": "c805b5e5aa4e727757b4b578d29b05b5a82c0b7aaea46f5ee13a4de3b8407665",
+              "function": "~lib/array/ensureCapacity"
+            },
+            "entity_constructor": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/common/collections/Entity#constructor (type $t0) (param $p0 i32) (result i32)",
+                "(local $l1 i32) (local $l2 i32)"
+              ],
+              "declaration_sha256": "70f0b73ec7e71d84a8b6495901f45d7cee32bbbe6da674efd3055d33d995bac1",
+              "function": "~lib/@graphprotocol/graph-ts/common/collections/Entity#constructor"
+            },
+            "event_param_get": {
+              "declaration_lines": [
+                "(func $~lib/array/Array<~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.EventParam>#__get (type $t1) (param $p0 i32) (param $p1 i32) (result i32)"
+              ],
+              "declaration_sha256": "3d68149bf2c79fd4e4decb561fcab220e6e460ffc4458908677717de6de94a9c",
+              "function": "~lib/array/Array<~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.EventParam>#__get"
+            },
+            "memcpy": {
+              "declaration_lines": [
+                "(func $~lib/util/memory/memcpy (type $t4) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+                "(local $l3 i32) (local $l4 i32) (local $l5 i32)"
+              ],
+              "declaration_sha256": "4c48d712cd02d418fbc9396e5f27e189ce0fffb0346d528c690dc9342ffbbe25",
+              "function": "~lib/util/memory/memcpy"
+            },
+            "memory_copy": {
+              "declaration_lines": [
+                "(func $~lib/memory/memory.copy (type $t4) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+                "(local $l3 i32) (local $l4 i32)"
+              ],
+              "declaration_sha256": "311e404c773a923e7f496836731c5863b779e98ee1eed7c4fa37f3f8086162ed",
+              "function": "~lib/memory/memory.copy"
+            },
+            "memory_fill": {
+              "declaration_lines": [
+                "(func $~lib/memory/memory.fill (type $t3) (param $p0 i32) (param $p1 i32)",
+                "(local $l2 i32)"
+              ],
+              "declaration_sha256": "bf6f7793cf5dc75d9f61dd9fe169544f9edba86c60851b73916b01cf124b8fea",
+              "function": "~lib/memory/memory.fill"
+            },
+            "string_eq": {
+              "declaration_lines": [
+                "(func $~lib/string/String.__eq (type $t1) (param $p0 i32) (param $p1 i32) (result i32)",
+                "(local $l2 i32) (local $l3 i32) (local $l4 i32) (local $l5 i32)"
+              ],
+              "declaration_sha256": "3ebcf8c3190dd600f465a6226ab985793becb54565724db367c29fcc35dbeee1",
+              "function": "~lib/string/String.__eq"
+            },
+            "stub_alloc": {
+              "declaration_lines": [
+                "(func $~lib/rt/stub/__alloc (type $t0) (param $p0 i32) (result i32)",
+                "(local $l1 i32) (local $l2 i32) (local $l3 i32) (local $l4 i32) (local $l5 i32)"
+              ],
+              "declaration_sha256": "f794d94b01deb0adb9330f2c42db66978c1d1da57aefada51389927f91e95d52",
+              "function": "~lib/rt/stub/__alloc"
+            },
+            "stub_new": {
+              "declaration_lines": [
+                "(func $~lib/rt/stub/__new (type $t1) (param $p0 i32) (param $p1 i32) (result i32)",
+                "(local $l2 i32) (local $l3 i32)"
+              ],
+              "declaration_sha256": "60b7e1b60a92098569cccc5e0b10043d4e267b79092d3f1797a4cc0dd2bc695c",
+              "function": "~lib/rt/stub/__new"
+            },
+            "typed_map_get": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/common/collections/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/common/value/Value>#get (type $t1) (param $p0 i32) (param $p1 i32) (result i32)",
+                "(local $l2 i32)"
+              ],
+              "declaration_sha256": "73e821af339ae42f074d1febbc4b76eae4b14fe60549b590d9d6d6bec95879b2",
+              "function": "~lib/@graphprotocol/graph-ts/common/collections/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/common/value/Value>#get"
+            },
+            "typed_map_set": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/common/collections/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/common/value/Value>#set (type $t4) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+                "(local $l3 i32)"
+              ],
+              "declaration_sha256": "aa0e1d6979dc83394e54de11e2fcb4d4cda1a582b612785e9ab648f2607c2af6",
+              "function": "~lib/@graphprotocol/graph-ts/common/collections/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/common/value/Value>#set"
+            }
+          },
+          "parameter_local_and_result_declarations_exactly_bound": true
+        },
         "indexed_collection": {
           "event_param_array_get": {
             "body_sha256": "dd7f14070e5643932f0dc9ba5d3e7f9966aa900dc9e171eb213b9aaf4cf6d0c8",
@@ -2516,6 +3845,99 @@
         "imported_host_functions_assumed_not_to_write_arbitrary_linear_memory": true
       },
       "public_collection_capsule": {
+        "exact_function_declarations": {
+          "function_count": 11,
+          "functions": {
+            "ensure_capacity": {
+              "declaration_lines": [
+                "(func $~lib/array/ensureCapacity (type $t3) (param $p0 i32) (param $p1 i32)",
+                "(local $l2 i32) (local $l3 i32) (local $l4 i32) (local $l5 i32) (local $l6 i32) (local $l7 i32) (local $l8 i32) (local $l9 i32) (local $l10 i32)"
+              ],
+              "declaration_sha256": "c805b5e5aa4e727757b4b578d29b05b5a82c0b7aaea46f5ee13a4de3b8407665",
+              "function": "~lib/array/ensureCapacity"
+            },
+            "entity_constructor": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/common/collections/Entity#constructor (type $t0) (param $p0 i32) (result i32)",
+                "(local $l1 i32) (local $l2 i32)"
+              ],
+              "declaration_sha256": "70f0b73ec7e71d84a8b6495901f45d7cee32bbbe6da674efd3055d33d995bac1",
+              "function": "~lib/@graphprotocol/graph-ts/common/collections/Entity#constructor"
+            },
+            "event_param_get": {
+              "declaration_lines": [
+                "(func $~lib/array/Array<~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.EventParam>#__get (type $t1) (param $p0 i32) (param $p1 i32) (result i32)"
+              ],
+              "declaration_sha256": "3d68149bf2c79fd4e4decb561fcab220e6e460ffc4458908677717de6de94a9c",
+              "function": "~lib/array/Array<~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.EventParam>#__get"
+            },
+            "memcpy": {
+              "declaration_lines": [
+                "(func $~lib/util/memory/memcpy (type $t4) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+                "(local $l3 i32) (local $l4 i32) (local $l5 i32)"
+              ],
+              "declaration_sha256": "4c48d712cd02d418fbc9396e5f27e189ce0fffb0346d528c690dc9342ffbbe25",
+              "function": "~lib/util/memory/memcpy"
+            },
+            "memory_copy": {
+              "declaration_lines": [
+                "(func $~lib/memory/memory.copy (type $t4) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+                "(local $l3 i32) (local $l4 i32)"
+              ],
+              "declaration_sha256": "311e404c773a923e7f496836731c5863b779e98ee1eed7c4fa37f3f8086162ed",
+              "function": "~lib/memory/memory.copy"
+            },
+            "memory_fill": {
+              "declaration_lines": [
+                "(func $~lib/memory/memory.fill (type $t3) (param $p0 i32) (param $p1 i32)",
+                "(local $l2 i32)"
+              ],
+              "declaration_sha256": "bf6f7793cf5dc75d9f61dd9fe169544f9edba86c60851b73916b01cf124b8fea",
+              "function": "~lib/memory/memory.fill"
+            },
+            "string_eq": {
+              "declaration_lines": [
+                "(func $~lib/string/String.__eq (type $t1) (param $p0 i32) (param $p1 i32) (result i32)",
+                "(local $l2 i32) (local $l3 i32) (local $l4 i32) (local $l5 i32)"
+              ],
+              "declaration_sha256": "3ebcf8c3190dd600f465a6226ab985793becb54565724db367c29fcc35dbeee1",
+              "function": "~lib/string/String.__eq"
+            },
+            "stub_alloc": {
+              "declaration_lines": [
+                "(func $~lib/rt/stub/__alloc (type $t0) (param $p0 i32) (result i32)",
+                "(local $l1 i32) (local $l2 i32) (local $l3 i32) (local $l4 i32) (local $l5 i32)"
+              ],
+              "declaration_sha256": "f794d94b01deb0adb9330f2c42db66978c1d1da57aefada51389927f91e95d52",
+              "function": "~lib/rt/stub/__alloc"
+            },
+            "stub_new": {
+              "declaration_lines": [
+                "(func $~lib/rt/stub/__new (type $t1) (param $p0 i32) (param $p1 i32) (result i32)",
+                "(local $l2 i32) (local $l3 i32)"
+              ],
+              "declaration_sha256": "60b7e1b60a92098569cccc5e0b10043d4e267b79092d3f1797a4cc0dd2bc695c",
+              "function": "~lib/rt/stub/__new"
+            },
+            "typed_map_get": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/common/collections/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/common/value/Value>#get (type $t1) (param $p0 i32) (param $p1 i32) (result i32)",
+                "(local $l2 i32)"
+              ],
+              "declaration_sha256": "73e821af339ae42f074d1febbc4b76eae4b14fe60549b590d9d6d6bec95879b2",
+              "function": "~lib/@graphprotocol/graph-ts/common/collections/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/common/value/Value>#get"
+            },
+            "typed_map_set": {
+              "declaration_lines": [
+                "(func $~lib/@graphprotocol/graph-ts/common/collections/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/common/value/Value>#set (type $t4) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+                "(local $l3 i32)"
+              ],
+              "declaration_sha256": "aa0e1d6979dc83394e54de11e2fcb4d4cda1a582b612785e9ab648f2607c2af6",
+              "function": "~lib/@graphprotocol/graph-ts/common/collections/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/common/value/Value>#set"
+            }
+          },
+          "parameter_local_and_result_declarations_exactly_bound": true
+        },
         "indexed_collection": {
           "event_param_array_get": {
             "body_sha256": "d7838efd2a3cd438b05d6d627df4c1ea8ef0a291c02921096b89198d8643de68",
@@ -2691,14 +4113,14 @@
       }
     }
   ],
-  "projection_sha256": "9da3dfaaa6c25d484f22eea376337f81931b76296acd49d96d2930a9b1ae6e95",
+  "projection_sha256": "a14c75215009daba3d2c0ed8d4d6c4951e645f4e57188235ed6ed8377648f8e8",
   "provenance": {
     "base_commit": "1df0c471c354fc3718dac88a973a34f5b149d9c3",
     "base_commit_verification": "recorded review provenance; Git ancestry is outside this verifier",
     "shared_wat_runtime": {
       "candidate_bytes_equal_exact_executed_source": true,
       "path": "scripts/uniswap_v3_wat_runtime.py",
-      "raw_sha256": "977bab525ae5b02451c8652050d22a8c2f730c7982ba079d0b8eed9b094780e5"
+      "raw_sha256": "0b8fca4e63f33e7332341098e1da74b725029ac6b89479c69673393d3453ec8f"
     },
     "wabt_version": "1.0.35",
     "wasm2wat_command": [
@@ -2754,6 +4176,7 @@
     "both_modern_pool_allocator_floors_above_all_initialized_data_proven": true,
     "both_modern_pool_allocator_return_identities_proven": true,
     "both_modern_pool_entity_constructor_type_ids_proven": true,
+    "both_modern_pool_exact_function_declaration_inventories_proven": true,
     "both_modern_pool_exported_start_and_global_writer_inventories_proven": true,
     "both_modern_pool_getter_index_and_string_equality_dependencies_proven": true,
     "both_modern_pool_public_collection_capsules_proven": true,
@@ -2782,6 +4205,7 @@
     "readiness_complete": false,
     "six_legacy_pool_allocator_data_floors_proven": true,
     "six_legacy_pool_complete_import_export_global_inventories_proven": true,
+    "six_legacy_pool_exact_function_declaration_inventories_proven": true,
     "six_legacy_pool_native_start_module_states_proven": true,
     "six_legacy_pool_no_indirect_table_and_handler_reset_reachability_proven": true,
     "six_legacy_pool_public_collection_capsules_proven": true,

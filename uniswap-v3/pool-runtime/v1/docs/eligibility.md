@@ -9,6 +9,12 @@ candidate shared-runtime bytes actually executed, the generation-appropriate
 public collection capsule, complete module-state inventory, and initialized
 data below the exact allocator floor.
 
+The public capsules also bind exact function declarations independently from
+body digests: function names and type uses, ordered parameter names/types,
+result declarations, and every leading named local declaration. Recomputing a
+body digest after swapping parameter or local labels cannot preserve a runtime
+claim.
+
 The modern certificate remains the same exported-initializer proof: 77-line
 `TypedMap#set`, getter/index/equality dependencies, Entity constructor type
 IDs, allocator identities, capacity commits, `_start -> ~start`, eight critical
@@ -65,7 +71,9 @@ rejects module start/export/import/table/reset, global inventory, data-floor,
 start/constants, allocator/ArrayBuffer, EventParam, Value, String,
 TypedMap/entry-constructor, entry-array, and low-level primitive drift. When a
 test targets a deeper structural rule, only the deliberately changed
-top-level body authority is refreshed. A self-rehashed JSON contract cannot
+top-level body authority is refreshed. It separately rejects parameter-order,
+parameter/local-identity, type-use/result, and local-type declaration drift
+after that refresh. A self-rehashed JSON contract cannot
 promote any residual gate because verification recomputes the complete
 deterministic projection.
 

@@ -72,6 +72,8 @@ class ModernPoolRuntimeTest(unittest.TestCase):
         mutate_module: ModuleMutator | None = None,
         refresh_start_authority: bool = False,
         refresh_initialized_data_authority: bool = False,
+        refresh_body_authority: str | None = None,
+        expected_changed_body_sha256: str | None = None,
     ) -> None:
         base = self.contexts[profile]
         function = selector(base)
@@ -105,6 +107,24 @@ class ModernPoolRuntimeTest(unittest.TestCase):
             "module_text": changed_wat,
             "initialized_data": VERIFIER.initialized_data_inventory(changed_wat),
         }
+        collection_spec = VERIFIER.POOL_COLLECTION_SPEC
+        if refresh_body_authority is not None:
+            changed_function = VERIFIER.function_by_suffix(changed, function.name)
+            body_sha256 = hashlib.sha256(changed_function.payload).hexdigest()
+            if expected_changed_body_sha256 is not None:
+                self.assertEqual(body_sha256, expected_changed_body_sha256, label)
+            if refresh_body_authority.startswith("profile."):
+                field = refresh_body_authority.removeprefix("profile.")
+                profile_spec = collection_spec.profiles[profile]
+                profiles = dict(collection_spec.profiles)
+                profiles[profile] = replace(
+                    profile_spec, **{field: body_sha256}
+                )
+                collection_spec = replace(collection_spec, profiles=profiles)
+            else:
+                collection_spec = replace(
+                    collection_spec, **{refresh_body_authority: body_sha256}
+                )
         if refresh_start_authority:
             changed_start = VERIFIER.function_by_suffix(changed, "~start")
             changed["spec"] = replace(
@@ -122,8 +142,13 @@ class ModernPoolRuntimeTest(unittest.TestCase):
                     "segment_count"
                 ],
             )
-        with self.assertRaises(VERIFIER.VerificationError, msg=label) as caught:
-            VERIFIER.prove_pool_runtime_context(changed)
+        original_collection_spec = VERIFIER.POOL_COLLECTION_SPEC
+        VERIFIER.POOL_COLLECTION_SPEC = collection_spec
+        try:
+            with self.assertRaises(VERIFIER.VerificationError, msg=label) as caught:
+                VERIFIER.prove_pool_runtime_context(changed)
+        finally:
+            VERIFIER.POOL_COLLECTION_SPEC = original_collection_spec
         self.assertIn(expected_error, str(caught.exception), label)
 
     def test_committed_contract_is_the_deterministic_projection(self) -> None:
@@ -232,6 +257,56 @@ class ModernPoolRuntimeTest(unittest.TestCase):
                     self.selector(VERIFIER.TYPED_MAP_SET_CALL),
                     mutate,
                     "Pool TypedMap#set key/value/inline-append operand drift",
+                )
+
+    def test_modern_function_declaration_and_parameter_identity_drift_fails_closed(self) -> None:
+        def swap_names(index: int, first: str, second: str) -> Mutator:
+            def mutate(lines: list[str], _context: dict[str, Any]) -> None:
+                line = VERIFIER.normalized(lines[index])
+                self.assertEqual(line.count(first), 1)
+                self.assertEqual(line.count(second), 1)
+                changed = line.replace(first, "$signature_swap", 1)
+                changed = changed.replace(second, first, 1)
+                changed = changed.replace("$signature_swap", second, 1)
+                self.set_normalized(lines, index, changed)
+
+            return mutate
+
+        cases = (
+            (
+                "audited modern TypedMap setter key/value parameter labels swap",
+                VERIFIER.TYPED_MAP_SET_CALL,
+                swap_names(0, "$p1", "$p2"),
+                "typed_map_set_body_sha256",
+                "typed_map_set",
+                "2906ce27627f5729e3016c842a5f084bbf566eb968ef76aaa7233e246f2d228a",
+            ),
+            (
+                "modern Entity constructor local identities swap",
+                "common/collections/Entity#constructor",
+                swap_names(1, "$l1", "$l2"),
+                "entity_constructor_body_sha256",
+                "entity_constructor",
+                None,
+            ),
+            (
+                "modern memcpy source and destination labels swap",
+                "~lib/util/memory/memcpy",
+                swap_names(0, "$p0", "$p1"),
+                "profile.memcpy_body_sha256",
+                "memcpy",
+                None,
+            ),
+        )
+        for label, suffix, mutate, refresh, authority_id, digest in cases:
+            with self.subTest(label=label):
+                self.assert_valid_wat_mutation_rejected(
+                    label,
+                    self.selector(suffix),
+                    mutate,
+                    f"exact {authority_id} function declaration drift",
+                    refresh_body_authority=refresh,
+                    expected_changed_body_sha256=digest,
                 )
 
     def test_getter_index_and_equality_mutations_fail_at_public_capsule(self) -> None:
@@ -497,6 +572,7 @@ class LegacyPoolRuntimeTest(unittest.TestCase):
         mutate_module: ModuleMutator | None = None,
         refresh_body_authority: str | None = None,
         refresh_initialized_data_authority: bool = False,
+        expected_changed_body_sha256: str | None = None,
     ) -> None:
         base = self.contexts[profile]
         function = selector(base)
@@ -550,6 +626,8 @@ class LegacyPoolRuntimeTest(unittest.TestCase):
         if refresh_body_authority is not None:
             changed_function = VERIFIER.function_by_suffix(changed, function.name)
             body_sha256 = hashlib.sha256(changed_function.payload).hexdigest()
+            if expected_changed_body_sha256 is not None:
+                self.assertEqual(body_sha256, expected_changed_body_sha256, label)
             if refresh_body_authority.startswith("profile."):
                 field = refresh_body_authority.removeprefix("profile.")
                 profile_spec = collection_spec.profiles[profile]
@@ -592,6 +670,117 @@ class LegacyPoolRuntimeTest(unittest.TestCase):
                 )
                 self.assertFalse(
                     proof["proof_boundaries"]["cross_handler_allocator_freshness_proven"]
+                )
+
+    def test_legacy_function_declaration_and_parameter_identity_drift_fails_closed(self) -> None:
+        def swap_names(index: int, first: str, second: str) -> Mutator:
+            def mutate(lines: list[str], _context: dict[str, Any]) -> None:
+                line = VERIFIER.normalized(lines[index])
+                self.assertEqual(line.count(first), 1)
+                self.assertEqual(line.count(second), 1)
+                changed = line.replace(first, "$signature_swap", 1)
+                changed = changed.replace(second, first, 1)
+                changed = changed.replace("$signature_swap", second, 1)
+                self.set_normalized(lines, index, changed)
+
+            return mutate
+
+        def swap_param_and_local(
+            parameter: str, local: str
+        ) -> Mutator:
+            def mutate(lines: list[str], _context: dict[str, Any]) -> None:
+                header = VERIFIER.normalized(lines[0])
+                locals_line = VERIFIER.normalized(lines[1])
+                self.assertEqual(header.count(parameter), 1)
+                self.assertEqual(locals_line.count(local), 1)
+                self.set_normalized(lines, 0, header.replace(parameter, local, 1))
+                self.set_normalized(lines, 1, locals_line.replace(local, parameter, 1))
+
+            return mutate
+
+        def append_unused_local(value_type: str) -> Mutator:
+            def mutate(lines: list[str], _context: dict[str, Any]) -> None:
+                locals_line = VERIFIER.normalized(lines[1])
+                self.set_normalized(
+                    lines,
+                    1,
+                    f"{locals_line} (local $signature_extra {value_type})",
+                )
+
+            return mutate
+
+        def add_named_local(value_type: str) -> Mutator:
+            def mutate(lines: list[str], _context: dict[str, Any]) -> None:
+                self.insert_normalized(
+                    lines, 1, [f"(local $signature_extra {value_type})"]
+                )
+
+            return mutate
+
+        def rename_param_and_add_original_local(
+            parameter: str, replacement: str
+        ) -> Mutator:
+            def mutate(lines: list[str], _context: dict[str, Any]) -> None:
+                header = VERIFIER.normalized(lines[0])
+                self.assertEqual(header.count(parameter), 1)
+                self.set_normalized(
+                    lines, 0, header.replace(parameter, replacement, 1)
+                )
+                self.insert_normalized(lines, 1, [f"(local {parameter} i32)"])
+
+            return mutate
+
+        def remove_type_use(type_use: str) -> Mutator:
+            def mutate(lines: list[str], _context: dict[str, Any]) -> None:
+                header = VERIFIER.normalized(lines[0])
+                marker = f"(type {type_use})"
+                self.assertEqual(header.count(marker), 1)
+                self.set_normalized(lines, 0, header.replace(f" {marker}", "", 1))
+
+            return mutate
+
+        cases = (
+            (
+                "audited legacy TypedMap setter key/value parameter labels swap",
+                "index/Value>#set",
+                swap_names(0, "$p1", "$p2"),
+                "typed_map_set_body_sha256",
+                "typed_map_set",
+                "1bde0f8b27b08c4433a2e9392dadffe18237a9d393bd609b9cd2a3713ef6feb0",
+            ),
+            ("TypedMap get receiver/key labels swap", "index/Value>#get", swap_names(0, "$p0", "$p1"), "typed_map_get_body_sha256", "typed_map_get", None),
+            ("TypedMap getEntry receiver/key labels swap", "index/Value>#getEntry", swap_names(0, "$p0", "$p1"), "typed_map_get_entry_body_sha256", "typed_map_get_entry", None),
+            ("entry constructor key/value labels swap", "ethereum.SmartContract#constructor", swap_names(0, "$p1", "$p2"), "entry_constructor_body_sha256", "entry_constructor", None),
+            ("EventParam receiver/index labels swap", "EventParam>#__get", swap_names(0, "$p0", "$p1"), "event_param_get_body_sha256", "event_param_get", None),
+            ("Value constructor gains typed local", "index/Value#constructor", append_unused_local("i64"), "value_constructor_body_sha256", "value_constructor", None),
+            ("Value.fromBigDecimal parameter/local identities swap", "index/Value.fromBigDecimal", swap_param_and_local("$p0", "$l1"), "value_from_big_decimal_body_sha256", "value_from_big_decimal", None),
+            ("arena allocator local identities swap", "allocator/arena/__memory_allocate", swap_names(1, "$l1", "$l2"), "arena_allocate_body_sha256", "arena_allocate", None),
+            ("ArrayBuffer computeSize gains typed local", "internal/arraybuffer/computeSize", add_named_local("i64"), "compute_size_body_sha256", "compute_size", None),
+            ("ArrayBuffer allocate parameter/local identities swap", "internal/arraybuffer/allocateUnsafe", swap_param_and_local("$p0", "$l1"), "allocate_unsafe_body_sha256", "allocate_unsafe", None),
+            ("ArrayBuffer reallocate pointer/length labels swap", "internal/arraybuffer/reallocateUnsafe", swap_names(0, "$p0", "$p1"), "reallocate_unsafe_body_sha256", "reallocate_unsafe", None),
+            ("entry-array constructor parameter/local identities swap", "TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#constructor", swap_param_and_local("$p0", "$l1"), "profile.array_constructor_body_sha256", "array_constructor", None),
+            ("entry-array push receiver/value labels swap", "TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/index/Value>>#push", swap_names(0, "$p0", "$p1"), "profile.array_push_body_sha256", "array_push", None),
+            ("String equality operand labels swap", "~lib/string/String.__eq", swap_names(0, "$p0", "$p1"), "string_eq_body_sha256", "string_eq", None),
+            ("compareUnsafe operand labels swap", "internal/string/compareUnsafe", swap_names(0, "$p0", "$p1"), "compare_unsafe_body_sha256", "compare_unsafe", None),
+            ("memcpy source/destination labels swap", "internal/memory/memcpy", swap_names(0, "$p0", "$p1"), "memcpy_body_sha256", "memcpy", None),
+            ("memmove source/destination labels swap", "internal/memory/memmove", swap_names(0, "$p0", "$p1"), "memmove_body_sha256", "memmove", None),
+            ("memset pointer/value labels swap", "internal/memory/memset", swap_names(0, "$p0", "$p1"), "memset_body_sha256", "memset", None),
+            ("Factory constructor operand labels swap", "templates/Pool/Factory/Factory#constructor", swap_names(0, "$p0", "$p1"), "factory_constructor_body_sha256", "factory_constructor", None),
+            ("ByteArray.fromI32 parameter/local identities swap", "index/ByteArray.fromI32", swap_param_and_local("$p0", "$l1"), "byte_array_from_i32_body_sha256", "byte_array_from_i32", None),
+            ("NativeMath.pow gains typed local", "~lib/math/NativeMath.pow", append_unused_local("f32"), "native_math_pow_body_sha256", "native_math_pow", None),
+            ("memory.allocate ignores renamed input via new local", "~lib/memory/memory.allocate", rename_param_and_add_original_local("$p0", "$p1"), "memory_allocate_body_sha256", "memory_allocate", None),
+            ("memory.reset drops its exact type use", "~lib/memory/memory.reset", remove_type_use("$t0"), "memory_reset_body_sha256", "memory_reset", None),
+        )
+        self.assertEqual(len(cases), 23)
+        for label, suffix, mutate, refresh, authority_id, digest in cases:
+            with self.subTest(label=label):
+                self.assert_valid_legacy_wat_mutation_rejected(
+                    label,
+                    self.selector(suffix),
+                    mutate,
+                    f"exact {authority_id} function declaration drift",
+                    refresh_body_authority=refresh,
+                    expected_changed_body_sha256=digest,
                 )
 
     def test_legacy_module_surface_state_reset_and_floor_mutations_fail_closed(self) -> None:

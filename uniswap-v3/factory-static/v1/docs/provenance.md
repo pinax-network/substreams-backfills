@@ -24,7 +24,7 @@ The reusable structural algorithms for initializer/global-writer analysis,
 direct linear-memory-write classification, and the modern allocator and
 TypedMap/array runtime are isolated in
 `scripts/uniswap_v3_wat_runtime.py` (SHA-256
-`977bab525ae5b02451c8652050d22a8c2f730c7982ba079d0b8eed9b094780e5`).
+`0b8fca4e63f33e7332341098e1da74b725029ac6b89479c69673393d3453ec8f`).
 That module performs no contract or repository I/O. Artifact hashes, contract
 truth gates, and release authority remain in this Factory verifier; reuse of
 the algorithms alone certifies no Pool handler or Pool mapping.
@@ -36,6 +36,12 @@ collection capsule closes allocator, capacity-growth, map set/get, indexed
 array access, low-level memory-body, and exact `String.__eq` dependencies
 together. Its lower-level dependency algorithms are private and make no
 standalone closure claim.
+
+The capsule records a separate exact declaration inventory for all 13 named
+functions in this path. It binds function type uses, parameter/local names and
+order, their types, and results independently of reachable-body and
+function-body hashes. Compile-valid parameter and local swaps are rejected
+after the corresponding outer body authority is refreshed.
 
 ## Authoritative retained artifacts
 

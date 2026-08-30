@@ -32,6 +32,14 @@ class WatRuntimeOps:
 
 
 @dataclass(frozen=True)
+class FunctionDeclarationSpec:
+    """Exact function header and local declarations behind named-body proofs."""
+
+    suffix: str
+    declaration_lines: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class ModuleStateSpec:
     """Exact initializer and mutable-global writer contract for one module family."""
 
@@ -55,6 +63,7 @@ class ModernCollectionSpec:
     memory_copy_body_sha256: str
     memcpy_body_sha256: str
     string_eq_body_sha256: str
+    function_declarations: Mapping[str, FunctionDeclarationSpec]
 
 
 @dataclass(frozen=True)
@@ -83,6 +92,7 @@ class ModernPoolCollectionSpec:
     entity_constructor_body_sha256: str
     entity_constructor_type_ids: tuple[int, int, int]
     string_eq_body_sha256: str
+    function_declarations: Mapping[str, FunctionDeclarationSpec]
     profiles: Mapping[str, ModernPoolCollectionProfileSpec]
 
 
@@ -150,7 +160,64 @@ class LegacyCollectionSpec:
     memset_body_sha256: str
     memory_allocate_body_sha256: str
     memory_reset_body_sha256: str
+    function_declarations: Mapping[str, FunctionDeclarationSpec]
     profiles: Mapping[str, LegacyCollectionProfileSpec]
+
+
+def _function_declaration_lines(function: Any, ops: WatRuntimeOps) -> list[str]:
+    """Return the exact header plus every leading local declaration line."""
+
+    lines = [ops.normalized(line) for line in function.lines]
+    ops.require(
+        bool(lines) and lines[0].startswith("(func $"),
+        "missing WAT function header",
+    )
+    declarations = [lines[0]]
+    for line in lines[1:]:
+        if not line.startswith("(local "):
+            break
+        declarations.append(line)
+    return declarations
+
+
+def _prove_exact_function_declaration_inventory(
+    context: dict[str, Any],
+    ops: WatRuntimeOps,
+    specs: Mapping[str, FunctionDeclarationSpec],
+) -> dict[str, Any]:
+    """Bind parameter/local names, order, types, results, and type uses exactly."""
+
+    observed: dict[str, dict[str, Any]] = {}
+    selected_functions: set[str] = set()
+    for authority_id in sorted(specs):
+        spec = specs[authority_id]
+        function = ops.function_by_suffix(context, spec.suffix)
+        declarations = _function_declaration_lines(function, ops)
+        ops.require(
+            declarations == list(spec.declaration_lines),
+            f"{context['cid']} exact {authority_id} function declaration drift",
+        )
+        ops.require(
+            function.name not in selected_functions,
+            f"{context['cid']} duplicate function declaration authority: {function.name}",
+        )
+        selected_functions.add(function.name)
+        observed[authority_id] = {
+            "function": function.name,
+            "declaration_lines": declarations,
+            "declaration_sha256": hashlib.sha256(
+                ("\n".join(declarations) + "\n").encode()
+            ).hexdigest(),
+        }
+    ops.require(
+        len(observed) == len(specs),
+        f"{context['cid']} incomplete function declaration inventory",
+    )
+    return {
+        "functions": observed,
+        "function_count": len(observed),
+        "parameter_local_and_result_declarations_exactly_bound": True,
+    }
 
 
 def native_start_directives(module_text: str) -> list[str]:
@@ -1688,6 +1755,9 @@ def prove_legacy_collection_capsule(
 ) -> dict[str, Any]:
     """Close the sole public legacy allocator, collection, Value, and string capsule."""
 
+    declarations = _prove_exact_function_declaration_inventory(
+        context, ops, spec.function_declarations
+    )
     start = _prove_legacy_start_dependencies(context, ops, spec)
     allocator = _prove_legacy_allocator_dependencies(context, ops, spec)
     indexed_value = _prove_legacy_indexed_and_value_dependencies(context, ops, spec)
@@ -1695,6 +1765,7 @@ def prove_legacy_collection_capsule(
     arrays = _prove_legacy_array_dependencies(context, ops, spec)
     typed_map = _prove_legacy_typed_map_dependencies(context, ops, spec)
     return {
+        "exact_function_declarations": declarations,
         "native_start_and_constants": start,
         "allocator_and_arraybuffer": allocator,
         "indexed_access_and_value": indexed_value,
@@ -1719,6 +1790,9 @@ def prove_modern_collection_capsule(
     algorithms above intentionally cannot certify a consumer on their own.
     """
 
+    declarations = _prove_exact_function_declaration_inventory(
+        context, ops, spec.function_declarations
+    )
     if isinstance(spec, ModernPoolCollectionSpec):
         collection = _prove_modern_pool_mutation_dependencies(context, ops, spec)
         indexed = _prove_modern_pool_indexed_access_dependencies(context, ops, spec)
@@ -1738,6 +1812,7 @@ def prove_modern_collection_capsule(
     )
     collection["collection_mutation_chain_structurally_closed"] = True
     return {
+        "exact_function_declarations": declarations,
         "typed_map_collection_runtime": collection,
         "indexed_collection": indexed,
         "string_equality": {

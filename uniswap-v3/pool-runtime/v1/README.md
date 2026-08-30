@@ -21,7 +21,8 @@ SHA-256)` tuple:
 
 ## Generation-specific proofs
 
-The modern proof is unchanged. Its public shared collection capsule binds the
+The modern semantic proof is retained and its declaration boundary is
+strengthened. Its public shared collection capsule binds the
 77-line inline `TypedMap#set`, both update and append branches, exact old/new
 length commit, `TypedMap#get`, EventParam indexed access, the Entity
 constructor with type IDs 25/27/29, stub allocator and object-return
@@ -45,6 +46,13 @@ get/getEntry/set; and entry-array construction/push. The retained symbol
 `ethereum.SmartContract#constructor` is bound by its call sites and exact
 layout as the 8-byte TypedMap entry constructor: receiver zero, key at offset
 0, value at offset 4, and the same entry returned.
+
+Before either generation-specific capsule can close, the verifier binds an
+independent exact declaration inventory for every named helper used by the
+proof. Each entry includes the full function header and every leading local
+declaration, fixing parameter/local names, order, types, results, and type-use
+identity. A refreshed body checksum therefore cannot reinterpret `$p1` as
+`$p2` or exchange named locals behind otherwise unchanged instructions.
 
 `memcpy`, `memmove`, and `memset` remain exact retained-body authorities. The
 capsule proves the relevant operand call sites but does not claim a new general

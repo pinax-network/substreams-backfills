@@ -54,6 +54,12 @@ low-level memory primitives used beneath that chain are explicit exact-body
 boundaries; their independently pinned digests are not refreshed by
 top-level helper authority.
 
+The shared public capsule also binds an exact 13-function declaration
+inventory before those structural claims can close. Function type uses,
+ordered named parameters and types, results, and named locals are independent
+authority, so refreshing reachable-body hashes cannot reinterpret parameter
+or local identities.
+
 The initializer proof binds the `_start -> ~start` export, absence of a native
 WebAssembly start section, zero initial mutable globals, and the complete
 writer inventory for `~started`, the allocator offset, and ZERO/ONE constants.

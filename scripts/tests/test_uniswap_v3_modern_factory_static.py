@@ -1085,6 +1085,44 @@ class ModernFactoryStaticTest(unittest.TestCase):
                     refresh_reachable_body_authority=True,
                 )
 
+    def test_shared_modern_declaration_identity_survives_outer_body_refresh(self) -> None:
+        def swap_names(index: int, first: str, second: str) -> Mutator:
+            def mutate(lines: list[str], _context: dict[str, Any]) -> None:
+                line = VERIFIER.normalized(lines[index])
+                self.assertEqual(line.count(first), 1)
+                self.assertEqual(line.count(second), 1)
+                changed = line.replace(first, "$signature_swap", 1)
+                changed = changed.replace(second, first, 1)
+                changed = changed.replace("$signature_swap", second, 1)
+                self.set_normalized(lines, index, changed)
+
+            return mutate
+
+        cases = (
+            (
+                "Factory TypedMap setter key/value parameter labels swap",
+                VERIFIER.TYPED_MAP_SET_CALL,
+                swap_names(0, "$p1", "$p2"),
+                "typed_map_set",
+            ),
+            (
+                "Factory Entity constructor local identities swap",
+                "common/collections/Entity#constructor",
+                swap_names(1, "$l1", "$l2"),
+                "entity_constructor",
+            ),
+        )
+        for label, suffix, mutate, authority_id in cases:
+            with self.subTest(label=label):
+                self.assert_valid_wat_mutation_rejected(
+                    label,
+                    self.function_selector(suffix),
+                    mutate,
+                    self.public_collection_capsule_check,
+                    f"exact {authority_id} function declaration drift",
+                    refresh_reachable_body_authority=True,
+                )
+
     def test_direct_memory_write_opcode_inventory_covers_all_writer_families(self) -> None:
         for instruction in (
             "i32.store",

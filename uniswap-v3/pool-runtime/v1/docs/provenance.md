@@ -59,6 +59,13 @@ String equality/compare, and memory allocate/reset. The full names, line counts,
 hashes, structural facts, and exact low-level primitive boundaries are emitted
 in each legacy proof projection.
 
+The declaration inventory is separate from those body hashes. It contains 11
+modern Pool functions and 26 legacy functions per artifact, preserving the
+exact header, ordered named parameters and types, result, type use, and all
+leading local declarations. This closes the reviewed counterexamples where a
+compile-valid `$p1`/`$p2` header swap was accepted after refreshing only the
+function body hash.
+
 Initialized data remains strictly below the exact `align8(max_data_end)` floor:
 
 | Profile group | Segments | Maximum end | Allocator floor |
@@ -82,8 +89,10 @@ python3 -m unittest scripts.tests.test_uniswap_v3_pool_runtime
 ```
 
 Every adversarial WAT fixture is first compiled with checksum-pinned WABT
-`wat2wasm`. The legacy registry contains 55 compile-valid mutations spanning
-every promoted layer and all four digest groups. A deeper invariant test
+`wat2wasm`. The legacy registry contains 78 compile-valid mutations spanning
+every promoted layer, all four digest groups, and 23 distinct declaration
+mutations. Modern Pool and Factory tests independently cover the shared
+declaration boundary. A deeper invariant test
 refreshes only the deliberately changed top-level body authority so rejection
 occurs at the independent structural boundary. Candidate-root divergence is
 tested in both verify and `--write` modes.

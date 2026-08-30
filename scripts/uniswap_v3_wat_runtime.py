@@ -56,6 +56,35 @@ class ModernCollectionSpec:
     string_eq_body_sha256: str
 
 
+@dataclass(frozen=True)
+class ModernPoolCollectionProfileSpec:
+    """Profile-specific retained-body authority for a modern Pool module."""
+
+    ensure_capacity_body_sha256: str
+    event_param_get_body_sha256: str
+    memory_fill_body_sha256: str
+    memory_copy_body_sha256: str
+    memcpy_body_sha256: str
+
+
+@dataclass(frozen=True)
+class ModernPoolCollectionSpec:
+    """Distinct authority for the modern Pool inline-append collection layout."""
+
+    typed_map_set_call: str
+    typed_map_get_call: str
+    event_param_get_call: str
+    stub_new_call: str
+    stub_alloc_body_sha256: str
+    stub_new_body_sha256: str
+    typed_map_set_body_sha256: str
+    typed_map_get_body_sha256: str
+    entity_constructor_body_sha256: str
+    entity_constructor_type_ids: tuple[int, int, int]
+    string_eq_body_sha256: str
+    profiles: Mapping[str, ModernPoolCollectionProfileSpec]
+
+
 def native_start_directives(module_text: str) -> list[str]:
     """Return every native WebAssembly ``start`` directive in a text module."""
 
@@ -168,7 +197,9 @@ def is_direct_memory_write(raw_line: str, normalized: Normalize) -> bool:
 
 
 def _prove_modern_allocator_dependency(
-    context: dict[str, Any], ops: WatRuntimeOps, spec: ModernCollectionSpec
+    context: dict[str, Any],
+    ops: WatRuntimeOps,
+    spec: ModernCollectionSpec | ModernPoolCollectionSpec,
 ) -> dict[str, Any]:
     """Bind allocator dependencies for the public aggregate capsule."""
 
@@ -217,9 +248,15 @@ def _prove_modern_allocator_dependency(
         and ops.call_name(new.lines[16]) == "~lib/rt/stub/__alloc",
         f"{context['cid']} stub/__new allocation/header/return identity drift",
     )
+    new_digest = hashlib.sha256(new.payload).hexdigest()
+    if isinstance(spec, ModernPoolCollectionSpec):
+        ops.require(
+            new_digest == spec.stub_new_body_sha256,
+            f"{context['cid']} fixed retained stub/__new body drift",
+        )
     return {
         "stub_alloc_body_sha256": alloc_digest,
-        "stub_new_body_sha256": hashlib.sha256(new.payload).hexdigest(),
+        "stub_new_body_sha256": new_digest,
         "alloc_returns_old_offset_plus_header_word": True,
         "new_returns_same_allocated_payload_plus_object_header": True,
         "allocator_return_identity_structurally_proven": True,
@@ -397,8 +434,183 @@ def _prove_modern_typed_map_mutation_dependencies(
     }
 
 
+def _prove_modern_pool_mutation_dependencies(
+    context: dict[str, Any], ops: WatRuntimeOps, spec: ModernPoolCollectionSpec
+) -> dict[str, Any]:
+    """Bind the Pool 77-line inline-append mutation dependency chain."""
+
+    allocator = _prove_modern_allocator_dependency(context, ops, spec)
+    profile = context["profile"]["profile_id"]
+    ops.require(
+        profile in spec.profiles,
+        f"{context['cid']} no retained Pool runtime authority for profile {profile}",
+    )
+    profile_spec = spec.profiles[profile]
+
+    ensure = ops.function_by_suffix(context, "~lib/array/ensureCapacity")
+    ensure_lines = [ops.normalized(line) for line in ensure.lines]
+    ops.require(
+        len(ensure_lines) == 226
+        and ensure_lines[2:10]
+        == [
+            "local.get $p0", "i32.load offset=8", "local.tee $l3", "i32.const 2",
+            "i32.shr_u", "local.get $p1", "i32.lt_u", "if $I0",
+        ]
+        and ensure_lines[195:226]
+        == [
+            "local.get $p1", "i32.const 4", "i32.sub", "local.get $l6",
+            "i32.store offset=16", "local.get $l3", "local.get $p1", "i32.const 16",
+            "i32.add", "local.tee $p1", "i32.add", "end", "local.get $l5",
+            "local.get $l3", "i32.sub", ensure_lines[210], "local.get $p1",
+            "local.get $l4", "i32.ne", "if $I12", "local.get $p0", "local.get $p1",
+            "i32.store", "local.get $p0", "local.get $p1", "i32.store offset=4",
+            "end", "local.get $p0", "local.get $l5", "i32.store offset=8", "end)",
+        ]
+        and (ops.call_name(ensure.lines[175]) or "").endswith("stub/__alloc")
+        and (ops.call_name(ensure.lines[179]) or "").endswith("memory.copy")
+        and (ops.call_name(ensure.lines[210]) or "").endswith("memory.fill"),
+        f"{context['cid']} Pool ensureCapacity committed capacity/backing behavior drift",
+    )
+    ensure_digest = hashlib.sha256(ensure.payload).hexdigest()
+    ops.require(
+        ensure_digest == profile_spec.ensure_capacity_body_sha256,
+        f"{context['cid']} fixed retained Pool ensureCapacity body drift",
+    )
+
+    typed_set = ops.function_by_suffix(context, spec.typed_map_set_call)
+    set_lines = [ops.normalized(line) for line in typed_set.lines]
+    ops.require(
+        len(set_lines) == 77
+        and set_lines[2:33]
+        == [
+            "block $B0 (result i32)", "loop $L1", "local.get $p0", "i32.load",
+            "i32.load offset=12", "local.get $l3", "i32.gt_s", "if $I2",
+            "local.get $p0", "i32.load", "local.get $l3", set_lines[13], "i32.load",
+            "local.get $p1", set_lines[16], "if $I3", "local.get $p0", "i32.load",
+            "local.get $l3", set_lines[21], "br $B0", "end", "local.get $l3",
+            "i32.const 1", "i32.add", "local.set $l3", "br $L1", "end", "end",
+            "i32.const 0", "end",
+        ]
+        and ops.call_name(typed_set.lines[13]) == spec.event_param_get_call
+        and ops.call_name(typed_set.lines[16]) == "~lib/string/String.__eq"
+        and ops.call_name(typed_set.lines[21]) == spec.event_param_get_call
+        and set_lines[33:77]
+        == [
+            "local.tee $l3", "if $I4", "local.get $l3", "local.get $p2",
+            "i32.store offset=4", "else", "i32.const 8", "i32.const 28",
+            set_lines[41], "local.tee $l3", "i32.const 0", "i32.store",
+            "local.get $l3", "i32.const 0", "i32.store offset=4", "local.get $l3",
+            "local.get $p1", "i32.store", "local.get $l3", "local.get $p2",
+            "i32.store offset=4", "local.get $p0", "i32.load", "local.tee $p0",
+            "i32.load offset=12", "local.tee $p1", "i32.const 1", "i32.add",
+            "local.set $p2", "local.get $p0", "local.get $p2", set_lines[64],
+            "local.get $p0", "i32.load offset=4", "local.get $p1", "i32.const 2",
+            "i32.shl", "i32.add", "local.get $l3", "i32.store", "local.get $p0",
+            "local.get $p2", "i32.store offset=12", "end)",
+        ]
+        and ops.call_name(typed_set.lines[41]) == spec.stub_new_call
+        and (ops.call_name(typed_set.lines[64]) or "").endswith("array/ensureCapacity"),
+        f"{context['cid']} Pool TypedMap#set key/value/inline-append operand drift",
+    )
+    set_digest = hashlib.sha256(typed_set.payload).hexdigest()
+    ops.require(
+        set_digest == spec.typed_map_set_body_sha256,
+        f"{context['cid']} fixed retained Pool TypedMap#set body drift",
+    )
+
+    entity = ops.function_by_suffix(context, "common/collections/Entity#constructor")
+    entity_lines = [ops.normalized(line) for line in entity.lines]
+    receiver_type, fallback_type, array_type = spec.entity_constructor_type_ids
+    ops.require(
+        len(entity_lines) == 58
+        and entity_lines[2:18]
+        == [
+            "local.get $p0", "i32.eqz", "if $I0", "i32.const 4",
+            f"i32.const {receiver_type}", entity_lines[7], "local.set $p0", "end",
+            "local.get $p0", "i32.eqz", "if $I1", "i32.const 4",
+            f"i32.const {fallback_type}", entity_lines[15], "local.set $p0", "end",
+        ]
+        and ops.call_name(entity.lines[7]) == spec.stub_new_call
+        and ops.call_name(entity.lines[15]) == spec.stub_new_call
+        and entity_lines[18:58]
+        == [
+            "local.get $p0", "i32.const 0", "i32.store", "i32.const 16",
+            f"i32.const {array_type}", entity_lines[23], "local.tee $l1", "i32.const 0",
+            "i32.store", "local.get $l1", "i32.const 0", "i32.store offset=4",
+            "local.get $l1", "i32.const 0", "i32.store offset=8", "local.get $l1",
+            "i32.const 0", "i32.store offset=12", "i32.const 32", "i32.const 0",
+            entity_lines[38], "local.tee $l2", "i32.const 32", entity_lines[41],
+            "local.get $l1", "local.get $l2", "i32.store", "local.get $l1",
+            "local.get $l2", "i32.store offset=4", "local.get $l1", "i32.const 32",
+            "i32.store offset=8", "local.get $l1", "i32.const 0",
+            "i32.store offset=12", "local.get $p0", "local.get $l1", "i32.store",
+            "local.get $p0)",
+        ]
+        and ops.call_name(entity.lines[23]) == spec.stub_new_call
+        and ops.call_name(entity.lines[38]) == spec.stub_new_call
+        and (ops.call_name(entity.lines[41]) or "").endswith("memory.fill"),
+        f"{context['cid']} Pool Entity constructor type/backing/return drift",
+    )
+    entity_digest = hashlib.sha256(entity.payload).hexdigest()
+    ops.require(
+        entity_digest == spec.entity_constructor_body_sha256,
+        f"{context['cid']} fixed retained Pool Entity constructor body drift",
+    )
+
+    primitive_authority = {
+        "memory_fill": (
+            "~lib/memory/memory.fill",
+            profile_spec.memory_fill_body_sha256,
+        ),
+        "memory_copy": (
+            "~lib/memory/memory.copy",
+            profile_spec.memory_copy_body_sha256,
+        ),
+        "memcpy": ("~lib/util/memory/memcpy", profile_spec.memcpy_body_sha256),
+    }
+    fixed_bodies: dict[str, dict[str, Any]] = {}
+    for key, (suffix, expected_digest) in primitive_authority.items():
+        primitive = ops.function_by_suffix(context, suffix)
+        digest = hashlib.sha256(primitive.payload).hexdigest()
+        ops.require(
+            digest == expected_digest,
+            f"{context['cid']} fixed retained Pool {suffix} body drift",
+        )
+        fixed_bodies[key] = {
+            "function": primitive.name,
+            "body_sha256": digest,
+            "proof_boundary": "exact retained low-level memory primitive body",
+        }
+    return {
+        "allocator": allocator,
+        "ensure_capacity": {
+            "function": ensure.name,
+            "body_sha256": ensure_digest,
+            "committed_capacity_and_backing_structurally_proven": True,
+            "proof_boundary": "exact retained complex array-growth primitive body plus structural commit checks",
+        },
+        "typed_map_set": {
+            "function": typed_set.name,
+            "body_sha256": set_digest,
+            "same_key_and_value_update_or_new_entry_structurally_proven": True,
+            "same_new_entry_appended_inline_to_same_receiver": True,
+            "old_length_slot_and_exact_new_length_committed": True,
+        },
+        "entity_map_constructor": {
+            "function": entity.name,
+            "body_sha256": entity_digest,
+            "type_ids": list(spec.entity_constructor_type_ids),
+            "fresh_array_backing_and_same_entity_receiver_structurally_proven": True,
+        },
+        "fixed_low_level_memory_primitives": fixed_bodies,
+        "_collection_mutation_dependencies_structurally_bound": True,
+    }
+
+
 def _prove_modern_indexed_access_dependencies(
-    context: dict[str, Any], ops: WatRuntimeOps, spec: ModernCollectionSpec
+    context: dict[str, Any],
+    ops: WatRuntimeOps,
+    spec: ModernCollectionSpec | ModernPoolCollectionSpec,
 ) -> dict[str, Any]:
     """Bind indexed-access dependencies without independently claiming closure."""
 
@@ -474,8 +686,79 @@ def _prove_modern_indexed_access_dependencies(
     }
 
 
+def _prove_modern_pool_indexed_access_dependencies(
+    context: dict[str, Any], ops: WatRuntimeOps, spec: ModernPoolCollectionSpec
+) -> dict[str, Any]:
+    """Add exact Pool getter bodies to the shared indexed-access structure."""
+
+    profile = context["profile"]["profile_id"]
+    ops.require(
+        profile in spec.profiles,
+        f"{context['cid']} no retained Pool indexed authority for profile {profile}",
+    )
+    event_get = ops.function_by_suffix(context, spec.event_param_get_call)
+    event_lines = [ops.normalized(line) for line in event_get.lines]
+    ops.require(
+        len(event_lines) == 31
+        and event_lines[1:6]
+        == ["local.get $p0", "i32.load offset=12", "local.get $p1", "i32.le_u", "if $I0"]
+        and (ops.call_name(event_get.lines[10]) or "").endswith("builtins/abort")
+        and event_lines[13:21]
+        == [
+            "local.get $p0", "i32.load offset=4", "local.get $p1", "i32.const 2",
+            "i32.shl", "i32.add", "i32.load", "local.tee $p0",
+        ]
+        and event_lines[21:23] == ["i32.eqz", "if $I1"]
+        and (ops.call_name(event_get.lines[27]) or "").endswith("builtins/abort")
+        and event_lines[28:31] == ["unreachable", "end", "local.get $p0)"],
+        f"{context['cid']} Pool EventParam Array#get bounds/index/value drift",
+    )
+    event_get_digest = hashlib.sha256(event_get.payload).hexdigest()
+    ops.require(
+        event_get_digest == spec.profiles[profile].event_param_get_body_sha256,
+        f"{context['cid']} fixed retained Pool EventParam Array#get body drift",
+    )
+    typed_get = ops.function_by_suffix(context, spec.typed_map_get_call)
+    map_lines = [ops.normalized(line) for line in typed_get.lines]
+    ops.require(
+        len(map_lines) == 32
+        and map_lines[2:32]
+        == [
+            "loop $L0", "local.get $p0", "i32.load", "i32.load offset=12",
+            "local.get $l2", "i32.gt_s", "if $I1", "local.get $p0", "i32.load",
+            "local.get $l2", map_lines[12], "i32.load", "local.get $p1", map_lines[15],
+            "if $I2", "local.get $p0", "i32.load", "local.get $l2", map_lines[20],
+            "i32.load offset=4", "return", "end", "local.get $l2", "i32.const 1",
+            "i32.add", "local.set $l2", "br $L0", "end", "end", "i32.const 0)",
+        ]
+        and ops.call_name(typed_get.lines[12]) == spec.event_param_get_call
+        and ops.call_name(typed_get.lines[15]) == "~lib/string/String.__eq"
+        and ops.call_name(typed_get.lines[20]) == spec.event_param_get_call,
+        f"{context['cid']} Pool TypedMap#get receiver/key/ordered-result drift",
+    )
+    typed_get_digest = hashlib.sha256(typed_get.payload).hexdigest()
+    ops.require(
+        typed_get_digest == spec.typed_map_get_body_sha256,
+        f"{context['cid']} fixed retained Pool TypedMap#get body drift",
+    )
+    return {
+        "event_param_array_get": {
+            "function": event_get.name,
+            "body_sha256": event_get_digest,
+            "same_receiver_index_and_non_null_result_structurally_proven": True,
+        },
+        "typed_map_get": {
+            "function": typed_get.name,
+            "body_sha256": typed_get_digest,
+            "same_receiver_key_loop_and_value_result_structurally_proven": True,
+        },
+    }
+
+
 def prove_modern_collection_capsule(
-    context: dict[str, Any], ops: WatRuntimeOps, spec: ModernCollectionSpec
+    context: dict[str, Any],
+    ops: WatRuntimeOps,
+    spec: ModernCollectionSpec | ModernPoolCollectionSpec,
 ) -> dict[str, Any]:
     """Close the public modern allocator, collection, and equality capsule.
 
@@ -483,8 +766,12 @@ def prove_modern_collection_capsule(
     algorithms above intentionally cannot certify a consumer on their own.
     """
 
-    collection = _prove_modern_typed_map_mutation_dependencies(context, ops, spec)
-    indexed = _prove_modern_indexed_access_dependencies(context, ops, spec)
+    if isinstance(spec, ModernPoolCollectionSpec):
+        collection = _prove_modern_pool_mutation_dependencies(context, ops, spec)
+        indexed = _prove_modern_pool_indexed_access_dependencies(context, ops, spec)
+    else:
+        collection = _prove_modern_typed_map_mutation_dependencies(context, ops, spec)
+        indexed = _prove_modern_indexed_access_dependencies(context, ops, spec)
     string_eq = ops.function_by_suffix(context, "~lib/string/String.__eq")
     string_eq_digest = hashlib.sha256(string_eq.payload).hexdigest()
     ops.require(

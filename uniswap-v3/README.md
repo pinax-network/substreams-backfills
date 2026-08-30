@@ -245,6 +245,16 @@ Value-decoder, token-call, static-lookup, entry-local, and complete decimals
 dataflows and prove `Pool.tick` absent. The four legacy static paths and every
 runtime, continuity, parity, backfill, and production gate remain false.
 
+The sibling [`pool-runtime/v1`](pool-runtime/v1/README.md) supplement closes a
+runtime-only structural capsule for exactly the modern Base and modern mainnet
+Pool artifacts. Its public shared capsule binds the distinct 77-line inline
+`TypedMap#set`, getter/index/equality dependencies, Entity constructor type
+IDs, allocator returns, profile capacity bodies, exported initializer, complete
+critical-global writer inventory, and initialized-data floor. The six legacy
+Pool runtime profiles, every Pool handler, entity history, continuity,
+oracle/parity, checkpoint, backfill, production, and readiness gate remain
+false.
+
 The next sibling [`npm-observation-plan/`](npm-observation-plan/README.md)
 closes the repository-only host request set before joint reduction. It first
 enumerates every unique Position key from the complete event envelope, then,

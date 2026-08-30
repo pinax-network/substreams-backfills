@@ -1,0 +1,466 @@
+{
+  "authority_contract": {
+    "fail_closed_rule": "any candidate runtime, tuple, WAT, export, start, global initializer/writer, allocator floor, data segment, setter/getter/index/equality, Entity type, allocator return, capacity, or low-level memory-body drift leaves every scoped runtime claim false",
+    "host_boundary": "imported host functions are assumed not to write arbitrary linear memory; complex capacity and low-level memory bodies retain exact aggregate-body authority",
+    "proof_model": "exact artifact tuple selection plus exported initializer/global-writer/data-floor closure and the public modern Pool collection capsule",
+    "semantic_authority": "exact retained WASM bytes and checksum-pinned WABT 1.0.35 --generate-names WAT for only the modern Base and modern mainnet Pool mappings"
+  },
+  "contract_version": "uniswap-v3-modern-pool-runtime/v1",
+  "modern_pool_runtime_proofs": [
+    {
+      "artifact_selection_tuple": [
+        "modern-base",
+        "QmPZCHE1URf4oviX7Tbrkw3aMENo1qAeEGa1AS2gMumG7P",
+        "e0050819429ca279916027512234119308ab26f4ff115939e6409aab676a501c",
+        "bd42b64aeaaf677018c11fe779179ecb81d7c4125fa0b846134bb0e0a6059ad1"
+      ],
+      "defined_function_count": 123,
+      "mapping_cid": "QmPZCHE1URf4oviX7Tbrkw3aMENo1qAeEGa1AS2gMumG7P",
+      "modern_pool_runtime_facts_only": true,
+      "profile_id": "modern-base",
+      "proof_boundaries": {
+        "complex_allocator_capacity_and_memory_primitive_bodies_are_exact_aggregate_boundaries": true,
+        "general_reachable_helper_memory_safety_rederived": false,
+        "handler_semantics_proven": false,
+        "historic_event_population_proven": false,
+        "imported_host_functions_assumed_not_to_write_arbitrary_linear_memory": true
+      },
+      "public_collection_capsule": {
+        "indexed_collection": {
+          "event_param_array_get": {
+            "body_sha256": "dd7f14070e5643932f0dc9ba5d3e7f9966aa900dc9e171eb213b9aaf4cf6d0c8",
+            "function": "~lib/array/Array<~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.EventParam>#__get",
+            "same_receiver_index_and_non_null_result_structurally_proven": true
+          },
+          "typed_map_get": {
+            "body_sha256": "672fd714a063fdaf09f51b8e3a25c5b01a2124f68f3e8f7fcb587cddeb5999cb",
+            "function": "~lib/@graphprotocol/graph-ts/common/collections/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/common/value/Value>#get",
+            "same_receiver_key_loop_and_value_result_structurally_proven": true
+          }
+        },
+        "modern_collection_capsule_structurally_closed": true,
+        "string_equality": {
+          "function": "~lib/string/String.__eq",
+          "proof_boundary": "exact retained pure library primitive body",
+          "retained_body_sha256": "f7967b738553ba98aba24f869e968d73e8013f99e83d02e106cad52306aa3c3f"
+        },
+        "typed_map_collection_runtime": {
+          "allocator": {
+            "alloc_returns_old_offset_plus_header_word": true,
+            "allocator_return_identity_structurally_proven": true,
+            "new_returns_same_allocated_payload_plus_object_header": true,
+            "stub_alloc_body_sha256": "a03922d8f65cdc65e9d23c65bae22238c3783fed3294ec8847c2951f45a49c68",
+            "stub_new_body_sha256": "dc15ae7bfd1ff6f9f27d365946a2de6d849b46ed9e08818b80d59c05f97918fa"
+          },
+          "collection_mutation_chain_structurally_closed": true,
+          "ensure_capacity": {
+            "body_sha256": "09e6f7222a5ada41dc343ffb5eb297342dd3ff167cd6532bcaeec772f9705578",
+            "committed_capacity_and_backing_structurally_proven": true,
+            "function": "~lib/array/ensureCapacity",
+            "proof_boundary": "exact retained complex array-growth primitive body plus structural commit checks"
+          },
+          "entity_map_constructor": {
+            "body_sha256": "df453669386fdd214d23b561c134fdc0b1fe4e8c9bb46a3b6bec63e22e51d032",
+            "fresh_array_backing_and_same_entity_receiver_structurally_proven": true,
+            "function": "~lib/@graphprotocol/graph-ts/common/collections/Entity#constructor",
+            "type_ids": [
+              25,
+              27,
+              29
+            ]
+          },
+          "fixed_low_level_memory_primitives": {
+            "memcpy": {
+              "body_sha256": "a201b34d93d9bb7e4813134f668fb9436014260ba637d2db39cf7af3dc84a97c",
+              "function": "~lib/util/memory/memcpy",
+              "proof_boundary": "exact retained low-level memory primitive body"
+            },
+            "memory_copy": {
+              "body_sha256": "0128a0af41ee62c13df7a14de4648d2e7ac19f230786e447a8736179e36d74a6",
+              "function": "~lib/memory/memory.copy",
+              "proof_boundary": "exact retained low-level memory primitive body"
+            },
+            "memory_fill": {
+              "body_sha256": "3eb4dece783813845638f30ebde64f0ce5c2d10784a724c6b5bcd346e7771390",
+              "function": "~lib/memory/memory.fill",
+              "proof_boundary": "exact retained low-level memory primitive body"
+            }
+          },
+          "typed_map_set": {
+            "body_sha256": "1e32ff9bb00d137e45c1023931fe103bbe71d7011e2955044d0fb772b88f008b",
+            "function": "~lib/@graphprotocol/graph-ts/common/collections/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/common/value/Value>#set",
+            "old_length_slot_and_exact_new_length_committed": true,
+            "same_key_and_value_update_or_new_entry_structurally_proven": true,
+            "same_new_entry_appended_inline_to_same_receiver": true
+          }
+        }
+      },
+      "retained_wasm": {
+        "bytes": 76545,
+        "path": "uniswap-v3/graft-ancestry/v1/artifacts/QmPZCHE1URf4oviX7Tbrkw3aMENo1qAeEGa1AS2gMumG7P",
+        "sha256": "e0050819429ca279916027512234119308ab26f4ff115939e6409aab676a501c",
+        "wat_sha256": "bd42b64aeaaf677018c11fe779179ecb81d7c4125fa0b846134bb0e0a6059ad1"
+      },
+      "start_and_allocator_floor": {
+        "all_initialized_data_below_allocator_floor_machine_proven": true,
+        "allocator_floor": 20940,
+        "allocator_floor_gap_bytes": 38,
+        "body_sha256": "52a99f58e7904d3ed759bf0a0272101e9e998bdfdb0e2fe93a21aedd6c12d589",
+        "direct_memory_write_sites": [],
+        "function": "~start",
+        "initialized_data": {
+          "maximum_end_exclusive": 20902,
+          "segment_count": 528,
+          "segment_inventory_sha256": "639741c2bdb018b7bebaae54df0bb6e723b290382c1b111686f7e3b459cb63a1"
+        },
+        "line_count": 50,
+        "module_state": {
+          "complete_global_set_inventory": {
+            "$src/utils/constants/ONE_BD": [
+              [
+                "~start",
+                24
+              ]
+            ],
+            "$src/utils/constants/ONE_BI": [
+              [
+                "~start",
+                18
+              ]
+            ],
+            "$src/utils/constants/ZERO_BD": [
+              [
+                "~start",
+                21
+              ]
+            ],
+            "$src/utils/constants/ZERO_BI": [
+              [
+                "~start",
+                15
+              ]
+            ],
+            "$src/utils/pricing/MINIMUM_ETH_LOCKED": [
+              [
+                "~start",
+                40
+              ]
+            ],
+            "$src/utils/pricing/Q192": [
+              [
+                "~start",
+                46
+              ]
+            ],
+            "$~lib/rt/stub/offset": [
+              [
+                "~lib/rt/stub/__alloc",
+                68
+              ],
+              [
+                "~lib/array/ensureCapacity",
+                161
+              ],
+              [
+                "~lib/array/ensureCapacity",
+                189
+              ],
+              [
+                "~start",
+                9
+              ]
+            ],
+            "$~started": [
+              [
+                "~start",
+                7
+              ]
+            ]
+          },
+          "complete_global_set_inventory_sha256": "12232b6b91eb8616eba9f252dfaece1b0056186e204d4389dc10fb3f94111d41",
+          "critical_global_initializers_and_all_writers_machine_proven": true,
+          "initializer_dispatch": {
+            "export": "_start",
+            "function": "~start",
+            "native_start_section_present": false,
+            "started_global_initial_value": 0
+          },
+          "zero_initialized_mutable_globals": [
+            "$~started",
+            "$~lib/rt/stub/offset",
+            "$src/utils/constants/ZERO_BI",
+            "$src/utils/constants/ONE_BI",
+            "$src/utils/constants/ZERO_BD",
+            "$src/utils/constants/ONE_BD",
+            "$src/utils/pricing/MINIMUM_ETH_LOCKED",
+            "$src/utils/pricing/Q192"
+          ]
+        },
+        "non_start_allocator_writers_are_capsule_bound_but_general_memory_safety_is_not_rederived": true,
+        "start_has_no_direct_linear_memory_write_machine_proven": true
+      }
+    },
+    {
+      "artifact_selection_tuple": [
+        "modern-mainnet",
+        "QmSaGgPnyhStviGQSGTokQYRgVqLFNvnGWfnv8tSfuvpWD",
+        "f9a25426839d83f84679cd0d272582f2631c57117093ffd342351bc04aff8970",
+        "8454917398ef7a3b8f965a7e40e5b7a1d8cf7879e898490aeabe15726c3d4281"
+      ],
+      "defined_function_count": 123,
+      "mapping_cid": "QmSaGgPnyhStviGQSGTokQYRgVqLFNvnGWfnv8tSfuvpWD",
+      "modern_pool_runtime_facts_only": true,
+      "profile_id": "modern-mainnet",
+      "proof_boundaries": {
+        "complex_allocator_capacity_and_memory_primitive_bodies_are_exact_aggregate_boundaries": true,
+        "general_reachable_helper_memory_safety_rederived": false,
+        "handler_semantics_proven": false,
+        "historic_event_population_proven": false,
+        "imported_host_functions_assumed_not_to_write_arbitrary_linear_memory": true
+      },
+      "public_collection_capsule": {
+        "indexed_collection": {
+          "event_param_array_get": {
+            "body_sha256": "d7838efd2a3cd438b05d6d627df4c1ea8ef0a291c02921096b89198d8643de68",
+            "function": "~lib/array/Array<~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.EventParam>#__get",
+            "same_receiver_index_and_non_null_result_structurally_proven": true
+          },
+          "typed_map_get": {
+            "body_sha256": "672fd714a063fdaf09f51b8e3a25c5b01a2124f68f3e8f7fcb587cddeb5999cb",
+            "function": "~lib/@graphprotocol/graph-ts/common/collections/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/common/value/Value>#get",
+            "same_receiver_key_loop_and_value_result_structurally_proven": true
+          }
+        },
+        "modern_collection_capsule_structurally_closed": true,
+        "string_equality": {
+          "function": "~lib/string/String.__eq",
+          "proof_boundary": "exact retained pure library primitive body",
+          "retained_body_sha256": "f7967b738553ba98aba24f869e968d73e8013f99e83d02e106cad52306aa3c3f"
+        },
+        "typed_map_collection_runtime": {
+          "allocator": {
+            "alloc_returns_old_offset_plus_header_word": true,
+            "allocator_return_identity_structurally_proven": true,
+            "new_returns_same_allocated_payload_plus_object_header": true,
+            "stub_alloc_body_sha256": "a03922d8f65cdc65e9d23c65bae22238c3783fed3294ec8847c2951f45a49c68",
+            "stub_new_body_sha256": "dc15ae7bfd1ff6f9f27d365946a2de6d849b46ed9e08818b80d59c05f97918fa"
+          },
+          "collection_mutation_chain_structurally_closed": true,
+          "ensure_capacity": {
+            "body_sha256": "90f7a34c6ef281823ee2062d67f72c339ee27b748d82b578348b02c3300a7579",
+            "committed_capacity_and_backing_structurally_proven": true,
+            "function": "~lib/array/ensureCapacity",
+            "proof_boundary": "exact retained complex array-growth primitive body plus structural commit checks"
+          },
+          "entity_map_constructor": {
+            "body_sha256": "df453669386fdd214d23b561c134fdc0b1fe4e8c9bb46a3b6bec63e22e51d032",
+            "fresh_array_backing_and_same_entity_receiver_structurally_proven": true,
+            "function": "~lib/@graphprotocol/graph-ts/common/collections/Entity#constructor",
+            "type_ids": [
+              25,
+              27,
+              29
+            ]
+          },
+          "fixed_low_level_memory_primitives": {
+            "memcpy": {
+              "body_sha256": "a201b34d93d9bb7e4813134f668fb9436014260ba637d2db39cf7af3dc84a97c",
+              "function": "~lib/util/memory/memcpy",
+              "proof_boundary": "exact retained low-level memory primitive body"
+            },
+            "memory_copy": {
+              "body_sha256": "0128a0af41ee62c13df7a14de4648d2e7ac19f230786e447a8736179e36d74a6",
+              "function": "~lib/memory/memory.copy",
+              "proof_boundary": "exact retained low-level memory primitive body"
+            },
+            "memory_fill": {
+              "body_sha256": "3eb4dece783813845638f30ebde64f0ce5c2d10784a724c6b5bcd346e7771390",
+              "function": "~lib/memory/memory.fill",
+              "proof_boundary": "exact retained low-level memory primitive body"
+            }
+          },
+          "typed_map_set": {
+            "body_sha256": "1e32ff9bb00d137e45c1023931fe103bbe71d7011e2955044d0fb772b88f008b",
+            "function": "~lib/@graphprotocol/graph-ts/common/collections/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/common/value/Value>#set",
+            "old_length_slot_and_exact_new_length_committed": true,
+            "same_key_and_value_update_or_new_entry_structurally_proven": true,
+            "same_new_entry_appended_inline_to_same_receiver": true
+          }
+        }
+      },
+      "retained_wasm": {
+        "bytes": 78047,
+        "path": "uniswap-v3/graft-ancestry/v1/artifacts/QmSaGgPnyhStviGQSGTokQYRgVqLFNvnGWfnv8tSfuvpWD",
+        "sha256": "f9a25426839d83f84679cd0d272582f2631c57117093ffd342351bc04aff8970",
+        "wat_sha256": "8454917398ef7a3b8f965a7e40e5b7a1d8cf7879e898490aeabe15726c3d4281"
+      },
+      "start_and_allocator_floor": {
+        "all_initialized_data_below_allocator_floor_machine_proven": true,
+        "allocator_floor": 22700,
+        "allocator_floor_gap_bytes": 38,
+        "body_sha256": "785ca5348b08a12a9a90b79760beefb3ab8b71130bfc01ee9e48ddefa36c79d3",
+        "direct_memory_write_sites": [],
+        "function": "~start",
+        "initialized_data": {
+          "maximum_end_exclusive": 22662,
+          "segment_count": 558,
+          "segment_inventory_sha256": "a84f4d75334466a8f8bb35580f7a508954daaf5b04de55947684570be06d9994"
+        },
+        "line_count": 49,
+        "module_state": {
+          "complete_global_set_inventory": {
+            "$src/utils/constants/ONE_BD": [
+              [
+                "~start",
+                24
+              ]
+            ],
+            "$src/utils/constants/ONE_BI": [
+              [
+                "~start",
+                18
+              ]
+            ],
+            "$src/utils/constants/ZERO_BD": [
+              [
+                "~start",
+                21
+              ]
+            ],
+            "$src/utils/constants/ZERO_BI": [
+              [
+                "~start",
+                15
+              ]
+            ],
+            "$src/utils/pricing/MINIMUM_ETH_LOCKED": [
+              [
+                "~start",
+                40
+              ]
+            ],
+            "$src/utils/pricing/Q192": [
+              [
+                "~start",
+                45
+              ]
+            ],
+            "$~lib/rt/stub/offset": [
+              [
+                "~lib/rt/stub/__alloc",
+                68
+              ],
+              [
+                "~lib/array/ensureCapacity",
+                161
+              ],
+              [
+                "~lib/array/ensureCapacity",
+                189
+              ],
+              [
+                "~start",
+                9
+              ]
+            ],
+            "$~started": [
+              [
+                "~start",
+                7
+              ]
+            ]
+          },
+          "complete_global_set_inventory_sha256": "4e4d5ef7249dca8bf2dbf1bcdca7607ea3518ae21c99b37bfbe93e4e79105919",
+          "critical_global_initializers_and_all_writers_machine_proven": true,
+          "initializer_dispatch": {
+            "export": "_start",
+            "function": "~start",
+            "native_start_section_present": false,
+            "started_global_initial_value": 0
+          },
+          "zero_initialized_mutable_globals": [
+            "$~started",
+            "$~lib/rt/stub/offset",
+            "$src/utils/constants/ZERO_BI",
+            "$src/utils/constants/ONE_BI",
+            "$src/utils/constants/ZERO_BD",
+            "$src/utils/constants/ONE_BD",
+            "$src/utils/pricing/MINIMUM_ETH_LOCKED",
+            "$src/utils/pricing/Q192"
+          ]
+        },
+        "non_start_allocator_writers_are_capsule_bound_but_general_memory_safety_is_not_rederived": true,
+        "start_has_no_direct_linear_memory_write_machine_proven": true
+      }
+    }
+  ],
+  "projection_sha256": "e2f2ad0284f68018029bf8ebf038018638a79d60072d076755afa5f67931075c",
+  "provenance": {
+    "base_commit": "112fd27745b3cdc252a9df9665481b6fa8257705",
+    "base_commit_verification": "recorded review provenance; Git ancestry is outside this verifier",
+    "shared_wat_runtime": {
+      "candidate_bytes_equal_exact_executed_source": true,
+      "path": "scripts/uniswap_v3_wat_runtime.py",
+      "raw_sha256": "2e6e28ba112dc49b9c7fe7658f47808968b3de3e3b45943129ba2f3b33295379"
+    },
+    "wabt_version": "1.0.35",
+    "wasm2wat_command": [
+      "wasm2wat",
+      "--generate-names",
+      "<retained-modern-pool-wasm>"
+    ]
+  },
+  "residuals": [
+    "six legacy Pool runtime capsules remain unproved",
+    "Burn, Mint, Initialize, Swap, and Flash handler semantics are outside this runtime-only certificate",
+    "complete Pool entity histories and actual historic event population remain unproved",
+    "host memory behavior, boundary continuity, parity, checkpoint, backfill, production, and readiness gates remain false"
+  ],
+  "scope": {
+    "closed_mapping_cids": [
+      "QmPZCHE1URf4oviX7Tbrkw3aMENo1qAeEGa1AS2gMumG7P",
+      "QmSaGgPnyhStviGQSGTokQYRgVqLFNvnGWfnv8tSfuvpWD"
+    ],
+    "closed_profiles": [
+      "modern-base",
+      "modern-mainnet"
+    ],
+    "handler_semantics_added": [],
+    "newly_closed_modern_runtime_profile_count": 2,
+    "pool_mapping_profile_count": 8,
+    "residual_legacy_runtime_profile_count": 6
+  },
+  "truth_boundary": {
+    "actual_historic_event_population_proven": false,
+    "aggregate_helper_memory_safety_rederived": false,
+    "all_eight_pool_runtime_capsules_proven": false,
+    "all_manifest_handler_semantics_complete": false,
+    "backfill_ready": false,
+    "both_modern_pool_77_line_typed_map_setters_proven": true,
+    "both_modern_pool_allocator_floors_above_all_initialized_data_proven": true,
+    "both_modern_pool_allocator_return_identities_proven": true,
+    "both_modern_pool_entity_constructor_type_ids_proven": true,
+    "both_modern_pool_exported_start_and_global_writer_inventories_proven": true,
+    "both_modern_pool_getter_index_and_string_equality_dependencies_proven": true,
+    "both_modern_pool_public_collection_capsules_proven": true,
+    "both_modern_pool_start_direct_memory_write_absence_proven": true,
+    "boundary_state_continuity_complete": false,
+    "candidate_shared_runtime_bytes_equal_executed_bytes": true,
+    "checkpoint_authority": false,
+    "exact_two_modern_pool_artifact_tuples_selected": true,
+    "graph_oracle_complete": false,
+    "host_functions_cannot_write_arbitrary_linear_memory": false,
+    "logical_parity_complete": false,
+    "physical_parity_complete": false,
+    "poi_parity_complete": false,
+    "pool_burn_handler_semantics_complete": false,
+    "pool_complete_entity_history": false,
+    "pool_flash_handler_semantics_complete": false,
+    "pool_initialize_handler_semantics_complete": false,
+    "pool_mint_handler_semantics_complete": false,
+    "pool_swap_handler_semantics_complete": false,
+    "production_ready": false,
+    "readiness_complete": false,
+    "six_legacy_pool_runtime_capsules_proven": false
+  }
+}

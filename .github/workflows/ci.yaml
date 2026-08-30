@@ -78,6 +78,10 @@ jobs:
         run: |
           python3 scripts/verify-uniswap-v3-pool-burn.py --wasm2wat "$WASM2WAT"
           python3 -m unittest scripts.tests.test_uniswap_v3_pool_burn
+      - name: Recompute retained-WAT Uniswap V3 Pool Mint TVL semantics
+        run: |
+          python3 scripts/verify-uniswap-v3-pool-mint.py --wasm2wat "$WASM2WAT"
+          python3 -m unittest scripts.tests.test_uniswap_v3_pool_mint
       - name: Verify bounded Uniswap V3 Factory effect suffixes
         run: |
           python3 scripts/verify-uniswap-v3-factory-effects.py --wasm2wat "$WASM2WAT"

@@ -272,6 +272,16 @@ semantically closed, so selected-TVL persistence and field completeness remain
 false alongside complete Pool history, parity, checkpoint, backfill, production,
 and readiness.
 
+The additive [`pool-mint/v1`](pool-mint/v1/README.md) supplement stacks on the
+digest-pinned Burn contract while independently re-running each same-WAT Pool
+runtime capsule. It binds the trigger-address Pool identity, Mint ABI indices
+5/6, matching Token decimals, conversion and old-plus-amount operand order,
+modern missing-entity trap dominance, intra-handler wrapper/Value freshness,
+the two explicit selected setters, Pool/Mint save ordering, and exact reachable
+effect inventories. Baseline receiver/key/value and direct-memory aliases remain
+unclassified, so persistence, no-later-overwrite, field completeness, Pool
+history, parity, checkpoint, backfill, production, and readiness stay false.
+
 The next sibling [`npm-observation-plan/`](npm-observation-plan/README.md)
 closes the repository-only host request set before joint reduction. It first
 enumerates every unique Position key from the complete event envelope, then,

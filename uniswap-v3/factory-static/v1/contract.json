@@ -1,0 +1,4694 @@
+{
+  "authority_contract": {
+    "fail_closed_rule": "any parent-contract, artifact, initializer export, native start section, critical-global initializer or writer, handler, reachable setter, helper or shared runtime primitive, entry-local definition, entity receiver, decoded field key, Value kind, semantic payload source/local, final Value operand, exact map call, event index, early return, persistent effect, static profile, or required-absence drift leaves the scoped claims false",
+    "host_boundary": "reachable helper bodies retain aggregate exact-body authority rather than a general protected-memory write proof; the proof reaches Graph host-effect invocation, while imported host memory behavior, Graph Node rollback, and other host behavior are not proved by retained WAT",
+    "proof_model": "the inherited complete handler CFG/SSA/effect proof plus exact exported-initializer dispatch and critical-global writer inventories, a complete direct/indirect reachable TypedMap#set closure, complete 76-handler-set semantic-family inventory, exact entry/local reaching definitions, exact entity receiver and decoded-key bindings, structural helper/runtime/source-to-payload flows, exact Value kind/payload/final-operand/set-call chains, required absence, and handler-local normal-exit effect traces",
+    "semantic_authority": "the exact modern Base and modern mainnet deployed Factory WASM artifacts and checksum-pinned WABT 1.0.35 --generate-names WAT projections",
+    "symbolic_call_boundary": "token helper outcomes are exact functions of the structurally bound SmartContract receiver, selector, argument, retained call-result wrapper, and Graph ethereum.call result; the imported host call result and which outcomes occurred at historic blocks are not asserted"
+  },
+  "contract_version": "uniswap-v3-modern-factory-static/v1",
+  "modern_factory_static_proofs": [
+    {
+      "actual_historic_call_outcomes_bound": false,
+      "authority": {
+        "handler_body_sha256": "485b7aab032b388184d0fe5535d40cd80176f0bc5cfd2682676824eff3f98dc8",
+        "handler_function": "src/mappings/factory/handlePoolCreated",
+        "handler_wat_start_line": 4482,
+        "wabt_version": "1.0.35",
+        "wasm_sha256": "296eb1ad59dca0ef5000e7e48971cb4c39ce8a3d8cfeb7541f6e8b924d049694",
+        "wat_sha256": "ea8185d6d94ff68dbb041684f29d23d528c6784a3396542657f9708d73d70972"
+      },
+      "complete_static_handler_contract": true,
+      "field_contract": {
+        "all_59_written_field_transitions_machine_proven": true,
+        "all_76_handler_map_sets_accounted": true,
+        "conditional_whitelist_updates": [
+          {
+            "entity_receiver": "$l5",
+            "exact_receiver_key_Value_helper_and_set_call_proven": true,
+            "machine_proven": true,
+            "predicate": "profile-pinned whitelist includes token0.id",
+            "same_mutated_array_is_final_Value_payload_operand": true,
+            "updated_entity": "Token[token1]",
+            "value": "old whitelistPools appended with Pool.id",
+            "value_kind_tag": 4,
+            "wat_line": 5741
+          },
+          {
+            "entity_receiver": "$l3",
+            "exact_receiver_key_Value_helper_and_set_call_proven": true,
+            "machine_proven": true,
+            "predicate": "profile-pinned whitelist includes token1.id",
+            "same_mutated_array_is_final_Value_payload_operand": true,
+            "updated_entity": "Token[token0]",
+            "value": "old whitelistPools appended with Pool.id",
+            "value_kind_tag": 4,
+            "wat_line": 5757
+          }
+        ],
+        "empty_whitelist_initializers": [
+          {
+            "entity": "Token[token0]",
+            "entity_receiver": "$l3",
+            "exact_receiver_key_Value_helper_and_set_call_proven": true,
+            "field": "whitelistPools",
+            "machine_proven": true,
+            "same_new_empty_array_is_final_Value_payload_operand": true,
+            "value": [],
+            "value_kind_tag": 4
+          },
+          {
+            "entity": "Token[token1]",
+            "entity_receiver": "$l5",
+            "exact_receiver_key_Value_helper_and_set_call_proven": true,
+            "field": "whitelistPools",
+            "machine_proven": true,
+            "same_new_empty_array_is_final_Value_payload_operand": true,
+            "value": [],
+            "value_kind_tag": 4
+          }
+        ],
+        "entity_receiver_origins": {
+          "Bundle": "$l1",
+          "Factory": "$l4",
+          "Pool": "$l6",
+          "Token[token0]": {
+            "constructor_alias": "$l1",
+            "primary": "$l3"
+          },
+          "Token[token1]": {
+            "constructor_alias": "$l1",
+            "primary": "$l5"
+          },
+          "exact_constructor_source_receiver_and_no_reassignment_proven": true
+        },
+        "handler_entry_local_stability": {
+          "complete_pre_effect_entry_local_read_sites": [
+            10,
+            421,
+            507,
+            546,
+            566,
+            589,
+            609,
+            641,
+            673,
+            705,
+            922,
+            942,
+            974,
+            1006,
+            1038,
+            1318,
+            1498,
+            1516
+          ],
+          "entry_event_and_zero_copy_index_reaching_definitions_proven": true,
+          "entry_event_local": "$p0",
+          "event_and_block_read_sites": [
+            10,
+            507,
+            546,
+            566,
+            589,
+            609,
+            641,
+            673,
+            705,
+            922,
+            942,
+            974,
+            1006,
+            1038,
+            1318,
+            1498,
+            1516
+          ],
+          "fee_copy_index_first_write_site": 1451,
+          "fee_copy_index_local": "$l2",
+          "post_read_write_sites": [
+            1906,
+            1951,
+            1961,
+            1976,
+            1996
+          ],
+          "pre_read_write_is_trap_only": true,
+          "pre_read_write_sites": [
+            416
+          ]
+        },
+        "handler_semantic_set_family_coverage_sha256": "38a4dd6e51d3d0e27fbe9aafee70c410d39644b604663fae910b91b96c28880b",
+        "handler_typed_map_set_count": 76,
+        "handler_typed_map_set_inventory_sha256": "38a4dd6e51d3d0e27fbe9aafee70c410d39644b604663fae910b91b96c28880b",
+        "pool_tick_required_absence_machine_proven": true,
+        "reachable_typed_map_setter_closure": {
+          "certified_helper_typed_map_set_sites": [
+            {
+              "function": "src/types/schema/Token#constructor",
+              "function_wat_line": 23
+            }
+          ],
+          "complete_direct_and_indirect_typed_map_setter_closure_proven": true,
+          "complete_typed_map_set_site_count": 77,
+          "complete_typed_map_set_sites_sha256": "193f2206f4a7b73ae2e743697cf62a7a837f29ee5cbe778fe3b7e0e121ad62f6",
+          "conservative_indirect_targets": [
+            "~lib/@graphprotocol/graph-ts/common/value/Value#displayData~anonymous|0"
+          ],
+          "handler_typed_map_set_sites": [
+            172,
+            188,
+            204,
+            220,
+            236,
+            252,
+            268,
+            284,
+            300,
+            316,
+            332,
+            348,
+            361,
+            379,
+            395,
+            499,
+            538,
+            633,
+            665,
+            697,
+            742,
+            758,
+            774,
+            790,
+            806,
+            822,
+            838,
+            854,
+            870,
+            886,
+            902,
+            910,
+            966,
+            998,
+            1030,
+            1075,
+            1091,
+            1107,
+            1123,
+            1139,
+            1155,
+            1171,
+            1187,
+            1203,
+            1219,
+            1235,
+            1243,
+            1259,
+            1275,
+            1293,
+            1310,
+            1497,
+            1515,
+            1533,
+            1549,
+            1565,
+            1581,
+            1597,
+            1613,
+            1629,
+            1645,
+            1661,
+            1677,
+            1693,
+            1709,
+            1725,
+            1741,
+            1757,
+            1773,
+            1789,
+            1805,
+            1821,
+            1837,
+            1853,
+            1869,
+            1885
+          ],
+          "no_other_reachable_typed_map_setter": true,
+          "reachable_call_indirect_sites": [
+            {
+              "function": "~lib/@graphprotocol/graph-ts/common/value/Value#displayData",
+              "function_wat_line": 162
+            }
+          ],
+          "reachable_function_count": 56
+        },
+        "required_absent_fields": [
+          "Pool.tick"
+        ],
+        "simple_global_value_flows": [
+          {
+            "entity": "Factory",
+            "field": "poolCount",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l4",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "poolCount",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BI",
+            "value_kind": "BigInt",
+            "wat_line": 4670
+          },
+          {
+            "entity": "Factory",
+            "field": "txCount",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l4",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "txCount",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BI",
+            "value_kind": "BigInt",
+            "wat_line": 4830
+          },
+          {
+            "entity": "Token[token0]",
+            "field": "txCount",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l3",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "txCount",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BI",
+            "value_kind": "BigInt",
+            "wat_line": 5368
+          },
+          {
+            "entity": "Token[token0]",
+            "field": "poolCount",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l3",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "poolCount",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BI",
+            "value_kind": "BigInt",
+            "wat_line": 5384
+          },
+          {
+            "entity": "Token[token1]",
+            "field": "txCount",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l5",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "txCount",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BI",
+            "value_kind": "BigInt",
+            "wat_line": 5701
+          },
+          {
+            "entity": "Token[token1]",
+            "field": "poolCount",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l5",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "poolCount",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BI",
+            "value_kind": "BigInt",
+            "wat_line": 5717
+          },
+          {
+            "entity": "Pool",
+            "field": "liquidityProviderCount",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "liquidityProviderCount",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BI",
+            "value_kind": "BigInt",
+            "wat_line": 6031
+          },
+          {
+            "entity": "Pool",
+            "field": "txCount",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "txCount",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BI",
+            "value_kind": "BigInt",
+            "wat_line": 6047
+          },
+          {
+            "entity": "Pool",
+            "field": "liquidity",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "liquidity",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BI",
+            "value_kind": "BigInt",
+            "wat_line": 6063
+          },
+          {
+            "entity": "Pool",
+            "field": "sqrtPrice",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "sqrtPrice",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BI",
+            "value_kind": "BigInt",
+            "wat_line": 6079
+          },
+          {
+            "entity": "Pool",
+            "field": "feeGrowthGlobal0X128",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "feeGrowthGlobal0X128",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BI",
+            "value_kind": "BigInt",
+            "wat_line": 6095
+          },
+          {
+            "entity": "Pool",
+            "field": "feeGrowthGlobal1X128",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "feeGrowthGlobal1X128",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BI",
+            "value_kind": "BigInt",
+            "wat_line": 6111
+          },
+          {
+            "entity": "Pool",
+            "field": "observationIndex",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "observationIndex",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BI",
+            "value_kind": "BigInt",
+            "wat_line": 6159
+          },
+          {
+            "entity": "Factory",
+            "field": "totalVolumeETH",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l4",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalVolumeETH",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 4686
+          },
+          {
+            "entity": "Factory",
+            "field": "totalVolumeUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l4",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalVolumeUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 4702
+          },
+          {
+            "entity": "Factory",
+            "field": "untrackedVolumeUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l4",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "untrackedVolumeUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 4718
+          },
+          {
+            "entity": "Factory",
+            "field": "totalFeesUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l4",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalFeesUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 4734
+          },
+          {
+            "entity": "Factory",
+            "field": "totalFeesETH",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l4",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalFeesETH",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 4750
+          },
+          {
+            "entity": "Factory",
+            "field": "totalValueLockedETH",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l4",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalValueLockedETH",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 4766
+          },
+          {
+            "entity": "Factory",
+            "field": "totalValueLockedUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l4",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalValueLockedUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 4782
+          },
+          {
+            "entity": "Factory",
+            "field": "totalValueLockedUSDUntracked",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l4",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalValueLockedUSDUntracked",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 4798
+          },
+          {
+            "entity": "Factory",
+            "field": "totalValueLockedETHUntracked",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l4",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalValueLockedETHUntracked",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 4814
+          },
+          {
+            "entity": "Bundle",
+            "field": "ethPriceUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l1",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l3",
+              "field_key": "ethPriceUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l3"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 4877
+          },
+          {
+            "entity": "Token[token0]",
+            "field": "derivedETH",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l3",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "derivedETH",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 5240
+          },
+          {
+            "entity": "Token[token0]",
+            "field": "volume",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l3",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "volume",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 5256
+          },
+          {
+            "entity": "Token[token0]",
+            "field": "volumeUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l3",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "volumeUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 5272
+          },
+          {
+            "entity": "Token[token0]",
+            "field": "feesUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l3",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "feesUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 5288
+          },
+          {
+            "entity": "Token[token0]",
+            "field": "untrackedVolumeUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l3",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "untrackedVolumeUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 5304
+          },
+          {
+            "entity": "Token[token0]",
+            "field": "totalValueLocked",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l3",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalValueLocked",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 5320
+          },
+          {
+            "entity": "Token[token0]",
+            "field": "totalValueLockedUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l3",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalValueLockedUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 5336
+          },
+          {
+            "entity": "Token[token0]",
+            "field": "totalValueLockedUSDUntracked",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l3",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalValueLockedUSDUntracked",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 5352
+          },
+          {
+            "entity": "Token[token1]",
+            "field": "derivedETH",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l5",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "derivedETH",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 5573
+          },
+          {
+            "entity": "Token[token1]",
+            "field": "volume",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l5",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "volume",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 5589
+          },
+          {
+            "entity": "Token[token1]",
+            "field": "volumeUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l5",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "volumeUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 5605
+          },
+          {
+            "entity": "Token[token1]",
+            "field": "untrackedVolumeUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l5",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "untrackedVolumeUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 5621
+          },
+          {
+            "entity": "Token[token1]",
+            "field": "feesUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l5",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "feesUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 5637
+          },
+          {
+            "entity": "Token[token1]",
+            "field": "totalValueLocked",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l5",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalValueLocked",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 5653
+          },
+          {
+            "entity": "Token[token1]",
+            "field": "totalValueLockedUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l5",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalValueLockedUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 5669
+          },
+          {
+            "entity": "Token[token1]",
+            "field": "totalValueLockedUSDUntracked",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l5",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalValueLockedUSDUntracked",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 5685
+          },
+          {
+            "entity": "Pool",
+            "field": "token0Price",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "token0Price",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 6127
+          },
+          {
+            "entity": "Pool",
+            "field": "token1Price",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "token1Price",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 6143
+          },
+          {
+            "entity": "Pool",
+            "field": "totalValueLockedToken0",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalValueLockedToken0",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 6175
+          },
+          {
+            "entity": "Pool",
+            "field": "totalValueLockedToken1",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalValueLockedToken1",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 6191
+          },
+          {
+            "entity": "Pool",
+            "field": "totalValueLockedUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalValueLockedUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 6207
+          },
+          {
+            "entity": "Pool",
+            "field": "totalValueLockedETH",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalValueLockedETH",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 6223
+          },
+          {
+            "entity": "Pool",
+            "field": "totalValueLockedUSDUntracked",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalValueLockedUSDUntracked",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 6239
+          },
+          {
+            "entity": "Pool",
+            "field": "volumeToken0",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "volumeToken0",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 6255
+          },
+          {
+            "entity": "Pool",
+            "field": "volumeToken1",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "volumeToken1",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 6271
+          },
+          {
+            "entity": "Pool",
+            "field": "volumeUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "volumeUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 6287
+          },
+          {
+            "entity": "Pool",
+            "field": "feesUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "feesUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 6303
+          },
+          {
+            "entity": "Pool",
+            "field": "untrackedVolumeUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "untrackedVolumeUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 6319
+          },
+          {
+            "entity": "Pool",
+            "field": "collectedFeesToken0",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "collectedFeesToken0",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 6335
+          },
+          {
+            "entity": "Pool",
+            "field": "collectedFeesToken1",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "collectedFeesToken1",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 6351
+          },
+          {
+            "entity": "Pool",
+            "field": "collectedFeesUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "collectedFeesUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 6367
+          }
+        ],
+        "special_field_flows": [
+          {
+            "entity": "Factory",
+            "field": "id",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l4",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "id",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "0x33128a8fC17869897dcE68Ed026d694621f6FDfD",
+              "value_kind_tag": 0,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "0x33128a8fC17869897dcE68Ed026d694621f6FDfD"
+          },
+          {
+            "entity": "Bundle",
+            "field": "id",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l1",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l3",
+              "field_key": "id",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "1",
+              "value_kind_tag": 0,
+              "value_wrapper_local": "$l3"
+            },
+            "value": "1"
+          },
+          {
+            "entity": "Factory",
+            "field": "owner",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l4",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "owner",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "0x0000000000000000000000000000000000000000",
+              "value_kind_tag": 0,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ADDRESS_ZERO"
+          },
+          {
+            "entity": "Factory",
+            "field": "poolCount",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l4",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "poolCount",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "old poolCount + ONE_BI"
+          },
+          {
+            "entity": "Pool",
+            "field": "id",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "id",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 0,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "bytesToHex(event[4].pool)"
+          },
+          {
+            "entity": "Pool",
+            "field": "token0",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "token0",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 0,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "Token[token0].id"
+          },
+          {
+            "entity": "Pool",
+            "field": "token1",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "token1",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 0,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "Token[token1].id"
+          },
+          {
+            "entity": "Pool",
+            "field": "feeTier",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "feeTier",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "source_proof": {
+              "accepted_source_value_kinds": [
+                3,
+                4
+              ],
+              "event_value_payload_sign_extension_byte_copy_and_i32_assembly_structurally_proven": true,
+              "normalized_conversion_slice_sha256": "2a63a66ed9dc95965e56fa204c683233a00045532c5d8cef09675bce8c3d2882",
+              "slice_digest_role": "exact retained-artifact closure over the inlined conversion",
+              "source": "event[2].value"
+            },
+            "value": "BigInt.fromI32(event[2].fee)"
+          },
+          {
+            "entity": "Pool",
+            "field": "createdAtTimestamp",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "createdAtTimestamp",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "event.block.offset[40]"
+          },
+          {
+            "entity": "Pool",
+            "field": "createdAtBlockNumber",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "createdAtBlockNumber",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "event.block.offset[28]"
+          }
+        ],
+        "stored_field_contract_count": 60,
+        "stored_fields": [
+          "Bundle.ethPriceUSD",
+          "Bundle.id",
+          "Factory.id",
+          "Factory.owner",
+          "Factory.poolCount",
+          "Factory.totalFeesETH",
+          "Factory.totalFeesUSD",
+          "Factory.totalValueLockedETH",
+          "Factory.totalValueLockedETHUntracked",
+          "Factory.totalValueLockedUSD",
+          "Factory.totalValueLockedUSDUntracked",
+          "Factory.totalVolumeETH",
+          "Factory.totalVolumeUSD",
+          "Factory.txCount",
+          "Factory.untrackedVolumeUSD",
+          "Pool.collectedFeesToken0",
+          "Pool.collectedFeesToken1",
+          "Pool.collectedFeesUSD",
+          "Pool.createdAtBlockNumber",
+          "Pool.createdAtTimestamp",
+          "Pool.feeGrowthGlobal0X128",
+          "Pool.feeGrowthGlobal1X128",
+          "Pool.feeTier",
+          "Pool.feesUSD",
+          "Pool.id",
+          "Pool.liquidity",
+          "Pool.liquidityProviderCount",
+          "Pool.observationIndex",
+          "Pool.sqrtPrice",
+          "Pool.tick",
+          "Pool.token0",
+          "Pool.token0Price",
+          "Pool.token1",
+          "Pool.token1Price",
+          "Pool.totalValueLockedETH",
+          "Pool.totalValueLockedToken0",
+          "Pool.totalValueLockedToken1",
+          "Pool.totalValueLockedUSD",
+          "Pool.totalValueLockedUSDUntracked",
+          "Pool.txCount",
+          "Pool.untrackedVolumeUSD",
+          "Pool.volumeToken0",
+          "Pool.volumeToken1",
+          "Pool.volumeUSD",
+          "Token.decimals",
+          "Token.derivedETH",
+          "Token.feesUSD",
+          "Token.id",
+          "Token.name",
+          "Token.poolCount",
+          "Token.symbol",
+          "Token.totalSupply",
+          "Token.totalValueLocked",
+          "Token.totalValueLockedUSD",
+          "Token.totalValueLockedUSDUntracked",
+          "Token.txCount",
+          "Token.untrackedVolumeUSD",
+          "Token.volume",
+          "Token.volumeUSD",
+          "Token.whitelistPools"
+        ],
+        "string_array_value_helper_flow": {
+          "body_sha256": "a5bcd2f19ae7d650900aa231b50aee26423f702f3f1f21aa069080c8fa3a3662",
+          "exact_helper_body_bound": true,
+          "function": "~lib/@graphprotocol/graph-ts/common/value/Value.fromStringArray",
+          "line_count": 103,
+          "outcome_model": {
+            "input": "String[]",
+            "output": "Value(kind=StringArray, payload=same ordered strings)"
+          },
+          "same_ordered_input_strings_encoded_in_payload": true,
+          "same_value_receiver_used_for_payload_and_return": true,
+          "structural_kind_payload_and_return_machine_proven": true,
+          "value_kind_tag": 4
+        },
+        "token_helper_field_flows": [
+          {
+            "entity": "Token[token0]",
+            "event_index": 0,
+            "field": "symbol",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l1",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l7",
+              "field_key": "symbol",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 0,
+              "value_wrapper_local": "$l7"
+            },
+            "value": "exact fetchTokenSymbol(event[0]) outcome",
+            "value_kind": "String",
+            "wat_line": 5115
+          },
+          {
+            "entity": "Token[token0]",
+            "event_index": 0,
+            "field": "name",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l3",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "name",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 0,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "exact fetchTokenName(event[0]) outcome",
+            "value_kind": "String",
+            "wat_line": 5147
+          },
+          {
+            "entity": "Token[token0]",
+            "event_index": 0,
+            "field": "totalSupply",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l3",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalSupply",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "exact fetchTokenTotalSupply(event[0]) outcome",
+            "value_kind": "BigInt",
+            "wat_line": 5179
+          },
+          {
+            "entity": "Token[token0]",
+            "event_index": 0,
+            "field": "decimals",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l3",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "decimals",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "exact fetchTokenDecimals(event[0]) outcome",
+            "value_kind": "BigInt",
+            "wat_line": 5224
+          },
+          {
+            "entity": "Token[token1]",
+            "event_index": 1,
+            "field": "symbol",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l1",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l7",
+              "field_key": "symbol",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 0,
+              "value_wrapper_local": "$l7"
+            },
+            "value": "exact fetchTokenSymbol(event[1]) outcome",
+            "value_kind": "String",
+            "wat_line": 5448
+          },
+          {
+            "entity": "Token[token1]",
+            "event_index": 1,
+            "field": "name",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l5",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "name",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 0,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "exact fetchTokenName(event[1]) outcome",
+            "value_kind": "String",
+            "wat_line": 5480
+          },
+          {
+            "entity": "Token[token1]",
+            "event_index": 1,
+            "field": "totalSupply",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l5",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalSupply",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "exact fetchTokenTotalSupply(event[1]) outcome",
+            "value_kind": "BigInt",
+            "wat_line": 5512
+          },
+          {
+            "entity": "Token[token1]",
+            "event_index": 1,
+            "field": "decimals",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l5",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "decimals",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "exact fetchTokenDecimals(event[1]) outcome",
+            "value_kind": "BigInt",
+            "wat_line": 5557
+          }
+        ],
+        "token_id_constructor_flow": {
+          "body_sha256": "b0d614ab062922a181e44d3649ba6b9555b3871473c3374207ee6ce596993e83",
+          "constructor_id_and_receiver_machine_proven": true,
+          "fresh_entity_local": "$l1",
+          "function": "generated/schema/Token#constructor",
+          "id_key": "id",
+          "id_map_set_call": "~lib/@graphprotocol/graph-ts/common/collections/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/common/value/Value>#set",
+          "input_id_parameter": "$p0",
+          "preserved_input_id_local": "$l2",
+          "returned_entity_local": "$l1",
+          "same_fresh_receiver_used_for_map_set_and_return": true,
+          "same_input_id_encoded_in_string_value_payload": true,
+          "value_kind_tag": 0
+        },
+        "written_field_count": 59,
+        "written_fields": [
+          "Bundle.ethPriceUSD",
+          "Bundle.id",
+          "Factory.id",
+          "Factory.owner",
+          "Factory.poolCount",
+          "Factory.totalFeesETH",
+          "Factory.totalFeesUSD",
+          "Factory.totalValueLockedETH",
+          "Factory.totalValueLockedETHUntracked",
+          "Factory.totalValueLockedUSD",
+          "Factory.totalValueLockedUSDUntracked",
+          "Factory.totalVolumeETH",
+          "Factory.totalVolumeUSD",
+          "Factory.txCount",
+          "Factory.untrackedVolumeUSD",
+          "Pool.collectedFeesToken0",
+          "Pool.collectedFeesToken1",
+          "Pool.collectedFeesUSD",
+          "Pool.createdAtBlockNumber",
+          "Pool.createdAtTimestamp",
+          "Pool.feeGrowthGlobal0X128",
+          "Pool.feeGrowthGlobal1X128",
+          "Pool.feeTier",
+          "Pool.feesUSD",
+          "Pool.id",
+          "Pool.liquidity",
+          "Pool.liquidityProviderCount",
+          "Pool.observationIndex",
+          "Pool.sqrtPrice",
+          "Pool.token0",
+          "Pool.token0Price",
+          "Pool.token1",
+          "Pool.token1Price",
+          "Pool.totalValueLockedETH",
+          "Pool.totalValueLockedToken0",
+          "Pool.totalValueLockedToken1",
+          "Pool.totalValueLockedUSD",
+          "Pool.totalValueLockedUSDUntracked",
+          "Pool.txCount",
+          "Pool.untrackedVolumeUSD",
+          "Pool.volumeToken0",
+          "Pool.volumeToken1",
+          "Pool.volumeUSD",
+          "Token.decimals",
+          "Token.derivedETH",
+          "Token.feesUSD",
+          "Token.id",
+          "Token.name",
+          "Token.poolCount",
+          "Token.symbol",
+          "Token.totalSupply",
+          "Token.totalValueLocked",
+          "Token.totalValueLockedUSD",
+          "Token.totalValueLockedUSDUntracked",
+          "Token.txCount",
+          "Token.untrackedVolumeUSD",
+          "Token.volume",
+          "Token.volumeUSD",
+          "Token.whitelistPools"
+        ]
+      },
+      "graph_handler_rollback_proven_by_retained_wat": false,
+      "mapping_cid": "QmXFDgK3qLnmsLFcPWobXbdnqV9gESL9BvYY29si4vpTjr",
+      "module_constants": {
+        "address_zero": "0x0000000000000000000000000000000000000000",
+        "body_sha256": "03a9880de5c636da605722c9de980a9d8b831bd818f1ee932150410aceb58f04",
+        "constant_flows_machine_proven": true,
+        "function": "~start",
+        "module_state_invariants": {
+          "complete_global_set_inventory": {
+            "$src/utils/constants/ONE_BI": [
+              [
+                "~start",
+                18
+              ]
+            ],
+            "$src/utils/constants/ZERO_BD": [
+              [
+                "~start",
+                21
+              ]
+            ],
+            "$src/utils/constants/ZERO_BI": [
+              [
+                "~start",
+                15
+              ]
+            ],
+            "$~lib/rt/stub/offset": [
+              [
+                "~lib/rt/stub/__alloc",
+                68
+              ],
+              [
+                "~lib/array/ensureCapacity",
+                161
+              ],
+              [
+                "~lib/array/ensureCapacity",
+                189
+              ],
+              [
+                "~start",
+                9
+              ]
+            ],
+            "$~started": [
+              [
+                "~start",
+                7
+              ]
+            ]
+          },
+          "complete_global_set_inventory_sha256": "0695acd331f5bad4e379e97162e43fb672b0278401a2b16a6a5aeaa46757826c",
+          "critical_global_initializers_and_all_writers_machine_proven": true,
+          "initializer_dispatch": {
+            "export": "_start",
+            "function": "~start",
+            "native_start_section_present": false,
+            "started_global_initial_value": 0
+          },
+          "zero_initialized_mutable_globals": [
+            "$~started",
+            "$~lib/rt/stub/offset",
+            "$src/utils/constants/ZERO_BI",
+            "$src/utils/constants/ONE_BI",
+            "$src/utils/constants/ZERO_BD"
+          ]
+        },
+        "one_bi": "BigInt.fromI32(1)",
+        "protected_whitelist_memory": {
+          "allocator_floor": 14604,
+          "direct_memory_write_sites": [
+            51,
+            54,
+            57,
+            61
+          ],
+          "exact_direct_call_inventory": [
+            "~lib/rt/stub/__alloc",
+            "~lib/@graphprotocol/graph-ts/common/numbers/BigInt.fromI32",
+            "~lib/@graphprotocol/graph-ts/common/numbers/BigInt.fromI32",
+            "~lib/@graphprotocol/graph-ts/common/numbers/bigDecimal.fromString",
+            "~lib/@graphprotocol/graph-ts/common/numbers/bigDecimal.fromString",
+            "~lib/@graphprotocol/graph-ts/common/numbers/BigInt.fromI32",
+            "~lib/@graphprotocol/graph-ts/common/conversion/typeConversion.stringToH160",
+            "~lib/rt/stub/__new",
+            "~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.SmartContract#constructor",
+            "~lib/@graphprotocol/graph-ts/common/numbers/bigDecimal.fromString",
+            "~lib/@graphprotocol/graph-ts/common/numbers/BigInt.fromI32",
+            "~lib/@graphprotocol/graph-ts/common/numbers/bigInt.pow",
+            "~lib/rt/stub/__new",
+            "~lib/@graphprotocol/graph-ts/common/numbers/BigInt.fromI32",
+            "~lib/rt/stub/__alloc"
+          ],
+          "imported_host_functions_assumed_not_to_write_arbitrary_linear_memory": true,
+          "module_start_direct_memory_writes_cannot_reach_protected_whitelist_memory": true,
+          "protected_regions": [
+            {
+              "end": 2800,
+              "label": "captured_array_object",
+              "start": 2784
+            },
+            {
+              "end": 2752,
+              "label": "captured_array_backing",
+              "start": 2736
+            },
+            {
+              "end": 2260,
+              "label": "captured_member_0",
+              "start": 2172
+            },
+            {
+              "end": 2484,
+              "label": "captured_member_1",
+              "start": 2396
+            },
+            {
+              "end": 2596,
+              "label": "captured_member_2",
+              "start": 2508
+            },
+            {
+              "end": 2708,
+              "label": "captured_member_3",
+              "start": 2620
+            }
+          ],
+          "protected_regions_sha256": "acf2deb29482a04182e5058c6e9b6e05457b84b7995b9b5dbd36b6cd30288c23",
+          "reachable_helper_memory_writes_bound_by_aggregate_body_authority_not_rederived": true
+        },
+        "zero_bd": "BigDecimal.fromString(0)",
+        "zero_bi": "BigInt.fromI32(0)"
+      },
+      "normal_return_and_partial_effect_contract": {
+        "all_handler_local_normal_exits_machine_proven": true,
+        "bundle_save_precedes_both_decimals_returns": true,
+        "complete_when_factory_missing": [
+          "Bundle.save",
+          "Pool.save",
+          "PoolTemplate.create",
+          "Token[token0].save",
+          "Token[token1].save",
+          "Factory.save"
+        ],
+        "complete_when_factory_present": [
+          "Pool.save",
+          "PoolTemplate.create",
+          "Token[token0].save",
+          "Token[token1].save",
+          "Factory.save"
+        ],
+        "decimals_return_when_factory_missing": [
+          "Bundle.save"
+        ],
+        "decimals_return_when_factory_present": [],
+        "effect_projection": [
+          "Bundle.save",
+          "Pool.save",
+          "PoolTemplate.create",
+          "Token[token0].save",
+          "Token[token1].save",
+          "Factory.save"
+        ],
+        "excluded_pool_return_trace": [],
+        "graph_handler_rollback_proven_by_retained_wat": false,
+        "handler_local_explicit_trap_traces": [
+          [],
+          [
+            "Bundle.save"
+          ],
+          [
+            "Pool.save",
+            "PoolTemplate.create",
+            "Token[token0].save",
+            "Token[token1].save"
+          ],
+          [
+            "Bundle.save",
+            "Pool.save",
+            "PoolTemplate.create",
+            "Token[token0].save",
+            "Token[token1].save"
+          ]
+        ],
+        "normal_exit_traces": [
+          [],
+          [
+            "Bundle.save"
+          ],
+          [
+            "Pool.save",
+            "PoolTemplate.create",
+            "Token[token0].save",
+            "Token[token1].save",
+            "Factory.save"
+          ],
+          [
+            "Bundle.save",
+            "Pool.save",
+            "PoolTemplate.create",
+            "Token[token0].save",
+            "Token[token1].save",
+            "Factory.save"
+          ]
+        ]
+      },
+      "profile_id": "modern-base",
+      "token_call_helpers": {
+        "all_exact_symbol_name_decimals_and_total_supply_helpers_bound": true,
+        "decimals": {
+          "body_sha256": "a7d58596c9cb914b93bf95ce0a4737475dab9d152e13d5ea1ef61d34c08dd394",
+          "comparison_body_sha256": "fed0f7c5527a22b04eb08fe6a8b021e7be72c07a827ef0ad6658b3d482fbbbab",
+          "complete_comparison_instruction_structure_machine_proven": true,
+          "decoded_result_and_threshold_locals_stable_through_comparison": true,
+          "exact_helper_body_bound": true,
+          "failure_path_uses_original_input_address": true,
+          "function": "src/utils/token/fetchTokenDecimals",
+          "line_count": 270,
+          "outcome_model": {
+            "call_failure_static_match": "profile-pinned static decimals",
+            "call_failure_without_static_match": null,
+            "call_success_at_or_above_255": null,
+            "call_success_below_255": "the decoded BigInt result"
+          },
+          "smart_contract_source": {
+            "argument_arrays": "exact empty arrays",
+            "helper": "decimals",
+            "input_address_local": "$p0",
+            "input_address_to_contract_to_tryCall_structurally_proven": true,
+            "selectors": [
+              "decimals():(uint32)"
+            ],
+            "try_call_receivers": [
+              "SmartContract#constructor stack result"
+            ]
+          },
+          "static_or_null_failure_fallback_machine_proven": true,
+          "successful_result_decode_and_threshold_return_machine_proven": true
+        },
+        "name": {
+          "body_sha256": "9c9d2d6f5b2f57cf6dea0c883b94c10ee85cbdea1936a3217b5f5e273103ee86",
+          "exact_helper_body_bound": true,
+          "function": "src/utils/token/fetchTokenName",
+          "line_count": 113,
+          "outcome_model": {
+            "both_calls_fail": "unknown",
+            "primary_failure_bytes_call_success_non_sentinel": "decoded bytes32 string",
+            "primary_failure_bytes_call_success_sentinel_no_static_match": "unknown",
+            "primary_failure_bytes_call_success_sentinel_static_match": "profile-pinned static name",
+            "primary_string_call_success": "decoded string result"
+          },
+          "primary_and_bytes_try_call_dataflow_machine_proven": true,
+          "sentinel_static_fallback_dataflow_machine_proven": true,
+          "smart_contract_source": {
+            "argument_arrays": "exact empty arrays",
+            "helper": "name",
+            "input_address_local": "$p0",
+            "input_address_to_contract_to_tryCall_structurally_proven": true,
+            "selectors": [
+              "name():(string)",
+              "name():(bytes32)"
+            ],
+            "try_call_receivers": [
+              "$l1",
+              "$l2"
+            ]
+          }
+        },
+        "shared_runtime_primitives": {
+          "big_int_from_i32": {
+            "byte_array_constructor_and_uint8_get_set_structurally_proven": true,
+            "same_i32_encoded_as_four_little_endian_bytes": true
+          },
+          "call_result": {
+            "from_value_wrappers": {
+              "big_int": {
+                "function": "~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.CallResult.fromValue<~lib/@graphprotocol/graph-ts/common/numbers/BigInt>",
+                "same_input_payload_wrapped_and_returned": true
+              },
+              "bytes": {
+                "function": "~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.CallResult.fromValue<~lib/@graphprotocol/graph-ts/common/collections/Bytes>",
+                "same_input_payload_wrapped_and_returned": true
+              },
+              "string": {
+                "function": "~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.CallResult.fromValue<~lib/string/String>",
+                "same_input_payload_wrapped_and_returned": true
+              }
+            },
+            "same_success_payload_getter_structurally_proven": true
+          },
+          "new_array": {
+            "same_initialized_backing_and_receiver_returned": true,
+            "same_length_controls_backing_size_and_length_slot": true
+          },
+          "shared_runtime_semantics_structurally_closed": true,
+          "smart_contract_constructor": {
+            "same_name_and_address_stored_on_same_receiver": true,
+            "same_receiver_returned": true
+          },
+          "smart_contract_try_call": {
+            "host_result_success_failure_wrapping_structurally_proven": true,
+            "same_contract_name_address_selectors_and_arguments_enter_host_call": true
+          },
+          "string_equality": {
+            "function": "~lib/string/String.__eq",
+            "proof_boundary": "exact retained pure library primitive body",
+            "retained_body_sha256": "f7967b738553ba98aba24f869e968d73e8013f99e83d02e106cad52306aa3c3f"
+          },
+          "type_erased_array_get_set": {
+            "same_receiver_index_and_value_structurally_proven": true
+          },
+          "typed_map_collection_runtime": {
+            "allocator": {
+              "alloc_returns_old_offset_plus_header_word": true,
+              "allocator_return_identity_structurally_proven": true,
+              "new_returns_same_allocated_payload_plus_object_header": true,
+              "stub_alloc_body_sha256": "a03922d8f65cdc65e9d23c65bae22238c3783fed3294ec8847c2951f45a49c68",
+              "stub_new_body_sha256": "dc15ae7bfd1ff6f9f27d365946a2de6d849b46ed9e08818b80d59c05f97918fa"
+            },
+            "collection_mutation_chain_structurally_closed": true,
+            "ensure_capacity": {
+              "body_sha256": "c3f2f8562d0bd486d33a84bbf0ad08f72a291947d1bc7f65f9dc4c2b19df1c69",
+              "committed_capacity_and_backing_structurally_proven": true,
+              "function": "~lib/array/ensureCapacity",
+              "proof_boundary": "exact retained complex array-growth primitive body plus structural commit checks"
+            },
+            "entity_map_constructor": {
+              "fresh_array_backing_and_same_entity_receiver_structurally_proven": true,
+              "function": "~lib/@graphprotocol/graph-ts/common/collections/Entity#constructor"
+            },
+            "fixed_low_level_memory_primitives": {
+              "memcpy": {
+                "body_sha256": "0da0c6a704b3c3d86e0a9a7ab3d441f3d44556c811ab4d35acfc3604d2db9a90",
+                "function": "~lib/util/memory/memcpy",
+                "proof_boundary": "exact retained low-level memory primitive body"
+              },
+              "memory_copy": {
+                "body_sha256": "fd525c8864117cf67304d6896524aa816b1949797f64ee28f43b6448e82ae2f4",
+                "function": "~lib/memory/memory.copy",
+                "proof_boundary": "exact retained low-level memory primitive body"
+              },
+              "memory_fill": {
+                "body_sha256": "a95fecf1bd14d1ab88b6c6374397793361e50f6f7c6a292e2fe0ac71dc667ad0",
+                "function": "~lib/memory/memory.fill",
+                "proof_boundary": "exact retained low-level memory primitive body"
+              }
+            },
+            "typed_map_entry_push": {
+              "function": "~lib/array/Array<~lib/@graphprotocol/graph-ts/common/collections/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/common/value/Value>>#push",
+              "same_appended_operand_at_old_length_and_exact_new_length_committed": true
+            },
+            "typed_map_set": {
+              "function": "~lib/@graphprotocol/graph-ts/common/collections/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/common/value/Value>#set",
+              "same_key_and_value_update_or_new_entry_structurally_proven": true,
+              "same_new_entry_appended_to_same_receiver": true
+            }
+          },
+          "typed_map_get": {
+            "same_receiver_key_loop_and_value_result_structurally_proven": true
+          },
+          "value_payload_decoders": {
+            "entity_array": {
+              "accepted_value_kinds": [
+                4
+              ],
+              "function": "~lib/@graphprotocol/graph-ts/common/value/Value#toArray",
+              "kind_gate_and_payload_structurally_proven": true,
+              "same_receiver_payload_offset_8_returned": true
+            },
+            "entity_string": {
+              "accepted_value_kinds": [
+                0
+              ],
+              "function": "~lib/@graphprotocol/graph-ts/common/value/Value#toString",
+              "kind_gate_and_payload_structurally_proven": true,
+              "same_receiver_payload_offset_8_returned": true
+            },
+            "ethereum_big_int": {
+              "accepted_value_kinds": [
+                3,
+                4
+              ],
+              "function": "~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.Value#toBigInt",
+              "kind_gate_and_payload_structurally_proven": true,
+              "same_receiver_payload_offset_8_returned": true
+            },
+            "ethereum_bytes": {
+              "accepted_value_kinds": [
+                1,
+                2
+              ],
+              "function": "~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.Value#toBytes",
+              "kind_gate_and_payload_structurally_proven": true,
+              "same_receiver_payload_offset_8_returned": true
+            },
+            "ethereum_string": {
+              "accepted_value_kinds": [
+                6
+              ],
+              "function": "~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.Value#toString",
+              "kind_gate_and_payload_structurally_proven": true,
+              "same_receiver_payload_offset_8_returned": true
+            }
+          }
+        },
+        "static_definitions": {
+          "array_length_tuple_slots_input_compare_loop_and_null_return_structurally_proven": true,
+          "body_sha256": "92bc949a17ab31a22ee3f81a5ff1bc20878df57af3af314ee542ad1c103aa8ef",
+          "definition_count": 0,
+          "definitions": [],
+          "exact_profile_body_and_literals_bound": true,
+          "fresh_zeroed_constructor_structurally_proven_when_reachable": true,
+          "function": "src/utils/staticTokenDefinition/StaticTokenDefinition.fromAddress",
+          "profile": "base-safe-empty",
+          "safe_literal_array": true
+        },
+        "symbol": {
+          "body_sha256": "96e3c6a30f1a578ee73fb0728502be0d664c45ae00ae81950a4205efebd63005",
+          "exact_helper_body_bound": true,
+          "function": "src/utils/token/fetchTokenSymbol",
+          "line_count": 113,
+          "outcome_model": {
+            "both_calls_fail": "unknown",
+            "primary_failure_bytes_call_success_non_sentinel": "decoded bytes32 string",
+            "primary_failure_bytes_call_success_sentinel_no_static_match": "unknown",
+            "primary_failure_bytes_call_success_sentinel_static_match": "profile-pinned static symbol",
+            "primary_string_call_success": "decoded string result"
+          },
+          "primary_and_bytes_try_call_dataflow_machine_proven": true,
+          "sentinel_static_fallback_dataflow_machine_proven": true,
+          "smart_contract_source": {
+            "argument_arrays": "exact empty arrays",
+            "helper": "symbol",
+            "input_address_local": "$p0",
+            "input_address_to_contract_to_tryCall_structurally_proven": true,
+            "selectors": [
+              "symbol():(string)",
+              "symbol():(bytes32)"
+            ],
+            "try_call_receivers": [
+              "$l1",
+              "$l2"
+            ]
+          }
+        },
+        "total_supply": {
+          "body_sha256": "f81e091e27097d63c781cbe34253e50b5bdaca99120aad68fbbccd3b51934036",
+          "function": "src/utils/token/fetchTokenTotalSupply",
+          "generation": "modern",
+          "outcomes": {
+            "erc20_result_value_decoded": true,
+            "reverted": "BigInt.fromI32(0)",
+            "success": "decoded ERC20 totalSupply CallResult BigInt value"
+          },
+          "smart_contract_source": {
+            "argument_arrays": "exact empty arrays",
+            "helper": "totalSupply",
+            "input_address_local": "$p0",
+            "input_address_to_contract_to_tryCall_structurally_proven": true,
+            "selectors": [
+              "totalSupply():(uint256)"
+            ],
+            "try_call_receivers": [
+              "$p0"
+            ]
+          },
+          "success_failure_dataflow_machine_proven": true,
+          "success_result_decode_is_contiguous_into_value_wrapper": true,
+          "success_wrapper_body_sha256": "124a162622476ddfb55166cae0edd28fb6944fff9df2c1366c945fc176a4cc65"
+        },
+        "whitelist_and_id_support": {
+          "pool_id_getter": {
+            "body_sha256": "082572dceb0673ebc1ba252ecc46e579316e6b34afeba9f7d9861849e5e26493",
+            "decoded_key": "id",
+            "exact_helper_body_bound": true,
+            "function": "generated/schema/Pool#get:id",
+            "line_count": 24,
+            "no_setter_or_persistent_side_effect": true,
+            "outcome_model": {
+              "input": "entity receiver",
+              "output": "same non-null id Value converted to String"
+            },
+            "receiver_key_guard_result_structurally_proven": true,
+            "same_input_receiver_used_for_get": true,
+            "same_non_null_non_Null_Value_converted_to_string": true
+          },
+          "token_id_getter": {
+            "body_sha256": "fa5baf7f95cc0c79730a34e04262e54730f53798b851866f2135f7976d18c9ba",
+            "decoded_key": "id",
+            "exact_helper_body_bound": true,
+            "function": "generated/schema/Token#get:id",
+            "line_count": 24,
+            "no_setter_or_persistent_side_effect": true,
+            "outcome_model": {
+              "input": "entity receiver",
+              "output": "same non-null id Value converted to String"
+            },
+            "receiver_key_guard_result_structurally_proven": true,
+            "same_input_receiver_used_for_get": true,
+            "same_non_null_non_Null_Value_converted_to_string": true
+          },
+          "whitelist_getter": {
+            "body_sha256": "346159ad6af19879530e3cd0b2eb2d2deb6bd6b1beb6166da50c2abd24dd8ebd",
+            "decoded_key": "whitelistPools",
+            "exact_helper_body_bound": true,
+            "function": "generated/schema/Token#get:whitelistPools",
+            "line_count": 103,
+            "outcome_model": {
+              "input": "Token entity",
+              "output": "same ordered whitelistPools strings"
+            },
+            "receiver_key_kind_array_conversion_and_return_structurally_proven": true,
+            "same_index_Value_toString_conversion_and_ordered_return": true,
+            "same_source_array_length_written_to_destination_offset_12": true
+          },
+          "whitelist_membership": {
+            "body_sha256": "fd7533a73510430897d69bce95502409898dccffd1eb01592089dbec82bfdc86",
+            "captured_backing_pointer": 2736,
+            "captured_backing_pointer_slot": 2788,
+            "captured_length": 4,
+            "captured_length_slot": 2796,
+            "decoded_profile_members": [
+              "0x4200000000000000000000000000000000000006",
+              "0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca",
+              "0x50c5725949a6f0c72e6c4a641f24049a917db0cb",
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
+            ],
+            "exact_helper_body_bound": true,
+            "function": "~lib/array/Array<~lib/string/String>#includes",
+            "line_count": 44,
+            "loop_equality_and_boolean_return_structurally_proven": true,
+            "outcome_model": {
+              "input": "needle String",
+              "output": "needle equals one exact profile member"
+            },
+            "same_input_needle_compared_to_each_ordered_member": true
+          }
+        }
+      },
+      "upstream_effect_proof_sha256": "7e796860491fdd8e8a90ad623588788b67386f18bfd01ee7e883f3b002981897"
+    },
+    {
+      "actual_historic_call_outcomes_bound": false,
+      "authority": {
+        "handler_body_sha256": "245ffe7ad61554106f9a5c748bb2cd629287a4fb0ecffa72c956d94915272dd5",
+        "handler_function": "src/mappings/factory/handlePoolCreated",
+        "handler_wat_start_line": 4617,
+        "wabt_version": "1.0.35",
+        "wasm_sha256": "9a33e52667ce538278f9ab88ac9818f5442021e8a2ddb22fd5994a9643148887",
+        "wat_sha256": "84064b99fa818216ac5090dcf2a8f6b16acfe5f93edcc9819d0cb88d84526449"
+      },
+      "complete_static_handler_contract": true,
+      "field_contract": {
+        "all_59_written_field_transitions_machine_proven": true,
+        "all_76_handler_map_sets_accounted": true,
+        "conditional_whitelist_updates": [
+          {
+            "entity_receiver": "$l5",
+            "exact_receiver_key_Value_helper_and_set_call_proven": true,
+            "machine_proven": true,
+            "predicate": "profile-pinned whitelist includes token0.id",
+            "same_mutated_array_is_final_Value_payload_operand": true,
+            "updated_entity": "Token[token1]",
+            "value": "old whitelistPools appended with Pool.id",
+            "value_kind_tag": 4,
+            "wat_line": 5876
+          },
+          {
+            "entity_receiver": "$l3",
+            "exact_receiver_key_Value_helper_and_set_call_proven": true,
+            "machine_proven": true,
+            "predicate": "profile-pinned whitelist includes token1.id",
+            "same_mutated_array_is_final_Value_payload_operand": true,
+            "updated_entity": "Token[token0]",
+            "value": "old whitelistPools appended with Pool.id",
+            "value_kind_tag": 4,
+            "wat_line": 5892
+          }
+        ],
+        "empty_whitelist_initializers": [
+          {
+            "entity": "Token[token0]",
+            "entity_receiver": "$l3",
+            "exact_receiver_key_Value_helper_and_set_call_proven": true,
+            "field": "whitelistPools",
+            "machine_proven": true,
+            "same_new_empty_array_is_final_Value_payload_operand": true,
+            "value": [],
+            "value_kind_tag": 4
+          },
+          {
+            "entity": "Token[token1]",
+            "entity_receiver": "$l5",
+            "exact_receiver_key_Value_helper_and_set_call_proven": true,
+            "field": "whitelistPools",
+            "machine_proven": true,
+            "same_new_empty_array_is_final_Value_payload_operand": true,
+            "value": [],
+            "value_kind_tag": 4
+          }
+        ],
+        "entity_receiver_origins": {
+          "Bundle": "$l1",
+          "Factory": "$l4",
+          "Pool": "$l6",
+          "Token[token0]": {
+            "constructor_alias": "$l1",
+            "primary": "$l3"
+          },
+          "Token[token1]": {
+            "constructor_alias": "$l1",
+            "primary": "$l5"
+          },
+          "exact_constructor_source_receiver_and_no_reassignment_proven": true
+        },
+        "handler_entry_local_stability": {
+          "complete_pre_effect_entry_local_read_sites": [
+            10,
+            421,
+            507,
+            546,
+            566,
+            589,
+            609,
+            641,
+            673,
+            705,
+            922,
+            942,
+            974,
+            1006,
+            1038,
+            1318,
+            1498,
+            1516
+          ],
+          "entry_event_and_zero_copy_index_reaching_definitions_proven": true,
+          "entry_event_local": "$p0",
+          "event_and_block_read_sites": [
+            10,
+            507,
+            546,
+            566,
+            589,
+            609,
+            641,
+            673,
+            705,
+            922,
+            942,
+            974,
+            1006,
+            1038,
+            1318,
+            1498,
+            1516
+          ],
+          "fee_copy_index_first_write_site": 1451,
+          "fee_copy_index_local": "$l2",
+          "post_read_write_sites": [
+            1906,
+            1951,
+            1961,
+            1976,
+            1996
+          ],
+          "pre_read_write_is_trap_only": true,
+          "pre_read_write_sites": [
+            416
+          ]
+        },
+        "handler_semantic_set_family_coverage_sha256": "38a4dd6e51d3d0e27fbe9aafee70c410d39644b604663fae910b91b96c28880b",
+        "handler_typed_map_set_count": 76,
+        "handler_typed_map_set_inventory_sha256": "38a4dd6e51d3d0e27fbe9aafee70c410d39644b604663fae910b91b96c28880b",
+        "pool_tick_required_absence_machine_proven": true,
+        "reachable_typed_map_setter_closure": {
+          "certified_helper_typed_map_set_sites": [
+            {
+              "function": "src/types/schema/Token#constructor",
+              "function_wat_line": 23
+            }
+          ],
+          "complete_direct_and_indirect_typed_map_setter_closure_proven": true,
+          "complete_typed_map_set_site_count": 77,
+          "complete_typed_map_set_sites_sha256": "193f2206f4a7b73ae2e743697cf62a7a837f29ee5cbe778fe3b7e0e121ad62f6",
+          "conservative_indirect_targets": [
+            "~lib/@graphprotocol/graph-ts/common/value/Value#displayData~anonymous|0"
+          ],
+          "handler_typed_map_set_sites": [
+            172,
+            188,
+            204,
+            220,
+            236,
+            252,
+            268,
+            284,
+            300,
+            316,
+            332,
+            348,
+            361,
+            379,
+            395,
+            499,
+            538,
+            633,
+            665,
+            697,
+            742,
+            758,
+            774,
+            790,
+            806,
+            822,
+            838,
+            854,
+            870,
+            886,
+            902,
+            910,
+            966,
+            998,
+            1030,
+            1075,
+            1091,
+            1107,
+            1123,
+            1139,
+            1155,
+            1171,
+            1187,
+            1203,
+            1219,
+            1235,
+            1243,
+            1259,
+            1275,
+            1293,
+            1310,
+            1497,
+            1515,
+            1533,
+            1549,
+            1565,
+            1581,
+            1597,
+            1613,
+            1629,
+            1645,
+            1661,
+            1677,
+            1693,
+            1709,
+            1725,
+            1741,
+            1757,
+            1773,
+            1789,
+            1805,
+            1821,
+            1837,
+            1853,
+            1869,
+            1885
+          ],
+          "no_other_reachable_typed_map_setter": true,
+          "reachable_call_indirect_sites": [
+            {
+              "function": "~lib/@graphprotocol/graph-ts/common/value/Value#displayData",
+              "function_wat_line": 162
+            }
+          ],
+          "reachable_function_count": 57
+        },
+        "required_absent_fields": [
+          "Pool.tick"
+        ],
+        "simple_global_value_flows": [
+          {
+            "entity": "Factory",
+            "field": "poolCount",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l4",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "poolCount",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BI",
+            "value_kind": "BigInt",
+            "wat_line": 4805
+          },
+          {
+            "entity": "Factory",
+            "field": "txCount",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l4",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "txCount",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BI",
+            "value_kind": "BigInt",
+            "wat_line": 4965
+          },
+          {
+            "entity": "Token[token0]",
+            "field": "txCount",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l3",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "txCount",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BI",
+            "value_kind": "BigInt",
+            "wat_line": 5503
+          },
+          {
+            "entity": "Token[token0]",
+            "field": "poolCount",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l3",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "poolCount",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BI",
+            "value_kind": "BigInt",
+            "wat_line": 5519
+          },
+          {
+            "entity": "Token[token1]",
+            "field": "txCount",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l5",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "txCount",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BI",
+            "value_kind": "BigInt",
+            "wat_line": 5836
+          },
+          {
+            "entity": "Token[token1]",
+            "field": "poolCount",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l5",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "poolCount",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BI",
+            "value_kind": "BigInt",
+            "wat_line": 5852
+          },
+          {
+            "entity": "Pool",
+            "field": "liquidityProviderCount",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "liquidityProviderCount",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BI",
+            "value_kind": "BigInt",
+            "wat_line": 6166
+          },
+          {
+            "entity": "Pool",
+            "field": "txCount",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "txCount",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BI",
+            "value_kind": "BigInt",
+            "wat_line": 6182
+          },
+          {
+            "entity": "Pool",
+            "field": "liquidity",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "liquidity",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BI",
+            "value_kind": "BigInt",
+            "wat_line": 6198
+          },
+          {
+            "entity": "Pool",
+            "field": "sqrtPrice",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "sqrtPrice",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BI",
+            "value_kind": "BigInt",
+            "wat_line": 6214
+          },
+          {
+            "entity": "Pool",
+            "field": "feeGrowthGlobal0X128",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "feeGrowthGlobal0X128",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BI",
+            "value_kind": "BigInt",
+            "wat_line": 6230
+          },
+          {
+            "entity": "Pool",
+            "field": "feeGrowthGlobal1X128",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "feeGrowthGlobal1X128",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BI",
+            "value_kind": "BigInt",
+            "wat_line": 6246
+          },
+          {
+            "entity": "Pool",
+            "field": "observationIndex",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "observationIndex",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BI",
+            "value_kind": "BigInt",
+            "wat_line": 6294
+          },
+          {
+            "entity": "Factory",
+            "field": "totalVolumeETH",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l4",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalVolumeETH",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 4821
+          },
+          {
+            "entity": "Factory",
+            "field": "totalVolumeUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l4",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalVolumeUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 4837
+          },
+          {
+            "entity": "Factory",
+            "field": "untrackedVolumeUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l4",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "untrackedVolumeUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 4853
+          },
+          {
+            "entity": "Factory",
+            "field": "totalFeesUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l4",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalFeesUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 4869
+          },
+          {
+            "entity": "Factory",
+            "field": "totalFeesETH",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l4",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalFeesETH",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 4885
+          },
+          {
+            "entity": "Factory",
+            "field": "totalValueLockedETH",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l4",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalValueLockedETH",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 4901
+          },
+          {
+            "entity": "Factory",
+            "field": "totalValueLockedUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l4",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalValueLockedUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 4917
+          },
+          {
+            "entity": "Factory",
+            "field": "totalValueLockedUSDUntracked",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l4",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalValueLockedUSDUntracked",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 4933
+          },
+          {
+            "entity": "Factory",
+            "field": "totalValueLockedETHUntracked",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l4",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalValueLockedETHUntracked",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 4949
+          },
+          {
+            "entity": "Bundle",
+            "field": "ethPriceUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l1",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l3",
+              "field_key": "ethPriceUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l3"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 5012
+          },
+          {
+            "entity": "Token[token0]",
+            "field": "derivedETH",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l3",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "derivedETH",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 5375
+          },
+          {
+            "entity": "Token[token0]",
+            "field": "volume",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l3",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "volume",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 5391
+          },
+          {
+            "entity": "Token[token0]",
+            "field": "volumeUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l3",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "volumeUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 5407
+          },
+          {
+            "entity": "Token[token0]",
+            "field": "feesUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l3",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "feesUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 5423
+          },
+          {
+            "entity": "Token[token0]",
+            "field": "untrackedVolumeUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l3",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "untrackedVolumeUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 5439
+          },
+          {
+            "entity": "Token[token0]",
+            "field": "totalValueLocked",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l3",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalValueLocked",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 5455
+          },
+          {
+            "entity": "Token[token0]",
+            "field": "totalValueLockedUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l3",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalValueLockedUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 5471
+          },
+          {
+            "entity": "Token[token0]",
+            "field": "totalValueLockedUSDUntracked",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l3",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalValueLockedUSDUntracked",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 5487
+          },
+          {
+            "entity": "Token[token1]",
+            "field": "derivedETH",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l5",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "derivedETH",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 5708
+          },
+          {
+            "entity": "Token[token1]",
+            "field": "volume",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l5",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "volume",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 5724
+          },
+          {
+            "entity": "Token[token1]",
+            "field": "volumeUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l5",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "volumeUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 5740
+          },
+          {
+            "entity": "Token[token1]",
+            "field": "untrackedVolumeUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l5",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "untrackedVolumeUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 5756
+          },
+          {
+            "entity": "Token[token1]",
+            "field": "feesUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l5",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "feesUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 5772
+          },
+          {
+            "entity": "Token[token1]",
+            "field": "totalValueLocked",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l5",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalValueLocked",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 5788
+          },
+          {
+            "entity": "Token[token1]",
+            "field": "totalValueLockedUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l5",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalValueLockedUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 5804
+          },
+          {
+            "entity": "Token[token1]",
+            "field": "totalValueLockedUSDUntracked",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l5",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalValueLockedUSDUntracked",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 5820
+          },
+          {
+            "entity": "Pool",
+            "field": "token0Price",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "token0Price",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 6262
+          },
+          {
+            "entity": "Pool",
+            "field": "token1Price",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "token1Price",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 6278
+          },
+          {
+            "entity": "Pool",
+            "field": "totalValueLockedToken0",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalValueLockedToken0",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 6310
+          },
+          {
+            "entity": "Pool",
+            "field": "totalValueLockedToken1",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalValueLockedToken1",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 6326
+          },
+          {
+            "entity": "Pool",
+            "field": "totalValueLockedUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalValueLockedUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 6342
+          },
+          {
+            "entity": "Pool",
+            "field": "totalValueLockedETH",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalValueLockedETH",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 6358
+          },
+          {
+            "entity": "Pool",
+            "field": "totalValueLockedUSDUntracked",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalValueLockedUSDUntracked",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 6374
+          },
+          {
+            "entity": "Pool",
+            "field": "volumeToken0",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "volumeToken0",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 6390
+          },
+          {
+            "entity": "Pool",
+            "field": "volumeToken1",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "volumeToken1",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 6406
+          },
+          {
+            "entity": "Pool",
+            "field": "volumeUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "volumeUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 6422
+          },
+          {
+            "entity": "Pool",
+            "field": "feesUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "feesUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 6438
+          },
+          {
+            "entity": "Pool",
+            "field": "untrackedVolumeUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "untrackedVolumeUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 6454
+          },
+          {
+            "entity": "Pool",
+            "field": "collectedFeesToken0",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "collectedFeesToken0",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 6470
+          },
+          {
+            "entity": "Pool",
+            "field": "collectedFeesToken1",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "collectedFeesToken1",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 6486
+          },
+          {
+            "entity": "Pool",
+            "field": "collectedFeesUSD",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "collectedFeesUSD",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 2,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ZERO_BD",
+            "value_kind": "BigDecimal",
+            "wat_line": 6502
+          }
+        ],
+        "special_field_flows": [
+          {
+            "entity": "Factory",
+            "field": "id",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l4",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "id",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+              "value_kind_tag": 0,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "0x1F98431c8aD98523631AE4a59f267346ea31F984"
+          },
+          {
+            "entity": "Bundle",
+            "field": "id",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l1",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l3",
+              "field_key": "id",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "1",
+              "value_kind_tag": 0,
+              "value_wrapper_local": "$l3"
+            },
+            "value": "1"
+          },
+          {
+            "entity": "Factory",
+            "field": "owner",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l4",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "owner",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "0x0000000000000000000000000000000000000000",
+              "value_kind_tag": 0,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "ADDRESS_ZERO"
+          },
+          {
+            "entity": "Factory",
+            "field": "poolCount",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l4",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "poolCount",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "old poolCount + ONE_BI"
+          },
+          {
+            "entity": "Pool",
+            "field": "id",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "id",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 0,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "bytesToHex(event[4].pool)"
+          },
+          {
+            "entity": "Pool",
+            "field": "token0",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "token0",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 0,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "Token[token0].id"
+          },
+          {
+            "entity": "Pool",
+            "field": "token1",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "token1",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 0,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "Token[token1].id"
+          },
+          {
+            "entity": "Pool",
+            "field": "feeTier",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "feeTier",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "source_proof": {
+              "accepted_source_value_kinds": [
+                3,
+                4
+              ],
+              "event_value_payload_sign_extension_byte_copy_and_i32_assembly_structurally_proven": true,
+              "normalized_conversion_slice_sha256": "b624329a49f47c04f6b8203072ff91a8a04d5de32c54a32ed4808ae694cebcf7",
+              "slice_digest_role": "exact retained-artifact closure over the inlined conversion",
+              "source": "event[2].value"
+            },
+            "value": "BigInt.fromI32(event[2].fee)"
+          },
+          {
+            "entity": "Pool",
+            "field": "createdAtTimestamp",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "createdAtTimestamp",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "event.block.offset[40]"
+          },
+          {
+            "entity": "Pool",
+            "field": "createdAtBlockNumber",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l6",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "createdAtBlockNumber",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "event.block.offset[28]"
+          }
+        ],
+        "stored_field_contract_count": 60,
+        "stored_fields": [
+          "Bundle.ethPriceUSD",
+          "Bundle.id",
+          "Factory.id",
+          "Factory.owner",
+          "Factory.poolCount",
+          "Factory.totalFeesETH",
+          "Factory.totalFeesUSD",
+          "Factory.totalValueLockedETH",
+          "Factory.totalValueLockedETHUntracked",
+          "Factory.totalValueLockedUSD",
+          "Factory.totalValueLockedUSDUntracked",
+          "Factory.totalVolumeETH",
+          "Factory.totalVolumeUSD",
+          "Factory.txCount",
+          "Factory.untrackedVolumeUSD",
+          "Pool.collectedFeesToken0",
+          "Pool.collectedFeesToken1",
+          "Pool.collectedFeesUSD",
+          "Pool.createdAtBlockNumber",
+          "Pool.createdAtTimestamp",
+          "Pool.feeGrowthGlobal0X128",
+          "Pool.feeGrowthGlobal1X128",
+          "Pool.feeTier",
+          "Pool.feesUSD",
+          "Pool.id",
+          "Pool.liquidity",
+          "Pool.liquidityProviderCount",
+          "Pool.observationIndex",
+          "Pool.sqrtPrice",
+          "Pool.tick",
+          "Pool.token0",
+          "Pool.token0Price",
+          "Pool.token1",
+          "Pool.token1Price",
+          "Pool.totalValueLockedETH",
+          "Pool.totalValueLockedToken0",
+          "Pool.totalValueLockedToken1",
+          "Pool.totalValueLockedUSD",
+          "Pool.totalValueLockedUSDUntracked",
+          "Pool.txCount",
+          "Pool.untrackedVolumeUSD",
+          "Pool.volumeToken0",
+          "Pool.volumeToken1",
+          "Pool.volumeUSD",
+          "Token.decimals",
+          "Token.derivedETH",
+          "Token.feesUSD",
+          "Token.id",
+          "Token.name",
+          "Token.poolCount",
+          "Token.symbol",
+          "Token.totalSupply",
+          "Token.totalValueLocked",
+          "Token.totalValueLockedUSD",
+          "Token.totalValueLockedUSDUntracked",
+          "Token.txCount",
+          "Token.untrackedVolumeUSD",
+          "Token.volume",
+          "Token.volumeUSD",
+          "Token.whitelistPools"
+        ],
+        "string_array_value_helper_flow": {
+          "body_sha256": "b458f9ce24317d5c56af74ecc8eedc179bc0a9c2816953c2d8e87f24f31d3b43",
+          "exact_helper_body_bound": true,
+          "function": "~lib/@graphprotocol/graph-ts/common/value/Value.fromStringArray",
+          "line_count": 103,
+          "outcome_model": {
+            "input": "String[]",
+            "output": "Value(kind=StringArray, payload=same ordered strings)"
+          },
+          "same_ordered_input_strings_encoded_in_payload": true,
+          "same_value_receiver_used_for_payload_and_return": true,
+          "structural_kind_payload_and_return_machine_proven": true,
+          "value_kind_tag": 4
+        },
+        "token_helper_field_flows": [
+          {
+            "entity": "Token[token0]",
+            "event_index": 0,
+            "field": "symbol",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l1",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l7",
+              "field_key": "symbol",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 0,
+              "value_wrapper_local": "$l7"
+            },
+            "value": "exact fetchTokenSymbol(event[0]) outcome",
+            "value_kind": "String",
+            "wat_line": 5250
+          },
+          {
+            "entity": "Token[token0]",
+            "event_index": 0,
+            "field": "name",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l3",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "name",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 0,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "exact fetchTokenName(event[0]) outcome",
+            "value_kind": "String",
+            "wat_line": 5282
+          },
+          {
+            "entity": "Token[token0]",
+            "event_index": 0,
+            "field": "totalSupply",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l3",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalSupply",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "exact fetchTokenTotalSupply(event[0]) outcome",
+            "value_kind": "BigInt",
+            "wat_line": 5314
+          },
+          {
+            "entity": "Token[token0]",
+            "event_index": 0,
+            "field": "decimals",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l3",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "decimals",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "exact fetchTokenDecimals(event[0]) outcome",
+            "value_kind": "BigInt",
+            "wat_line": 5359
+          },
+          {
+            "entity": "Token[token1]",
+            "event_index": 1,
+            "field": "symbol",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l1",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l7",
+              "field_key": "symbol",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 0,
+              "value_wrapper_local": "$l7"
+            },
+            "value": "exact fetchTokenSymbol(event[1]) outcome",
+            "value_kind": "String",
+            "wat_line": 5583
+          },
+          {
+            "entity": "Token[token1]",
+            "event_index": 1,
+            "field": "name",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l5",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "name",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 0,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "exact fetchTokenName(event[1]) outcome",
+            "value_kind": "String",
+            "wat_line": 5615
+          },
+          {
+            "entity": "Token[token1]",
+            "event_index": 1,
+            "field": "totalSupply",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l5",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "totalSupply",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "exact fetchTokenTotalSupply(event[1]) outcome",
+            "value_kind": "BigInt",
+            "wat_line": 5647
+          },
+          {
+            "entity": "Token[token1]",
+            "event_index": 1,
+            "field": "decimals",
+            "machine_proven": true,
+            "set_binding": {
+              "entity_receiver": "$l5",
+              "exact_receiver_key_kind_payload_final_operand_and_set_call_proven": true,
+              "exact_site_wrapper_local": "$l1",
+              "field_key": "decimals",
+              "payload_and_wrapper_contiguous_without_reassignment": true,
+              "payload_operand": "$l9",
+              "value_kind_tag": 7,
+              "value_wrapper_local": "$l1"
+            },
+            "value": "exact fetchTokenDecimals(event[1]) outcome",
+            "value_kind": "BigInt",
+            "wat_line": 5692
+          }
+        ],
+        "token_id_constructor_flow": {
+          "body_sha256": "44e94b0a2a9be6341273b4d71fb1306864b40ed0c677131339066eb1d1e2af83",
+          "constructor_id_and_receiver_machine_proven": true,
+          "fresh_entity_local": "$l1",
+          "function": "src/types/schema/Token#constructor",
+          "id_key": "id",
+          "id_map_set_call": "~lib/@graphprotocol/graph-ts/common/collections/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/common/value/Value>#set",
+          "input_id_parameter": "$p0",
+          "preserved_input_id_local": "$l2",
+          "returned_entity_local": "$l1",
+          "same_fresh_receiver_used_for_map_set_and_return": true,
+          "same_input_id_encoded_in_string_value_payload": true,
+          "value_kind_tag": 0
+        },
+        "written_field_count": 59,
+        "written_fields": [
+          "Bundle.ethPriceUSD",
+          "Bundle.id",
+          "Factory.id",
+          "Factory.owner",
+          "Factory.poolCount",
+          "Factory.totalFeesETH",
+          "Factory.totalFeesUSD",
+          "Factory.totalValueLockedETH",
+          "Factory.totalValueLockedETHUntracked",
+          "Factory.totalValueLockedUSD",
+          "Factory.totalValueLockedUSDUntracked",
+          "Factory.totalVolumeETH",
+          "Factory.totalVolumeUSD",
+          "Factory.txCount",
+          "Factory.untrackedVolumeUSD",
+          "Pool.collectedFeesToken0",
+          "Pool.collectedFeesToken1",
+          "Pool.collectedFeesUSD",
+          "Pool.createdAtBlockNumber",
+          "Pool.createdAtTimestamp",
+          "Pool.feeGrowthGlobal0X128",
+          "Pool.feeGrowthGlobal1X128",
+          "Pool.feeTier",
+          "Pool.feesUSD",
+          "Pool.id",
+          "Pool.liquidity",
+          "Pool.liquidityProviderCount",
+          "Pool.observationIndex",
+          "Pool.sqrtPrice",
+          "Pool.token0",
+          "Pool.token0Price",
+          "Pool.token1",
+          "Pool.token1Price",
+          "Pool.totalValueLockedETH",
+          "Pool.totalValueLockedToken0",
+          "Pool.totalValueLockedToken1",
+          "Pool.totalValueLockedUSD",
+          "Pool.totalValueLockedUSDUntracked",
+          "Pool.txCount",
+          "Pool.untrackedVolumeUSD",
+          "Pool.volumeToken0",
+          "Pool.volumeToken1",
+          "Pool.volumeUSD",
+          "Token.decimals",
+          "Token.derivedETH",
+          "Token.feesUSD",
+          "Token.id",
+          "Token.name",
+          "Token.poolCount",
+          "Token.symbol",
+          "Token.totalSupply",
+          "Token.totalValueLocked",
+          "Token.totalValueLockedUSD",
+          "Token.totalValueLockedUSDUntracked",
+          "Token.txCount",
+          "Token.untrackedVolumeUSD",
+          "Token.volume",
+          "Token.volumeUSD",
+          "Token.whitelistPools"
+        ]
+      },
+      "graph_handler_rollback_proven_by_retained_wat": false,
+      "mapping_cid": "QmbJGLb6sXkN11djxLvKGb2zDk3s7ddgEsULwzC7TVyrEb",
+      "module_constants": {
+        "address_zero": "0x0000000000000000000000000000000000000000",
+        "body_sha256": "82f696b281a1321a3b9fb5a98645ede19e925b0f3a10525624a093509885fd76",
+        "constant_flows_machine_proven": true,
+        "function": "~start",
+        "module_state_invariants": {
+          "complete_global_set_inventory": {
+            "$src/utils/constants/ONE_BI": [
+              [
+                "~start",
+                18
+              ]
+            ],
+            "$src/utils/constants/ZERO_BD": [
+              [
+                "~start",
+                21
+              ]
+            ],
+            "$src/utils/constants/ZERO_BI": [
+              [
+                "~start",
+                15
+              ]
+            ],
+            "$~lib/rt/stub/offset": [
+              [
+                "~lib/rt/stub/__alloc",
+                68
+              ],
+              [
+                "~lib/array/ensureCapacity",
+                161
+              ],
+              [
+                "~lib/array/ensureCapacity",
+                189
+              ],
+              [
+                "~start",
+                9
+              ]
+            ],
+            "$~started": [
+              [
+                "~start",
+                7
+              ]
+            ]
+          },
+          "complete_global_set_inventory_sha256": "0695acd331f5bad4e379e97162e43fb672b0278401a2b16a6a5aeaa46757826c",
+          "critical_global_initializers_and_all_writers_machine_proven": true,
+          "initializer_dispatch": {
+            "export": "_start",
+            "function": "~start",
+            "native_start_section_present": false,
+            "started_global_initial_value": 0
+          },
+          "zero_initialized_mutable_globals": [
+            "$~started",
+            "$~lib/rt/stub/offset",
+            "$src/utils/constants/ZERO_BI",
+            "$src/utils/constants/ONE_BI",
+            "$src/utils/constants/ZERO_BD"
+          ]
+        },
+        "one_bi": "BigInt.fromI32(1)",
+        "protected_whitelist_memory": {
+          "allocator_floor": 17516,
+          "direct_memory_write_sites": [],
+          "exact_direct_call_inventory": [
+            "~lib/rt/stub/__alloc",
+            "~lib/@graphprotocol/graph-ts/common/numbers/BigInt.fromI32",
+            "~lib/@graphprotocol/graph-ts/common/numbers/BigInt.fromI32",
+            "~lib/@graphprotocol/graph-ts/common/numbers/bigDecimal.fromString",
+            "~lib/@graphprotocol/graph-ts/common/numbers/bigDecimal.fromString",
+            "~lib/@graphprotocol/graph-ts/common/numbers/BigInt.fromI32",
+            "~lib/@graphprotocol/graph-ts/common/conversion/typeConversion.stringToH160",
+            "~lib/rt/stub/__new",
+            "~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.SmartContract#constructor",
+            "~lib/@graphprotocol/graph-ts/common/numbers/bigDecimal.fromString",
+            "~lib/@graphprotocol/graph-ts/common/numbers/BigInt.fromI32",
+            "~lib/@graphprotocol/graph-ts/common/numbers/bigInt.pow",
+            "~lib/rt/stub/__alloc"
+          ],
+          "imported_host_functions_assumed_not_to_write_arbitrary_linear_memory": true,
+          "module_start_direct_memory_writes_cannot_reach_protected_whitelist_memory": true,
+          "protected_regions": [
+            {
+              "end": 4768,
+              "label": "captured_array_object",
+              "start": 4752
+            },
+            {
+              "end": 4724,
+              "label": "captured_array_backing",
+              "start": 4640
+            },
+            {
+              "end": 2260,
+              "label": "captured_member_0",
+              "start": 2172
+            },
+            {
+              "end": 2484,
+              "label": "captured_member_1",
+              "start": 2396
+            },
+            {
+              "end": 2596,
+              "label": "captured_member_2",
+              "start": 2508
+            },
+            {
+              "end": 2708,
+              "label": "captured_member_3",
+              "start": 2620
+            },
+            {
+              "end": 2820,
+              "label": "captured_member_4",
+              "start": 2732
+            },
+            {
+              "end": 2932,
+              "label": "captured_member_5",
+              "start": 2844
+            },
+            {
+              "end": 3044,
+              "label": "captured_member_6",
+              "start": 2956
+            },
+            {
+              "end": 3156,
+              "label": "captured_member_7",
+              "start": 3068
+            },
+            {
+              "end": 3268,
+              "label": "captured_member_8",
+              "start": 3180
+            },
+            {
+              "end": 3380,
+              "label": "captured_member_9",
+              "start": 3292
+            },
+            {
+              "end": 3492,
+              "label": "captured_member_10",
+              "start": 3404
+            },
+            {
+              "end": 3604,
+              "label": "captured_member_11",
+              "start": 3516
+            },
+            {
+              "end": 3716,
+              "label": "captured_member_12",
+              "start": 3628
+            },
+            {
+              "end": 3828,
+              "label": "captured_member_13",
+              "start": 3740
+            },
+            {
+              "end": 3940,
+              "label": "captured_member_14",
+              "start": 3852
+            },
+            {
+              "end": 4052,
+              "label": "captured_member_15",
+              "start": 3964
+            },
+            {
+              "end": 4164,
+              "label": "captured_member_16",
+              "start": 4076
+            },
+            {
+              "end": 4276,
+              "label": "captured_member_17",
+              "start": 4188
+            },
+            {
+              "end": 4388,
+              "label": "captured_member_18",
+              "start": 4300
+            },
+            {
+              "end": 4500,
+              "label": "captured_member_19",
+              "start": 4412
+            },
+            {
+              "end": 4612,
+              "label": "captured_member_20",
+              "start": 4524
+            }
+          ],
+          "protected_regions_sha256": "7412a7049c932cfa45fbe2a7a2362b9d441a650bd9833687a643ab68c872f782",
+          "reachable_helper_memory_writes_bound_by_aggregate_body_authority_not_rederived": true
+        },
+        "zero_bd": "BigDecimal.fromString(0)",
+        "zero_bi": "BigInt.fromI32(0)"
+      },
+      "normal_return_and_partial_effect_contract": {
+        "all_handler_local_normal_exits_machine_proven": true,
+        "bundle_save_precedes_both_decimals_returns": true,
+        "complete_when_factory_missing": [
+          "Bundle.save",
+          "Pool.save",
+          "PoolTemplate.create",
+          "Token[token0].save",
+          "Token[token1].save",
+          "Factory.save"
+        ],
+        "complete_when_factory_present": [
+          "Pool.save",
+          "PoolTemplate.create",
+          "Token[token0].save",
+          "Token[token1].save",
+          "Factory.save"
+        ],
+        "decimals_return_when_factory_missing": [
+          "Bundle.save"
+        ],
+        "decimals_return_when_factory_present": [],
+        "effect_projection": [
+          "Bundle.save",
+          "Pool.save",
+          "PoolTemplate.create",
+          "Token[token0].save",
+          "Token[token1].save",
+          "Factory.save"
+        ],
+        "excluded_pool_return_trace": [],
+        "graph_handler_rollback_proven_by_retained_wat": false,
+        "handler_local_explicit_trap_traces": [
+          [],
+          [
+            "Bundle.save"
+          ],
+          [
+            "Pool.save",
+            "PoolTemplate.create",
+            "Token[token0].save",
+            "Token[token1].save"
+          ],
+          [
+            "Bundle.save",
+            "Pool.save",
+            "PoolTemplate.create",
+            "Token[token0].save",
+            "Token[token1].save"
+          ]
+        ],
+        "normal_exit_traces": [
+          [],
+          [
+            "Bundle.save"
+          ],
+          [
+            "Pool.save",
+            "PoolTemplate.create",
+            "Token[token0].save",
+            "Token[token1].save",
+            "Factory.save"
+          ],
+          [
+            "Bundle.save",
+            "Pool.save",
+            "PoolTemplate.create",
+            "Token[token0].save",
+            "Token[token1].save",
+            "Factory.save"
+          ]
+        ]
+      },
+      "profile_id": "modern-mainnet",
+      "token_call_helpers": {
+        "all_exact_symbol_name_decimals_and_total_supply_helpers_bound": true,
+        "decimals": {
+          "body_sha256": "6b4849eab563bdf783203bf2541fd1687e652f51f2fd4c9b5cf0b3362d8653f5",
+          "comparison_body_sha256": "fed0f7c5527a22b04eb08fe6a8b021e7be72c07a827ef0ad6658b3d482fbbbab",
+          "complete_comparison_instruction_structure_machine_proven": true,
+          "decoded_result_and_threshold_locals_stable_through_comparison": true,
+          "exact_helper_body_bound": true,
+          "failure_path_uses_original_input_address": true,
+          "function": "src/utils/token/fetchTokenDecimals",
+          "line_count": 270,
+          "outcome_model": {
+            "call_failure_static_match": "profile-pinned static decimals",
+            "call_failure_without_static_match": null,
+            "call_success_at_or_above_255": null,
+            "call_success_below_255": "the decoded BigInt result"
+          },
+          "smart_contract_source": {
+            "argument_arrays": "exact empty arrays",
+            "helper": "decimals",
+            "input_address_local": "$p0",
+            "input_address_to_contract_to_tryCall_structurally_proven": true,
+            "selectors": [
+              "decimals():(uint32)"
+            ],
+            "try_call_receivers": [
+              "SmartContract#constructor stack result"
+            ]
+          },
+          "static_or_null_failure_fallback_machine_proven": true,
+          "successful_result_decode_and_threshold_return_machine_proven": true
+        },
+        "name": {
+          "body_sha256": "f760179a543ed09dc1a37c9bb0909376ec26c812b8917f55775e2fcd3bb607bd",
+          "exact_helper_body_bound": true,
+          "function": "src/utils/token/fetchTokenName",
+          "line_count": 113,
+          "outcome_model": {
+            "both_calls_fail": "unknown",
+            "primary_failure_bytes_call_success_non_sentinel": "decoded bytes32 string",
+            "primary_failure_bytes_call_success_sentinel_no_static_match": "unknown",
+            "primary_failure_bytes_call_success_sentinel_static_match": "profile-pinned static name",
+            "primary_string_call_success": "decoded string result"
+          },
+          "primary_and_bytes_try_call_dataflow_machine_proven": true,
+          "sentinel_static_fallback_dataflow_machine_proven": true,
+          "smart_contract_source": {
+            "argument_arrays": "exact empty arrays",
+            "helper": "name",
+            "input_address_local": "$p0",
+            "input_address_to_contract_to_tryCall_structurally_proven": true,
+            "selectors": [
+              "name():(string)",
+              "name():(bytes32)"
+            ],
+            "try_call_receivers": [
+              "$l1",
+              "$l2"
+            ]
+          }
+        },
+        "shared_runtime_primitives": {
+          "big_int_from_i32": {
+            "byte_array_constructor_and_uint8_get_set_structurally_proven": true,
+            "same_i32_encoded_as_four_little_endian_bytes": true
+          },
+          "call_result": {
+            "from_value_wrappers": {
+              "big_int": {
+                "function": "~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.CallResult.fromValue<~lib/@graphprotocol/graph-ts/common/numbers/BigInt>",
+                "same_input_payload_wrapped_and_returned": true
+              },
+              "bytes": {
+                "function": "~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.CallResult.fromValue<~lib/@graphprotocol/graph-ts/common/collections/Bytes>",
+                "same_input_payload_wrapped_and_returned": true
+              },
+              "string": {
+                "function": "~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.CallResult.fromValue<~lib/string/String>",
+                "same_input_payload_wrapped_and_returned": true
+              }
+            },
+            "same_success_payload_getter_structurally_proven": true
+          },
+          "new_array": {
+            "same_initialized_backing_and_receiver_returned": true,
+            "same_length_controls_backing_size_and_length_slot": true
+          },
+          "shared_runtime_semantics_structurally_closed": true,
+          "smart_contract_constructor": {
+            "same_name_and_address_stored_on_same_receiver": true,
+            "same_receiver_returned": true
+          },
+          "smart_contract_try_call": {
+            "host_result_success_failure_wrapping_structurally_proven": true,
+            "same_contract_name_address_selectors_and_arguments_enter_host_call": true
+          },
+          "string_equality": {
+            "function": "~lib/string/String.__eq",
+            "proof_boundary": "exact retained pure library primitive body",
+            "retained_body_sha256": "f7967b738553ba98aba24f869e968d73e8013f99e83d02e106cad52306aa3c3f"
+          },
+          "type_erased_array_get_set": {
+            "same_receiver_index_and_value_structurally_proven": true
+          },
+          "typed_map_collection_runtime": {
+            "allocator": {
+              "alloc_returns_old_offset_plus_header_word": true,
+              "allocator_return_identity_structurally_proven": true,
+              "new_returns_same_allocated_payload_plus_object_header": true,
+              "stub_alloc_body_sha256": "a03922d8f65cdc65e9d23c65bae22238c3783fed3294ec8847c2951f45a49c68",
+              "stub_new_body_sha256": "dc15ae7bfd1ff6f9f27d365946a2de6d849b46ed9e08818b80d59c05f97918fa"
+            },
+            "collection_mutation_chain_structurally_closed": true,
+            "ensure_capacity": {
+              "body_sha256": "5686a840f52807e6c35015e015e0f9589342779719d970157ce4b42973be91e8",
+              "committed_capacity_and_backing_structurally_proven": true,
+              "function": "~lib/array/ensureCapacity",
+              "proof_boundary": "exact retained complex array-growth primitive body plus structural commit checks"
+            },
+            "entity_map_constructor": {
+              "fresh_array_backing_and_same_entity_receiver_structurally_proven": true,
+              "function": "~lib/@graphprotocol/graph-ts/common/collections/Entity#constructor"
+            },
+            "fixed_low_level_memory_primitives": {
+              "memcpy": {
+                "body_sha256": "0da0c6a704b3c3d86e0a9a7ab3d441f3d44556c811ab4d35acfc3604d2db9a90",
+                "function": "~lib/util/memory/memcpy",
+                "proof_boundary": "exact retained low-level memory primitive body"
+              },
+              "memory_copy": {
+                "body_sha256": "fd525c8864117cf67304d6896524aa816b1949797f64ee28f43b6448e82ae2f4",
+                "function": "~lib/memory/memory.copy",
+                "proof_boundary": "exact retained low-level memory primitive body"
+              },
+              "memory_fill": {
+                "body_sha256": "a95fecf1bd14d1ab88b6c6374397793361e50f6f7c6a292e2fe0ac71dc667ad0",
+                "function": "~lib/memory/memory.fill",
+                "proof_boundary": "exact retained low-level memory primitive body"
+              }
+            },
+            "typed_map_entry_push": {
+              "function": "~lib/array/Array<~lib/@graphprotocol/graph-ts/common/collections/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/common/value/Value>>#push",
+              "same_appended_operand_at_old_length_and_exact_new_length_committed": true
+            },
+            "typed_map_set": {
+              "function": "~lib/@graphprotocol/graph-ts/common/collections/TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/common/value/Value>#set",
+              "same_key_and_value_update_or_new_entry_structurally_proven": true,
+              "same_new_entry_appended_to_same_receiver": true
+            }
+          },
+          "typed_map_get": {
+            "same_receiver_key_loop_and_value_result_structurally_proven": true
+          },
+          "value_payload_decoders": {
+            "entity_array": {
+              "accepted_value_kinds": [
+                4
+              ],
+              "function": "~lib/@graphprotocol/graph-ts/common/value/Value#toArray",
+              "kind_gate_and_payload_structurally_proven": true,
+              "same_receiver_payload_offset_8_returned": true
+            },
+            "entity_string": {
+              "accepted_value_kinds": [
+                0
+              ],
+              "function": "~lib/@graphprotocol/graph-ts/common/value/Value#toString",
+              "kind_gate_and_payload_structurally_proven": true,
+              "same_receiver_payload_offset_8_returned": true
+            },
+            "ethereum_big_int": {
+              "accepted_value_kinds": [
+                3,
+                4
+              ],
+              "function": "~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.Value#toBigInt",
+              "kind_gate_and_payload_structurally_proven": true,
+              "same_receiver_payload_offset_8_returned": true
+            },
+            "ethereum_bytes": {
+              "accepted_value_kinds": [
+                1,
+                2
+              ],
+              "function": "~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.Value#toBytes",
+              "kind_gate_and_payload_structurally_proven": true,
+              "same_receiver_payload_offset_8_returned": true
+            },
+            "ethereum_string": {
+              "accepted_value_kinds": [
+                6
+              ],
+              "function": "~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.Value#toString",
+              "kind_gate_and_payload_structurally_proven": true,
+              "same_receiver_payload_offset_8_returned": true
+            }
+          }
+        },
+        "static_definitions": {
+          "array_length_tuple_slots_input_compare_loop_and_null_return_structurally_proven": true,
+          "body_sha256": "9b4a566cea79a2ce18a1bdbe6d6add7fc42b13e3b2ecfb3ef4cbeeac669451bf",
+          "definition_count": 6,
+          "definitions": [
+            [
+              "0xe0b7927c4af23765cb51314a0e0521a9645f0e2a",
+              "DGD",
+              "DGD",
+              9
+            ],
+            [
+              "0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9",
+              "AAVE",
+              "Aave Token",
+              18
+            ],
+            [
+              "0xeb9951021698b42e4399f9cbb6267aa35f82d59d",
+              "LIF",
+              "Lif",
+              18
+            ],
+            [
+              "0xbdeb4b83251fb146687fa19d1c660f99411eefe3",
+              "SVD",
+              "savedroid",
+              18
+            ],
+            [
+              "0xbb9bc244d798123fde783fcc1c72d3bb8c189413",
+              "TheDAO",
+              "TheDAO",
+              16
+            ],
+            [
+              "0x38c6a68304cdefb9bec48bbfaaba5c5b47818bb2",
+              "HPB",
+              "HPBCoin",
+              18
+            ]
+          ],
+          "exact_profile_body_and_literals_bound": true,
+          "fresh_zeroed_constructor_structurally_proven_when_reachable": true,
+          "function": "src/utils/staticTokenDefinition/StaticTokenDefinition.fromAddress",
+          "profile": "mainnet-safe-six",
+          "safe_literal_array": true
+        },
+        "symbol": {
+          "body_sha256": "4f09a6bf9196de9bb7574e45b49e04e6998b40e02df2603ca33a7732a4714ed9",
+          "exact_helper_body_bound": true,
+          "function": "src/utils/token/fetchTokenSymbol",
+          "line_count": 113,
+          "outcome_model": {
+            "both_calls_fail": "unknown",
+            "primary_failure_bytes_call_success_non_sentinel": "decoded bytes32 string",
+            "primary_failure_bytes_call_success_sentinel_no_static_match": "unknown",
+            "primary_failure_bytes_call_success_sentinel_static_match": "profile-pinned static symbol",
+            "primary_string_call_success": "decoded string result"
+          },
+          "primary_and_bytes_try_call_dataflow_machine_proven": true,
+          "sentinel_static_fallback_dataflow_machine_proven": true,
+          "smart_contract_source": {
+            "argument_arrays": "exact empty arrays",
+            "helper": "symbol",
+            "input_address_local": "$p0",
+            "input_address_to_contract_to_tryCall_structurally_proven": true,
+            "selectors": [
+              "symbol():(string)",
+              "symbol():(bytes32)"
+            ],
+            "try_call_receivers": [
+              "$l1",
+              "$l2"
+            ]
+          }
+        },
+        "total_supply": {
+          "body_sha256": "3feccb548d20c8961a76b9da3ca4e441ffdb90df4034d08b38814864371fb405",
+          "function": "src/utils/token/fetchTokenTotalSupply",
+          "generation": "modern",
+          "outcomes": {
+            "erc20_result_value_decoded": true,
+            "reverted": "BigInt.fromI32(0)",
+            "success": "decoded ERC20 totalSupply CallResult BigInt value"
+          },
+          "smart_contract_source": {
+            "argument_arrays": "exact empty arrays",
+            "helper": "totalSupply",
+            "input_address_local": "$p0",
+            "input_address_to_contract_to_tryCall_structurally_proven": true,
+            "selectors": [
+              "totalSupply():(uint256)"
+            ],
+            "try_call_receivers": [
+              "$p0"
+            ]
+          },
+          "success_failure_dataflow_machine_proven": true,
+          "success_result_decode_is_contiguous_into_value_wrapper": true,
+          "success_wrapper_body_sha256": "124a162622476ddfb55166cae0edd28fb6944fff9df2c1366c945fc176a4cc65"
+        },
+        "whitelist_and_id_support": {
+          "pool_id_getter": {
+            "body_sha256": "c3bf64291589c98b778f00f5c611241724cf1a66b65077d067f06b4e7e37ad31",
+            "decoded_key": "id",
+            "exact_helper_body_bound": true,
+            "function": "src/types/schema/Pool#get:id",
+            "line_count": 24,
+            "no_setter_or_persistent_side_effect": true,
+            "outcome_model": {
+              "input": "entity receiver",
+              "output": "same non-null id Value converted to String"
+            },
+            "receiver_key_guard_result_structurally_proven": true,
+            "same_input_receiver_used_for_get": true,
+            "same_non_null_non_Null_Value_converted_to_string": true
+          },
+          "token_id_getter": {
+            "body_sha256": "929754fb22ba5daae26dfe0fb012b63cea986e258a470a3c75beed6202849731",
+            "decoded_key": "id",
+            "exact_helper_body_bound": true,
+            "function": "src/types/schema/Token#get:id",
+            "line_count": 24,
+            "no_setter_or_persistent_side_effect": true,
+            "outcome_model": {
+              "input": "entity receiver",
+              "output": "same non-null id Value converted to String"
+            },
+            "receiver_key_guard_result_structurally_proven": true,
+            "same_input_receiver_used_for_get": true,
+            "same_non_null_non_Null_Value_converted_to_string": true
+          },
+          "whitelist_getter": {
+            "body_sha256": "74ffe9096e8964cffc2f1dc62cd89e1f126681936d0e71a245d64eb917afabd1",
+            "decoded_key": "whitelistPools",
+            "exact_helper_body_bound": true,
+            "function": "src/types/schema/Token#get:whitelistPools",
+            "line_count": 103,
+            "outcome_model": {
+              "input": "Token entity",
+              "output": "same ordered whitelistPools strings"
+            },
+            "receiver_key_kind_array_conversion_and_return_structurally_proven": true,
+            "same_index_Value_toString_conversion_and_ordered_return": true,
+            "same_source_array_length_written_to_destination_offset_12": true
+          },
+          "whitelist_membership": {
+            "body_sha256": "c2fcbe1f72c5178a09100ce46a209a2a47e7c9d7780f7c7eafa5fed6f054ba2e",
+            "captured_backing_pointer": 4640,
+            "captured_backing_pointer_slot": 4756,
+            "captured_length": 21,
+            "captured_length_slot": 4764,
+            "decoded_profile_members": [
+              "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+              "0x6b175474e89094c44da98b954eedeac495271d0f",
+              "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+              "0xdac17f958d2ee523a2206206994597c13d831ec7",
+              "0x0000000000085d4780b73119b644ae5ecd22b376",
+              "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+              "0x5d3a536e4d6dbd6114cc1ead35777bab948e3643",
+              "0x39aa39c021dfbae8fac545936693ac917d5e7563",
+              "0x86fadb80d8d2cff3c3680819e4da99c10232ba0f",
+              "0x57ab1ec28d129707052df4df418d58a2d46d5f51",
+              "0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2",
+              "0xc00e94cb662c3520282e6f5717214004a7f26888",
+              "0x514910771af9ca656af840dff83e8264ecf986ca",
+              "0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f",
+              "0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e",
+              "0x111111111117dc0aa78b770fa6a738034120c302",
+              "0xdf5e0e81dff6faf3a7e52ba697820c5e32d806a8",
+              "0x956f47f50a910163d8bf957cf5846d573e7f87ca",
+              "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0",
+              "0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9",
+              "0xfe2e637202056d30016725477c5da089ab0a043a"
+            ],
+            "exact_helper_body_bound": true,
+            "function": "~lib/array/Array<~lib/string/String>#includes",
+            "line_count": 44,
+            "loop_equality_and_boolean_return_structurally_proven": true,
+            "outcome_model": {
+              "input": "needle String",
+              "output": "needle equals one exact profile member"
+            },
+            "same_input_needle_compared_to_each_ordered_member": true
+          }
+        }
+      },
+      "upstream_effect_proof_sha256": "8d429b53d3be3985db822ec8f3d6687ebf7685206967078b961c6c5097e02e41"
+    }
+  ],
+  "provenance": {
+    "base_commit": "699c9feeea3b1ed89c7f62dc86a46cf8ff1e7f03",
+    "base_commit_verification": "recorded review provenance; Git ancestry is outside the artifact verifier",
+    "factory_effects_contract": {
+      "contract_version": "uniswap-v3-factory-effects/v1",
+      "path": "uniswap-v3/factory-effects/v1/contract.json",
+      "raw_sha256": "f737d67550721ed418d8b5fb83424a55e429dceea7596643c69748458c5ac892"
+    },
+    "wabt_version": "1.0.35",
+    "wasm2wat_command": [
+      "wasm2wat",
+      "--generate-names",
+      "<retained-modern-factory-wasm>"
+    ]
+  },
+  "residuals": [
+    "the four legacy complete-static Factory paths remain false, including their unsafe static-array holes and deployed totalSupply pointer behavior",
+    "historic token-call outcomes and actual runtime population are not supplied",
+    "retained WAT does not prove Graph Node transaction rollback after a later helper, import, or host trap",
+    "complete Factory entity histories require later Pool and other handler contributions",
+    "complete writer semantic diffs, integrated scheduling, runtime consumption, boundary continuity, oracle, logical/physical/PoI parity, backfill, and production gates remain false",
+    "this bounded supplement completes no tracking-issue acceptance checkbox"
+  ],
+  "scope": {
+    "closed_before_this_supplement": 12,
+    "cumulative_closed_after_this_supplement": 14,
+    "factory_upstream_path_count": 18,
+    "modern_mapping_count": 2,
+    "modern_segment_count": 2,
+    "modern_segment_field_projection_count": 120,
+    "newly_closed_complete_static_handler_paths": 2,
+    "newly_closed_path": "$.complete_static_handler_contract for modern-base and modern-mainnet",
+    "reason_global_counts_do_not_move": "the same 60-field Factory contract remains unproved for all four legacy mappings",
+    "required_absent_field_count_per_mapping": 1,
+    "residual_after_this_supplement": 4,
+    "residual_path": "$.complete_static_handler_contract for four legacy Factory mappings",
+    "stored_field_contract_count_per_mapping": 60,
+    "v2_global_residual_conditional_field_count_before_and_after": 232,
+    "v2_global_selected_field_count_before_and_after": 34,
+    "written_field_count_per_mapping": 59
+  },
+  "truth_boundary": {
+    "actual_historic_contract_call_outcomes_bound": false,
+    "all_manifest_handler_field_semantics_complete": false,
+    "all_pairwise_complete_writer_semantic_diffs_present": false,
+    "all_six_factory_complete_static_handler_contracts_proven": false,
+    "all_stored_fields_exact": false,
+    "backfill_ready": false,
+    "both_modern_factory_all_sixty_stored_field_contracts_proven": true,
+    "both_modern_factory_complete_static_handler_contracts_proven": true,
+    "both_modern_factory_decimals_threshold_and_static_fallback_dataflows_proven": true,
+    "both_modern_factory_early_return_partial_effects_proven": true,
+    "both_modern_factory_fifty_nine_written_field_transitions_proven": true,
+    "both_modern_factory_pool_tick_required_absence_proven": true,
+    "both_modern_factory_static_metadata_profiles_bound": true,
+    "both_modern_factory_symbol_name_and_decimals_helpers_bound": true,
+    "both_modern_factory_symbol_name_success_fallback_dataflows_proven": true,
+    "both_modern_factory_total_supply_success_failure_dataflow_proven": true,
+    "both_modern_factory_whitelist_update_direction_proven": true,
+    "boundary_state_continuity_complete": false,
+    "checkpoint_authority": false,
+    "combined_handler_order_implemented": false,
+    "cumulative_factory_paths_closed_is_14_of_18": true,
+    "cumulative_factory_paths_residual_is_4_of_18": true,
+    "dynamic_datasource_stage_order_implemented": false,
+    "exact_factory_effects_contract_bytes_pinned": true,
+    "exact_two_modern_factory_wasm_wat_and_handlers_pinned": true,
+    "exactly_two_complete_static_handler_paths_closed": true,
+    "factory_complete_entity_histories_proven": false,
+    "global_v2_selected_and_residual_counts_unchanged_by_partial_profile_closure": true,
+    "graph_execution_trace_complete": false,
+    "graph_handler_rollback_proven_by_retained_wat": false,
+    "graph_oracle_complete": false,
+    "legacy_factory_complete_static_handler_contracts_proven": false,
+    "logical_parity_complete": false,
+    "modern_segment_field_projection_count_is_120": true,
+    "physical_parity_complete": false,
+    "poi_parity_complete": false,
+    "post_fatal_execution_modeled": false,
+    "production_ready": false,
+    "runtime_population_complete": false,
+    "target_runtime_identity_bound": false,
+    "writer_runtime_consumes_this_contract": false
+  }
+}

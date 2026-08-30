@@ -72,6 +72,12 @@ only after this gate passes.
   Factory effect-order and exact-argument paths. It closes those paths without
   promoting Graph rollback, complete handler semantics, parity, backfill, or
   production readiness.
+- **`uniswap-v3/factory-static/v1/`** — the retained-WASM complete-static
+  semantics proof for the modern Base and modern mainnet Factory mappings. It
+  accounts for each 60-field contract (59 writes plus required `Pool.tick`
+  absence), structurally closes every handler/helper setter and support
+  dataflow, and accounts for all early-return/partial-effect traces while
+  leaving the four legacy paths and every broad readiness gate false.
 - **`common/`** — shared contracts extracted only after they reproduce the V4 reference.
   A family boundary must preserve ordered mapping operations and the inputs required for
   exact PoI; a coalesced `EntityChanges` stream is not assumed sufficient.

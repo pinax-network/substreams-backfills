@@ -233,6 +233,18 @@ trap projection is not claimed. Cumulative Factory closure is twelve of 18.
 Graph rollback, `totalSupply`, the six complete-static-handler paths, runtime
 consumption, continuity, parity, backfill, and production remain false.
 
+The sibling [`factory-static/v1`](factory-static/v1/README.md) supplement
+closes only the two retained modern Base/mainnet complete-static Factory paths.
+For each mapping it accounts for all 60 stored-field contracts, continuously
+binds every one of the 76 handler map writes through its exact entity receiver,
+decoded key, Value kind, semantic payload source, final Value operand, and map
+setter. Its complete direct/conservative-indirect closure admits only those 76
+sites plus the certified Token-constructor ID write, so a setter hidden in a
+reachable helper also fails. Structural certificates bind the collection,
+Value-decoder, token-call, static-lookup, entry-local, and complete decimals
+dataflows and prove `Pool.tick` absent. The four legacy static paths and every
+runtime, continuity, parity, backfill, and production gate remain false.
+
 The next sibling [`npm-observation-plan/`](npm-observation-plan/README.md)
 closes the repository-only host request set before joint reduction. It first
 enumerates every unique Position key from the complete event envelope, then,

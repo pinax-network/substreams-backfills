@@ -87,6 +87,14 @@ only after this gate passes.
   effect inventories. Persistence, no-later-overwrite, general alias safety,
   field completeness, history, parity, backfill, production, and readiness
   remain false.
+- **`uniswap-v3/pool-swap-core/v1/`** — retained-WAT call-flow
+  evidence for `Pool.handleSwap` assignments of liquidity, tick, and sqrtPrice
+  from exact ABI indices 5, 6, and 4 across all eight mappings. It binds modern
+  required-entity traps and the two-Token guard, legacy decoded semantics behind
+  misleading deduplicated symbols, selected receiver/key/value flows, both Pool
+  saves, and exact mutation/store inventories. Complete Swap, persistence,
+  no-later-overwrite, alias, rollback, history, parity, backfill, production,
+  and readiness claims remain false.
 - **`uniswap-v3/factory-effects/v1/`** — the retained-WASM proof for the six
   Factory effect-order and exact-argument paths. It closes those paths without
   promoting Graph rollback, complete handler semantics, parity, backfill, or

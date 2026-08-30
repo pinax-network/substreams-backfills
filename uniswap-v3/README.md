@@ -282,6 +282,18 @@ effect inventories. Baseline receiver/key/value and direct-memory aliases remain
 unclassified, so persistence, no-later-overwrite, field completeness, Pool
 history, parity, checkpoint, backfill, production, and readiness stay false.
 
+The [`pool-swap-core/v1`](pool-swap-core/v1/README.md) supplement
+then digest-pins Mint plus the canonical Pool runtime and Initialize capsules.
+Across all eight retained Pool mappings it binds `handleSwap` liquidity, tick,
+and sqrtPrice assignments from ABI parameters 5, 6, and 4, exact decoded keys,
+selected loaded-Pool receiver identity, modern required-entity traps and the
+two-Token guard, the first Pool-save order, the second reachable Pool save, and
+complete reachable mutation/store inventories. Legacy semantics come only from
+decoded operands, keys, and call flow—not misleading deduplicated symbols.
+Complete Swap, persistence, no-later-overwrite, alias, rollback, history,
+parity, checkpoint, backfill, production, and readiness remain false. The slice
+is based on exact Pool Mint squash merge `fa1c8d842712e53d363615062ecf1374e52bb854`.
+
 The next sibling [`npm-observation-plan/`](npm-observation-plan/README.md)
 closes the repository-only host request set before joint reduction. It first
 enumerates every unique Position key from the complete event envelope, then,

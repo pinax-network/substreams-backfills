@@ -79,6 +79,14 @@ only after this gate passes.
   selected-TVL persistence, field completeness, host behavior, general alias
   safety, complete Pool history, parity, backfill, and production gates remain
   false.
+- **`uniswap-v3/pool-mint/v1/`** — retained-WAT call-flow evidence for both
+  `Pool.handleMint` token-TVL additions. It digest-pins Burn and the shared
+  same-WAT runtime capsules, binds ABI indices 5/6, exact amount/decimals and
+  old-plus-amount operand flow, modern missing-entity traps, fresh intra-handler
+  wrapper/Value identities, selected setters, save ordering, and exact reachable
+  effect inventories. Persistence, no-later-overwrite, general alias safety,
+  field completeness, history, parity, backfill, production, and readiness
+  remain false.
 - **`uniswap-v3/factory-effects/v1/`** — the retained-WASM proof for the six
   Factory effect-order and exact-argument paths. It closes those paths without
   promoting Graph rollback, complete handler semantics, parity, backfill, or

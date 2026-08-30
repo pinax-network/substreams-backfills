@@ -68,6 +68,17 @@ only after this gate passes.
   ancestry segments. It proves the three saving profiles and recomputes the
   five historical no-save closures while leaving complete Pool history,
   runtime, parity, backfill, and production gates false.
+- **`uniswap-v3/pool-runtime/v1/`** — the shared all-profile Pool collection,
+  allocator, module-state, and global-writer capsule. Handler semantics and all
+  readiness gates remain false.
+- **`uniswap-v3/pool-burn/v1/`** — retained-WAT call-flow evidence for both
+  `Pool.handleBurn` token-TVL updates. It consumes the same-WAT Pool runtime
+  capsule, binds exact indices 4/5, matching decimal conversion/subtraction,
+  explicit setter/save flow, and an exact reachable mutation inventory. Baseline
+  dynamic-key and memory-alias effects remain semantically unclassified, so
+  selected-TVL persistence, field completeness, host behavior, general alias
+  safety, complete Pool history, parity, backfill, and production gates remain
+  false.
 - **`uniswap-v3/factory-effects/v1/`** — the retained-WASM proof for the six
   Factory effect-order and exact-argument paths. It closes those paths without
   promoting Graph rollback, complete handler semantics, parity, backfill, or

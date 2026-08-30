@@ -20,6 +20,38 @@ binds the complete handler authority, CFG/SSA analysis, constructor and save
 helpers, persistent-effect closure, argument identity, and exact five-effect
 suffix before the new static semantics are considered.
 
+The reusable structural algorithms for initializer/global-writer analysis,
+direct linear-memory-write classification, and the modern allocator and
+TypedMap/array runtime are isolated in
+`scripts/uniswap_v3_wat_runtime.py` (SHA-256
+`bd555b5d44bed144777e35b361fcb63e275d7f21b774db3ffe0e08bef3bf4411`).
+That module performs no contract or repository I/O. Artifact hashes, contract
+truth gates, and release authority remain in this Factory verifier; reuse of
+the algorithms alone certifies no Pool handler or Pool mapping.
+
+The verifier captures those exact source bytes before importing the module and
+requires any `--root` candidate to contain identical bytes before either
+verification or `--write` can reconstruct a contract. The one public modern
+collection capsule closes allocator, capacity-growth, map set/get, indexed
+array access, low-level memory-body, and exact `String.__eq` dependencies
+together. Its lower-level dependency algorithms are private and make no
+standalone closure claim.
+
+The capsule records a separate exact declaration inventory for all 13 named
+functions in this path. It binds function type uses, parameter/local names and
+order, their types, and results independently of reachable-body and
+function-body hashes. Compile-valid parameter and local swaps are rejected
+after the corresponding outer body authority is refreshed.
+
+The public proof also compares the complete all-defined-function declaration
+inventory against fixed artifact authority. Base binds 62 functions at digest
+`e270520d4d74623bdc6f38f98a3d79d2c6061c2b6e5cc7b756b0464f4885da4a`;
+mainnet binds 63 at
+`6926ef9ed933fae438823d74c35412e64c193ff311b6816b0873a65a19b5e3f7`.
+This digest covers headers, type uses, ordered parameters and results, and all
+leading locals in WAT definition order. It is declaration authority, not a
+general semantic proof of all 62 or 63 functions.
+
 ## Authoritative retained artifacts
 
 | Profile | Mapping CID | WASM SHA-256 | WAT SHA-256 | Handler body SHA-256 |

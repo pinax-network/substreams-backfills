@@ -70,6 +70,10 @@ jobs:
         run: |
           python3 scripts/verify-uniswap-v3-pool-initialize.py --wasm2wat "$WASM2WAT"
           python3 -m unittest scripts.tests.test_uniswap_v3_pool_initialize
+      - name: Verify bounded all-profile Uniswap V3 Pool runtime capsules
+        run: |
+          python3 scripts/verify-uniswap-v3-pool-runtime.py --wasm2wat "$WASM2WAT"
+          python3 -m unittest scripts.tests.test_uniswap_v3_pool_runtime
       - name: Verify bounded Uniswap V3 Factory effect suffixes
         run: |
           python3 scripts/verify-uniswap-v3-factory-effects.py --wasm2wat "$WASM2WAT"
@@ -77,7 +81,9 @@ jobs:
       - name: Verify bounded modern Uniswap V3 Factory static semantics
         run: |
           python3 scripts/verify-uniswap-v3-modern-factory-static.py --wasm2wat "$WASM2WAT"
-          python3 -m unittest scripts.tests.test_uniswap_v3_modern_factory_static
+          python3 -m unittest \
+            scripts.tests.test_uniswap_v3_wat_runtime \
+            scripts.tests.test_uniswap_v3_modern_factory_static
       - name: Test eligibility decisions and freshness gates
         run: python3 -m unittest discover -s scripts/tests -p 'test_*.py'
 

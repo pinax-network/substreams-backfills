@@ -29,6 +29,8 @@ REPOSITORY = Path(__file__).resolve().parents[1]
 CONTRACT_PATH = Path("uniswap-v3/factory-static/v1/contract.json")
 CONTRACT_VERSION = "uniswap-v3-modern-factory-static/v1"
 EFFECTS_PATH = REPOSITORY / "scripts/verify-uniswap-v3-factory-effects.py"
+RUNTIME_SOURCE_PATH = Path("scripts/uniswap_v3_wat_runtime.py")
+RUNTIME_PATH = REPOSITORY / RUNTIME_SOURCE_PATH
 EFFECTS_CONTRACT_PATH = Path("uniswap-v3/factory-effects/v1/contract.json")
 EFFECTS_CONTRACT_SHA256 = "f737d67550721ed418d8b5fb83424a55e429dceea7596643c69748458c5ac892"
 BASE_COMMIT = "699c9feeea3b1ed89c7f62dc86a46cf8ff1e7f03"
@@ -44,6 +46,22 @@ EFFECTS_SPEC.loader.exec_module(EFFECTS)
 V2 = EFFECTS.V2
 WRITER = EFFECTS.WRITER
 
+RUNTIME_SPEC = importlib.util.spec_from_file_location(
+    "uniswap_v3_wat_runtime_for_modern_factory_static", RUNTIME_PATH
+)
+if RUNTIME_SPEC is None or RUNTIME_SPEC.loader is None:
+    raise RuntimeError(f"cannot import {RUNTIME_PATH}")
+try:
+    RUNTIME_SOURCE_BYTES = RUNTIME_PATH.read_bytes()
+except OSError as error:
+    raise RuntimeError(f"cannot read {RUNTIME_PATH}: {error}") from error
+RUNTIME = importlib.util.module_from_spec(RUNTIME_SPEC)
+sys.modules[RUNTIME_SPEC.name] = RUNTIME
+exec(
+    compile(RUNTIME_SOURCE_BYTES, str(RUNTIME_PATH), "exec"),
+    RUNTIME.__dict__,
+)
+
 
 class VerificationError(RuntimeError):
     pass
@@ -56,6 +74,23 @@ def require(condition: bool, message: str) -> None:
 
 def raw_sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def bind_candidate_runtime(root: Path) -> str:
+    """Require candidate-root bytes to equal the exact source imported above."""
+
+    candidate_path = root.resolve() / RUNTIME_SOURCE_PATH
+    try:
+        candidate_bytes = candidate_path.read_bytes()
+    except OSError as error:
+        raise VerificationError(
+            f"cannot read candidate-root shared WAT runtime {candidate_path}: {error}"
+        ) from error
+    require(
+        candidate_bytes == RUNTIME_SOURCE_BYTES,
+        "candidate-root shared WAT runtime bytes differ from the exact imported runtime bytes",
+    )
+    return hashlib.sha256(candidate_bytes).hexdigest()
 
 
 def canonical_bytes(value: Any) -> bytes:
@@ -465,6 +500,8 @@ TRUE_FLAGS = {
     "cumulative_factory_paths_residual_is_4_of_18",
     "modern_segment_field_projection_count_is_120",
     "global_v2_selected_and_residual_counts_unchanged_by_partial_profile_closure",
+    "both_modern_factory_exact_runtime_function_declaration_inventories_proven",
+    "both_modern_factory_all_defined_function_declaration_inventories_proven",
 }
 
 
@@ -606,6 +643,116 @@ def function_by_suffix(context: dict[str, Any], suffix: str) -> Any:
     return matches[0]
 
 
+def runtime_ops() -> Any:
+    """Bind contract-local parsing and failure semantics to shared WAT proofs."""
+
+    return RUNTIME.WatRuntimeOps(
+        require=require,
+        normalized=normalized,
+        call_name=call_name,
+        function_by_suffix=function_by_suffix,
+    )
+
+
+def function_declaration(suffix: str, *lines: str) -> Any:
+    return RUNTIME.FunctionDeclarationSpec(suffix, tuple(lines))
+
+
+MODERN_FUNCTION_DECLARATIONS = {
+    "stub_alloc": function_declaration(
+        "~lib/rt/stub/__alloc",
+        "(func $~lib/rt/stub/__alloc (type $t0) (param $p0 i32) (result i32)",
+        "(local $l1 i32) (local $l2 i32) (local $l3 i32) (local $l4 i32) (local $l5 i32)",
+    ),
+    "stub_new": function_declaration(
+        "~lib/rt/stub/__new",
+        "(func $~lib/rt/stub/__new (type $t1) (param $p0 i32) (param $p1 i32) (result i32)",
+        "(local $l2 i32) (local $l3 i32)",
+    ),
+    "ensure_capacity": function_declaration(
+        "~lib/array/ensureCapacity",
+        "(func $~lib/array/ensureCapacity (type $t4) (param $p0 i32) (param $p1 i32)",
+        "(local $l2 i32) (local $l3 i32) (local $l4 i32) (local $l5 i32) (local $l6 i32) (local $l7 i32) (local $l8 i32) (local $l9 i32) (local $l10 i32)",
+    ),
+    "typed_map_entry_push": function_declaration(
+        "TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/common/value/Value>>#push",
+        "(func $~lib/array/Array<~lib/@graphprotocol/graph-ts/common/collections/TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/common/value/Value>>#push (type $t4) (param $p0 i32) (param $p1 i32)",
+        "(local $l2 i32) (local $l3 i32)",
+    ),
+    "typed_map_set": function_declaration(
+        TYPED_MAP_SET_CALL,
+        f"(func ${TYPED_MAP_SET_CALL} (type $t2) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+        "(local $l3 i32)",
+    ),
+    "entity_constructor": function_declaration(
+        "common/collections/Entity#constructor",
+        "(func $~lib/@graphprotocol/graph-ts/common/collections/Entity#constructor (type $t0) (param $p0 i32) (result i32)",
+        "(local $l1 i32) (local $l2 i32)",
+    ),
+    "memory_fill": function_declaration(
+        "~lib/memory/memory.fill",
+        "(func $~lib/memory/memory.fill (type $t4) (param $p0 i32) (param $p1 i32)",
+        "(local $l2 i32)",
+    ),
+    "memory_copy": function_declaration(
+        "~lib/memory/memory.copy",
+        "(func $~lib/memory/memory.copy (type $t2) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+        "(local $l3 i32) (local $l4 i32)",
+    ),
+    "memcpy": function_declaration(
+        "~lib/util/memory/memcpy",
+        "(func $~lib/util/memory/memcpy (type $t2) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+        "(local $l3 i32) (local $l4 i32) (local $l5 i32)",
+    ),
+    "event_param_get": function_declaration(
+        "Array<~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.EventParam>#__get",
+        "(func $~lib/array/Array<~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.EventParam>#__get (type $t1) (param $p0 i32) (param $p1 i32) (result i32)",
+    ),
+    "value_array_set": function_declaration(
+        "Array<~lib/@graphprotocol/graph-ts/common/value/Value>#__set",
+        "(func $~lib/array/Array<~lib/@graphprotocol/graph-ts/common/value/Value>#__set (type $t2) (param $p0 i32) (param $p1 i32) (param $p2 i32)",
+        "(local $l3 i32)",
+    ),
+    "typed_map_get": function_declaration(
+        TYPED_MAP_GET_CALL,
+        f"(func ${TYPED_MAP_GET_CALL} (type $t1) (param $p0 i32) (param $p1 i32) (result i32)",
+        "(local $l2 i32)",
+    ),
+    "string_eq": function_declaration(
+        "~lib/string/String.__eq",
+        "(func $~lib/string/String.__eq (type $t1) (param $p0 i32) (param $p1 i32) (result i32)",
+        "(local $l2 i32) (local $l3 i32) (local $l4 i32) (local $l5 i32)",
+    ),
+}
+
+
+MODERN_MODULE_FUNCTION_DECLARATIONS = {
+    "modern-base": RUNTIME.AllDefinedFunctionDeclarationInventorySpec(
+        expected_function_count=62,
+        expected_inventory_sha256="e270520d4d74623bdc6f38f98a3d79d2c6061c2b6e5cc7b756b0464f4885da4a",
+    ),
+    "modern-mainnet": RUNTIME.AllDefinedFunctionDeclarationInventorySpec(
+        expected_function_count=63,
+        expected_inventory_sha256="6926ef9ed933fae438823d74c35412e64c193ff311b6816b0873a65a19b5e3f7",
+    ),
+}
+
+
+MODERN_COLLECTION_SPEC = RUNTIME.ModernCollectionSpec(
+    typed_map_set_call=TYPED_MAP_SET_CALL,
+    typed_map_get_call=TYPED_MAP_GET_CALL,
+    event_param_get_call=EVENT_PARAM_GET_CALL,
+    stub_new_call=STUB_NEW_CALL,
+    stub_alloc_body_sha256=FIXED_RUNTIME_BODY_SHA256["stub_alloc"],
+    ensure_capacity_body_sha256=FIXED_RUNTIME_BODY_SHA256["ensure_capacity"],
+    memory_fill_body_sha256=FIXED_RUNTIME_BODY_SHA256["memory_fill"],
+    memory_copy_body_sha256=FIXED_RUNTIME_BODY_SHA256["memory_copy"],
+    memcpy_body_sha256=FIXED_RUNTIME_BODY_SHA256["memcpy"],
+    string_eq_body_sha256=STRING_EQ_BODY_SHA256,
+    function_declarations=MODERN_FUNCTION_DECLARATIONS,
+)
+
+
 def decoded_i64_string(line: str, memory: bytearray) -> str | None:
     match = re.fullmatch(r"\s*i64\.const (\d+)\s*", line)
     if not match:
@@ -626,47 +773,6 @@ def prove_module_state_invariants(
     context: dict[str, Any], start_function: Any
 ) -> dict[str, Any]:
     """Bind initializer dispatch, zero initial state, and every critical global writer."""
-
-    cid = context["cid"]
-    module_text = context.get("module_text")
-    exports = context.get("exports")
-    require(isinstance(module_text, str), f"{cid} complete module WAT is required")
-    require(isinstance(exports, dict), f"{cid} module export inventory is required")
-    require(
-        exports.get("_start") == start_function.name,
-        f"{cid} _start export binding drift",
-    )
-    native_starts = [
-        line.strip()
-        for line in module_text.splitlines()
-        if line.strip().startswith("(start ")
-    ]
-    require(
-        native_starts == [],
-        f"{cid} unexpected native WebAssembly start section: {native_starts}",
-    )
-    module_lines = [line.strip() for line in module_text.splitlines()]
-    initializers = {
-        name: [
-            line
-            for line in module_lines
-            if line.startswith(f"(global {name} ")
-        ]
-        for name in MUTABLE_GLOBALS
-    }
-    for name, definitions in initializers.items():
-        require(
-            definitions == [f"(global {name} (mut i32) (i32.const 0))"],
-            f"{cid} {name} zero initializer drift: {definitions}",
-        )
-
-    observed: dict[str, list[list[Any]]] = {name: [] for name in MUTABLE_GLOBALS}
-    for function_name, function in context["functions"].items():
-        for index, raw_line in enumerate(function.lines):
-            line = normalized(raw_line)
-            for global_name in MUTABLE_GLOBALS:
-                if line == f"global.set {global_name}":
-                    observed[global_name].append([function_name, index])
     expected = {
         "$~started": [["~start", 7]],
         "$~lib/rt/stub/offset": [
@@ -679,36 +785,26 @@ def prove_module_state_invariants(
         "$src/utils/constants/ONE_BI": [["~start", 18]],
         "$src/utils/constants/ZERO_BD": [["~start", 21]],
     }
-    require(
-        observed == expected,
-        f"{cid} critical mutable-global writer inventory drift: {observed}",
+    spec = RUNTIME.ModuleStateSpec(
+        initializer_export="_start",
+        initializer_function=start_function.name,
+        mutable_globals=MUTABLE_GLOBALS,
+        expected_global_set_inventory=expected,
     )
-    return {
-        "initializer_dispatch": {
-            "export": "_start",
-            "function": start_function.name,
-            "native_start_section_present": False,
-            "started_global_initial_value": 0,
-        },
-        "zero_initialized_mutable_globals": list(MUTABLE_GLOBALS),
-        "complete_global_set_inventory": observed,
-        "complete_global_set_inventory_sha256": canonical_sha256(observed),
-        "critical_global_initializers_and_all_writers_machine_proven": True,
-    }
+    return RUNTIME.prove_module_state_invariants(
+        context,
+        start_function,
+        spec,
+        require=require,
+        normalized=normalized,
+        canonical_sha256=canonical_sha256,
+    )
 
 
 def is_direct_memory_write(raw_line: str) -> bool:
     """Recognize every retained-WAT opcode that can directly alter linear memory."""
 
-    line = normalized(raw_line)
-    if not line:
-        return False
-    opcode = line.split(maxsplit=1)[0].rstrip(")")
-    return (
-        ".store" in opcode
-        or ".atomic.rmw" in opcode
-        or opcode in {"memory.copy", "memory.fill", "memory.init", "memory.discard"}
-    )
+    return RUNTIME.is_direct_memory_write(raw_line, normalized)
 
 
 def prove_start_protected_memory_invariance(
@@ -1153,231 +1249,41 @@ def prove_value_payload_decoder(
 
 
 def prove_allocator_identity(context: dict[str, Any]) -> dict[str, Any]:
-    """Bind the bump allocator and object allocator to their exact return pointers."""
+    """Return allocator evidence from the complete public collection capsule."""
 
-    alloc = function_by_suffix(context, "~lib/rt/stub/__alloc")
-    alloc_lines = [normalized(line) for line in alloc.lines]
-    require(
-        len(alloc_lines) == 73
-        and alloc_lines[2:5]
-        == ["local.get $p0", "i32.const 1073741820", "i32.gt_u"]
-        and alloc_lines[13:28]
-        == [
-            "global.get $~lib/rt/stub/offset", "local.tee $l1", "i32.const 4",
-            "i32.add", "local.tee $l2", "local.get $p0", "i32.const 19",
-            "i32.add", "i32.const -16", "i32.and", "i32.const 4", "i32.sub",
-            "local.tee $p0", "i32.add", "local.tee $l3",
-        ]
-        and alloc_lines[67:73]
-        == [
-            "local.get $l3", "global.set $~lib/rt/stub/offset", "local.get $l1",
-            "local.get $p0", "i32.store", "local.get $l2)",
-        ],
-        f"{context['cid']} stub/__alloc aligned extent/header/return identity drift",
+    capsule = RUNTIME.prove_modern_collection_capsule(
+        context, runtime_ops(), MODERN_COLLECTION_SPEC
     )
-    alloc_digest = hashlib.sha256(alloc.payload).hexdigest()
-    require(
-        alloc_digest == FIXED_RUNTIME_BODY_SHA256["stub_alloc"],
-        f"{context['cid']} fixed retained stub/__alloc body drift",
-    )
-
-    new = function_by_suffix(context, "~lib/rt/stub/__new")
-    new_lines = [normalized(line) for line in new.lines]
-    require(
-        len(new_lines) == 35
-        and new_lines[2:35]
-        == [
-            "local.get $p0", "i32.const 1073741804", "i32.gt_u", "if $I0",
-            new_lines[6], new_lines[7], "i32.const 86", "i32.const 30", new_lines[10],
-            "unreachable", "end", "local.get $p0", "i32.const 16", "i32.add",
-            new_lines[16], "local.tee $l3", "i32.const 4", "i32.sub",
-            "local.tee $l2", "i32.const 0", "i32.store offset=4", "local.get $l2",
-            "i32.const 0", "i32.store offset=8", "local.get $l2", "local.get $p1",
-            "i32.store offset=12", "local.get $l2", "local.get $p0",
-            "i32.store offset=16", "local.get $l3", "i32.const 16", "i32.add)",
-        ]
-        and (call_name(new.lines[10]) or "").endswith("builtins/abort")
-        and call_name(new.lines[16]) == "~lib/rt/stub/__alloc",
-        f"{context['cid']} stub/__new allocation/header/return identity drift",
-    )
-    return {
-        "stub_alloc_body_sha256": alloc_digest,
-        "stub_new_body_sha256": hashlib.sha256(new.payload).hexdigest(),
-        "alloc_returns_old_offset_plus_header_word": True,
-        "new_returns_same_allocated_payload_plus_object_header": True,
-        "allocator_return_identity_structurally_proven": True,
-    }
+    return capsule["typed_map_collection_runtime"]["allocator"]
 
 
 def prove_typed_map_collection_runtime(context: dict[str, Any]) -> dict[str, Any]:
-    """Close TypedMap mutation through entry creation, push, growth, and allocation."""
+    """Return TypedMap evidence from the complete public collection capsule."""
 
-    allocator = prove_allocator_identity(context)
-    profile = context["profile"]["profile_id"]
-
-    ensure = function_by_suffix(context, "~lib/array/ensureCapacity")
-    ensure_lines = [normalized(line) for line in ensure.lines]
-    require(
-        len(ensure_lines) == 226
-        and ensure_lines[2:10]
-        == [
-            "local.get $p0", "i32.load offset=8", "local.tee $l3", "i32.const 2",
-            "i32.shr_u", "local.get $p1", "i32.lt_u", "if $I0",
-        ]
-        and ensure_lines[195:226]
-        == [
-            "local.get $p1", "i32.const 4", "i32.sub", "local.get $l6",
-            "i32.store offset=16", "local.get $l3", "local.get $p1", "i32.const 16",
-            "i32.add", "local.tee $p1", "i32.add", "end", "local.get $l5",
-            "local.get $l3", "i32.sub", ensure_lines[210], "local.get $p1",
-            "local.get $l4", "i32.ne", "if $I12", "local.get $p0", "local.get $p1",
-            "i32.store", "local.get $p0", "local.get $p1", "i32.store offset=4",
-            "end", "local.get $p0", "local.get $l5", "i32.store offset=8", "end)",
-        ]
-        and (call_name(ensure.lines[175]) or "").endswith("stub/__alloc")
-        and (call_name(ensure.lines[179]) or "").endswith("memory.copy")
-        and (call_name(ensure.lines[210]) or "").endswith("memory.fill"),
-        f"{context['cid']} ensureCapacity committed capacity/backing behavior drift",
+    capsule = RUNTIME.prove_modern_collection_capsule(
+        context, runtime_ops(), MODERN_COLLECTION_SPEC
     )
-    ensure_digest = hashlib.sha256(ensure.payload).hexdigest()
-    require(
-        ensure_digest == FIXED_RUNTIME_BODY_SHA256["ensure_capacity"][profile],
-        f"{context['cid']} fixed retained ensureCapacity body drift",
-    )
-
-    push = function_by_suffix(
-        context,
-        "TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/common/value/Value>>#push",
-    )
-    push_lines = [normalized(line) for line in push.lines]
-    require(
-        len(push_lines) == 21
-        and push_lines[2:21]
-        == [
-            "local.get $p0", "local.get $p0", "i32.load offset=12", "local.tee $l2",
-            "i32.const 1", "i32.add", "local.tee $l3", push_lines[9],
-            "local.get $p0", "i32.load offset=4", "local.get $l2", "i32.const 2",
-            "i32.shl", "i32.add", "local.get $p1", "i32.store", "local.get $p0",
-            "local.get $l3", "i32.store offset=12)",
-        ]
-        and (call_name(push.lines[9]) or "").endswith("array/ensureCapacity"),
-        f"{context['cid']} Array<TypedMapEntry>#push receiver/length/appended-operand drift",
-    )
-
-    typed_set = function_by_suffix(context, TYPED_MAP_SET_CALL)
-    set_lines = [normalized(line) for line in typed_set.lines]
-    require(
-        len(set_lines) == 59
-        and set_lines[2:33]
-        == [
-            "block $B0 (result i32)", "loop $L1", "local.get $p0", "i32.load",
-            "i32.load offset=12", "local.get $l3", "i32.gt_s", "if $I2",
-            "local.get $p0", "i32.load", "local.get $l3", set_lines[13], "i32.load",
-            "local.get $p1", set_lines[16], "if $I3", "local.get $p0", "i32.load",
-            "local.get $l3", set_lines[21], "br $B0", "end", "local.get $l3",
-            "i32.const 1", "i32.add", "local.set $l3", "br $L1", "end", "end",
-            "i32.const 0", "end",
-        ]
-        and call_name(typed_set.lines[13]) == EVENT_PARAM_GET_CALL
-        and call_name(typed_set.lines[16]) == "~lib/string/String.__eq"
-        and call_name(typed_set.lines[21]) == EVENT_PARAM_GET_CALL
-        and set_lines[33:59]
-        == [
-            "local.tee $l3", "if $I4", "local.get $l3", "local.get $p2",
-            "i32.store offset=4", "else", "i32.const 8", "i32.const 29",
-            set_lines[41], "local.tee $l3", "i32.const 0", "i32.store",
-            "local.get $l3", "i32.const 0", "i32.store offset=4", "local.get $l3",
-            "local.get $p1", "i32.store", "local.get $l3", "local.get $p2",
-            "i32.store offset=4", "local.get $p0", "i32.load", "local.get $l3",
-            set_lines[57], "end)",
-        ]
-        and call_name(typed_set.lines[41]) == STUB_NEW_CALL
-        and (call_name(typed_set.lines[57]) or "").endswith(
-            "TypedMapEntry<~lib/string/String_~lib/@graphprotocol/graph-ts/common/value/Value>>#push"
-        ),
-        f"{context['cid']} TypedMap#set key/value/entry/push operand drift",
-    )
-
-    entity = function_by_suffix(context, "common/collections/Entity#constructor")
-    entity_lines = [normalized(line) for line in entity.lines]
-    require(
-        len(entity_lines) == 58
-        and entity_lines[2:18]
-        == [
-            "local.get $p0", "i32.eqz", "if $I0", "i32.const 4", "i32.const 26",
-            entity_lines[7], "local.set $p0", "end", "local.get $p0", "i32.eqz",
-            "if $I1", "i32.const 4", "i32.const 28", entity_lines[15],
-            "local.set $p0", "end",
-        ]
-        and call_name(entity.lines[7]) == STUB_NEW_CALL
-        and call_name(entity.lines[15]) == STUB_NEW_CALL
-        and entity_lines[18:58]
-        == [
-            "local.get $p0", "i32.const 0", "i32.store", "i32.const 16",
-            "i32.const 30", entity_lines[23], "local.tee $l1", "i32.const 0",
-            "i32.store", "local.get $l1", "i32.const 0", "i32.store offset=4",
-            "local.get $l1", "i32.const 0", "i32.store offset=8", "local.get $l1",
-            "i32.const 0", "i32.store offset=12", "i32.const 32", "i32.const 0",
-            entity_lines[38], "local.tee $l2", "i32.const 32", entity_lines[41],
-            "local.get $l1", "local.get $l2", "i32.store", "local.get $l1",
-            "local.get $l2", "i32.store offset=4", "local.get $l1", "i32.const 32",
-            "i32.store offset=8", "local.get $l1", "i32.const 0",
-            "i32.store offset=12", "local.get $p0", "local.get $l1", "i32.store",
-            "local.get $p0)",
-        ]
-        and call_name(entity.lines[23]) == STUB_NEW_CALL
-        and call_name(entity.lines[38]) == STUB_NEW_CALL
-        and (call_name(entity.lines[41]) or "").endswith("memory.fill"),
-        f"{context['cid']} Entity constructor TypedMap array/backing/return drift",
-    )
-
-    fixed_bodies: dict[str, dict[str, Any]] = {}
-    for key, suffix in (
-        ("memory_fill", "~lib/memory/memory.fill"),
-        ("memory_copy", "~lib/memory/memory.copy"),
-        ("memcpy", "~lib/util/memory/memcpy"),
-    ):
-        primitive = function_by_suffix(context, suffix)
-        digest = hashlib.sha256(primitive.payload).hexdigest()
-        require(
-            digest == FIXED_RUNTIME_BODY_SHA256[key],
-            f"{context['cid']} fixed retained {suffix} body drift",
-        )
-        fixed_bodies[key] = {
-            "function": primitive.name,
-            "body_sha256": digest,
-            "proof_boundary": "exact retained low-level memory primitive body",
-        }
-    return {
-        "allocator": allocator,
-        "ensure_capacity": {
-            "function": ensure.name,
-            "body_sha256": ensure_digest,
-            "committed_capacity_and_backing_structurally_proven": True,
-            "proof_boundary": "exact retained complex array-growth primitive body plus structural commit checks",
-        },
-        "typed_map_set": {
-            "function": typed_set.name,
-            "same_key_and_value_update_or_new_entry_structurally_proven": True,
-            "same_new_entry_appended_to_same_receiver": True,
-        },
-        "typed_map_entry_push": {
-            "function": push.name,
-            "same_appended_operand_at_old_length_and_exact_new_length_committed": True,
-        },
-        "entity_map_constructor": {
-            "function": entity.name,
-            "fresh_array_backing_and_same_entity_receiver_structurally_proven": True,
-        },
-        "fixed_low_level_memory_primitives": fixed_bodies,
-        "collection_mutation_chain_structurally_closed": True,
-    }
+    return capsule["typed_map_collection_runtime"]
 
 
 def prove_shared_runtime_primitives(context: dict[str, Any]) -> dict[str, Any]:
     """Close the retained library primitives used by the semantic wrappers."""
 
-    collection_runtime = prove_typed_map_collection_runtime(context)
+    collection_capsule = RUNTIME.prove_modern_collection_capsule(
+        context, runtime_ops(), MODERN_COLLECTION_SPEC
+    )
+    profile_id = context["profile"]["profile_id"]
+    require(
+        profile_id in MODERN_MODULE_FUNCTION_DECLARATIONS,
+        f"{context['cid']} all-defined-function declaration profile missing",
+    )
+    module_declarations = RUNTIME.prove_exact_all_defined_function_declaration_inventory(
+        context,
+        runtime_ops(),
+        MODERN_MODULE_FUNCTION_DECLARATIONS[profile_id],
+    )
+    collection_runtime = collection_capsule["typed_map_collection_runtime"]
+    indexed_collection = collection_capsule["indexed_collection"]
     smart_contract = function_by_suffix(context, "ethereum.SmartContract#constructor")
     lines = [normalized(line) for line in smart_contract.lines]
     require(
@@ -1500,69 +1406,6 @@ def prove_shared_runtime_primitives(context: dict[str, Any]) -> dict[str, Any]:
         f"{context['cid']} BigInt.fromI32 exact four-byte signed encoding drift",
     )
 
-    array_get = function_by_suffix(
-        context,
-        "Array<~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.EventParam>#__get",
-    )
-    get_lines = [normalized(line) for line in array_get.lines]
-    require(
-        len(get_lines) == 31
-        and get_lines[1:6]
-        == ["local.get $p0", "i32.load offset=12", "local.get $p1", "i32.le_u", "if $I0"]
-        and (call_name(array_get.lines[10]) or "").endswith("builtins/abort")
-        and get_lines[13:21]
-        == [
-            "local.get $p0", "i32.load offset=4", "local.get $p1", "i32.const 2",
-            "i32.shl", "i32.add", "i32.load", "local.tee $p0",
-        ]
-        and get_lines[21:23] == ["i32.eqz", "if $I1"]
-        and (call_name(array_get.lines[27]) or "").endswith("builtins/abort")
-        and get_lines[28:31] == ["unreachable", "end", "local.get $p0)"],
-        f"{context['cid']} type-erased Array#__get bounds/index/value drift",
-    )
-
-    array_set = function_by_suffix(
-        context, "Array<~lib/@graphprotocol/graph-ts/common/value/Value>#__set"
-    )
-    set_lines = [normalized(line) for line in array_set.lines]
-    require(
-        len(set_lines) == 36
-        and set_lines[2:7]
-        == ["local.get $p0", "i32.load offset=12", "local.get $p1", "i32.le_u", "if $I0"]
-        and set_lines[18:27]
-        == [
-            "local.get $p0", "local.get $p1", "i32.const 1", "i32.add",
-            "local.tee $l3", set_lines[23], "local.get $p0", "local.get $l3",
-            "i32.store offset=12",
-        ]
-        and (call_name(array_set.lines[23]) or "").endswith("array/ensureCapacity")
-        and set_lines[28:36]
-        == [
-            "local.get $p0", "i32.load offset=4", "local.get $p1", "i32.const 2",
-            "i32.shl", "i32.add", "local.get $p2", "i32.store)",
-        ],
-        f"{context['cid']} type-erased Array#__set receiver/index/value drift",
-    )
-
-    typed_get = function_by_suffix(context, TYPED_MAP_GET_CALL)
-    map_lines = [normalized(line) for line in typed_get.lines]
-    require(
-        len(map_lines) == 32
-        and map_lines[2:32]
-        == [
-            "loop $L0", "local.get $p0", "i32.load", "i32.load offset=12",
-            "local.get $l2", "i32.gt_s", "if $I1", "local.get $p0", "i32.load",
-            "local.get $l2", map_lines[12], "i32.load", "local.get $p1", map_lines[15],
-            "if $I2", "local.get $p0", "i32.load", "local.get $l2", map_lines[20],
-            "i32.load offset=4", "return", "end", "local.get $l2", "i32.const 1",
-            "i32.add", "local.set $l2", "br $L0", "end", "end", "i32.const 0)",
-        ]
-        and call_name(typed_get.lines[12]) == EVENT_PARAM_GET_CALL
-        and call_name(typed_get.lines[15]) == "~lib/string/String.__eq"
-        and call_name(typed_get.lines[20]) == EVENT_PARAM_GET_CALL,
-        f"{context['cid']} TypedMap#get receiver/key/ordered-result drift",
-    )
-
     try_call = function_by_suffix(context, "ethereum.SmartContract#tryCall")
     call_lines = [normalized(line) for line in try_call.lines]
     require(
@@ -1651,12 +1494,6 @@ def prove_shared_runtime_primitives(context: dict[str, Any]) -> dict[str, Any]:
             "same_input_payload_wrapped_and_returned": True,
         }
 
-    string_eq = function_by_suffix(context, "~lib/string/String.__eq")
-    require(
-        hashlib.sha256(string_eq.payload).hexdigest() == STRING_EQ_BODY_SHA256,
-        f"{context['cid']} retained String.__eq primitive body drift",
-    )
-
     decoders = {
         "entity_string": prove_value_payload_decoder(
             context, "common/value/Value#toString", (0,)
@@ -1675,6 +1512,10 @@ def prove_shared_runtime_primitives(context: dict[str, Any]) -> dict[str, Any]:
         ),
     }
     return {
+        "all_defined_function_declarations": module_declarations,
+        "exact_function_declarations": collection_capsule[
+            "exact_function_declarations"
+        ],
         "typed_map_collection_runtime": collection_runtime,
         "smart_contract_constructor": {
             "same_name_and_address_stored_on_same_receiver": True,
@@ -1688,12 +1529,10 @@ def prove_shared_runtime_primitives(context: dict[str, Any]) -> dict[str, Any]:
             "same_i32_encoded_as_four_little_endian_bytes": True,
             "byte_array_constructor_and_uint8_get_set_structurally_proven": True,
         },
-        "type_erased_array_get_set": {
-            "same_receiver_index_and_value_structurally_proven": True
-        },
-        "typed_map_get": {
-            "same_receiver_key_loop_and_value_result_structurally_proven": True
-        },
+        "type_erased_array_get_set": indexed_collection[
+            "type_erased_array_get_set"
+        ],
+        "typed_map_get": indexed_collection["typed_map_get"],
         "smart_contract_try_call": {
             "same_contract_name_address_selectors_and_arguments_enter_host_call": True,
             "host_result_success_failure_wrapping_structurally_proven": True,
@@ -1702,11 +1541,7 @@ def prove_shared_runtime_primitives(context: dict[str, Any]) -> dict[str, Any]:
             "same_success_payload_getter_structurally_proven": True,
             "from_value_wrappers": result_wrappers,
         },
-        "string_equality": {
-            "function": string_eq.name,
-            "retained_body_sha256": STRING_EQ_BODY_SHA256,
-            "proof_boundary": "exact retained pure library primitive body",
-        },
+        "string_equality": collection_capsule["string_equality"],
         "value_payload_decoders": decoders,
         "shared_runtime_semantics_structurally_closed": True,
     }
@@ -3434,8 +3269,19 @@ def load_contexts(root: Path, wasm2wat: Path | None = None) -> list[dict[str, An
 
 
 def expected_contract(root: Path, wasm2wat: Path | None = None) -> dict[str, Any]:
+    runtime_sha256 = bind_candidate_runtime(root)
     proofs = [prove_modern_static(context) for context in load_contexts(root, wasm2wat)]
     require(len(proofs) == 2, "modern Factory static proof count drift")
+    declaration_inventories = [
+        proof["token_call_helpers"]["shared_runtime_primitives"]
+        ["exact_function_declarations"]
+        for proof in proofs
+    ]
+    all_defined_declaration_inventories = [
+        proof["token_call_helpers"]["shared_runtime_primitives"]
+        ["all_defined_function_declarations"]
+        for proof in proofs
+    ]
     require(
         all(
             proof["complete_static_handler_contract"]
@@ -3443,6 +3289,23 @@ def expected_contract(root: Path, wasm2wat: Path | None = None) -> dict[str, Any
             and proof["field_contract"]["written_field_count"] == 59
             and proof["field_contract"]["required_absent_fields"] == ["Pool.tick"]
             for proof in proofs
+        )
+        and all(
+            inventory["function_count"] == 13
+            and inventory["parameter_local_and_result_declarations_exactly_bound"]
+            is True
+            for inventory in declaration_inventories
+        )
+        and all(
+            inventory["defined_function_count"]
+            == MODERN_MODULE_FUNCTION_DECLARATIONS[proof["profile_id"]].expected_function_count
+            and inventory[
+                "all_defined_function_headers_type_uses_ordered_parameters_results_and_leading_locals_exactly_bound"
+            ]
+            is True
+            for proof, inventory in zip(
+                proofs, all_defined_declaration_inventories, strict=True
+            )
         ),
         "modern Factory static proof did not close",
     )
@@ -3455,7 +3318,7 @@ def expected_contract(root: Path, wasm2wat: Path | None = None) -> dict[str, Any
             "semantic_authority": "the exact modern Base and modern mainnet deployed Factory WASM artifacts and checksum-pinned WABT 1.0.35 --generate-names WAT projections",
             "proof_model": "the inherited complete handler CFG/SSA/effect proof plus exact exported-initializer dispatch and critical-global writer inventories, a complete direct/indirect reachable TypedMap#set closure, complete 76-handler-set semantic-family inventory, exact entry/local reaching definitions, exact entity receiver and decoded-key bindings, structural helper/runtime/source-to-payload flows, exact Value kind/payload/final-operand/set-call chains, required absence, and handler-local normal-exit effect traces",
             "symbolic_call_boundary": "token helper outcomes are exact functions of the structurally bound SmartContract receiver, selector, argument, retained call-result wrapper, and Graph ethereum.call result; the imported host call result and which outcomes occurred at historic blocks are not asserted",
-            "fail_closed_rule": "any parent-contract, artifact, initializer export, native start section, critical-global initializer or writer, handler, reachable setter, helper or shared runtime primitive, entry-local definition, entity receiver, decoded field key, Value kind, semantic payload source/local, final Value operand, exact map call, event index, early return, persistent effect, static profile, or required-absence drift leaves the scoped claims false",
+            "fail_closed_rule": "any parent-contract, artifact, initializer export, native start section, all-defined-function declaration inventory, selected function header or local declaration, critical-global initializer or writer, handler, reachable setter, helper or shared runtime primitive, entry-local definition, entity receiver, decoded field key, Value kind, semantic payload source/local, final Value operand, exact map call, event index, early return, persistent effect, static profile, or required-absence drift leaves the scoped claims false",
             "host_boundary": "reachable helper bodies retain aggregate exact-body authority rather than a general protected-memory write proof; the proof reaches Graph host-effect invocation, while imported host memory behavior, Graph Node rollback, and other host behavior are not proved by retained WAT",
         },
         "provenance": {
@@ -3465,6 +3328,11 @@ def expected_contract(root: Path, wasm2wat: Path | None = None) -> dict[str, Any
                 "path": EFFECTS_CONTRACT_PATH.as_posix(),
                 "raw_sha256": EFFECTS_CONTRACT_SHA256,
                 "contract_version": "uniswap-v3-factory-effects/v1",
+            },
+            "shared_wat_runtime": {
+                "path": RUNTIME_SOURCE_PATH.as_posix(),
+                "raw_sha256": runtime_sha256,
+                "authority_boundary": "contract-I/O-free reusable structural algorithms; no Pool artifact or release gate is certified",
             },
             "wabt_version": WRITER.WABT_VERSION,
             "wasm2wat_command": ["wasm2wat", "--generate-names", "<retained-modern-factory-wasm>"],

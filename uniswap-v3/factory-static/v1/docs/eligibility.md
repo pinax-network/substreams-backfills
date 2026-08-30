@@ -50,6 +50,18 @@ commits of `ensureCapacity`. The complete retained `ensureCapacity` body and
 the lower-level `memory.fill`, `memory.copy`, and `memcpy` bodies remain exact
 hash boundaries because their general memory semantics are not rederived.
 
+Every shared collection helper used by those claims also has an independently
+exact function declaration. The header, type use, ordered named parameters and
+types, result, and leading local declarations must match. Parameter or local
+label swaps therefore fail even after the enclosing reachable-body authority
+is refreshed.
+
+That selected 13-function inventory is supplemented by a fixed all-defined-
+function declaration digest at the public proof boundary: 62 Base functions
+and 63 mainnet functions. It closes declaration omissions such as
+`SmartContract#constructor` without claiming semantics for functions that are
+not otherwise structurally proved.
+
 The exported initializer is bound as `_start -> ~start`; no native start
 section is admitted. The proof requires zero initial values and inventories
 every writer of `~started`, the allocator offset, ZERO_BI, ONE_BI, and ZERO_BD.
@@ -99,3 +111,7 @@ The following remain strict JSON `false` values:
 
 This bounded supplement does not complete any acceptance checkbox in tracking
 issue #38.
+
+Extracting its contract-I/O-free WAT runtime algorithms for later reuse does
+not bind either modern Pool context and does not add any Pool runtime,
+backfill, or production certification.

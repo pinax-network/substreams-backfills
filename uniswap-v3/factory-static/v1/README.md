@@ -54,6 +54,19 @@ low-level memory primitives used beneath that chain are explicit exact-body
 boundaries; their independently pinned digests are not refreshed by
 top-level helper authority.
 
+The shared public capsule also binds an exact 13-function declaration
+inventory before those structural claims can close. Function type uses,
+ordered named parameters and types, results, and named locals are independent
+authority, so refreshing reachable-body hashes cannot reinterpret parameter
+or local identities.
+
+The public Factory proof additionally binds the all-defined-function
+declaration inventory: 62 functions on Base and 63 on mainnet. A fixed
+per-profile digest covers every defined function header and every leading
+local declaration before any scoped truth gate can close. This is declaration
+authority only; it does not assign general semantics to otherwise unproved
+functions.
+
 The initializer proof binds the `_start -> ~start` export, absence of a native
 WebAssembly start section, zero initial mutable globals, and the complete
 writer inventory for `~started`, the allocator offset, and ZERO/ONE constants.

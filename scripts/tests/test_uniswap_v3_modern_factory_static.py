@@ -98,6 +98,14 @@ class ModernFactoryStaticTest(unittest.TestCase):
             raise VERIFIER.VerificationError(str(error)) from error
 
     @staticmethod
+    def public_collection_capsule_check(context: dict[str, Any]) -> None:
+        VERIFIER.RUNTIME.prove_modern_collection_capsule(
+            context,
+            VERIFIER.runtime_ops(),
+            VERIFIER.MODERN_COLLECTION_SPEC,
+        )
+
+    @staticmethod
     def refreshed_reachable_body_bindings_sha256(context: dict[str, Any]) -> str:
         normalized_functions = {
             name.replace("generated/schema/", "src/types/schema/"): function
@@ -856,7 +864,7 @@ class ModernFactoryStaticTest(unittest.TestCase):
                 "retained String equality primitive reverses the identity comparison",
                 self.function_selector("~lib/string/String.__eq"),
                 string_equality_operator,
-                VERIFIER.prove_shared_runtime_primitives,
+                self.public_collection_capsule_check,
                 "retained String.__eq primitive body drift",
             ),
             (
@@ -1074,6 +1082,90 @@ class ModernFactoryStaticTest(unittest.TestCase):
                     mutate,
                     check,
                     expected,
+                    refresh_reachable_body_authority=True,
+                )
+
+    def test_shared_modern_declaration_identity_survives_outer_body_refresh(self) -> None:
+        def swap_names(index: int, first: str, second: str) -> Mutator:
+            def mutate(lines: list[str], _context: dict[str, Any]) -> None:
+                line = VERIFIER.normalized(lines[index])
+                self.assertEqual(line.count(first), 1)
+                self.assertEqual(line.count(second), 1)
+                changed = line.replace(first, "$signature_swap", 1)
+                changed = changed.replace(second, first, 1)
+                changed = changed.replace("$signature_swap", second, 1)
+                self.set_normalized(lines, index, changed)
+
+            return mutate
+
+        cases = (
+            (
+                "Factory TypedMap setter key/value parameter labels swap",
+                VERIFIER.TYPED_MAP_SET_CALL,
+                swap_names(0, "$p1", "$p2"),
+                "typed_map_set",
+            ),
+            (
+                "Factory Entity constructor local identities swap",
+                "common/collections/Entity#constructor",
+                swap_names(1, "$l1", "$l2"),
+                "entity_constructor",
+            ),
+        )
+        for label, suffix, mutate, authority_id in cases:
+            with self.subTest(label=label):
+                self.assert_valid_wat_mutation_rejected(
+                    label,
+                    self.function_selector(suffix),
+                    mutate,
+                    self.public_collection_capsule_check,
+                    f"exact {authority_id} function declaration drift",
+                    refresh_reachable_body_authority=True,
+                )
+
+    def test_all_defined_declaration_inventory_closes_omitted_helper_headers(self) -> None:
+        def swap_names(index: int, first: str, second: str) -> Mutator:
+            def mutate(lines: list[str], _context: dict[str, Any]) -> None:
+                line = VERIFIER.normalized(lines[index])
+                self.assertEqual(line.count(first), 1)
+                self.assertEqual(line.count(second), 1)
+                changed = line.replace(first, "$module_signature_swap", 1)
+                changed = changed.replace(second, first, 1)
+                changed = changed.replace("$module_signature_swap", second, 1)
+                self.set_normalized(lines, index, changed)
+
+            return mutate
+
+        def remove_type_use(lines: list[str], _context: dict[str, Any]) -> None:
+            header = VERIFIER.normalized(lines[0])
+            self.assertEqual(header.count("(type $t0) "), 1)
+            self.set_normalized(lines, 0, header.replace("(type $t0) ", "", 1))
+
+        cases = (
+            (
+                "omitted SmartContract constructor name/address parameters swap",
+                "ethereum.SmartContract#constructor",
+                swap_names(0, "$p1", "$p2"),
+            ),
+            (
+                "omitted __newArray leading local identities swap",
+                "~lib/rt/__newArray",
+                swap_names(1, "$l3", "$l4"),
+            ),
+            (
+                "omitted CallResult getter type use removed",
+                "CallResult<~lib/array/Array<~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.Value>>#get:value",
+                remove_type_use,
+            ),
+        )
+        for label, suffix, mutate in cases:
+            with self.subTest(label=label):
+                self.assert_valid_wat_mutation_rejected(
+                    label,
+                    self.function_selector(suffix),
+                    mutate,
+                    VERIFIER.prove_shared_runtime_primitives,
+                    "all-defined-function declaration inventory drift",
                     refresh_reachable_body_authority=True,
                 )
 

@@ -245,6 +245,19 @@ Value-decoder, token-call, static-lookup, entry-local, and complete decimals
 dataflows and prove `Pool.tick` absent. The four legacy static paths and every
 runtime, continuity, parity, backfill, and production gate remain false.
 
+The sibling [`pool-runtime/v1`](pool-runtime/v1/README.md) supplement closes a
+runtime-only structural capsule for all eight retained Pool artifacts. It
+keeps separate modern exported-initializer and legacy native-start proofs. The
+modern capsule binds its 77-line inline `TypedMap#set`, Entity and allocator
+dependencies; the legacy capsule binds its arena/ArrayBuffer, EventParam,
+Value, String, TypedMap/entry-array, native module-state, and allocator-floor
+dependencies across four exact digest groups. Legacy `memory.reset` is
+host-exported, so freshness is only intra-handler under an explicit
+non-reentrant-host assumption. Every Pool handler, entity history, host and
+low-level general semantics, cross-handler freshness, continuity,
+oracle/parity, checkpoint, backfill, production, and readiness gate remains
+false.
+
 The next sibling [`npm-observation-plan/`](npm-observation-plan/README.md)
 closes the repository-only host request set before joint reduction. It first
 enumerates every unique Position key from the complete event envelope, then,

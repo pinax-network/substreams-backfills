@@ -95,6 +95,13 @@ only after this gate passes.
   saves, and exact mutation/store inventories. Complete Swap, persistence,
   no-later-overwrite, alias, rollback, history, parity, backfill, production,
   and readiness claims remain false.
+- **`uniswap-v3/pool-flash/v1/`** — retained-WAT same-path and effect-closure
+  evidence for the exact `Pool.handleFlash` fee0 call, result-zero decode, fee1
+  call, result-zero decode, fee0 setter, fee1 setter, and same-receiver Pool
+  save order, plus non-try null traps, exact Pool-only store closure, and
+  required-absent Flash rows across all eight mappings. Candidate output, host
+  call semantics, persistence, complete Flash, history, parity, backfill,
+  production, and readiness remain false.
 - **`uniswap-v3/factory-effects/v1/`** — the retained-WASM proof for the six
   Factory effect-order and exact-argument paths. It closes those paths without
   promoting Graph rollback, complete handler semantics, parity, backfill, or

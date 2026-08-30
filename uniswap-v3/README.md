@@ -258,6 +258,20 @@ low-level general semantics, cross-handler freshness, continuity,
 oracle/parity, checkpoint, backfill, production, and readiness gate remains
 false.
 
+The additive [`pool-burn/v1`](pool-burn/v1/README.md) supplement then binds
+`Pool.handleBurn` call-flow evidence for `Pool.totalValueLockedToken0` and
+`Pool.totalValueLockedToken1` across all eight retained Pool mappings. Each
+exact current WAT fixture re-runs the public modern or legacy Pool runtime
+capsule before the Burn-specific verifier binds the trigger-address Pool
+identity, ABI indices 4/5, matching Token decimals, decimal conversion,
+old-minus-amount operands, explicit selected setters, and the same Pool save on
+the selected-update path. Every reachable function body, direct memory-write
+site, TypedMap set site, Graph store site, and indirect target is inventory-bound.
+Baseline dynamic-key, receiver, value, and memory-alias effects are not
+semantically closed, so selected-TVL persistence and field completeness remain
+false alongside complete Pool history, parity, checkpoint, backfill, production,
+and readiness.
+
 The next sibling [`npm-observation-plan/`](npm-observation-plan/README.md)
 closes the repository-only host request set before joint reduction. It first
 enumerates every unique Position key from the complete event envelope, then,

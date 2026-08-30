@@ -102,6 +102,14 @@ only after this gate passes.
   required-absent Flash rows across all eight mappings. Candidate output, host
   call semantics, persistence, complete Flash, history, parity, backfill,
   production, and readiness remain false.
+- **`uniswap-v3/pool-swap-fee-growth/v1/`** — retained-WAT call-flow evidence
+  for both `Pool.handleSwap` fee-growth contract calls, result-zero BigInt
+  decodes, uncrossed same-Pool setters, and the second Pool save across all
+  eight mappings. It binds the modern Token guard and required traps, legacy
+  helper operands, exact selected slices, null and invalid-kind traps, and the
+  full Swap mutation/store inventories. Host semantics, persistence, complete
+  Swap/history, issue completion, backfill, production, and readiness remain
+  false. Its base is the exact canonical PR #70 squash merge.
 - **`uniswap-v3/factory-effects/v1/`** — the retained-WASM proof for the six
   Factory effect-order and exact-argument paths. It closes those paths without
   promoting Graph rollback, complete handler semantics, parity, backfill, or

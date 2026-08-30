@@ -24,7 +24,7 @@ The reusable structural algorithms for initializer/global-writer analysis,
 direct linear-memory-write classification, and the modern allocator and
 TypedMap/array runtime are isolated in
 `scripts/uniswap_v3_wat_runtime.py` (SHA-256
-`2e6e28ba112dc49b9c7fe7658f47808968b3de3e3b45943129ba2f3b33295379`).
+`977bab525ae5b02451c8652050d22a8c2f730c7982ba079d0b8eed9b094780e5`).
 That module performs no contract or repository I/O. Artifact hashes, contract
 truth gates, and release authority remain in this Factory verifier; reuse of
 the algorithms alone certifies no Pool handler or Pool mapping.

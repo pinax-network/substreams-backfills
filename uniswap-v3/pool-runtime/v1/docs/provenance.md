@@ -3,7 +3,7 @@
 The recorded reviewed base is:
 
 ```text
-112fd27745b3cdc252a9df9665481b6fa8257705
+1df0c471c354fc3718dac88a973a34f5b149d9c3
 ```
 
 This is review provenance only; the verifier does not use Git ancestry as
@@ -12,51 +12,66 @@ checksum-pinned WABT 1.0.35 `--generate-names` WAT projection.
 
 ## Exact artifact selection
 
-| Profile | CID | Bytes | WASM SHA-256 | WAT SHA-256 |
-|---|---|---:|---|---|
-| `modern-base` | `QmPZCHE1URf4oviX7Tbrkw3aMENo1qAeEGa1AS2gMumG7P` | 76,545 | `e0050819429ca279916027512234119308ab26f4ff115939e6409aab676a501c` | `bd42b64aeaaf677018c11fe779179ecb81d7c4125fa0b846134bb0e0a6059ad1` |
-| `modern-mainnet` | `QmSaGgPnyhStviGQSGTokQYRgVqLFNvnGWfnv8tSfuvpWD` | 78,047 | `f9a25426839d83f84679cd0d272582f2631c57117093ffd342351bc04aff8970` | `8454917398ef7a3b8f965a7e40e5b7a1d8cf7879e898490aeabe15726c3d4281` |
+| Profile | CID | Bytes | WAT lines | WASM SHA-256 | WAT SHA-256 |
+|---|---|---:|---:|---|---|
+| `modern-base` | `QmPZCHE1URf4oviX7Tbrkw3aMENo1qAeEGa1AS2gMumG7P` | 76,545 | 16,748 | `e0050819429ca279916027512234119308ab26f4ff115939e6409aab676a501c` | `bd42b64aeaaf677018c11fe779179ecb81d7c4125fa0b846134bb0e0a6059ad1` |
+| `modern-mainnet` | `QmSaGgPnyhStviGQSGTokQYRgVqLFNvnGWfnv8tSfuvpWD` | 78,047 | 16,605 | `f9a25426839d83f84679cd0d272582f2631c57117093ffd342351bc04aff8970` | `8454917398ef7a3b8f965a7e40e5b7a1d8cf7879e898490aeabe15726c3d4281` |
+| `legacy-mainnet-root` | `QmWuomVAQCdEXdCRavcsmRz4BNqPx2nppqe8S6AXid66xw` | 40,813 | 8,842 | `f2238dc4f98e2ab6e7caf1ebe2bf2574c0f47f50df17c466b492542f3e06e4e7` | `5e8f6e0c96992afee37669c053b8940355e09e18741e53089838fb1c11924666` |
+| `legacy-mainnet-qmrv` | `QmYQRHstsSS7mntgKNSot74qN2dpuyFEtd1DddPmnqWC65` | 40,954 | 8,865 | `ee35ffc861d04313370845e12d27de3a16d4f1f2d7137b81407c797d189fe94f` | `84dc181907baec30b5770fe5f8cdc61062b002989eb09f218963fd1995209aae` |
+| `legacy-base-root` | `QmZPiDeH1j95mozzb5AjKCHn6zgpnhMu77kNAitPbi4Vt3` | 39,128 | 8,859 | `daaf355098f0d962fe772cdf858a5135cf229c03224380a83ea1e5248b746a0c` | `7444416b1ac3e7a3c98f4a2d5d3f24d343b2a1af8238f159b4839a0b2adc0a02` |
+| `legacy-mainnet-stable` | `QmeNbEMUnaaPpmpLaUVBJfFWRCN5SxG8xPG5eDNoXEGdbW` | 40,971 | 8,862 | `0cb47b9bc9352ff26fda2267967374dee8bd54b9627120c97e442de1692979c5` | `6fac410afa86a411137e3bfabf46550261785b79fbfc53a39b8ec59492061d36` |
+| `legacy-mainnet-stable-fee-tier-1` | `Qmaydei2ScE7JptBTPgSfkf6PFxEZpLn39gEXYqrBZhsv8` | 40,987 | 8,871 | `5130b364eb6e67767f0f6890011095a40f603af96e3dab9b3207e474af7d9e3b` | `3e68ada1f22ed2a2b72f74ecbdebe2f084ad42e11068fdc6991947963f145cb5` |
+| `legacy-mainnet-stable-fee-tier-100` | `QmadCQv7VPgNXhQTNkcDyzmiWZpWexynUH4XuuaMrsAbJY` | 40,988 | 8,871 | `6f795b4a38a805ff8fbff2b0c33f8c5e52da2cd342a5efea9cffe637ec8ff42b` | `3868d954fe13117081173408b79d72fb88c4b88bfeabfb7a6e93b5482b87e4ff` |
 
-Both modules contain 123 defined functions.
+## Modern authority retained
 
-## Shared and profile runtime authority
+Both modern modules contain 123 defined functions. Their existing public
+collection and exported-initializer proofs are retained without weakening.
+The exact modern common bodies, profile `~start`, `ensureCapacity`, EventParam,
+data-segment, and global-writer inventories remain recorded in
+`contract.json`.
 
-The reusable, contract-I/O-free algorithms live in
-`scripts/uniswap_v3_wat_runtime.py`. The standalone verifier captures and
-executes those exact source bytes, then requires a `--root` candidate to carry
-identical bytes before verification or `--write`. The current raw SHA-256 is
-recorded in `contract.json`; regenerate the contract whenever those bytes
-change.
+## Legacy module and collection authority
 
-Common Pool bodies:
+All six legacy modules contain 225 defined functions and have the same native
+module shape: `(start $start)`, no `_start` export, 17 imports, 11 exports,
+`(table $table 1 funcref)`, sole element `$null`, and no `call_indirect`.
+The export inventory SHA-256 is
+`ec559f76cf848547649dc9d0306b7830b37536366c6eef5542002056125b0bf4`.
+Import inventory, global-definition inventory, complete global-writer
+inventory, no-writer static globals, and all handler reachability inventories
+are profile-bound in `contract.json`.
 
-| Function | Lines | SHA-256 |
-|---|---:|---|
-| Pool `TypedMap#set` | 77 | `1e32ff9bb00d137e45c1023931fe103bbe71d7011e2955044d0fb772b88f008b` |
-| Pool `TypedMap#get` | 32 | `672fd714a063fdaf09f51b8e3a25c5b01a2124f68f3e8f7fcb587cddeb5999cb` |
-| Entity constructor, type IDs 25/27/29 | 58 | `df453669386fdd214d23b561c134fdc0b1fe4e8c9bb46a3b6bec63e22e51d032` |
-| `stub/__alloc` | 73 | `a03922d8f65cdc65e9d23c65bae22238c3783fed3294ec8847c2951f45a49c68` |
-| `stub/__new` | 35 | `dc15ae7bfd1ff6f9f27d365946a2de6d849b46ed9e08818b80d59c05f97918fa` |
-| `String.__eq` | exact body | `f7967b738553ba98aba24f869e968d73e8013f99e83d02e106cad52306aa3c3f` |
-| `memory.fill` | exact body | `3eb4dece783813845638f30ebde64f0ce5c2d10784a724c6b5bcd346e7771390` |
-| `memory.copy` | exact body | `0128a0af41ee62c13df7a14de4648d2e7ac19f230786e447a8736179e36d74a6` |
-| `memcpy` | exact body | `a201b34d93d9bb7e4813134f668fb9436014260ba637d2db39cf7af3dc84a97c` |
+The four profile digest groups are:
 
-Profile-specialized bodies and allocator data floor:
+| Group | Profiles | `start` SHA-256 | Entry-array ctor SHA-256 | Entry-array push SHA-256 | String allocate SHA-256 |
+|---|---|---|---|---|---|
+| `legacy-wuom` | mainnet root | `287ad43620693a8d7b56e4e279c70c20ddf418deee872113bea040240b6d6c37` | `49c2ef950af1df2183e8d9a554594508f9b0bf86ed4831a39a211468f3023428` | `3ac2d877fec3008d9f13c8e95a1e20bc78c8a9bbe429630cc5e0a077604c3d5d` | `857aa72088e9ec6101a1c984f483b2321172f093d8acfb857acbf79b7f2432f1` |
+| `legacy-yqr` | mainnet qmrv | `7b4e87d1aac1cdab8bbf97f74860739b39d24e70561c5f5b658318720852e9c1` | `f70f06c137d5b20c51b88de9ef8ff2eda6f713b92a8ab2fe0515238823e9fa8d` | `383337d49695eb70e6f113a5b5ee2bac214824350c788a996594a8d3104515d7` | `bac733ad2a46c0975cfeb8f37fd25464803ec78d52cb5b6262aad4386ea71e1b` |
+| `legacy-zpi` | Base root | `dfedcb96be9317aad4d57a7bb53c8df3bbc2cd661a90f94b30ec299b7045424a` | `3ceaf38d13058325c0d8929a6ecf48010e801860d9d11cb34b9f321f73eef486` | `741170d740eafb130b2ca5ec98930f6e4d648ab781de35b8f0e193c4023ab4af` | `3775376af9346f6a9e5ab38c9721e024a9e481481189b1cc3cb2035fcf07f608` |
+| `legacy-stable` | stable trio | `e97cc12f2129907015f400de8d01332698f783916ea1eaaaaca46272ccd79b53` | `174c75441ee0095f6f7e05633ee7f7352c47019ed0140970d3f28560d5ea4d63` | `830deee879384740601f635f04a329aa2a0e3688c5dc2bc8178e399308625665` | `098a5876f9394c48b20268aaecb58e3967f063baced1bfc0b5a42aafa036962b` |
 
-| Profile | `~start` lines / SHA-256 | `ensureCapacity` SHA-256 | EventParam get SHA-256 | Data end / floor |
-|---|---|---|---|---:|
-| `modern-base` | 50 / `52a99f58e7904d3ed759bf0a0272101e9e998bdfdb0e2fe93a21aedd6c12d589` | `09e6f7222a5ada41dc343ffb5eb297342dd3ff167cd6532bcaeec772f9705578` | `dd7f14070e5643932f0dc9ba5d3e7f9966aa900dc9e171eb213b9aaf4cf6d0c8` | 20,902 / 20,940 |
-| `modern-mainnet` | 49 / `785ca5348b08a12a9a90b79760beefb3ab8b71130bfc01ee9e48ddefa36c79d3` | `90f7a34c6ef281823ee2062d67f72c339ee27b748d82b578348b02c3300a7579` | `d7838efd2a3cd438b05d6d627df4c1ea8ef0a291c02921096b89198d8643de68` | 22,662 / 22,700 |
+Shared six-profile exact bodies include the constants initializer,
+ByteArray/Factory/NativeMath dependencies, arena allocator, ArrayBuffer
+compute/allocate/reallocate, EventParam get, Value constructor/fromBigDecimal,
+TypedMap get/getEntry/set, the misleading 8-byte entry constructor,
+String equality/compare, and memory allocate/reset. The full names, line counts,
+hashes, structural facts, and exact low-level primitive boundaries are emitted
+in each legacy proof projection.
 
-Base has 528 initialized data segments; mainnet has 558. The canonical segment
-inventory hashes and complete global-writer inventories are emitted in
-`contract.json`, including the profile-specific Q192 writer line.
+Initialized data remains strictly below the exact `align8(max_data_end)` floor:
+
+| Profile group | Segments | Maximum end | Allocator floor |
+|---|---:|---:|---:|
+| `legacy-wuom` | 194 | 10,981 | 10,984 |
+| `legacy-yqr` | 195 | 11,069 | 11,072 |
+| `legacy-zpi` | 177 | 9,301 | 9,304 |
+| `legacy-stable` | 197 | 11,109 | 11,112 |
 
 ## Reproduction
 
 ```text
-wasm2wat --generate-names <retained-modern-pool-wasm>
+wasm2wat --generate-names <retained-pool-wasm>
 ```
 
 Run:
@@ -67,8 +82,15 @@ python3 -m unittest scripts.tests.test_uniswap_v3_pool_runtime
 ```
 
 Every adversarial WAT fixture is first compiled with checksum-pinned WABT
-`wat2wasm`. The test then refreshes only the named top-level authority where
-needed, so rejection occurs at the independent structural, module-state, or
-allocator-floor boundary. Candidate-root divergence is tested in both verify
-and `--write` modes. The six legacy mappings remain the next runtime work; no
-legacy hash is promoted by this certificate.
+`wat2wasm`. The legacy registry contains 55 compile-valid mutations spanning
+every promoted layer and all four digest groups. A deeper invariant test
+refreshes only the deliberately changed top-level body authority so rejection
+occurs at the independent structural boundary. Candidate-root divergence is
+tested in both verify and `--write` modes.
+
+The reusable contract-I/O-free algorithms live in
+`scripts/uniswap_v3_wat_runtime.py`. The standalone verifier captures and
+executes those exact source bytes, then requires a `--root` candidate to carry
+identical bytes before verification or `--write`. The current raw SHA-256 is
+recorded in `contract.json`; regenerate both Pool runtime and Factory static
+contracts whenever those bytes change.

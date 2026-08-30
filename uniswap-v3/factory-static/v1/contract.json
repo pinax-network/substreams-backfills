@@ -4618,7 +4618,7 @@
     "shared_wat_runtime": {
       "authority_boundary": "contract-I/O-free reusable structural algorithms; no Pool artifact or release gate is certified",
       "path": "scripts/uniswap_v3_wat_runtime.py",
-      "raw_sha256": "2e6e28ba112dc49b9c7fe7658f47808968b3de3e3b45943129ba2f3b33295379"
+      "raw_sha256": "977bab525ae5b02451c8652050d22a8c2f730c7982ba079d0b8eed9b094780e5"
     },
     "wabt_version": "1.0.35",
     "wasm2wat_command": [

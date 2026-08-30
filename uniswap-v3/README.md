@@ -246,13 +246,16 @@ dataflows and prove `Pool.tick` absent. The four legacy static paths and every
 runtime, continuity, parity, backfill, and production gate remain false.
 
 The sibling [`pool-runtime/v1`](pool-runtime/v1/README.md) supplement closes a
-runtime-only structural capsule for exactly the modern Base and modern mainnet
-Pool artifacts. Its public shared capsule binds the distinct 77-line inline
-`TypedMap#set`, getter/index/equality dependencies, Entity constructor type
-IDs, allocator returns, profile capacity bodies, exported initializer, complete
-critical-global writer inventory, and initialized-data floor. The six legacy
-Pool runtime profiles, every Pool handler, entity history, continuity,
-oracle/parity, checkpoint, backfill, production, and readiness gate remain
+runtime-only structural capsule for all eight retained Pool artifacts. It
+keeps separate modern exported-initializer and legacy native-start proofs. The
+modern capsule binds its 77-line inline `TypedMap#set`, Entity and allocator
+dependencies; the legacy capsule binds its arena/ArrayBuffer, EventParam,
+Value, String, TypedMap/entry-array, native module-state, and allocator-floor
+dependencies across four exact digest groups. Legacy `memory.reset` is
+host-exported, so freshness is only intra-handler under an explicit
+non-reentrant-host assumption. Every Pool handler, entity history, host and
+low-level general semantics, cross-handler freshness, continuity,
+oracle/parity, checkpoint, backfill, production, and readiness gate remains
 false.
 
 The next sibling [`npm-observation-plan/`](npm-observation-plan/README.md)

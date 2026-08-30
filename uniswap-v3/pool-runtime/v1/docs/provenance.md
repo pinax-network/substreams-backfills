@@ -66,6 +66,21 @@ leading local declarations. This closes the reviewed counterexamples where a
 compile-valid `$p1`/`$p2` header swap was accepted after refreshing only the
 function body hash.
 
+The public proof independently binds every defined function declaration in WAT
+order. The fixed `(count, digest)` authorities are:
+
+| Profile | Count | All-defined declaration SHA-256 |
+|---|---:|---|
+| `modern-base` | 123 | `4c288bb51f506dcad12d1985d772c388c5aa7fb31e83adb3777dc2a9c2a38d4e` |
+| `modern-mainnet` | 123 | `5669d97cd2b172292c699775b477383cef35562cf3b576e6fb5235425f985fad` |
+| `legacy-mainnet-root` | 225 | `49119dc2f85372f5c8975fcdb6c25b06d868cdca61b1fdc5a9448038ec421c4e` |
+| `legacy-mainnet-qmrv` | 225 | `a91930ddbf086e37a5e240e8ff3b5a390373970c03f6f066678def94c0facbf4` |
+| `legacy-base-root` | 225 | `9882a4927dfbca99f3197b45158a70a4103e9f52589ee11bc144c6f0eff1670e` |
+| legacy stable trio | 225 each | `68e17a52c7846777508cbd7da39e15db9482b9711c0966658f34e5999da8a8e2` |
+
+This is exact declaration authority only; it does not rederive general
+semantics for every defined helper.
+
 Initialized data remains strictly below the exact `align8(max_data_end)` floor:
 
 | Profile group | Segments | Maximum end | Allocator floor |

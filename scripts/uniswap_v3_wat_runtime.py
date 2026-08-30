@@ -10,6 +10,7 @@ algorithms without transferring any certification authority to this module.
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 from dataclasses import dataclass
 from typing import Any, Callable, Mapping, Sequence
@@ -37,6 +38,14 @@ class FunctionDeclarationSpec:
 
     suffix: str
     declaration_lines: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class AllDefinedFunctionDeclarationInventorySpec:
+    """Exact authority for every defined function declaration."""
+
+    expected_function_count: int
+    expected_inventory_sha256: str
 
 
 @dataclass(frozen=True)
@@ -217,6 +226,55 @@ def _prove_exact_function_declaration_inventory(
         "functions": observed,
         "function_count": len(observed),
         "parameter_local_and_result_declarations_exactly_bound": True,
+    }
+
+
+def prove_exact_function_declaration_inventory(
+    context: dict[str, Any],
+    ops: WatRuntimeOps,
+    specs: Mapping[str, FunctionDeclarationSpec],
+) -> dict[str, Any]:
+    """Public exact declaration boundary for a verifier-selected helper set."""
+
+    return _prove_exact_function_declaration_inventory(context, ops, specs)
+
+
+def prove_exact_all_defined_function_declaration_inventory(
+    context: dict[str, Any],
+    ops: WatRuntimeOps,
+    spec: AllDefinedFunctionDeclarationInventorySpec,
+) -> dict[str, Any]:
+    """Bind headers and leading locals for every defined function in WAT order.
+
+    This is declaration authority only.  It prevents named-parameter/local
+    structural proofs from silently changing meaning when a declaration is
+    edited, but it does not assign semantics to otherwise unproved functions.
+    """
+
+    functions = sorted(
+        context["functions"].values(),
+        key=lambda function: (function.start_line, function.name),
+    )
+    inventory = [
+        [function.name, _function_declaration_lines(function, ops)]
+        for function in functions
+    ]
+    digest = hashlib.sha256(
+        json.dumps(inventory, ensure_ascii=True, separators=(",", ":")).encode()
+    ).hexdigest()
+    ops.require(
+        len(inventory) == spec.expected_function_count,
+        f"{context['cid']} all-defined-function declaration count drift",
+    )
+    ops.require(
+        digest == spec.expected_inventory_sha256,
+        f"{context['cid']} all-defined-function declaration inventory drift",
+    )
+    return {
+        "defined_function_count": len(inventory),
+        "inventory_sha256": digest,
+        "all_defined_function_headers_type_uses_ordered_parameters_results_and_leading_locals_exactly_bound": True,
+        "declaration_authority_only_not_general_function_semantics": True,
     }
 
 

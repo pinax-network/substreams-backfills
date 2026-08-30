@@ -24,7 +24,7 @@ The reusable structural algorithms for initializer/global-writer analysis,
 direct linear-memory-write classification, and the modern allocator and
 TypedMap/array runtime are isolated in
 `scripts/uniswap_v3_wat_runtime.py` (SHA-256
-`0b8fca4e63f33e7332341098e1da74b725029ac6b89479c69673393d3453ec8f`).
+`bd555b5d44bed144777e35b361fcb63e275d7f21b774db3ffe0e08bef3bf4411`).
 That module performs no contract or repository I/O. Artifact hashes, contract
 truth gates, and release authority remain in this Factory verifier; reuse of
 the algorithms alone certifies no Pool handler or Pool mapping.
@@ -42,6 +42,15 @@ functions in this path. It binds function type uses, parameter/local names and
 order, their types, and results independently of reachable-body and
 function-body hashes. Compile-valid parameter and local swaps are rejected
 after the corresponding outer body authority is refreshed.
+
+The public proof also compares the complete all-defined-function declaration
+inventory against fixed artifact authority. Base binds 62 functions at digest
+`e270520d4d74623bdc6f38f98a3d79d2c6061c2b6e5cc7b756b0464f4885da4a`;
+mainnet binds 63 at
+`6926ef9ed933fae438823d74c35412e64c193ff311b6816b0873a65a19b5e3f7`.
+This digest covers headers, type uses, ordered parameters and results, and all
+leading locals in WAT definition order. It is declaration authority, not a
+general semantic proof of all 62 or 63 functions.
 
 ## Authoritative retained artifacts
 

@@ -54,6 +54,13 @@ declaration, fixing parameter/local names, order, types, results, and type-use
 identity. A refreshed body checksum therefore cannot reinterpret `$p1` as
 `$p2` or exchange named locals behind otherwise unchanged instructions.
 
+The public context proof also binds an all-defined-function declaration
+inventory before any runtime truth gate can close: 123 functions in each
+modern artifact and 225 in each legacy artifact. This complete declaration
+authority prevents an interpreted or future helper from falling outside the
+selected 11/26-helper inventories; it does not claim general semantics for
+otherwise unproved functions.
+
 `memcpy`, `memmove`, and `memset` remain exact retained-body authorities. The
 capsule proves the relevant operand call sites but does not claim a new general
 semantic proof of those low-level routines. Imported host behavior is also an

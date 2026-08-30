@@ -309,6 +309,23 @@ class ModernPoolRuntimeTest(unittest.TestCase):
                     expected_changed_body_sha256=digest,
                 )
 
+    def test_modern_all_defined_declarations_reject_unselected_helper_drift(self) -> None:
+        def swap_concat_parameters(lines: list[str], _context: dict[str, Any]) -> None:
+            header = VERIFIER.normalized(lines[0])
+            self.assertEqual(header.count("$p0"), 1)
+            self.assertEqual(header.count("$p1"), 1)
+            changed = header.replace("$p0", "$module_signature_swap", 1)
+            changed = changed.replace("$p1", "$p0", 1)
+            changed = changed.replace("$module_signature_swap", "$p1", 1)
+            self.set_normalized(lines, 0, changed)
+
+        self.assert_valid_wat_mutation_rejected(
+            "modern unselected String#concat parameter identities swap",
+            self.selector("~lib/string/String#concat"),
+            swap_concat_parameters,
+            "all-defined-function declaration inventory drift",
+        )
+
     def test_getter_index_and_equality_mutations_fail_at_public_capsule(self) -> None:
         def event_index_scale(lines: list[str], _context: dict[str, Any]) -> None:
             self.set_normalized(lines, 16, "i32.const 1")
@@ -782,6 +799,23 @@ class LegacyPoolRuntimeTest(unittest.TestCase):
                     refresh_body_authority=refresh,
                     expected_changed_body_sha256=digest,
                 )
+
+    def test_legacy_all_defined_declarations_reject_unselected_helper_drift(self) -> None:
+        def swap_concat_locals(lines: list[str], _context: dict[str, Any]) -> None:
+            locals_line = VERIFIER.normalized(lines[1])
+            self.assertEqual(locals_line.count("$l2"), 1)
+            self.assertEqual(locals_line.count("$l3"), 1)
+            changed = locals_line.replace("$l2", "$module_signature_swap", 1)
+            changed = changed.replace("$l3", "$l2", 1)
+            changed = changed.replace("$module_signature_swap", "$l3", 1)
+            self.set_normalized(lines, 1, changed)
+
+        self.assert_valid_legacy_wat_mutation_rejected(
+            "legacy unselected String#concat leading local identities swap",
+            self.selector("~lib/string/String#concat"),
+            swap_concat_locals,
+            "all-defined-function declaration inventory drift",
+        )
 
     def test_legacy_module_surface_state_reset_and_floor_mutations_fail_closed(self) -> None:
         def unchanged(lines: list[str], _context: dict[str, Any]) -> None:

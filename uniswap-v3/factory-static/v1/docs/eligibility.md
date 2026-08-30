@@ -56,6 +56,12 @@ types, result, and leading local declarations must match. Parameter or local
 label swaps therefore fail even after the enclosing reachable-body authority
 is refreshed.
 
+That selected 13-function inventory is supplemented by a fixed all-defined-
+function declaration digest at the public proof boundary: 62 Base functions
+and 63 mainnet functions. It closes declaration omissions such as
+`SmartContract#constructor` without claiming semantics for functions that are
+not otherwise structurally proved.
+
 The exported initializer is bound as `_start -> ~start`; no native start
 section is admitted. The proof requires zero initial values and inventories
 every writer of `~started`, the allocator offset, ZERO_BI, ONE_BI, and ZERO_BD.

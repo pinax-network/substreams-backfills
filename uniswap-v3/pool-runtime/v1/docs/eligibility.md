@@ -15,6 +15,11 @@ result declarations, and every leading named local declaration. Recomputing a
 body digest after swapping parameter or local labels cannot preserve a runtime
 claim.
 
+At the public context boundary, fixed per-profile all-defined-function
+declaration digests additionally cover all 123 modern or 225 legacy function
+definitions. This is declaration authority only, not a semantic promotion of
+unselected helpers.
+
 The modern certificate remains the same exported-initializer proof: 77-line
 `TypedMap#set`, getter/index/equality dependencies, Entity constructor type
 IDs, allocator identities, capacity commits, `_start -> ~start`, eight critical

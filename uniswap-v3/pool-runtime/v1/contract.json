@@ -1,7 +1,7 @@
 {
   "authority_contract": {
     "aggregate_body_boundary": "modern capacity/memory bodies and legacy memcpy/memmove/memset remain exact retained-body authority with structural operand callsite checks rather than general memory-semantics proofs",
-    "fail_closed_rule": "any candidate runtime, tuple, WAT, import/export, start, function header or local declaration, global definition/writer, data floor, reset reachability, allocator, setter/getter/index/equality, Value/Entity/entry/array layout, or exact low-level body drift leaves every scoped runtime claim false",
+    "fail_closed_rule": "any candidate runtime, tuple, WAT, import/export, start, all-defined-function declaration inventory, selected function header or local declaration, global definition/writer, data floor, reset reachability, allocator, setter/getter/index/equality, Value/Entity/entry/array layout, or exact low-level body drift leaves every scoped runtime claim false",
     "host_boundary": "imported host behavior is not rederived; modern hosts are assumed not to write arbitrary linear memory, and legacy hosts are additionally assumed not to reenter exported memory.reset during a handler",
     "proof_model": "exact artifact tuple selection plus separate modern exported-initializer and legacy native-start module-state proofs and generation-specific public collection capsules",
     "semantic_authority": "exact retained WASM bytes and checksum-pinned WABT 1.0.35 --generate-names WAT for all eight retained Pool mappings"
@@ -9,6 +9,12 @@
   "contract_version": "uniswap-v3-pool-runtime/v1",
   "legacy_pool_runtime_proofs": [
     {
+      "all_defined_function_declarations": {
+        "all_defined_function_headers_type_uses_ordered_parameters_results_and_leading_locals_exactly_bound": true,
+        "declaration_authority_only_not_general_function_semantics": true,
+        "defined_function_count": 225,
+        "inventory_sha256": "49119dc2f85372f5c8975fcdb6c25b06d868cdca61b1fdc5a9448038ec421c4e"
+      },
       "artifact_selection_tuple": [
         "legacy-mainnet-root",
         "QmWuomVAQCdEXdCRavcsmRz4BNqPx2nppqe8S6AXid66xw",
@@ -596,6 +602,12 @@
       }
     },
     {
+      "all_defined_function_declarations": {
+        "all_defined_function_headers_type_uses_ordered_parameters_results_and_leading_locals_exactly_bound": true,
+        "declaration_authority_only_not_general_function_semantics": true,
+        "defined_function_count": 225,
+        "inventory_sha256": "a91930ddbf086e37a5e240e8ff3b5a390373970c03f6f066678def94c0facbf4"
+      },
       "artifact_selection_tuple": [
         "legacy-mainnet-qmrv",
         "QmYQRHstsSS7mntgKNSot74qN2dpuyFEtd1DddPmnqWC65",
@@ -1183,6 +1195,12 @@
       }
     },
     {
+      "all_defined_function_declarations": {
+        "all_defined_function_headers_type_uses_ordered_parameters_results_and_leading_locals_exactly_bound": true,
+        "declaration_authority_only_not_general_function_semantics": true,
+        "defined_function_count": 225,
+        "inventory_sha256": "9882a4927dfbca99f3197b45158a70a4103e9f52589ee11bc144c6f0eff1670e"
+      },
       "artifact_selection_tuple": [
         "legacy-base-root",
         "QmZPiDeH1j95mozzb5AjKCHn6zgpnhMu77kNAitPbi4Vt3",
@@ -1772,6 +1790,12 @@
       }
     },
     {
+      "all_defined_function_declarations": {
+        "all_defined_function_headers_type_uses_ordered_parameters_results_and_leading_locals_exactly_bound": true,
+        "declaration_authority_only_not_general_function_semantics": true,
+        "defined_function_count": 225,
+        "inventory_sha256": "68e17a52c7846777508cbd7da39e15db9482b9711c0966658f34e5999da8a8e2"
+      },
       "artifact_selection_tuple": [
         "legacy-mainnet-stable",
         "QmeNbEMUnaaPpmpLaUVBJfFWRCN5SxG8xPG5eDNoXEGdbW",
@@ -2361,6 +2385,12 @@
       }
     },
     {
+      "all_defined_function_declarations": {
+        "all_defined_function_headers_type_uses_ordered_parameters_results_and_leading_locals_exactly_bound": true,
+        "declaration_authority_only_not_general_function_semantics": true,
+        "defined_function_count": 225,
+        "inventory_sha256": "68e17a52c7846777508cbd7da39e15db9482b9711c0966658f34e5999da8a8e2"
+      },
       "artifact_selection_tuple": [
         "legacy-mainnet-stable-fee-tier-1",
         "Qmaydei2ScE7JptBTPgSfkf6PFxEZpLn39gEXYqrBZhsv8",
@@ -2950,6 +2980,12 @@
       }
     },
     {
+      "all_defined_function_declarations": {
+        "all_defined_function_headers_type_uses_ordered_parameters_results_and_leading_locals_exactly_bound": true,
+        "declaration_authority_only_not_general_function_semantics": true,
+        "defined_function_count": 225,
+        "inventory_sha256": "68e17a52c7846777508cbd7da39e15db9482b9711c0966658f34e5999da8a8e2"
+      },
       "artifact_selection_tuple": [
         "legacy-mainnet-stable-fee-tier-100",
         "QmadCQv7VPgNXhQTNkcDyzmiWZpWexynUH4XuuaMrsAbJY",
@@ -3541,6 +3577,12 @@
   ],
   "modern_pool_runtime_proofs": [
     {
+      "all_defined_function_declarations": {
+        "all_defined_function_headers_type_uses_ordered_parameters_results_and_leading_locals_exactly_bound": true,
+        "declaration_authority_only_not_general_function_semantics": true,
+        "defined_function_count": 123,
+        "inventory_sha256": "4c288bb51f506dcad12d1985d772c388c5aa7fb31e83adb3777dc2a9c2a38d4e"
+      },
       "artifact_selection_tuple": [
         "modern-base",
         "QmPZCHE1URf4oviX7Tbrkw3aMENo1qAeEGa1AS2gMumG7P",
@@ -3827,6 +3869,12 @@
       }
     },
     {
+      "all_defined_function_declarations": {
+        "all_defined_function_headers_type_uses_ordered_parameters_results_and_leading_locals_exactly_bound": true,
+        "declaration_authority_only_not_general_function_semantics": true,
+        "defined_function_count": 123,
+        "inventory_sha256": "5669d97cd2b172292c699775b477383cef35562cf3b576e6fb5235425f985fad"
+      },
       "artifact_selection_tuple": [
         "modern-mainnet",
         "QmSaGgPnyhStviGQSGTokQYRgVqLFNvnGWfnv8tSfuvpWD",
@@ -4113,14 +4161,14 @@
       }
     }
   ],
-  "projection_sha256": "a14c75215009daba3d2c0ed8d4d6c4951e645f4e57188235ed6ed8377648f8e8",
+  "projection_sha256": "fa31d4c2a26bcb8ce5090830575b14f3b184ddfa8a8fc79b00e8a52d6eccf393",
   "provenance": {
     "base_commit": "1df0c471c354fc3718dac88a973a34f5b149d9c3",
     "base_commit_verification": "recorded review provenance; Git ancestry is outside this verifier",
     "shared_wat_runtime": {
       "candidate_bytes_equal_exact_executed_source": true,
       "path": "scripts/uniswap_v3_wat_runtime.py",
-      "raw_sha256": "0b8fca4e63f33e7332341098e1da74b725029ac6b89479c69673393d3453ec8f"
+      "raw_sha256": "bd555b5d44bed144777e35b361fcb63e275d7f21b774db3ffe0e08bef3bf4411"
     },
     "wabt_version": "1.0.35",
     "wasm2wat_command": [
@@ -4173,6 +4221,7 @@
     "all_manifest_handler_semantics_complete": false,
     "backfill_ready": false,
     "both_modern_pool_77_line_typed_map_setters_proven": true,
+    "both_modern_pool_all_defined_function_declaration_inventories_proven": true,
     "both_modern_pool_allocator_floors_above_all_initialized_data_proven": true,
     "both_modern_pool_allocator_return_identities_proven": true,
     "both_modern_pool_entity_constructor_type_ids_proven": true,
@@ -4203,6 +4252,7 @@
     "pool_swap_handler_semantics_complete": false,
     "production_ready": false,
     "readiness_complete": false,
+    "six_legacy_pool_all_defined_function_declaration_inventories_proven": true,
     "six_legacy_pool_allocator_data_floors_proven": true,
     "six_legacy_pool_complete_import_export_global_inventories_proven": true,
     "six_legacy_pool_exact_function_declaration_inventories_proven": true,

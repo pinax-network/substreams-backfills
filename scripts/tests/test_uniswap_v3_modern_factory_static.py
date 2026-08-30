@@ -1123,6 +1123,52 @@ class ModernFactoryStaticTest(unittest.TestCase):
                     refresh_reachable_body_authority=True,
                 )
 
+    def test_all_defined_declaration_inventory_closes_omitted_helper_headers(self) -> None:
+        def swap_names(index: int, first: str, second: str) -> Mutator:
+            def mutate(lines: list[str], _context: dict[str, Any]) -> None:
+                line = VERIFIER.normalized(lines[index])
+                self.assertEqual(line.count(first), 1)
+                self.assertEqual(line.count(second), 1)
+                changed = line.replace(first, "$module_signature_swap", 1)
+                changed = changed.replace(second, first, 1)
+                changed = changed.replace("$module_signature_swap", second, 1)
+                self.set_normalized(lines, index, changed)
+
+            return mutate
+
+        def remove_type_use(lines: list[str], _context: dict[str, Any]) -> None:
+            header = VERIFIER.normalized(lines[0])
+            self.assertEqual(header.count("(type $t0) "), 1)
+            self.set_normalized(lines, 0, header.replace("(type $t0) ", "", 1))
+
+        cases = (
+            (
+                "omitted SmartContract constructor name/address parameters swap",
+                "ethereum.SmartContract#constructor",
+                swap_names(0, "$p1", "$p2"),
+            ),
+            (
+                "omitted __newArray leading local identities swap",
+                "~lib/rt/__newArray",
+                swap_names(1, "$l3", "$l4"),
+            ),
+            (
+                "omitted CallResult getter type use removed",
+                "CallResult<~lib/array/Array<~lib/@graphprotocol/graph-ts/chain/ethereum/ethereum.Value>>#get:value",
+                remove_type_use,
+            ),
+        )
+        for label, suffix, mutate in cases:
+            with self.subTest(label=label):
+                self.assert_valid_wat_mutation_rejected(
+                    label,
+                    self.function_selector(suffix),
+                    mutate,
+                    VERIFIER.prove_shared_runtime_primitives,
+                    "all-defined-function declaration inventory drift",
+                    refresh_reachable_body_authority=True,
+                )
+
     def test_direct_memory_write_opcode_inventory_covers_all_writer_families(self) -> None:
         for instruction in (
             "i32.store",

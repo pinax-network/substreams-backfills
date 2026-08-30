@@ -319,6 +319,41 @@ LEGACY_EXPECTED_ARTIFACT_TUPLES = {
 }
 EXPECTED_ARTIFACT_TUPLES = MODERN_EXPECTED_ARTIFACT_TUPLES | LEGACY_EXPECTED_ARTIFACT_TUPLES
 
+MODULE_FUNCTION_DECLARATIONS = {
+    "modern-base": RUNTIME.AllDefinedFunctionDeclarationInventorySpec(
+        expected_function_count=123,
+        expected_inventory_sha256="4c288bb51f506dcad12d1985d772c388c5aa7fb31e83adb3777dc2a9c2a38d4e",
+    ),
+    "modern-mainnet": RUNTIME.AllDefinedFunctionDeclarationInventorySpec(
+        expected_function_count=123,
+        expected_inventory_sha256="5669d97cd2b172292c699775b477383cef35562cf3b576e6fb5235425f985fad",
+    ),
+    "legacy-mainnet-root": RUNTIME.AllDefinedFunctionDeclarationInventorySpec(
+        expected_function_count=225,
+        expected_inventory_sha256="49119dc2f85372f5c8975fcdb6c25b06d868cdca61b1fdc5a9448038ec421c4e",
+    ),
+    "legacy-mainnet-qmrv": RUNTIME.AllDefinedFunctionDeclarationInventorySpec(
+        expected_function_count=225,
+        expected_inventory_sha256="a91930ddbf086e37a5e240e8ff3b5a390373970c03f6f066678def94c0facbf4",
+    ),
+    "legacy-base-root": RUNTIME.AllDefinedFunctionDeclarationInventorySpec(
+        expected_function_count=225,
+        expected_inventory_sha256="9882a4927dfbca99f3197b45158a70a4103e9f52589ee11bc144c6f0eff1670e",
+    ),
+    "legacy-mainnet-stable": RUNTIME.AllDefinedFunctionDeclarationInventorySpec(
+        expected_function_count=225,
+        expected_inventory_sha256="68e17a52c7846777508cbd7da39e15db9482b9711c0966658f34e5999da8a8e2",
+    ),
+    "legacy-mainnet-stable-fee-tier-1": RUNTIME.AllDefinedFunctionDeclarationInventorySpec(
+        expected_function_count=225,
+        expected_inventory_sha256="68e17a52c7846777508cbd7da39e15db9482b9711c0966658f34e5999da8a8e2",
+    ),
+    "legacy-mainnet-stable-fee-tier-100": RUNTIME.AllDefinedFunctionDeclarationInventorySpec(
+        expected_function_count=225,
+        expected_inventory_sha256="68e17a52c7846777508cbd7da39e15db9482b9711c0966658f34e5999da8a8e2",
+    ),
+}
+
 TYPED_MAP_SET_CALL = (
     "~lib/@graphprotocol/graph-ts/common/collections/"
     "TypedMap<~lib/string/String_~lib/@graphprotocol/graph-ts/common/value/Value>#set"
@@ -590,6 +625,7 @@ TRUE_FLAGS = {
     "six_legacy_pool_complete_import_export_global_inventories_proven",
     "six_legacy_pool_no_indirect_table_and_handler_reset_reachability_proven",
     "six_legacy_pool_exact_function_declaration_inventories_proven",
+    "six_legacy_pool_all_defined_function_declaration_inventories_proven",
     "exact_two_modern_pool_artifact_tuples_selected",
     "candidate_shared_runtime_bytes_equal_executed_bytes",
     "both_modern_pool_public_collection_capsules_proven",
@@ -601,6 +637,7 @@ TRUE_FLAGS = {
     "both_modern_pool_allocator_floors_above_all_initialized_data_proven",
     "both_modern_pool_start_direct_memory_write_absence_proven",
     "both_modern_pool_exact_function_declaration_inventories_proven",
+    "both_modern_pool_all_defined_function_declaration_inventories_proven",
 }
 
 FALSE_FLAGS = {
@@ -925,20 +962,31 @@ def prove_start_and_allocator_floor(context: dict[str, Any]) -> dict[str, Any]:
 
 
 def prove_pool_runtime_context(context: dict[str, Any]) -> dict[str, Any]:
-    start = prove_start_and_allocator_floor(context)
-    capsule = RUNTIME.prove_modern_collection_capsule(
-        context, runtime_ops(), POOL_COLLECTION_SPEC
+    declarations = RUNTIME.prove_exact_function_declaration_inventory(
+        context, runtime_ops(), MODERN_POOL_FUNCTION_DECLARATIONS
     )
-    require(
-        capsule["modern_collection_capsule_structurally_closed"] is True,
-        f"{context['cid']} modern Pool collection capsule did not close",
-    )
-    declarations = capsule["exact_function_declarations"]
     require(
         declarations["function_count"] == 11
         and declarations["parameter_local_and_result_declarations_exactly_bound"]
         is True,
         f"{context['cid']} modern Pool function declaration inventory did not close",
+    )
+    profile_id = context["profile"]["profile_id"]
+    require(
+        profile_id in MODULE_FUNCTION_DECLARATIONS,
+        f"{context['cid']} all-defined-function declaration profile missing",
+    )
+    module_declarations = RUNTIME.prove_exact_all_defined_function_declaration_inventory(
+        context, runtime_ops(), MODULE_FUNCTION_DECLARATIONS[profile_id]
+    )
+    start = prove_start_and_allocator_floor(context)
+    capsule = RUNTIME.prove_modern_collection_capsule(
+        context, runtime_ops(), POOL_COLLECTION_SPEC
+    )
+    require(
+        capsule["modern_collection_capsule_structurally_closed"] is True
+        and capsule["exact_function_declarations"] == declarations,
+        f"{context['cid']} modern Pool collection capsule did not close",
     )
     spec: PoolProfileSpec = context["spec"]
     return {
@@ -957,6 +1005,7 @@ def prove_pool_runtime_context(context: dict[str, Any]) -> dict[str, Any]:
             "wat_sha256": spec.wat_sha256,
         },
         "defined_function_count": len(context["functions"]),
+        "all_defined_function_declarations": module_declarations,
         "start_and_allocator_floor": start,
         "public_collection_capsule": capsule,
         "proof_boundaries": {
@@ -1055,6 +1104,22 @@ def prove_legacy_pool_runtime_context(context: dict[str, Any]) -> dict[str, Any]
         and group.collection.start_floor == spec.allocator_floor,
         f"{spec.cid} legacy allocator floor is not exact align8(data end)",
     )
+    declarations = RUNTIME.prove_exact_function_declaration_inventory(
+        context, runtime_ops(), LEGACY_FUNCTION_DECLARATIONS
+    )
+    require(
+        declarations["function_count"] == 26
+        and declarations["parameter_local_and_result_declarations_exactly_bound"]
+        is True,
+        f"{spec.cid} legacy Pool function declaration inventory did not close",
+    )
+    require(
+        spec.profile_id in MODULE_FUNCTION_DECLARATIONS,
+        f"{spec.cid} all-defined-function declaration profile missing",
+    )
+    module_declarations = RUNTIME.prove_exact_all_defined_function_declaration_inventory(
+        context, runtime_ops(), MODULE_FUNCTION_DECLARATIONS[spec.profile_id]
+    )
     start = function_by_suffix(context, "start")
     module_state = RUNTIME.prove_legacy_module_state_invariants(
         context,
@@ -1067,15 +1132,9 @@ def prove_legacy_pool_runtime_context(context: dict[str, Any]) -> dict[str, Any]
         context, runtime_ops(), LEGACY_COLLECTION_SPEC
     )
     require(
-        capsule["legacy_collection_capsule_structurally_closed"] is True,
+        capsule["legacy_collection_capsule_structurally_closed"] is True
+        and capsule["exact_function_declarations"] == declarations,
         f"{spec.cid} legacy Pool collection capsule did not close",
-    )
-    declarations = capsule["exact_function_declarations"]
-    require(
-        declarations["function_count"] == 26
-        and declarations["parameter_local_and_result_declarations_exactly_bound"]
-        is True,
-        f"{spec.cid} legacy Pool function declaration inventory did not close",
     )
     return {
         "profile_id": spec.profile_id,
@@ -1095,6 +1154,7 @@ def prove_legacy_pool_runtime_context(context: dict[str, Any]) -> dict[str, Any]
             "wat_line_count": spec.wat_line_count,
         },
         "defined_function_count": len(context["functions"]),
+        "all_defined_function_declarations": module_declarations,
         "initialized_data_and_floor": {
             "initialized_data": initialized,
             "allocator_floor": spec.allocator_floor,
@@ -1148,6 +1208,20 @@ def expected_contract(root: Path, wasm2wat: Path | None = None) -> dict[str, Any
         == set(LEGACY_GROUP_SPECS),
         "legacy Pool digest-group coverage drift",
     )
+    require(
+        all(
+            proof["all_defined_function_declarations"]["defined_function_count"]
+            == MODULE_FUNCTION_DECLARATIONS[
+                proof["profile_id"]
+            ].expected_function_count
+            and proof["all_defined_function_declarations"][
+                "all_defined_function_headers_type_uses_ordered_parameters_results_and_leading_locals_exactly_bound"
+            ]
+            is True
+            for proof in modern_proofs + legacy_proofs
+        ),
+        "Pool all-defined-function declaration inventories did not close",
+    )
     truth = {key: True for key in sorted(TRUE_FLAGS)} | {
         key: False for key in sorted(FALSE_FLAGS)
     }
@@ -1158,7 +1232,7 @@ def expected_contract(root: Path, wasm2wat: Path | None = None) -> dict[str, Any
             "proof_model": "exact artifact tuple selection plus separate modern exported-initializer and legacy native-start module-state proofs and generation-specific public collection capsules",
             "host_boundary": "imported host behavior is not rederived; modern hosts are assumed not to write arbitrary linear memory, and legacy hosts are additionally assumed not to reenter exported memory.reset during a handler",
             "aggregate_body_boundary": "modern capacity/memory bodies and legacy memcpy/memmove/memset remain exact retained-body authority with structural operand callsite checks rather than general memory-semantics proofs",
-            "fail_closed_rule": "any candidate runtime, tuple, WAT, import/export, start, function header or local declaration, global definition/writer, data floor, reset reachability, allocator, setter/getter/index/equality, Value/Entity/entry/array layout, or exact low-level body drift leaves every scoped runtime claim false",
+            "fail_closed_rule": "any candidate runtime, tuple, WAT, import/export, start, all-defined-function declaration inventory, selected function header or local declaration, global definition/writer, data floor, reset reachability, allocator, setter/getter/index/equality, Value/Entity/entry/array layout, or exact low-level body drift leaves every scoped runtime claim false",
         },
         "provenance": {
             "base_commit": BASE_COMMIT,

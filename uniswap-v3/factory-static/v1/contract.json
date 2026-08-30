@@ -1,6 +1,6 @@
 {
   "authority_contract": {
-    "fail_closed_rule": "any parent-contract, artifact, initializer export, native start section, function header or local declaration, critical-global initializer or writer, handler, reachable setter, helper or shared runtime primitive, entry-local definition, entity receiver, decoded field key, Value kind, semantic payload source/local, final Value operand, exact map call, event index, early return, persistent effect, static profile, or required-absence drift leaves the scoped claims false",
+    "fail_closed_rule": "any parent-contract, artifact, initializer export, native start section, all-defined-function declaration inventory, selected function header or local declaration, critical-global initializer or writer, handler, reachable setter, helper or shared runtime primitive, entry-local definition, entity receiver, decoded field key, Value kind, semantic payload source/local, final Value operand, exact map call, event index, early return, persistent effect, static profile, or required-absence drift leaves the scoped claims false",
     "host_boundary": "reachable helper bodies retain aggregate exact-body authority rather than a general protected-memory write proof; the proof reaches Graph host-effect invocation, while imported host memory behavior, Graph Node rollback, and other host behavior are not proved by retained WAT",
     "proof_model": "the inherited complete handler CFG/SSA/effect proof plus exact exported-initializer dispatch and critical-global writer inventories, a complete direct/indirect reachable TypedMap#set closure, complete 76-handler-set semantic-family inventory, exact entry/local reaching definitions, exact entity receiver and decoded-key bindings, structural helper/runtime/source-to-payload flows, exact Value kind/payload/final-operand/set-call chains, required absence, and handler-local normal-exit effect traces",
     "semantic_authority": "the exact modern Base and modern mainnet deployed Factory WASM artifacts and checksum-pinned WABT 1.0.35 --generate-names WAT projections",
@@ -1969,6 +1969,12 @@
           }
         },
         "shared_runtime_primitives": {
+          "all_defined_function_declarations": {
+            "all_defined_function_headers_type_uses_ordered_parameters_results_and_leading_locals_exactly_bound": true,
+            "declaration_authority_only_not_general_function_semantics": true,
+            "defined_function_count": 62,
+            "inventory_sha256": "e270520d4d74623bdc6f38f98a3d79d2c6061c2b6e5cc7b756b0464f4885da4a"
+          },
           "big_int_from_i32": {
             "byte_array_constructor_and_uint8_get_set_structurally_proven": true,
             "same_i32_encoded_as_four_little_endian_bytes": true
@@ -4389,6 +4395,12 @@
           }
         },
         "shared_runtime_primitives": {
+          "all_defined_function_declarations": {
+            "all_defined_function_headers_type_uses_ordered_parameters_results_and_leading_locals_exactly_bound": true,
+            "declaration_authority_only_not_general_function_semantics": true,
+            "defined_function_count": 63,
+            "inventory_sha256": "6926ef9ed933fae438823d74c35412e64c193ff311b6816b0873a65a19b5e3f7"
+          },
           "big_int_from_i32": {
             "byte_array_constructor_and_uint8_get_set_structurally_proven": true,
             "same_i32_encoded_as_four_little_endian_bytes": true
@@ -4836,7 +4848,7 @@
     "shared_wat_runtime": {
       "authority_boundary": "contract-I/O-free reusable structural algorithms; no Pool artifact or release gate is certified",
       "path": "scripts/uniswap_v3_wat_runtime.py",
-      "raw_sha256": "0b8fca4e63f33e7332341098e1da74b725029ac6b89479c69673393d3453ec8f"
+      "raw_sha256": "bd555b5d44bed144777e35b361fcb63e275d7f21b774db3ffe0e08bef3bf4411"
     },
     "wabt_version": "1.0.35",
     "wasm2wat_command": [
@@ -4878,6 +4890,7 @@
     "all_six_factory_complete_static_handler_contracts_proven": false,
     "all_stored_fields_exact": false,
     "backfill_ready": false,
+    "both_modern_factory_all_defined_function_declaration_inventories_proven": true,
     "both_modern_factory_all_sixty_stored_field_contracts_proven": true,
     "both_modern_factory_complete_static_handler_contracts_proven": true,
     "both_modern_factory_decimals_threshold_and_static_fallback_dataflows_proven": true,

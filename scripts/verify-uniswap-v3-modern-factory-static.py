@@ -501,6 +501,7 @@ TRUE_FLAGS = {
     "modern_segment_field_projection_count_is_120",
     "global_v2_selected_and_residual_counts_unchanged_by_partial_profile_closure",
     "both_modern_factory_exact_runtime_function_declaration_inventories_proven",
+    "both_modern_factory_all_defined_function_declaration_inventories_proven",
 }
 
 
@@ -721,6 +722,18 @@ MODERN_FUNCTION_DECLARATIONS = {
         "~lib/string/String.__eq",
         "(func $~lib/string/String.__eq (type $t1) (param $p0 i32) (param $p1 i32) (result i32)",
         "(local $l2 i32) (local $l3 i32) (local $l4 i32) (local $l5 i32)",
+    ),
+}
+
+
+MODERN_MODULE_FUNCTION_DECLARATIONS = {
+    "modern-base": RUNTIME.AllDefinedFunctionDeclarationInventorySpec(
+        expected_function_count=62,
+        expected_inventory_sha256="e270520d4d74623bdc6f38f98a3d79d2c6061c2b6e5cc7b756b0464f4885da4a",
+    ),
+    "modern-mainnet": RUNTIME.AllDefinedFunctionDeclarationInventorySpec(
+        expected_function_count=63,
+        expected_inventory_sha256="6926ef9ed933fae438823d74c35412e64c193ff311b6816b0873a65a19b5e3f7",
     ),
 }
 
@@ -1259,6 +1272,16 @@ def prove_shared_runtime_primitives(context: dict[str, Any]) -> dict[str, Any]:
     collection_capsule = RUNTIME.prove_modern_collection_capsule(
         context, runtime_ops(), MODERN_COLLECTION_SPEC
     )
+    profile_id = context["profile"]["profile_id"]
+    require(
+        profile_id in MODERN_MODULE_FUNCTION_DECLARATIONS,
+        f"{context['cid']} all-defined-function declaration profile missing",
+    )
+    module_declarations = RUNTIME.prove_exact_all_defined_function_declaration_inventory(
+        context,
+        runtime_ops(),
+        MODERN_MODULE_FUNCTION_DECLARATIONS[profile_id],
+    )
     collection_runtime = collection_capsule["typed_map_collection_runtime"]
     indexed_collection = collection_capsule["indexed_collection"]
     smart_contract = function_by_suffix(context, "ethereum.SmartContract#constructor")
@@ -1489,6 +1512,7 @@ def prove_shared_runtime_primitives(context: dict[str, Any]) -> dict[str, Any]:
         ),
     }
     return {
+        "all_defined_function_declarations": module_declarations,
         "exact_function_declarations": collection_capsule[
             "exact_function_declarations"
         ],
@@ -3253,6 +3277,11 @@ def expected_contract(root: Path, wasm2wat: Path | None = None) -> dict[str, Any
         ["exact_function_declarations"]
         for proof in proofs
     ]
+    all_defined_declaration_inventories = [
+        proof["token_call_helpers"]["shared_runtime_primitives"]
+        ["all_defined_function_declarations"]
+        for proof in proofs
+    ]
     require(
         all(
             proof["complete_static_handler_contract"]
@@ -3266,6 +3295,17 @@ def expected_contract(root: Path, wasm2wat: Path | None = None) -> dict[str, Any
             and inventory["parameter_local_and_result_declarations_exactly_bound"]
             is True
             for inventory in declaration_inventories
+        )
+        and all(
+            inventory["defined_function_count"]
+            == MODERN_MODULE_FUNCTION_DECLARATIONS[proof["profile_id"]].expected_function_count
+            and inventory[
+                "all_defined_function_headers_type_uses_ordered_parameters_results_and_leading_locals_exactly_bound"
+            ]
+            is True
+            for proof, inventory in zip(
+                proofs, all_defined_declaration_inventories, strict=True
+            )
         ),
         "modern Factory static proof did not close",
     )
@@ -3278,7 +3318,7 @@ def expected_contract(root: Path, wasm2wat: Path | None = None) -> dict[str, Any
             "semantic_authority": "the exact modern Base and modern mainnet deployed Factory WASM artifacts and checksum-pinned WABT 1.0.35 --generate-names WAT projections",
             "proof_model": "the inherited complete handler CFG/SSA/effect proof plus exact exported-initializer dispatch and critical-global writer inventories, a complete direct/indirect reachable TypedMap#set closure, complete 76-handler-set semantic-family inventory, exact entry/local reaching definitions, exact entity receiver and decoded-key bindings, structural helper/runtime/source-to-payload flows, exact Value kind/payload/final-operand/set-call chains, required absence, and handler-local normal-exit effect traces",
             "symbolic_call_boundary": "token helper outcomes are exact functions of the structurally bound SmartContract receiver, selector, argument, retained call-result wrapper, and Graph ethereum.call result; the imported host call result and which outcomes occurred at historic blocks are not asserted",
-            "fail_closed_rule": "any parent-contract, artifact, initializer export, native start section, function header or local declaration, critical-global initializer or writer, handler, reachable setter, helper or shared runtime primitive, entry-local definition, entity receiver, decoded field key, Value kind, semantic payload source/local, final Value operand, exact map call, event index, early return, persistent effect, static profile, or required-absence drift leaves the scoped claims false",
+            "fail_closed_rule": "any parent-contract, artifact, initializer export, native start section, all-defined-function declaration inventory, selected function header or local declaration, critical-global initializer or writer, handler, reachable setter, helper or shared runtime primitive, entry-local definition, entity receiver, decoded field key, Value kind, semantic payload source/local, final Value operand, exact map call, event index, early return, persistent effect, static profile, or required-absence drift leaves the scoped claims false",
             "host_boundary": "reachable helper bodies retain aggregate exact-body authority rather than a general protected-memory write proof; the proof reaches Graph host-effect invocation, while imported host memory behavior, Graph Node rollback, and other host behavior are not proved by retained WAT",
         },
         "provenance": {

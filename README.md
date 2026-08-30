@@ -126,6 +126,12 @@ only after this gate passes.
   and compose with the recomputed modern parent for 16 records; persistence,
   complete legacy static semantics, history, issue completion, backfill,
   production, and readiness remain false.
+- **`uniswap-v3/factory-pool-bigint-init/v1/`** — retained-WAT evidence for
+  five legacy Factory-created Pool bigint initialization flows, including one
+  selected invocation of a four-use shared `txCount` helper. Six legacy and two
+  modern segments produce 40 records; the shared static site, mutation,
+  persistence, history, issue completion, backfill, production, and readiness
+  remain false.
 - **`common/`** — shared contracts extracted only after they reproduce the V4 reference.
   A family boundary must preserve ordered mapping operations and the inputs required for
   exact PoI; a coalesced `EntityChanges` stream is not assumed sufficient.

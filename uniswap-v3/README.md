@@ -311,6 +311,20 @@ slice is based on exact canonical Pool Swap squash merge
 identical to the audited candidate before deterministic regeneration and full
 revalidation.
 
+The [`pool-swap-fee-growth/v1`](pool-swap-fee-growth/v1/README.md) certificate
+reuses the audited Flash call model inside the full `handleSwap` body. It binds
+the event-address Pool contract, ordered `feeGrowthGlobal0X128` and
+`feeGrowthGlobal1X128` empty-argument calls, result-zero BigInt decodes,
+uncrossed same-Pool setters, and the same-receiver second Pool save. Modern
+required traps and the two-Token guard, legacy decoded helper operands, null
+and invalid-kind traps, exact selected slices, and the full 13-target Swap
+effect inventory are fail-closed. Persistence, later dynamic aliases, complete
+Swap and Pool history, legacy Factory initialization, host semantics, parity,
+backfill, production, and readiness remain false; the ledger stays 36 selected
+/ 230 residual. Its exact canonical Flash base is PR #70 squash merge
+`27dc439b150bbade46b6552d9e8611bc3c00da6f`, whose tree matches the
+independently audited candidate tree.
+
 The next sibling [`npm-observation-plan/`](npm-observation-plan/README.md)
 closes the repository-only host request set before joint reduction. It first
 enumerates every unique Position key from the complete event envelope, then,

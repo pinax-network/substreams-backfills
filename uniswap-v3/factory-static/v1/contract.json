@@ -4615,6 +4615,11 @@
       "path": "uniswap-v3/factory-effects/v1/contract.json",
       "raw_sha256": "f737d67550721ed418d8b5fb83424a55e429dceea7596643c69748458c5ac892"
     },
+    "shared_wat_runtime": {
+      "authority_boundary": "contract-I/O-free reusable structural algorithms; no Pool artifact or release gate is certified",
+      "path": "scripts/uniswap_v3_wat_runtime.py",
+      "raw_sha256": "5994acc43d8e276b4b2dd10c3415997b937103fd0a844487509de2765c373dab"
+    },
     "wabt_version": "1.0.35",
     "wasm2wat_command": [
       "wasm2wat",

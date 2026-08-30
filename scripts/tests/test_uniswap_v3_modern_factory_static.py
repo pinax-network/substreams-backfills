@@ -98,6 +98,14 @@ class ModernFactoryStaticTest(unittest.TestCase):
             raise VERIFIER.VerificationError(str(error)) from error
 
     @staticmethod
+    def public_collection_capsule_check(context: dict[str, Any]) -> None:
+        VERIFIER.RUNTIME.prove_modern_collection_capsule(
+            context,
+            VERIFIER.runtime_ops(),
+            VERIFIER.MODERN_COLLECTION_SPEC,
+        )
+
+    @staticmethod
     def refreshed_reachable_body_bindings_sha256(context: dict[str, Any]) -> str:
         normalized_functions = {
             name.replace("generated/schema/", "src/types/schema/"): function
@@ -856,7 +864,7 @@ class ModernFactoryStaticTest(unittest.TestCase):
                 "retained String equality primitive reverses the identity comparison",
                 self.function_selector("~lib/string/String.__eq"),
                 string_equality_operator,
-                VERIFIER.prove_shared_runtime_primitives,
+                self.public_collection_capsule_check,
                 "retained String.__eq primitive body drift",
             ),
             (

@@ -20,6 +20,23 @@ binds the complete handler authority, CFG/SSA analysis, constructor and save
 helpers, persistent-effect closure, argument identity, and exact five-effect
 suffix before the new static semantics are considered.
 
+The reusable structural algorithms for initializer/global-writer analysis,
+direct linear-memory-write classification, and the modern allocator and
+TypedMap/array runtime are isolated in
+`scripts/uniswap_v3_wat_runtime.py` (SHA-256
+`5994acc43d8e276b4b2dd10c3415997b937103fd0a844487509de2765c373dab`).
+That module performs no contract or repository I/O. Artifact hashes, contract
+truth gates, and release authority remain in this Factory verifier; reuse of
+the algorithms alone certifies no Pool handler or Pool mapping.
+
+The verifier captures those exact source bytes before importing the module and
+requires any `--root` candidate to contain identical bytes before either
+verification or `--write` can reconstruct a contract. The one public modern
+collection capsule closes allocator, capacity-growth, map set/get, indexed
+array access, low-level memory-body, and exact `String.__eq` dependencies
+together. Its lower-level dependency algorithms are private and make no
+standalone closure claim.
+
 ## Authoritative retained artifacts
 
 | Profile | Mapping CID | WASM SHA-256 | WAT SHA-256 | Handler body SHA-256 |

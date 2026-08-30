@@ -99,3 +99,7 @@ The following remain strict JSON `false` values:
 
 This bounded supplement does not complete any acceptance checkbox in tracking
 issue #38.
+
+Extracting its contract-I/O-free WAT runtime algorithms for later reuse does
+not bind either modern Pool context and does not add any Pool runtime,
+backfill, or production certification.

@@ -245,6 +245,21 @@ Value-decoder, token-call, static-lookup, entry-local, and complete decimals
 dataflows and prove `Pool.tick` absent. The four legacy static paths and every
 runtime, continuity, parity, backfill, and production gate remain false.
 
+The
+[`factory-fee-growth-init/v1`](factory-fee-growth-init/v1/README.md)
+certificate then isolates the two legacy Factory initialization setters for
+`Pool.feeGrowthGlobal0X128` and `Pool.feeGrowthGlobal1X128`. It binds the
+event-pool receiver, the native-start `$g2` pointer returned by
+`ByteArray.fromI32(0)`, exact Value and
+setter operands, uninterrupted same-receiver path, Pool-save ID/kind branches,
+and complete reachable residual inventories for four unique legacy mappings.
+Those proofs project to six legacy segments and compose with the recomputed
+modern parent for 16 initialization records. This does not close the four
+legacy complete-static paths or promote persistence, history, host/reset
+semantics, parity, backfill, production, or readiness. Its base is the exact
+canonical PR #71 squash merge `cf4d096304c09f150a7ee2ea85de5d479d5ec7ef`;
+that merge tree matches the independently audited candidate tree.
+
 The sibling [`pool-runtime/v1`](pool-runtime/v1/README.md) supplement closes a
 runtime-only structural capsule for all eight retained Pool artifacts. It
 keeps separate modern exported-initializer and legacy native-start proofs. The

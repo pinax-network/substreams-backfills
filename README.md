@@ -120,6 +120,12 @@ only after this gate passes.
   absence), structurally closes every handler/helper setter and support
   dataflow, and accounts for all early-return/partial-effect traces while
   leaving the four legacy paths and every broad readiness gate false.
+- **`uniswap-v3/factory-fee-growth-init/v1/`** — retained-WAT
+  evidence for the two legacy Factory fee-growth setter-call operands and
+  same-receiver Pool-save call. Four unique legacy mappings project to six segments
+  and compose with the recomputed modern parent for 16 records; persistence,
+  complete legacy static semantics, history, issue completion, backfill,
+  production, and readiness remain false.
 - **`common/`** — shared contracts extracted only after they reproduce the V4 reference.
   A family boundary must preserve ordered mapping operations and the inputs required for
   exact PoI; a coalesced `EntityChanges` stream is not assumed sufficient.

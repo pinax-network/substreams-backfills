@@ -104,6 +104,10 @@ jobs:
           python3 -m unittest \
             scripts.tests.test_uniswap_v3_wat_runtime \
             scripts.tests.test_uniswap_v3_modern_factory_static
+      - name: Recompute bounded Uniswap V3 Factory fee-growth initialization
+        run: |
+          python3 scripts/verify-uniswap-v3-factory-fee-growth-init.py --wasm2wat "$WASM2WAT"
+          python3 -m unittest scripts.tests.test_uniswap_v3_factory_fee_growth_init
       - name: Test eligibility decisions and freshness gates
         run: python3 -m unittest discover -s scripts/tests -p 'test_*.py'
 

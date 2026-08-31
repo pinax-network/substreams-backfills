@@ -1,0 +1,422 @@
+{
+  "format_version": 1,
+  "profile_id": "aerodrome-slipstream-base-QmasYjyp",
+  "status": "immutable_target_and_static_behavior_profile_only",
+  "family": "aerodrome-slipstream-base",
+  "protocol": "aerodrome-slipstream-cl",
+  "chain": "base",
+  "implementation_status": "not_started",
+  "eligibility_decision": "indeterminate_no_fresh_evidence",
+  "deployment": {
+    "cid": "QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV",
+    "spec_version": "1.2.0",
+    "mapping_api_version": "0.0.7",
+    "features": [
+      "nonFatalErrors",
+      "grafting"
+    ],
+    "graft": null,
+    "manifest_repository_metadata": "https://github.com/Uniswap/uniswap-v3-subgraph",
+    "manifest_repository_is_protocol_identity": false
+  },
+  "components": [
+    {
+      "kind": "data_source",
+      "name": "Factory",
+      "address": "0x5e7bb104d84c7cb9b682aac2f3d509f5f406809a",
+      "start_block": 13843704,
+      "mapping_cid": "QmZQVsukQt6nXKctyy2WSMWN5grVXKph5fR7ahxS11Uebs",
+      "abi_cids": {
+        "Factory": "QmamyiWBuT1kyYy6r97DamQ7eowheMw7nfGZUFdAmaFRG8",
+        "ERC20": "QmXuTbDkNrN27VydxbS2huvKRk62PMgUTdPDWkxcr2w7j2",
+        "ERC20SymbolBytes": "QmbHnhUFZa6qqqRyubUYhXntox1TCBxqryaBM1iNGqVJzT",
+        "ERC20NameBytes": "QmQCP6Pdp1MqpwRv2qoPHuUTwZGy7Q3eDHg4w5kzwE9mBj",
+        "Pool": "QmVszVJj4c73MuQGv5Bi9Kje5tpGijPCDXie7fXTqGAFi9"
+      },
+      "handlers": [
+        {
+          "name": "handlePoolCreated",
+          "signature": "PoolCreated(address,address,int24,address)",
+          "indexed_signature": "PoolCreated(indexed address,indexed address,indexed int24,address)",
+          "topic0": "0xab0d57f0df537bb25e80245ef7748fa62353808c54d6e528a9dd20887aed9ac2",
+          "calls": {}
+        }
+      ]
+    },
+    {
+      "kind": "data_source",
+      "name": "NonfungiblePositionManager",
+      "address": "0x827922686190790b37229fd06084350e74485b72",
+      "start_block": 13843719,
+      "mapping_cid": "QmcoeFHridxYBRFnrZ33v3PRAgvqunBfxe9gsCPhJQB4dy",
+      "abi_cids": {
+        "NonfungiblePositionManager": "QmdAXZw3wWJx7uRuzBmNPqgV6hqE3Cx3ZBvXEVRoThdPDL",
+        "Pool": "QmVszVJj4c73MuQGv5Bi9Kje5tpGijPCDXie7fXTqGAFi9",
+        "Factory": "QmamyiWBuT1kyYy6r97DamQ7eowheMw7nfGZUFdAmaFRG8",
+        "ERC20": "QmXuTbDkNrN27VydxbS2huvKRk62PMgUTdPDWkxcr2w7j2"
+      },
+      "handlers": [
+        {
+          "name": "handleIncreaseLiquidity",
+          "signature": "IncreaseLiquidity(uint256,uint128,uint256,uint256)",
+          "indexed_signature": "IncreaseLiquidity(indexed uint256,uint128,uint256,uint256)",
+          "topic0": "0x3067048beee31b25b2f1681f88dac838c8bba36af25bfb2b7cf7473a5847e35f",
+          "calls": {
+            "positions": "NonfungiblePositionManager[event.address].positions(event.params.tokenId)"
+          }
+        },
+        {
+          "name": "handleDecreaseLiquidity",
+          "signature": "DecreaseLiquidity(uint256,uint128,uint256,uint256)",
+          "indexed_signature": "DecreaseLiquidity(indexed uint256,uint128,uint256,uint256)",
+          "topic0": "0x26f6a048ee9138f2c0ce266f322cb99228e8d619ae2bff30c67f8dcf9d2377b4",
+          "calls": {
+            "positions": "NonfungiblePositionManager[event.address].positions(event.params.tokenId)"
+          }
+        },
+        {
+          "name": "handleCollect",
+          "signature": "Collect(uint256,address,uint256,uint256)",
+          "indexed_signature": "Collect(indexed uint256,address,uint256,uint256)",
+          "topic0": "0x40d0efd1a53d60ecbf40971b9daf7dc90178c3aadc7aab1765632738fa8b8f01",
+          "calls": {
+            "positions": "NonfungiblePositionManager[event.address].positions(event.params.tokenId)"
+          }
+        },
+        {
+          "name": "handleTransfer",
+          "signature": "Transfer(address,address,uint256)",
+          "indexed_signature": "Transfer(indexed address,indexed address,indexed uint256)",
+          "topic0": "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+          "calls": {
+            "positions": "NonfungiblePositionManager[event.address].positions(event.params.tokenId)"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "template",
+      "name": "Pool",
+      "created_by": "Factory.handlePoolCreated",
+      "mapping_cid": "QmQgC18iXqZc5Jp78KZs6wNpk2oZvgbe9TeMQnH9K7eMah",
+      "abi_cids": {
+        "Pool": "QmVszVJj4c73MuQGv5Bi9Kje5tpGijPCDXie7fXTqGAFi9",
+        "Factory": "QmamyiWBuT1kyYy6r97DamQ7eowheMw7nfGZUFdAmaFRG8",
+        "ERC20": "QmXuTbDkNrN27VydxbS2huvKRk62PMgUTdPDWkxcr2w7j2"
+      },
+      "handlers": [
+        {
+          "name": "handleInitialize",
+          "signature": "Initialize(uint160,int24)",
+          "indexed_signature": "Initialize(uint160,int24)",
+          "topic0": "0x98636036cb66a9c19a37435efc1e90142190214e8abeb821bdba3f2990dd4c95",
+          "calls": {}
+        },
+        {
+          "name": "handleSwap",
+          "signature": "Swap(address,address,int256,int256,uint160,uint128,int24)",
+          "indexed_signature": "Swap(indexed address,indexed address,int256,int256,uint160,uint128,int24)",
+          "topic0": "0xc42079f94a6350d7e6235f29174924f928cc2ac818eb64fed8004e115fbcca67",
+          "calls": {
+            "feeGrowthGlobal0X128": "Pool[event.address].feeGrowthGlobal0X128()",
+            "feeGrowthGlobal1X128": "Pool[event.address].feeGrowthGlobal1X128()"
+          }
+        },
+        {
+          "name": "handleMint",
+          "signature": "Mint(address,address,int24,int24,uint128,uint256,uint256)",
+          "indexed_signature": "Mint(address,indexed address,indexed int24,indexed int24,uint128,uint256,uint256)",
+          "topic0": "0x7a53080ba414158be7ec69b987b5fb7d07dee101fe85488f0853ae16239d0bde",
+          "calls": {
+            "poolTickLower": "Pool[event.address].ticks(event.params.tickLower)",
+            "poolTickUpper": "Pool[event.address].ticks(event.params.tickUpper)"
+          }
+        },
+        {
+          "name": "handleBurn",
+          "signature": "Burn(address,int24,int24,uint128,uint256,uint256)",
+          "indexed_signature": "Burn(indexed address,indexed int24,indexed int24,uint128,uint256,uint256)",
+          "topic0": "0x0c396cd989a39f4459b5fa1aed6a9a8dcdbc45908acfd67e028cd568da98982c",
+          "calls": {
+            "poolTickLower": "Pool[event.address].ticks(event.params.tickLower)",
+            "poolTickUpper": "Pool[event.address].ticks(event.params.tickUpper)"
+          }
+        },
+        {
+          "name": "handleFlash",
+          "signature": "Flash(address,address,uint256,uint256,uint256,uint256)",
+          "indexed_signature": "Flash(indexed address,indexed address,uint256,uint256,uint256,uint256)",
+          "topic0": "0xbdbdb71d7860376ba52b25a5028beea23581364a40522f6bcfb86bb1f2dca633",
+          "calls": {
+            "feeGrowthGlobal0X128": "Pool[event.address].feeGrowthGlobal0X128()",
+            "feeGrowthGlobal1X128": "Pool[event.address].feeGrowthGlobal1X128()"
+          }
+        }
+      ]
+    }
+  ],
+  "entity_layout": {
+    "entity_count": 20,
+    "field_count": 302,
+    "logical_sha256": "c072c3a609441de370bcb7340814b4e9dd9687043d7088f53a0dcb92ee8b23a0",
+    "all_entities_mutable": true,
+    "immutable_entities": [],
+    "explicit_mutable_entities": [],
+    "entities": [
+      "Bundle",
+      "Burn",
+      "Collect",
+      "Factory",
+      "Flash",
+      "Mint",
+      "Pool",
+      "PoolDayData",
+      "PoolHourData",
+      "Position",
+      "PositionSnapshot",
+      "Swap",
+      "Tick",
+      "TickDayData",
+      "TickHourData",
+      "Token",
+      "TokenDayData",
+      "TokenHourData",
+      "Transaction",
+      "UniswapDayData"
+    ]
+  },
+  "retained_qma8_schema_reference": {
+    "cid": "Qma8a81T9XoX5Pbkrk8J3kxMhWdXJzFSYZge1wGi3QZBru",
+    "path": "uniswap-v3/graft-ancestry/v1/artifacts/Qma8a81T9XoX5Pbkrk8J3kxMhWdXJzFSYZge1wGi3QZBru",
+    "bytes": 19034,
+    "sha256": "ae03d0c6d3c6c03f87ae8e699b1e71804266c1d4adb7acbf4f4de5d48727c39c",
+    "entity_count": 20,
+    "field_count": 299,
+    "logical_sha256": "6c801fc4c141c0ae12dbb937652f0dd49c9be5bd3b1b3c8e38bdb92fe6efec5d",
+    "all_entities_mutable": true
+  },
+  "qma8_static_gap": {
+    "comparison_direction": "bidirectional_slipstream_and_retained_deployed_qma8",
+    "missing_from_slipstream": [],
+    "extra_in_slipstream": [],
+    "exact_field_match_entities": [
+      "Bundle",
+      "Burn",
+      "Collect",
+      "Factory",
+      "Flash",
+      "Mint",
+      "Pool",
+      "PoolDayData",
+      "PoolHourData",
+      "PositionSnapshot",
+      "Swap",
+      "Tick",
+      "TickDayData",
+      "TickHourData",
+      "TokenDayData",
+      "TokenHourData",
+      "Transaction",
+      "UniswapDayData"
+    ],
+    "field_differences": {
+      "Position": {
+        "missing_from_slipstream": [],
+        "extra_in_slipstream": {
+          "collectedToken0": "BigDecimal!",
+          "collectedToken1": "BigDecimal!"
+        },
+        "type_differences": {}
+      },
+      "Token": {
+        "missing_from_slipstream": [],
+        "extra_in_slipstream": {
+          "version": "Int"
+        },
+        "type_differences": {}
+      }
+    },
+    "mutability_differences": [],
+    "scope": "static_deployed_schema_only"
+  },
+  "slipstream_abi_differences": {
+    "factory_pool_created": {
+      "slipstream": "PoolCreated(indexed address,indexed address,indexed int24,address)",
+      "canonical_v3": "PoolCreated(indexed address,indexed address,indexed uint24,int24,address)",
+      "difference": "Slipstream exposes tickSpacing but no separate fee event argument"
+    },
+    "factory_get_pool": "getPool(address,address,int24):(address)",
+    "npm_positions": "positions(uint256):(uint96,address,address,address,int24,int24,int24,uint128,uint256,uint256,uint128,uint128)",
+    "npm_position_slot_5": "int24_tick_spacing_not_canonical_uint24_fee",
+    "pool_specific_events_not_subscribed": [
+      "Collect(address,address,int24,int24,uint128,uint128)",
+      "CollectFees(address,uint128,uint128)",
+      "IncreaseObservationCardinalityNext(uint16,uint16)",
+      "SetFeeProtocol(uint8,uint8,uint8,uint8)"
+    ],
+    "pool_specific_function_families": [
+      "gauge_and_staking",
+      "reward_growth_and_rollover",
+      "unstaked_fee",
+      "factory_registry"
+    ]
+  },
+  "retained_wasm_static_behavior": {
+    "evidence": "deployed_wasm_name_section_exports_imports_constants_and_manifest_call_injections",
+    "proof_scope": "static_presence_and_binding_only_not_complete_values_order_branches_failure_or_persistence",
+    "Factory": {
+      "exports": [
+        "handlePoolCreated"
+      ],
+      "named_target_helpers": [
+        "src/utils/staticTokenDefinition/StaticTokenDefinition.fromAddress",
+        "src/utils/token/fetchTokenSymbol",
+        "src/utils/token/fetchTokenName",
+        "src/utils/token/fetchTokenTotalSupply",
+        "src/utils/token/fetchTokenDecimals",
+        "src/mappings/factory/handlePoolCreated"
+      ],
+      "host_capabilities": [
+        "store.get",
+        "store.set",
+        "ethereum.call",
+        "dataSource.create"
+      ]
+    },
+    "NonfungiblePositionManager": {
+      "exports": [
+        "handleIncreaseLiquidity",
+        "handleDecreaseLiquidity",
+        "handleCollect",
+        "handleTransfer"
+      ],
+      "named_target_helpers": [
+        "src/mappings/position-manager/getPosition",
+        "src/mappings/position-manager/updateFeeVars",
+        "src/mappings/position-manager/savePositionSnapshot",
+        "src/types/schema/Position#get:collectedToken0",
+        "src/types/schema/Position#get:collectedToken1"
+      ],
+      "host_capabilities": [
+        "store.get",
+        "store.set",
+        "ethereum.call"
+      ]
+    },
+    "Pool": {
+      "exports": [
+        "handleInitialize",
+        "handleMint",
+        "handleBurn",
+        "handleSwap",
+        "handleFlash"
+      ],
+      "named_target_helpers": [
+        "src/mappings/core/addMissingWhitelistedPools",
+        "src/mappings/core/loadTickUpdateFeeVarsAndSave",
+        "src/mappings/core/updateTickFeeVarsAndSave",
+        "src/types/schema/Token#get:version",
+        "src/types/templates/Pool/Factory/Factory#getPool"
+      ],
+      "host_capabilities": [
+        "store.get",
+        "store.set",
+        "ethereum.call"
+      ],
+      "flash_static_observation": "loads Pool, calls feeGrowthGlobal0X128 and feeGrowthGlobal1X128, sets both Pool fields, saves Pool; no Flash constructor or Flash save is present"
+    },
+    "embedded_address_constants": [
+      "0x5e7bb104d84c7cb9b682aac2f3d509f5f406809a",
+      "0x4200000000000000000000000000000000000006",
+      "0xb2cc224c1c9fee385f8ad6a55b4d94e92359dc59",
+      "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+      "0x940181a94a35a4569e4529a3cdfb74e38fd98631",
+      "0x8fe8d9bb8eeba3ed688069c3d6b556c9ca258248",
+      "0x9663f2ca0454accad3e094448ea6f77443880454"
+    ],
+    "embedded_numeric_strings": [
+      "0.01",
+      "1.0001",
+      "1000000"
+    ]
+  },
+  "public_prior_art_assessment": {
+    "substreams_evm_revision": "970a665e15619de8ad7f686bd89412a1030d46dc",
+    "aerodrome_module": {
+      "path": "dex/aerodrome",
+      "protocol_shape": "solidly_v2_pool_and_poolfactory_event_map",
+      "slipstream_factory_compatible": false,
+      "graph_entity_writer": false
+    },
+    "uniswap_v3_module": {
+      "path": "dex/uniswap-v3",
+      "protocol_shape": "canonical_v3_event_map",
+      "slipstream_pool_event_partial_prior_art": true,
+      "slipstream_factory_compatible": false,
+      "npm_handlers_present": false,
+      "manifest_call_injections_present": false,
+      "graph_entity_writer": false
+    },
+    "drop_in_package_safe": false
+  },
+  "source_provenance": {
+    "status": "unresolved_exact_revision_and_toolchain",
+    "manifest_repository_metadata": "https://github.com/Uniswap/uniswap-v3-subgraph",
+    "search_scope": {
+      "observed_at": "2026-08-31",
+      "public_code_search": [
+        "deployment CID QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV",
+        "Factory mapping CID QmZQVsukQt6nXKctyy2WSMWN5grVXKph5fR7ahxS11Uebs",
+        "NonfungiblePositionManager mapping CID QmcoeFHridxYBRFnrZ33v3PRAgvqunBfxe9gsCPhJQB4dy",
+        "Pool mapping CID QmQgC18iXqZc5Jp78KZs6wNpk2oZvgbe9TeMQnH9K7eMah",
+        "unique helper name addMissingWhitelistedPools"
+      ],
+      "repository_history_inspected": "https://github.com/Uniswap/v3-subgraph",
+      "result": "no_exact_deployed_slipstream_source_match"
+    },
+    "exact_repository": null,
+    "exact_commit": null,
+    "exact_tree": null,
+    "exact_toolchain": null,
+    "byte_reproduction": false,
+    "reason": "No public revision containing the deployed Slipstream Factory/NPM/Pool modifications was found; manifest metadata alone is insufficient authority."
+  },
+  "required_target_changes": [
+    "resolve_exact_source_revision_or_produce_complete_retained_wasm_semantic_specification",
+    "add_slipstream_factory_decoder_without_canonical_fee_argument",
+    "resolve_tick_spacing_to_fee_semantics_and_pool_fee_tier_authority",
+    "add_slipstream_npm_positions_int24_tick_spacing_adapter_and_four_handlers",
+    "preserve_manifest_contract_call_inputs_for_npm_positions_ticks_and_fee_growth",
+    "implement_token_version_and_missing_whitelist_pool_semantics",
+    "preserve_flash_fee_growth_only_behavior_and_absent_flash_rows",
+    "implement_all_twenty_mutable_entities_and_three_target_only_fields",
+    "bind_base_addresses_start_blocks_pricing_constants_and_dynamic_pool_creation",
+    "produce_target_specific_substreams_package_store_reducer_poi_and_temporal_writer",
+    "capture_adversarial_factory_npm_pool_metadata_revert_and_flash_fixtures",
+    "prove_graph_node_entity_value_order_failure_poi_vid_block_range_and_postgresql_parity"
+  ],
+  "truth_gates": {
+    "eligibility_complete": false,
+    "source_revision_pinned": false,
+    "source_reproducible": false,
+    "implementation_complete": false,
+    "runtime_complete": false,
+    "runtime_parity": false,
+    "logical_parity": false,
+    "history_complete": false,
+    "physical_profile_complete": false,
+    "physical_parity": false,
+    "poi_parity": false,
+    "backfill_ready": false,
+    "production_ready": false,
+    "readiness": false,
+    "issue_86_complete": false
+  },
+  "remaining_gates": [
+    "Fresh stable-pod 24-hour and 72-hour fastest-healthy-copy forecasts must both exceed 28 days or be non-converging.",
+    "Resolve the exact Slipstream source revision and build toolchain, or replace them with a complete independently reviewed retained-WASM behavior specification.",
+    "Implement the target-specific decoder, call inputs, stores, reducer, PoI, temporal writer, package, and schema without promoting any parity gate.",
+    "Prove canonical Base fixture, Graph Node differential, failure, save-order, PoI, VID, block-range, and PostgreSQL parity.",
+    "Validate only on a disposable paused target; compute, load, Kubernetes mutation, allocation, activation, and production require separate authorization."
+  ]
+}

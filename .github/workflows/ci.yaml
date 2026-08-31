@@ -44,6 +44,13 @@ jobs:
         run: python3 scripts/verify-pancakeswap-infinity-cl-bsc-target.py
       - name: Verify immutable Exchange V3 BSC target
         run: python3 scripts/verify-exchange-v3-bsc-target.py
+      - name: Verify immutable Aerodrome Slipstream CL Base target
+        run: |
+          wasm-validate aerodrome-slipstream-base/reference/mappings/Factory.wasm
+          wasm-validate aerodrome-slipstream-base/reference/mappings/NonfungiblePositionManager.wasm
+          wasm-validate aerodrome-slipstream-base/reference/mappings/Pool.wasm
+          python3 scripts/verify-aerodrome-slipstream-base-target.py
+          python3 -m unittest scripts.tests.test_aerodrome_slipstream_base_target
       - name: Verify immutable Uniswap V3 graft ancestry
         run: python3 scripts/verify-uniswap-v3-graft-ancestry.py
       - name: Recompute Uniswap V3 writer compatibility evidence

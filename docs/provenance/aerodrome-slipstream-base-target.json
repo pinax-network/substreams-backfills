@@ -1,0 +1,259 @@
+{
+  "format_version": 1,
+  "family": "aerodrome-slipstream-base",
+  "protocol": "aerodrome-slipstream-cl",
+  "implementation_status": "immutable_target_and_static_behavior_baseline_only",
+  "eligibility_decision": "indeterminate_no_fresh_evidence",
+  "deployment": {
+    "cid": "QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV",
+    "chain": "base",
+    "spec_version": "1.2.0",
+    "mapping_api_version": "0.0.7",
+    "manifest_repository_metadata": "https://github.com/Uniswap/uniswap-v3-subgraph",
+    "manifest_repository_is_protocol_identity": false,
+    "features": [
+      "nonFatalErrors",
+      "grafting"
+    ],
+    "concrete_graft": null,
+    "data_sources": [
+      {
+        "kind": "data_source",
+        "name": "Factory",
+        "address": "0x5e7bb104d84c7cb9b682aac2f3d509f5f406809a",
+        "start_block": 13843704,
+        "mapping_cid": "QmZQVsukQt6nXKctyy2WSMWN5grVXKph5fR7ahxS11Uebs"
+      },
+      {
+        "kind": "data_source",
+        "name": "NonfungiblePositionManager",
+        "address": "0x827922686190790b37229fd06084350e74485b72",
+        "start_block": 13843719,
+        "mapping_cid": "QmcoeFHridxYBRFnrZ33v3PRAgvqunBfxe9gsCPhJQB4dy"
+      },
+      {
+        "kind": "template",
+        "name": "Pool",
+        "address": null,
+        "start_block": null,
+        "mapping_cid": "QmQgC18iXqZc5Jp78KZs6wNpk2oZvgbe9TeMQnH9K7eMah"
+      }
+    ]
+  },
+  "artifact_lock": [
+    {
+      "role": "deployment",
+      "cid": "QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV",
+      "path": "aerodrome-slipstream-base/reference/deployment.yaml",
+      "bytes": 5371,
+      "sha256": "d93714e7ba268a91278f5c7c6a5b4ef71920d13b7e8d517f3542fb4a2edf6b20"
+    },
+    {
+      "role": "schema",
+      "cid": "QmTiEqVtfjTDY8DRkj17eLKSAyajHNz8r7Yg9cRgXwrWfF",
+      "path": "aerodrome-slipstream-base/reference/schema.graphql",
+      "bytes": 18598,
+      "sha256": "09d7c40167fc27c3aa2de0ec003fe7b0b469e132943cc26dcd4db6064769d0e8"
+    },
+    {
+      "role": "factory_abi",
+      "cid": "QmamyiWBuT1kyYy6r97DamQ7eowheMw7nfGZUFdAmaFRG8",
+      "path": "aerodrome-slipstream-base/reference/abis/Factory.json",
+      "bytes": 10875,
+      "sha256": "7dac7fd7c4ff807498cb7dcbf503474d13b1207852bb8b2b3687a7e8cfb6d979"
+    },
+    {
+      "role": "erc20_abi",
+      "cid": "QmXuTbDkNrN27VydxbS2huvKRk62PMgUTdPDWkxcr2w7j2",
+      "path": "aerodrome-slipstream-base/reference/abis/ERC20.json",
+      "bytes": 3684,
+      "sha256": "4b83c6645aed2df5e4e9a1d11f372453fc052ac8575348c8c04a33ceacd0ae90"
+    },
+    {
+      "role": "erc20_name_bytes_abi",
+      "cid": "QmQCP6Pdp1MqpwRv2qoPHuUTwZGy7Q3eDHg4w5kzwE9mBj",
+      "path": "aerodrome-slipstream-base/reference/abis/ERC20NameBytes.json",
+      "bytes": 268,
+      "sha256": "b874c853ffa5309e4b7fbf4934c1efdb4fe31e1a65f7041e67f4a7f2258ffb77"
+    },
+    {
+      "role": "erc20_symbol_bytes_abi",
+      "cid": "QmbHnhUFZa6qqqRyubUYhXntox1TCBxqryaBM1iNGqVJzT",
+      "path": "aerodrome-slipstream-base/reference/abis/ERC20SymbolBytes.json",
+      "bytes": 270,
+      "sha256": "9ccb9b5d95394b2ffb4ced54cffa0c5ea282917f4eec36c121ce28c257965193"
+    },
+    {
+      "role": "pool_abi",
+      "cid": "QmVszVJj4c73MuQGv5Bi9Kje5tpGijPCDXie7fXTqGAFi9",
+      "path": "aerodrome-slipstream-base/reference/abis/Pool.json",
+      "bytes": 25037,
+      "sha256": "46588c2f4ad0b91f64e7b43b03190c5422d3f46f2759c53412a3f3279f816760"
+    },
+    {
+      "role": "npm_abi",
+      "cid": "QmdAXZw3wWJx7uRuzBmNPqgV6hqE3Cx3ZBvXEVRoThdPDL",
+      "path": "aerodrome-slipstream-base/reference/abis/NonfungiblePositionManager.json",
+      "bytes": 26032,
+      "sha256": "6109c87c3dfd051c5fa283e71463d29d4c31a40339223ea3015ea0bcdd602c00"
+    },
+    {
+      "role": "factory_mapping_wasm",
+      "cid": "QmZQVsukQt6nXKctyy2WSMWN5grVXKph5fR7ahxS11Uebs",
+      "path": "aerodrome-slipstream-base/reference/mappings/Factory.wasm",
+      "bytes": 50419,
+      "sha256": "0072f4d819db1fce30c4e2a926008ce2e7180157dd9e4e42ddf3416eb7d64d17",
+      "exports": [
+        "handlePoolCreated"
+      ]
+    },
+    {
+      "role": "npm_mapping_wasm",
+      "cid": "QmcoeFHridxYBRFnrZ33v3PRAgvqunBfxe9gsCPhJQB4dy",
+      "path": "aerodrome-slipstream-base/reference/mappings/NonfungiblePositionManager.wasm",
+      "bytes": 49615,
+      "sha256": "5547847305e52793ed505edb98cdfd542e97031d869d504d0de434548fa2c63e",
+      "exports": [
+        "handleIncreaseLiquidity",
+        "handleDecreaseLiquidity",
+        "handleCollect",
+        "handleTransfer"
+      ]
+    },
+    {
+      "role": "pool_mapping_wasm",
+      "cid": "QmQgC18iXqZc5Jp78KZs6wNpk2oZvgbe9TeMQnH9K7eMah",
+      "path": "aerodrome-slipstream-base/reference/mappings/Pool.wasm",
+      "bytes": 77470,
+      "sha256": "778944cb5de130d35dd76718a2642a338e5637d1d3d58d5b64d7cdf096ed8272",
+      "exports": [
+        "handleInitialize",
+        "handleMint",
+        "handleBurn",
+        "handleSwap",
+        "handleFlash"
+      ]
+    }
+  ],
+  "protocol_identity": {
+    "authority": "deployed_addresses_manifest_event_signatures_and_abi_shape",
+    "classification": "aerodrome_slipstream_cl_base_not_canonical_uniswap_v3",
+    "factory_pool_created": "PoolCreated(indexed address,indexed address,indexed int24,address)",
+    "canonical_v3_pool_created": "PoolCreated(indexed address,indexed address,indexed uint24,int24,address)",
+    "pool_abi_specific_markers": [
+      "gauge():(address)",
+      "rewardGrowthGlobalX128():(uint256)",
+      "stakedLiquidity():(uint128)",
+      "unstakedFee():(uint24)"
+    ]
+  },
+  "source_provenance": {
+    "status": "unresolved_exact_revision_and_toolchain",
+    "manifest_repository_metadata": "https://github.com/Uniswap/uniswap-v3-subgraph",
+    "manifest_repository_is_exact_source_authority": false,
+    "search_scope": {
+      "observed_at": "2026-08-31",
+      "public_code_search": [
+        "deployment CID QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV",
+        "Factory mapping CID QmZQVsukQt6nXKctyy2WSMWN5grVXKph5fR7ahxS11Uebs",
+        "NonfungiblePositionManager mapping CID QmcoeFHridxYBRFnrZ33v3PRAgvqunBfxe9gsCPhJQB4dy",
+        "Pool mapping CID QmQgC18iXqZc5Jp78KZs6wNpk2oZvgbe9TeMQnH9K7eMah",
+        "unique helper name addMissingWhitelistedPools"
+      ],
+      "repository_history_inspected": "https://github.com/Uniswap/v3-subgraph",
+      "result": "no_exact_deployed_slipstream_source_match"
+    },
+    "exact_repository": null,
+    "exact_commit": null,
+    "exact_tree": null,
+    "exact_parent": null,
+    "exact_toolchain": null,
+    "byte_reproduction": false,
+    "reproduction_attempted": false,
+    "blocker": "The deployed IPFS closure does not name a source revision, and no public revision containing the exact Slipstream Factory/NPM/Pool modifications was identified.",
+    "public_lineage_probe": {
+      "repository": "https://github.com/Uniswap/v3-subgraph",
+      "probed_head_commit": "b4a0e8d34b8238482cadd3929ae88d3426a7067b",
+      "probed_head_tree": "6b32ebf65ca9fafc5fb3c04e3aa5247f1bdb6e21",
+      "nearest_schema_only_commit": "c63cb398075b1bb6d4acf9876f3561afdfd18d4e",
+      "nearest_schema_only_tree": "7be31c24df808f076d49ec7a03547bb8eb6db523",
+      "nearest_schema_only_relationship": "Its 20-entity/299-field logical schema matches retained Qma8, but it lacks the three Slipstream target fields and is not evidence of the deployed fork or build.",
+      "exact_deployment_cid_search_match": false,
+      "exact_mapping_cid_search_match": false,
+      "unique_add_missing_whitelisted_pools_source_match": false
+    }
+  },
+  "logical_contract": {
+    "entity_count": 20,
+    "field_count": 302,
+    "logical_sha256": "c072c3a609441de370bcb7340814b4e9dd9687043d7088f53a0dcb92ee8b23a0",
+    "all_entities_mutable": true,
+    "immutable_entities": [],
+    "retained_qma8": {
+      "cid": "Qma8a81T9XoX5Pbkrk8J3kxMhWdXJzFSYZge1wGi3QZBru",
+      "path": "uniswap-v3/graft-ancestry/v1/artifacts/Qma8a81T9XoX5Pbkrk8J3kxMhWdXJzFSYZge1wGi3QZBru",
+      "bytes": 19034,
+      "sha256": "ae03d0c6d3c6c03f87ae8e699b1e71804266c1d4adb7acbf4f4de5d48727c39c",
+      "entity_count": 20,
+      "field_count": 299,
+      "logical_sha256": "6c801fc4c141c0ae12dbb937652f0dd49c9be5bd3b1b3c8e38bdb92fe6efec5d"
+    },
+    "bidirectional_gap": {
+      "missing_entities": [],
+      "extra_entities": [],
+      "missing_fields": [],
+      "extra_fields": [
+        "Position.collectedToken0:BigDecimal!",
+        "Position.collectedToken1:BigDecimal!",
+        "Token.version:Int"
+      ],
+      "type_differences": [],
+      "mutability_differences": []
+    }
+  },
+  "layout_profile": {
+    "path": "aerodrome-slipstream-base/layout-profile-v1.json",
+    "bytes": 16938,
+    "sha256": "a47737893c3d9703f458426581878a0ca41ca48e75632a205e38c762f055e6d1"
+  },
+  "external_prior_art": {
+    "repository": "https://github.com/pinax-network/substreams-evm",
+    "revision": "970a665e15619de8ad7f686bd89412a1030d46dc",
+    "tree": "eac7466daba7f89a8c3b2e4742fcf24a155a2c24",
+    "aerodrome_module": "Solidly V2 event extractor; wrong PoolCreated ABI and no Graph entity writer",
+    "uniswap_v3_module": "Canonical V3 event extractor; wrong Factory ABI, no NPM handlers/call inputs, and no Graph entity writer",
+    "drop_in_package_safe": false
+  },
+  "kubernetes_evidence": {
+    "repository": "https://github.com/pinax-network/k8s-subgraphs",
+    "revision": "272b5babcc2717682e7becd7e3374b054063ee93",
+    "tree": "f3b343d9123adb3204d5a565dabfea414b9cfd96",
+    "path": "core/kan/graph-node-aerodrome.yaml",
+    "scope": "read_only_identity_and_current_placement_evidence_only",
+    "mutated": false
+  },
+  "truth_gates": {
+    "eligibility_complete": false,
+    "source_revision_pinned": false,
+    "source_reproducible": false,
+    "implementation_complete": false,
+    "runtime_complete": false,
+    "runtime_parity": false,
+    "logical_parity": false,
+    "history_complete": false,
+    "physical_profile_complete": false,
+    "physical_parity": false,
+    "poi_parity": false,
+    "backfill_ready": false,
+    "production_ready": false,
+    "readiness": false,
+    "issue_86_complete": false
+  },
+  "remaining_gates": [
+    "Fresh stable-pod 24-hour and 72-hour fastest-healthy-copy forecasts must both exceed 28 days or be non-converging.",
+    "Resolve the exact Slipstream source revision and build toolchain, or replace them with a complete independently reviewed retained-WASM behavior specification.",
+    "Implement the target-specific decoder, call inputs, stores, reducer, PoI, temporal writer, package, and schema without promoting any parity gate.",
+    "Prove canonical Base fixture, Graph Node differential, failure, save-order, PoI, VID, block-range, and PostgreSQL parity.",
+    "Validate only on a disposable paused target; compute, load, Kubernetes mutation, allocation, activation, and production require separate authorization."
+  ]
+}

@@ -18,3 +18,10 @@ records the explicit evidence gaps and all-false operational gates.
 assets rather than tracked files in the imported source tree. The corresponding bytes live
 under `artifacts/releases/uniswap-v4/`; mirroring them does not transfer future-release
 authority or make the old releases disposable.
+
+`aerodrome-slipstream-base-target.json` locks the complete deployed IPFS
+closure and static target profile for Aerodrome Slipstream CL on Base. Its
+manifest repository field is treated as metadata lineage only: no exact public
+Slipstream source revision or reproducible build toolchain was found. The
+record and verifier therefore keep source, runtime, parity, backfill,
+production, readiness, and issue-completion gates false.

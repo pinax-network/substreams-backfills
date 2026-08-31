@@ -114,6 +114,20 @@ only after this gate passes.
   Mint schema boundary and zero required-absence overlay. Value, preservation,
   Graph persistence, history, parity, backfill, production, and readiness
   remain false.
+- **`uniswap-v3/pool-swap/v2/`** — the complete conservative lexical static
+  `Pool.handleSwap` schema-API matrix across eight segments and all 299 schema
+  fields. Per mapping it binds 197 exact setter receiver flows, 201
+  nullable-expanded physical receiver-flow edges, 259 helper-expanded setter
+  paths, 144 unique stored setter fields, and exact profile-dependent 19/25,
+  22/28, or 23/29 lexical/expanded Graph-store ledgers. Cross-ledger
+  classification proves only same-group lexical order plus receiver-origin
+  overlap: 1,089 of 1,576 invocation classifications reference only
+  equal-origin-set stores and 487 reference overlap-only stores, while the
+  separate 1,720 setter-to-store edges split 1,233 / 487. Common execution,
+  branch correlation, and receiver must-alias are explicitly false.
+  Value, preservation, numeric/comparator, visibility, persistence,
+  last-writer, history, parity, backfill, production, and readiness remain
+  false.
 - **`uniswap-v3/pool-swap-core/v1/`** — retained-WAT call-flow
   evidence for `Pool.handleSwap` assignments of liquidity, tick, and sqrtPrice
   from exact ABI indices 5, 6, and 4 across all eight mappings. It binds modern

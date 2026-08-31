@@ -126,6 +126,13 @@ only after this gate passes.
   absence), structurally closes every handler/helper setter and support
   dataflow, and accounts for all early-return/partial-effect traces while
   leaving the four legacy paths and every broad readiness gate false.
+- **`uniswap-v3/factory-static/v2/`** — the composed all-profile Factory
+  static contract. It closes the four legacy paths by classifying all 44
+  reachable static setter sites and all 78 expanded legacy invocations by
+  exact receiver, key, kind, and payload, then composes modern v1 to reach
+  18/18 scoped Factory paths. Deployed legacy
+  static-array and `totalSupply` quirks are preserved; persistence, history,
+  parity, backfill, production, readiness, and issue checkboxes remain false.
 - **`uniswap-v3/factory-fee-growth-init/v1/`** — retained-WAT
   evidence for the two legacy Factory fee-growth setter-call operands and
   same-receiver Pool-save call. Four unique legacy mappings project to six segments

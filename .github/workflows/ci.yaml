@@ -192,6 +192,10 @@ jobs:
         run: |
           python3 scripts/verify-uniswap-v3-npm-observation-plan.py
           python3 -m unittest scripts.tests.test_uniswap_v3_npm_observation_plan
+      - name: Verify hermetic NPM provider-executor contract and refusals
+        run: |
+          python3 scripts/verify-uniswap-v3-npm-provider-executor.py
+          python3 -m unittest scripts.tests.test_uniswap_v3_npm_provider_executor
       - name: Test and build the source-pinned protocol-v3 parity client
         working-directory: scripts/parity-client
         run: |
@@ -562,6 +566,44 @@ jobs:
         run: |
           cargo +1.79.0 clean --manifest-path "$RUNNER_TEMP/uniswap-v3-npm-observation-plan/Cargo.toml"
           test ! -e "$RUNNER_TEMP/uniswap-v3-npm-observation-plan/target"
+      - name: Materialize the hermetic NPM provider executor
+        run: ./scripts/materialize-uniswap-v3-npm-provider-executor.sh "$RUNNER_TEMP/uniswap-v3-npm-provider-executor"
+      - name: Test and format-check phased provider execution
+        working-directory: ${{ runner.temp }}/uniswap-v3-npm-provider-executor
+        run: |
+          cargo +1.79.0 test --locked --target x86_64-unknown-linux-gnu
+          rustfmt +1.79.0 --edition 2021 --config-path rustfmt.toml --check \
+            src/npm_provider_executor.rs tests/npm_provider_executor.rs
+      - name: Enforce inherited Clippy inventory for the NPM provider executor
+        run: >-
+          python3 scripts/verify-uniswap-v3-writer-clippy.py
+          --baseline "$RUNNER_TEMP/uniswap-v3-configured"
+          --runtime "$RUNNER_TEMP/uniswap-v3-npm-provider-executor"
+          --target x86_64-unknown-linux-gnu
+      - name: Prove the provider executor leaves writer WASM and packages unchanged
+        working-directory: ${{ runner.temp }}/uniswap-v3-npm-provider-executor
+        run: |
+          cargo +1.79.0 build --locked --target wasm32-unknown-unknown --release
+          substreams pack -o "$RUNNER_TEMP/uniswap-v3-mainnet-npm-provider-executor-diagnostic.spkg" substreams.mainnet.yaml
+          substreams pack -o "$RUNNER_TEMP/uniswap-v3-base-npm-provider-executor-diagnostic.spkg" substreams.base.yaml
+          cmp "$RUNNER_TEMP/uniswap-v3-writer-runtime/target/wasm32-unknown-unknown/release/substreams_uniswap_v3.wasm" \
+            "$RUNNER_TEMP/uniswap-v3-npm-provider-executor/target/wasm32-unknown-unknown/release/substreams_uniswap_v3.wasm"
+          cmp "$RUNNER_TEMP/uniswap-v3-mainnet-writer-diagnostic.spkg" \
+            "$RUNNER_TEMP/uniswap-v3-mainnet-npm-provider-executor-diagnostic.spkg"
+          cmp "$RUNNER_TEMP/uniswap-v3-base-writer-diagnostic.spkg" \
+            "$RUNNER_TEMP/uniswap-v3-base-npm-provider-executor-diagnostic.spkg"
+          python3 "$GITHUB_WORKSPACE/scripts/verify-uniswap-v3-npm-provider-executor.py" \
+            --root "$GITHUB_WORKSPACE" \
+            --runtime "$RUNNER_TEMP/uniswap-v3-npm-provider-executor" \
+            --writer-runtime "$RUNNER_TEMP/uniswap-v3-writer-runtime" \
+            --mainnet-spkg "$RUNNER_TEMP/uniswap-v3-mainnet-npm-provider-executor-diagnostic.spkg" \
+            --base-spkg "$RUNNER_TEMP/uniswap-v3-base-npm-provider-executor-diagnostic.spkg" \
+            --writer-mainnet-spkg "$RUNNER_TEMP/uniswap-v3-mainnet-writer-diagnostic.spkg" \
+            --writer-base-spkg "$RUNNER_TEMP/uniswap-v3-base-writer-diagnostic.spkg"
+      - name: Release only the completed provider-executor target
+        run: |
+          cargo +1.79.0 clean --manifest-path "$RUNNER_TEMP/uniswap-v3-npm-provider-executor/Cargo.toml"
+          test ! -e "$RUNNER_TEMP/uniswap-v3-npm-provider-executor/target"
       - name: Test the parity client against all three real controlled-build packages
         working-directory: scripts/parity-client
         env:

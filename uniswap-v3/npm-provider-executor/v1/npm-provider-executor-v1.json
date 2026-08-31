@@ -1,0 +1,73 @@
+{
+  "format_version": 1,
+  "contract_version": "uniswap-v3-npm-provider-executor/v1",
+  "mode": "host-diagnostic-only",
+  "direct_dependencies": {
+    "npm_observation_plan_runtime": {
+      "path": "uniswap-v3/npm-observation-plan/contract-v1.json",
+      "contract_version": "uniswap-v3-npm-observation-plan-runtime/v1",
+      "raw_sha256": "8cd45b0c31994332e75bd25ccd515d961fe0de9d93ac30874f5a17c0f35b6c10"
+    },
+    "npm_observation_plan_semantics": {
+      "path": "uniswap-v3/npm-observation-plan/npm-observation-plan-v1.json",
+      "contract_version": "uniswap-v3-npm-observation-plan/v1",
+      "raw_sha256": "2d305149664b4c1e83d31a21a4131e585e44f8f25636d311ff741b9c437eaa3f"
+    },
+    "selected_npm_flash_field_semantics_v1": {
+      "path": "uniswap-v3/segment-field-semantics/v1/contract.json",
+      "contract_version": "uniswap-v3-segment-field-semantics/v1",
+      "raw_sha256": "4daa777ce2d14edd8a665a6a1239db8fb78957aa091174fd31f81b2c25136d4e"
+    }
+  },
+  "execution_contract": {
+    "inputs": "one validated NpmSourceBlock, immutable block-start ReducerState, resolved block call scope, and hermetic provider trait",
+    "phase_order": [
+      "all canonical Position requests",
+      "derive the closed plan",
+      "all canonical Pool requests",
+      "all ordinal-scoped canonical Token requests",
+      "exact-key preflight",
+      "certified joint reduction"
+    ],
+    "full_suffix": "every request in the conservative full-envelope plan is evaluated before reduction, including requests contributed only by events after a would-be fatal reducer prefix",
+    "provider_results": "Position Value/None, Pool Value/None, and Token Found/Missing are distinct resolved results; PossibleReorg, Unknown, and provider errors abort before reduction",
+    "provider_error_handling": "provider error payloads are discarded; only a sanitized error kind, phase, and optional canonical request index appear in the host error",
+    "key_ownership": "the executor constructs captured observation keys from canonical requests; the planner independently enforces exact resolved-frame key equality",
+    "audit_name": "canonical conservative request-evaluation trace",
+    "audit": "domain-separated deterministic SHA-256 binds source, planning state, scope, segment/profile identity, ordered request keys, resolved result classes, planned maxima, and reducer consumption coverage",
+    "provider_authority": "only an explicitly HermeticFixture provider is accepted",
+    "call_scopes": [
+      "exact EIP-1898 block hash",
+      "exact block-number fallback"
+    ],
+    "canonical_wire_schema_added": false,
+    "provider_status_serialized": false,
+    "provider_error_payload_serialized": false
+  },
+  "truth_boundary": {
+    "host_provider_executor_implemented": true,
+    "all_planned_conservative_observations_evaluated": true,
+    "post_fatal_reducer_suffix_evaluated": true,
+    "phased_provider_order_enforced": true,
+    "exact_plan_resolved_frame_key_equality_enforced": true,
+    "certified_joint_reducer_invoked_after_preflight": true,
+    "canonical_observation_execution_audit_returned": true,
+    "all_eight_npm_segment_profiles_exercised": true,
+    "live_provider_authority": false,
+    "exact_graph_call_trace_complete": false,
+    "exact_graph_ordering_complete": false,
+    "flash_integration_complete": false,
+    "factory_pool_combined_schedule_implemented": false,
+    "dynamic_datasource_stage_order_implemented": false,
+    "post_fatal_graph_execution_modeled": false,
+    "entity_changes_or_block_changes_implemented": false,
+    "output_or_store_or_graph_out_implemented": false,
+    "package_consumes_executor": false,
+    "checkpoint_or_graph_block_success_authorized": false,
+    "boundary_state_continuity_complete": false,
+    "physical_parity_complete": false,
+    "poi_parity_complete": false,
+    "backfill_ready": false,
+    "production_ready": false
+  }
+}

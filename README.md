@@ -74,6 +74,12 @@ only after this gate passes.
   ancestry segments. It proves the three saving profiles and recomputes the
   five historical no-save closures while leaving complete Pool history,
   runtime, parity, backfill, and production gates false.
+- **`uniswap-v3/pool-initialize/v2/`** — the complete path-qualified static
+  Initialize writer contract. It binds every reachable body, setter, save,
+  store target, helper, remove path, and indirect target; classifies all 299
+  schema fields in each of eight segments; and emits all 28 recursive diffs.
+  Imported host behavior, histories, parity, backfill, production, and both
+  issue acceptance checkboxes remain false.
 - **`uniswap-v3/pool-runtime/v1/`** — the shared all-profile Pool collection,
   allocator, module-state, and global-writer capsule. Handler semantics and all
   readiness gates remain false.

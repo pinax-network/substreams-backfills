@@ -220,6 +220,21 @@ cumulative selected-handler field count from 34 to 36, but Mint/Burn/Swap,
 complete Pool histories, runtime/oracle/parity, package consumption, backfill,
 and production remain false.
 
+The additive [`pool-initialize/v2/`](pool-initialize/v2/README.md) certificate
+then closes the complete path-qualified static Initialize writer surface. It
+accounts for 56 expanded field invocation sites, the exact three-save/five-no-Pool-
+save split, all Bundle/Pool/day/hour/Token transition and preservation paths,
+explicit no-direct-store outcomes for derived query fields, 299 schema outcomes
+in each of eight segments, and all 28 recursive diffs.
+The handler's Pool-save presence or absence and its order before subsequent
+helper Pool `store.get` paths are bound, but the returned store visibility or
+version is not. High/low creation writes and later comparator-return-controlled
+writes, the exact `BigInt#plus` result write, and nullable tick's null/unset
+setter branch are classified without assigning imported numeric meaning.
+Imported numeric and store semantics, rollback, actual populations, complete
+histories, continuity, parity, writer consumption, backfill, production, and
+issue acceptance remain false.
+
 The following additive
 [`factory-effects/v1`](factory-effects/v1/README.md) supplement closes only the
 six retained Factory effect-order and exact-argument paths. A shared handler-

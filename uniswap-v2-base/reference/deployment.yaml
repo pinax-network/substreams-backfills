@@ -1,0 +1,74 @@
+dataSources:
+  - kind: ethereum/contract
+    mapping:
+      abis:
+        - file:
+            /: /ipfs/QmZ55G1yYFzde8Vcq4cpLfNgPSEibpLi9aYCqS1jEvCKQ9
+          name: Factory
+        - file:
+            /: /ipfs/QmXuTbDkNrN27VydxbS2huvKRk62PMgUTdPDWkxcr2w7j2
+          name: ERC20
+        - file:
+            /: /ipfs/QmbHnhUFZa6qqqRyubUYhXntox1TCBxqryaBM1iNGqVJzT
+          name: ERC20SymbolBytes
+        - file:
+            /: /ipfs/QmQCP6Pdp1MqpwRv2qoPHuUTwZGy7Q3eDHg4w5kzwE9mBj
+          name: ERC20NameBytes
+      apiVersion: 0.0.7
+      entities:
+        - Pair
+        - Token
+      eventHandlers:
+        - event: PairCreated(indexed address,indexed address,address,uint256)
+          handler: handleNewPair
+      file:
+        /: /ipfs/QmeZQ3tfFC5seP2x8evCKyrnYKP5fSotua19vu83BuQBDB
+      kind: ethereum/events
+      language: wasm/assemblyscript
+    name: Factory
+    network: base
+    source:
+      abi: Factory
+      address: '0x8909Dc15e40173Ff4699343b6eB8132c65e18eC6'
+      startBlock: 6601915
+description: Uniswap is a decentralized protocol for automated token exchange on Ethereum.
+repository: https://github.com/Uniswap/uniswap-v2-subgraph
+schema:
+  file:
+    /: /ipfs/QmeyYQ8ZJnzuQsoXnizGXLyFSt7mcuRNkmNQxMv3pXiMnW
+specVersion: 0.0.8
+templates:
+  - kind: ethereum/contract
+    mapping:
+      abis:
+        - file:
+            /: /ipfs/QmbPLMADBP8L6LBVP3ZBQ8RgG7ghamD8DvbdUxHAjZrLgm
+          name: Pair
+        - file:
+            /: /ipfs/QmZ55G1yYFzde8Vcq4cpLfNgPSEibpLi9aYCqS1jEvCKQ9
+          name: Factory
+      apiVersion: 0.0.7
+      entities:
+        - Pair
+        - Token
+      eventHandlers:
+        - event: Mint(indexed address,uint256,uint256)
+          handler: handleMint
+        - event: Burn(indexed address,uint256,uint256,indexed address)
+          handler: handleBurn
+        - event: >-
+            Swap(indexed address,uint256,uint256,uint256,uint256,indexed
+            address)
+          handler: handleSwap
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+        - event: Sync(uint112,uint112)
+          handler: handleSync
+      file:
+        /: /ipfs/QmRi6hb3qXs6wQdDvDekFRVJM6QiJWB9z6q66U2xE3a6oj
+      kind: ethereum/events
+      language: wasm/assemblyscript
+    name: Pair
+    network: base
+    source:
+      abi: Pair

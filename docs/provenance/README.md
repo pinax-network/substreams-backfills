@@ -8,6 +8,13 @@ or identity no longer matches.
 Update a provenance record only as part of a reviewed source or target change.
 Do not rewrite a record merely to match unexpected local output.
 
+`uniswap-v2-base-target.json` pins the exact Uniswap V2 Base IPFS target and a bounded
+non-reproducible source search. Its adjacent source note explains why the behavioral source
+candidate and generic event decoder are evidence inputs rather than an exact source,
+implementation, or readiness claim. M8 orders #87, #89, and #93; M0 eligibility remains
+indeterminate and fail-closed under the both-cluster 24-hour/72-hour greater-than-28-day
+rule.
+
 The
 [`uniswap-v4-engine-v0.5.0`](uniswap-v4-engine-v0.5.0/README.md)
 directory is a closed, repository-only pre-execution capsule. Its copied JSON

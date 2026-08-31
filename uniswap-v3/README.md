@@ -276,6 +276,22 @@ persistence, complete history, host/store semantics, parity, backfill,
 production, and readiness remain false. Its exact base is canonical PR #72
 squash merge `982dd6f049af265cfed4c7b8edce1a90c936f319`.
 
+The
+[`factory-pool-price-init/v1`](factory-pool-price-init/v1/README.md)
+certificate adds bounded legacy initialization call-flow evidence for
+`Pool.token0Price` and `Pool.token1Price`. It binds the exact direct receiver,
+keys, `$g4`, `Value.fromBigDecimal`, and `TypedMap#set` operands and the
+same-receiver path to `Pool.save`. `$g4` is certified only as the pointer
+returned by imported `bigDecimal.fromString` for decoded string `"0"`; numeric
+semantics are not rederived. Six legacy and two modern segments produce 16
+records and 28 scoped pairwise diffs. After composition, 8 of 44 direct static
+sites and 9 of 78 expanded invocations are selected, leaving 36 and 69
+residual respectively; the shared `txCount` static site remains residual. The
+field ledger remains 36/230 and Factory closure remains 14/18. Mutation,
+persistence, complete history, host/store semantics, parity, backfill,
+production, and readiness remain false. Its exact base is canonical PR #73
+merge `19bbc277006cccaf960647dc0bb3c7344688a07f`.
+
 The sibling [`pool-runtime/v1`](pool-runtime/v1/README.md) supplement closes a
 runtime-only structural capsule for all eight retained Pool artifacts. It
 keeps separate modern exported-initializer and legacy native-start proofs. The

@@ -132,6 +132,12 @@ only after this gate passes.
   modern segments produce 40 records; the shared static site, mutation,
   persistence, history, issue completion, backfill, production, and readiness
   remain false.
+- **`uniswap-v3/factory-pool-price-init/v1/`** — retained-WAT evidence for the
+  two legacy Factory-created Pool BigDecimal price initialization flows. It
+  binds `$g4` only to the pointer returned by imported
+  `bigDecimal.fromString("0")`, not numeric semantics. Six legacy and two modern
+  segments produce 16 records; mutation, persistence, history, issue
+  completion, backfill, production, and readiness remain false.
 - **`common/`** — shared contracts extracted only after they reproduce the V4 reference.
   A family boundary must preserve ordered mapping operations and the inputs required for
   exact PoI; a coalesced `EntityChanges` stream is not assumed sufficient.

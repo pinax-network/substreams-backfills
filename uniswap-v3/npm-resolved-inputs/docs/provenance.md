@@ -18,3 +18,9 @@ The adapter is bound to these immutable repository artifacts:
 
 The checked-in verifier recomputes every binding from its source file and
 rejects any materialized runtime or writer/package identity drift.
+
+The adapter's static Base Factory is the deployed
+`33128a8fc17869897dce68ed026d694621f6fdfd`. The prior transposed byte tail is
+rejected by a source-level verifier mutation test, and the observation-plan
+harness carries a Base new-position `Value` row through exact Pool/Token
+preflight and joint reduction.

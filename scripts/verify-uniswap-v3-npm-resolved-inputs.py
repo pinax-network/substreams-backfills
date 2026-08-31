@@ -17,7 +17,7 @@ from pathlib import Path
 
 OVERLAY = Path("uniswap-v3/npm-resolved-inputs")
 CONTRACT_PATH = OVERLAY / "contract-v1.json"
-CONTRACT_SHA256 = "c5ad1556273b0c532f8d00e27c257250b596d022dc25dc4f9443c429303c0a1a"
+CONTRACT_SHA256 = "5df1d6f5d6852ff8aea9ef6b054be786d0df78021e6ed271439f744a330cfc1f"
 SEMANTICS_SHA256 = "01f7e87b22f52d84f8bb2fe806e963ecfb9dc196ab29804baee4c156eabbdbd9"
 SOURCE_RUNTIME_SHA256 = "701e83d3833356cff75ad4455553894e7695fb9f75f03e7c53eaa3da616b57d5"
 SOURCE_SEMANTICS_SHA256 = "267dfc6b7240c36cdf345553e02a4f7b5332fa70548349bc6ef4b3075b4fcb4b"
@@ -36,10 +36,10 @@ EXECUTION_ORDER_SHA256 = "241e970cfcec4d76610b29a10141d3bff2512d80454a6308594f3d
 
 README_SHA256 = "6531c8cd98f713da1f036f8bbfbba212163ff34a9acf2ac2a072838aee872845"
 ELIGIBILITY_SHA256 = "ffa5dc51a669ba8a4b8d548bb3c24c9588260fb3f0a21c7b7173129605460bb2"
-PROVENANCE_SHA256 = "9f3d94cc29ce9d523fbd91b40806be1971d1cbaadefd3a626065c926bb01349b"
+PROVENANCE_SHA256 = "89537d2fe898d0e487a1fccad4f54482766e51df2cd6613801e0a07520419dd4"
 PROTO_SHA256 = "e4859b67d590b1bcd2ce2d51ef90775c3729002300269a61b49d4bc31df6b299"
 BINDING_SHA256 = "d7979c2e98750c8fa1a5fbe4efcb11d7033e5b12b9c239a13963d20f485f3b66"
-SOURCE_CODE_SHA256 = "24fe3e9f7f94f156782394b5fc48407735cad2127ad9eec5bb9572fee35c4650"
+SOURCE_CODE_SHA256 = "01a836f7dc71b87e980f313b8cc61d1eb5529b7cbe3e590706ed8d2b0a8586c3"
 HARNESS_SHA256 = "b549e08bba3bef8ae18f6f0440a01efad0c811b2cfde50652446fd2dfd1a8f94"
 MATERIALIZER_SHA256 = "47273f52c892c7e491974e16a1199105516d1ef27f910d08b32a9a3a17e7227f"
 
@@ -396,6 +396,10 @@ def verify_overlay_static(root: Path) -> None:
     require(files == EXPECTED_OVERLAY_FILES, f"resolved-input overlay file set drift: {sorted(files)}")
     source = (root / OVERLAY / "src/npm_resolved_inputs.rs").read_text()
     compact = re.sub(r"\s+", "", source)
+    correct_base_factory = "0x33,0x12,0x8a,0x8f,0xc1,0x78,0x69,0x89,0x7d,0xce,0x68,0xed,0x02,0x6d,0x69,0x46,0x21,0xf6,0xfd,0xfd"
+    wrong_base_factory = "0x33,0x12,0x8a,0x8f,0xc1,0x78,0x69,0x89,0x7d,0xce,0x68,0xed,0x02,0x6d,0x69,0x46,0x21,0xf6,0xdf,0xd0"
+    require(correct_base_factory in compact, "exact Base Factory literal missing")
+    require(wrong_base_factory not in compact, "transposed Base Factory literal restored")
     require("pubfnmap_resolved_npm_inputs(source:&NpmSourceBlock," in compact, "source-only mapper signature drift")
     for required in (
         "ResolutionGate::Resolved",

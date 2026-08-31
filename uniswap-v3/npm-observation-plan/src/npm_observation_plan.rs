@@ -26,8 +26,8 @@ use crate::pb::npm_source::NpmSourceBlock;
 use crate::pb::writer::writer_event::Event;
 use crate::pb::writer::WriterEvent;
 
-pub const PLAN_SEMANTICS_SHA256: &str = "6e80d215e6e8fb22a8b1bf69172f973fb065d6a5605e5cdcb7d69298fbed41c9";
-pub const RESOLVED_INPUT_RUNTIME_SHA256: &str = "c5ad1556273b0c532f8d00e27c257250b596d022dc25dc4f9443c429303c0a1a";
+pub const PLAN_SEMANTICS_SHA256: &str = "2d305149664b4c1e83d31a21a4131e585e44f8f25636d311ff741b9c437eaa3f";
+pub const RESOLVED_INPUT_RUNTIME_SHA256: &str = "5df1d6f5d6852ff8aea9ef6b054be786d0df78021e6ed271439f744a330cfc1f";
 pub const RESOLVED_INPUT_SEMANTICS_SHA256: &str = "01f7e87b22f52d84f8bb2fe806e963ecfb9dc196ab29804baee4c156eabbdbd9";
 pub const NPM_SOURCE_RUNTIME_SHA256: &str = "701e83d3833356cff75ad4455553894e7695fb9f75f03e7c53eaa3da616b57d5";
 pub const NPM_HANDLER_REDUCER_RUNTIME_SHA256: &str = "6f46d5cca49506c3ee0622351324ccb62a459916f0e41f3772fe021e0e185dd6";

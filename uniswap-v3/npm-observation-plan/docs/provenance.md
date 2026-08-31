@@ -7,7 +7,7 @@ That exact head was subsequently squash-merged as
 
 Its direct runtime inputs are pinned by raw SHA-256:
 
-- resolved-input runtime: `c5ad1556273b0c532f8d00e27c257250b596d022dc25dc4f9443c429303c0a1a`
+- resolved-input runtime: `5df1d6f5d6852ff8aea9ef6b054be786d0df78021e6ed271439f744a330cfc1f`
 - resolved-input semantics: `01f7e87b22f52d84f8bb2fe806e963ecfb9dc196ab29804baee4c156eabbdbd9`
 - NPM source runtime: `701e83d3833356cff75ad4455553894e7695fb9f75f03e7c53eaa3da616b57d5`
 - joint reducer runtime: `6f46d5cca49506c3ee0622351324ccb62a459916f0e41f3772fe021e0e185dd6`
@@ -19,6 +19,11 @@ Its direct runtime inputs are pinned by raw SHA-256:
 - execution-order supplement: `241e970cfcec4d76610b29a10141d3bff2512d80454a6308594f3db23621cde2`
 
 The canonical plan semantic contract has raw SHA-256
-`1468ddf23c3c70a28c77e657cabaa1d91dd074c5927f37b7f3f49812471ec9df`.
+`2d305149664b4c1e83d31a21a4131e585e44f8f25636d311ff741b9c437eaa3f`.
 Provider failures, endpoint identity, retry metadata, and resolution status are
 explicitly excluded from canonical plan and resolved-frame bytes.
+
+The resolved-input runtime corrects the Base Factory literal to deployed
+`33128a8fc17869897dce68ed026d694621f6fdfd`. A Base new-position `Value`
+row is exercised through derived Pool/Token resolution, exact-key preflight,
+and joint reduction; the former transposed tail is rejected by the verifier.

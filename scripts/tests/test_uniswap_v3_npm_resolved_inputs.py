@@ -8,6 +8,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -98,6 +99,21 @@ class NpmResolvedInputContractTests(unittest.TestCase):
         self.assertNotIn(sentinel, content)
         self.assertNotIn(("Position" + "NullKind").encode(), content)
         self.assertFalse((ROOT / "uniswap-v3/source/proto/uniswap/npm/inputs/v1/npm_resolved_inputs.proto").exists())
+
+    def test_transposed_base_factory_literal_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="npm-resolved-base-factory-drift-") as temporary:
+            root = Path(temporary)
+            target = root / VERIFIER.OVERLAY
+            shutil.copytree(ROOT / VERIFIER.OVERLAY, target)
+            source = target / "src/npm_resolved_inputs.rs"
+            source.write_text(
+                source.read_text().replace(
+                    "0x21, 0xf6, 0xfd,\n    0xfd,",
+                    "0x21, 0xf6, 0xdf,\n    0xd0,",
+                )
+            )
+            with self.assertRaisesRegex(VERIFIER.VerificationError, "Base Factory"):
+                VERIFIER.verify_overlay_static(root)
 
     def test_semantics_use_complete_source_and_exact_initial_blocks(self) -> None:
         mapping = self.semantics["mapping_contract"]

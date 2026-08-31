@@ -1,22 +1,32 @@
 # All-handlers v1 eligibility
 
-## Provisional claim
+## Candidate claim
 
-This candidate can publish, after canonical resealing, a complete conservative
+This candidate needs no further component reseal for its complete conservative
 aggregation of ten static handler certificates over eight ancestry segments
-and the directly reconstructed 299-field schema. The exact certificate is
+and the directly reconstructed 299-field schema. That component result is not
+aggregate publication. The exact certificate is
 23,920 handler/segment/field cells with a 5,326/1,665/15,889/1,040 partition
 for component setter/direct-write authority, component nonsetter
 classification, outside certified effect scope, and derived fields. This
 normalization does not assert one uniform matching-Store path across the
 heterogeneous component certificates.
 
-It is not presently a canonical publication. Every selected root is present
-in one linear local ancestry through Liquidity, every selected predecessor
-edge matches, and every pinned Git object is available and digest-bound.
-Corrected Transfer and Collect are canonical. Corrected Liquidity is the sole
-provisional component; the aggregate must be regenerated after its canonical
-squash merge.
+It is not presently a canonical aggregate publication. Every selected root is
+canonical in one linear ancestry through corrected Liquidity, every selected
+predecessor edge matches, and every pinned Git object is available and
+digest-bound. The component reseal queue is empty, which is the entire meaning
+of `canonical_reseal_required=false`. Exact successful `main` push CI is bound
+for all nine canonical component heads, so
+`component_ci_validation_complete=true`.
+
+Merging the aggregate to `main` is necessary but not sufficient for canonical
+publication. A separate post-merge content-addressed publication seal must
+bind the exact canonical aggregate squash commit and tree plus a successful
+exact-head main-push CI run. This pre-merge candidate cannot supply those
+content-addressed bindings or auto-promote on merge, so
+`post_merge_aggregate_publication_seal_required=true` and
+`canonical_publication_root_complete=false`.
 
 ## Offline completion boundary
 
@@ -24,6 +34,8 @@ The static claim includes:
 
 - exact commit, tree, parent, contract, verifier, test and transitive-source
   digests for nine component artifacts covering ten handlers;
+- exact successful `main` push CI at every canonical component head: 6/6 jobs
+  per run, 171 through 179 successful steps, and zero failed or skipped steps;
 - default isolated regeneration of each pinned component verifier;
 - direct parsing of all three retained schemas into the same ordered 20-entity,
   299-field, 286-stored/13-derived catalog;
@@ -55,8 +67,9 @@ The static claim includes:
 
 The following remain false:
 
-- final canonical Liquidity ancestry or a final component-manifest digest;
-- complete component CI status at the provisional seal point;
+- canonical publication of this aggregate candidate;
+- the exact canonical aggregate squash commit and tree, successful exact-head
+  main-push CI, and separate post-merge publication seal that must bind them;
 - imported host behavior, numeric/comparator meaning, conversion values,
   arbitrary aliases or source-package identity;
 - a uniform setter-to-matching-Store path, common execution path, branch
@@ -95,7 +108,9 @@ shared-entity last writer.
 
 ## Issue effect
 
-This certificate changes no issue checkbox:
+This certificate completes no additional #37/#38 checkbox and neither issue is
+closed. Its `checkboxes_completed_by_this_certificate` list remains empty for
+both issues; previously completed live criteria are not rolled back or restated:
 
 - #37 criterion 1 remains incomplete because required-nonempty and runtime
   population authority are not complete.

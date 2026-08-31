@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Build or verify the provisional Uniswap V3 all-handlers v1 certificate.
+"""Build or verify the candidate Uniswap V3 all-handlers v1 certificate.
 
 The certificate is intentionally static and fail closed.  It composes exact
 component contracts from pinned Git objects, reconstructs the shared schema
 from the three retained GraphQL files, and projects every handler/segment/
-field cell into one conservative vocabulary.  It does not promote component
-roots to canonical ancestry, nor does it claim Graph Store or runtime truth.
+field cell into one conservative vocabulary.  Every component root is pinned
+to canonical ancestry, but the aggregate candidate is not itself promoted to
+canonical publication and no Graph Store or runtime truth is claimed.
 """
 
 from __future__ import annotations
@@ -27,7 +28,7 @@ from typing import Any
 REPOSITORY = Path(__file__).resolve().parents[1]
 CONTRACT_PATH = Path("uniswap-v3/all-handlers/v1/contract.json")
 CONTRACT_VERSION = "uniswap-v3-all-handlers/v1"
-IMPLEMENTATION_BASE_COMMIT = "d5497c9b89fd2c0eb6e5992c1e2e6434c9159883"
+IMPLEMENTATION_BASE_COMMIT = "09555b21c1a18767107b92ae7bef20dfb2da77c2"
 IMPLEMENTATION_BASE_TREE = "4adcdd646b04ca49631fe33f4b8330bff6d7f905"
 
 SEGMENT_FIELD_COMMIT = "86ba5eaf978b4751011cdcbc8d764814105c5d02"
@@ -104,9 +105,9 @@ HANDLERS = {
 TRANSACTION_FIELDS = ("id", "blockNumber", "timestamp", "gasUsed", "gasPrice")
 TRANSACTION_COMMON_HIT_OR_MISS_FIELDS = TRANSACTION_FIELDS[1:]
 
-# These are exact local/canonical identities. The verifier independently
+# These are exact canonical identities. The verifier independently
 # requires every selected root to be reachable from IMPLEMENTATION_BASE_COMMIT
-# while preserving the separate final-publication status of each component.
+# while preserving the separate publication status of the aggregate candidate.
 COMPONENTS: dict[str, dict[str, Any]] = {
     "factory": {
         "commit": "afaf3af9c25db029091d7699befe557276a442c7",
@@ -121,7 +122,7 @@ COMPONENTS: dict[str, dict[str, Any]] = {
         "test": "scripts/tests/test_uniswap_v3_factory_static_v2.py",
         "test_sha256": "2ca6b005465c7bff7af649d27ae1ff8eda61e69b00fc05ef55888989c91fd00a",
         "canonical_component": True,
-        "validation_status": "canonical component; exact post-merge validation previously passed",
+        "validation_status": "canonical component; exact main push CI run 33359148975 at head afaf3af9c25db029091d7699befe557276a442c7: 6/6 jobs and 171/171 steps succeeded; zero failed or skipped steps",
         "handlers": ["factory"],
         "selected_predecessor": None,
     },
@@ -138,7 +139,7 @@ COMPONENTS: dict[str, dict[str, Any]] = {
         "test": "scripts/tests/test_uniswap_v3_pool_initialize_v2.py",
         "test_sha256": "f9fdb08d567c2024abb637c373c58257171eb00153ceca8ec386a4ce8e5393ed",
         "canonical_component": True,
-        "validation_status": "canonical component; exact post-merge validation previously passed",
+        "validation_status": "canonical component; exact main push CI run 33362881880 at head 42c6d01f2e719993e41fca9db51be55d33da734c: 6/6 jobs and 172/172 steps succeeded; zero failed or skipped steps",
         "handlers": ["initialize"],
         "selected_predecessor": "factory",
     },
@@ -155,7 +156,7 @@ COMPONENTS: dict[str, dict[str, Any]] = {
         "test": "scripts/tests/test_uniswap_v3_pool_flash_v2.py",
         "test_sha256": "1efdb3f5d295dc3d7e10f3c3743473cc6d449354d6ac01601ccf827910739ed2",
         "canonical_component": True,
-        "validation_status": "canonical component; ancestor of implementation base; exact post-merge push CI run 33371981478 passed",
+        "validation_status": "canonical component; exact main push CI run 33371981478 at head 796aa3ebd50a56a7b36a588a70fb0aa7fa092818: 6/6 jobs and 173/173 steps succeeded; zero failed or skipped steps",
         "handlers": ["flash"],
         "selected_predecessor": "initialize",
     },
@@ -172,7 +173,7 @@ COMPONENTS: dict[str, dict[str, Any]] = {
         "test": "scripts/tests/test_uniswap_v3_pool_burn_v2.py",
         "test_sha256": "3559810ab7fcc2a2ac4b0ad632ca743bd51ca3010458c3d129d1ee139b42d36d",
         "canonical_component": True,
-        "validation_status": "canonical component; exact post-merge validation passed",
+        "validation_status": "canonical component; exact main push CI run 33377759861 at head 54bfab587a55a7c81204a166990c03cb659ae113: 6/6 jobs and 174/174 steps succeeded; zero failed or skipped steps",
         "handlers": ["burn"],
         "selected_predecessor": "flash",
     },
@@ -189,7 +190,7 @@ COMPONENTS: dict[str, dict[str, Any]] = {
         "test": "scripts/tests/test_uniswap_v3_pool_mint_v2.py",
         "test_sha256": "95b9f614419785f29b573529c1fa98c9986bd97138c5c5ddaa4101f0a36c46b7",
         "canonical_component": True,
-        "validation_status": "canonical component; exact post-merge push CI run 33382459957 passed",
+        "validation_status": "canonical component; exact main push CI run 33382459957 at head 7fdcdc915ab683c1081df307ef867cfde1f1bebd: 6/6 jobs and 175/175 steps succeeded; zero failed or skipped steps",
         "handlers": ["mint"],
         "selected_predecessor": "burn",
     },
@@ -206,7 +207,7 @@ COMPONENTS: dict[str, dict[str, Any]] = {
         "test": "scripts/tests/test_uniswap_v3_pool_swap_v2.py",
         "test_sha256": "97cb5508d4f8ae79fb822db75c9dffffd79b389e117c05049f102b9f49bd4477",
         "canonical_component": True,
-        "validation_status": "canonical component; exact post-merge push CI run 33406602088 passed",
+        "validation_status": "canonical component; exact main push CI run 33406602088 at head 8ac009d06ef05d077430aadac5782c6391a0ca0c: 6/6 jobs and 176/176 steps succeeded; zero failed or skipped steps",
         "handlers": ["swap"],
         "selected_predecessor": "mint",
     },
@@ -223,7 +224,7 @@ COMPONENTS: dict[str, dict[str, Any]] = {
         "test": "scripts/tests/test_uniswap_v3_npm_transfer_v2.py",
         "test_sha256": "f81b0ac2f374d97eb0a8f45f2909c43f9de242380ac2936b3456a9845d0af72f",
         "canonical_component": True,
-        "validation_status": "canonical component; candidate and squash-merge trees are byte-identical and exact post-merge validation passed",
+        "validation_status": "canonical component; exact main push CI run 33418534257 at head 0398e6184dc07fe848fcfef4ecd04ac0b64e8ece: 6/6 jobs and 177/177 steps succeeded; zero failed or skipped steps",
         "handlers": ["transfer"],
         "selected_predecessor": "swap",
     },
@@ -240,12 +241,12 @@ COMPONENTS: dict[str, dict[str, Any]] = {
         "test": "scripts/tests/test_uniswap_v3_npm_collect_v2.py",
         "test_sha256": "9ff074870c7e7ac6967196655cff757f0b888fb632b8017ed98fd756de161c6d",
         "canonical_component": True,
-        "validation_status": "canonical component; candidate and squash-merge trees are byte-identical; exact post-merge push CI run 33429253753 passed 6/6 jobs and 178/178 steps",
+        "validation_status": "canonical component; exact main push CI run 33429253753 at head 5ad75eca9857176e9a9ecdfa6aeff6dd2a763312: 6/6 jobs and 178/178 steps succeeded; zero failed or skipped steps",
         "handlers": ["collect"],
         "selected_predecessor": "transfer",
     },
     "liquidity": {
-        "commit": "d5497c9b89fd2c0eb6e5992c1e2e6434c9159883",
+        "commit": "09555b21c1a18767107b92ae7bef20dfb2da77c2",
         "tree": "4adcdd646b04ca49631fe33f4b8330bff6d7f905",
         "parent": "5ad75eca9857176e9a9ecdfa6aeff6dd2a763312",
         "path": "uniswap-v3/npm-liquidity/v2/contract.json",
@@ -256,8 +257,8 @@ COMPONENTS: dict[str, dict[str, Any]] = {
         "verifier_sha256": "ea980ae8c3af51684eb72c237eaf622d13070c47368bb4ce0909e3109800b373",
         "test": "scripts/tests/test_uniswap_v3_npm_liquidity_v2.py",
         "test_sha256": "9f3ffb866ac8ca8980185c9f9c0dba43e35914d6905c0633e2266aec7ca257f9",
-        "canonical_component": False,
-        "validation_status": "corrected provisional local candidate; focused 39, inherited 145, full discovery 1001, direct verifier, Rust and detached regeneration passed",
+        "canonical_component": True,
+        "validation_status": "canonical component; exact main push CI run 33438242374 at head 09555b21c1a18767107b92ae7bef20dfb2da77c2: 6/6 jobs and 179/179 steps succeeded; zero failed or skipped steps",
         "handlers": ["increase", "decrease"],
         "selected_predecessor": "collect",
     },
@@ -296,7 +297,7 @@ EXPECTED_ENTITY_AUTHORITIES = {
 }
 
 TRUE_FLAGS = (
-    "exact_provisional_component_roots_bound",
+    "exact_canonical_component_roots_bound",
     "component_contract_and_verifier_digests_bound",
     "normalized_component_native_categories_preserved",
     "repaired_swap_exact_receiver_origin_overlap_taxonomy_bound",
@@ -311,13 +312,14 @@ TRUE_FLAGS = (
     "manifest_handler_declaration_order_directly_parsed",
     "graph_node_reference_order_model_bound",
     "handler_and_aggregate_recursive_diffs_complete",
-    "provisional_reseal_requirement_machine_bound",
+    "component_canonicality_and_publication_boundary_bound",
+    "all_component_roots_canonical_and_ancestral",
+    "component_ci_validation_complete",
+    "post_merge_aggregate_publication_seal_required",
 )
 
 FALSE_FLAGS = (
-    "all_component_roots_canonical_and_ancestral",
     "canonical_publication_root_complete",
-    "component_ci_validation_complete",
     "source_package_identity_proven",
     "imported_host_semantics_rederived",
     "imported_numeric_or_comparator_semantics_rederived",
@@ -1371,15 +1373,15 @@ def expected_contract_from_sources(root: Path, sources: dict[str, Any]) -> dict[
     require(sum(len(item["handlers"]) for item in component_manifest) == 10, "component handler coverage drift")
     require(all(item["parent_matches_selected_predecessor"] for item in component_manifest), "selected predecessor edge drift")
     require(all(item["reachable_from_implementation_base"] for item in component_manifest), "component ancestry closure drift")
-    require(not all(item["canonical_component_commit"] for item in component_manifest), "provisional component roots unexpectedly canonical")
+    require(all(item["canonical_component_commit"] for item in component_manifest), "noncanonical component root detected")
     require(
         {item["component"] for item in component_manifest if item["canonical_component_commit"]}
-        == {"factory", "initialize", "flash", "burn", "mint", "swap", "transfer", "collect"},
+        == {"factory", "initialize", "flash", "burn", "mint", "swap", "transfer", "collect", "liquidity"},
         "canonical component set drift",
     )
     require(
         {item["component"] for item in component_manifest if item["provisional_for_final_publication"]}
-        == {"liquidity"},
+        == set(),
         "provisional component set drift",
     )
 
@@ -1439,7 +1441,7 @@ def expected_contract_from_sources(root: Path, sources: dict[str, Any]) -> dict[
     return {
         "format_version": 1,
         "contract_version": CONTRACT_VERSION,
-        "mode": "provisional-complete-conservative-all-handler-schema-api-classification-matrix",
+        "mode": "candidate-complete-conservative-all-handler-schema-api-classification-matrix",
         "scope": {
             "networks": ["mainnet", "base"],
             "handler_count": 10,
@@ -1459,7 +1461,20 @@ def expected_contract_from_sources(root: Path, sources: dict[str, Any]) -> dict[
         "authority_contract": {
             "implementation_base_commit": IMPLEMENTATION_BASE_COMMIT,
             "implementation_base_tree": IMPLEMENTATION_BASE_TREE,
-            "provisional_root_boundary": "the current base contains every selected component in one linear ancestry; components through corrected Transfer and Collect are canonical, while corrected Liquidity is the exact tested candidate and final publication must be regenerated after its canonical squash merge",
+            "component_publication_boundary": "canonical_reseal_required=false means only that the canonical Liquidity base contains every selected component in one linear canonical ancestry with matching predecessor edges and no component reseal remains; it does not publish the aggregate or complete its canonical publication root",
+            "aggregate_publication_boundary": {
+                "merge_to_main_required": True,
+                "merge_to_main_sufficient": False,
+                "post_merge_aggregate_publication_seal_required": True,
+                "post_merge_aggregate_publication_seal_complete": False,
+                "required_seal_bindings": [
+                    "exact_canonical_aggregate_squash_commit",
+                    "exact_canonical_aggregate_squash_tree",
+                    "successful_exact_head_main_push_ci_run",
+                ],
+                "auto_promote_on_merge": False,
+                "canonical_publication_root_complete": False,
+            },
             "factory_projection_boundary": "Factory #77 natively certifies only 59 written fields plus handler-local absence of Pool.tick; the other 226 stored fields are outside that 60-field contract, not asserted outside runtime store reachability",
             "normalized_category_boundary": "the four categories are conservative handler-relative normalization buckets: setter/direct-write authority, component-native nonsetter classification, outside certified scope, and derived; they preserve exact source-native categories but do not uniformly prove a matching Store path, common execution, branch correlation, receiver must-alias, visibility or persistence",
             "swap_receiver_boundary": "repaired Swap binds exact setter receiver flows, exact store target/receiver/value flows, and lexically later same-group receiver-origin overlap; common execution, branch correlation and receiver must-alias remain false",
@@ -1467,14 +1482,15 @@ def expected_contract_from_sources(root: Path, sources: dict[str, Any]) -> dict[
             "overlay_boundary": "handler-relative repeated evidence, distinct handler union, and population-required absence are separate denominators",
             "physical_ledger_boundary": "component physical ledgers have heterogeneous unique, weighted, expanded and site denominators and are retained separately rather than summed",
             "order_boundary": "manifest handler declaration order and the Graph Node reference-stage model are bound without claiming target runtime identity, a flattened global schedule, Store visibility, or last writer",
-            "issue_boundary": "this static aggregation completes no issue 37 or issue 38 checkbox and closes no issue",
+            "issue_boundary": "this static aggregation completes no additional issue #37 or #38 checkbox; checkboxes_completed_by_this_certificate remains empty for both and neither issue is closed",
         },
         "source_roots": source_roots,
         "source_roots_sha256": canonical_sha256(source_roots),
         "component_manifest": component_manifest,
         "component_manifest_sha256": canonical_sha256(component_manifest),
-        "canonical_reseal_required": True,
-        "canonical_reseal_order": ["liquidity", "all-handlers"],
+        "canonical_reseal_required": False,
+        "canonical_reseal_order": [],
+        "post_merge_aggregate_publication_seal_required": True,
         "schema_catalog": sources["schema"],
         "handler_catalog": [
             {
@@ -1508,9 +1524,9 @@ def expected_contract_from_sources(root: Path, sources: dict[str, Any]) -> dict[
         "diffs": diffs,
         "issue_mapping": issue_mapping,
         "residual_blockers": {
-            "provisional_roots": [
-                "all selected roots are present in one linear ancestry; corrected Transfer and Collect are canonical, while corrected Liquidity requires canonical landing/reseal",
-                "the final component-manifest digest must be regenerated after the canonical composition exists",
+            "publication": [
+                "merging this aggregate to main as an exact canonical squash commit and tree is necessary but not sufficient for canonical publication",
+                "after merge, a separate content-addressed publication seal must bind the exact canonical aggregate squash commit and tree plus a successful exact-head main-push CI run; this pre-merge candidate cannot auto-promote on merge",
             ],
             "semantic": [
                 "imported host returns, numeric/comparator meaning, arbitrary aliases, Store visibility/persistence/rollback, post-fatal execution and field histories remain false",
@@ -1520,7 +1536,7 @@ def expected_contract_from_sources(root: Path, sources: dict[str, Any]) -> dict[
             ],
             "execution": [
                 "target runtime, integrated scheduler/output/Store/package, continuity, provider/oracle, parity, checkpoint, backfill, deployment, production and readiness remain false",
-                "no issue checkbox is completed and neither issue is closed",
+                "this certificate completes no additional #37 or #38 checkbox and neither issue is closed",
             ],
         },
         "truth_boundary": truth_boundary(),
@@ -1607,12 +1623,12 @@ def main() -> int:
         print(f"Uniswap V3 all-handlers v1 verification failed: {error}", file=sys.stderr)
         return 1
     print(
-        "verified provisional Uniswap V3 all-handlers v1: "
+        "verified candidate Uniswap V3 all-handlers v1: "
         f"{result['scope']['handler_count']} handlers x "
         f"{result['scope']['segment_count']} segments x "
         f"{result['scope']['schema_field_count']} fields = "
-        f"{result['scope']['field_cell_count']} cells; canonical reseal required; "
-        "no issue checkbox completed"
+        f"{result['scope']['field_cell_count']} cells; all component roots canonical; aggregate publication pending; "
+        "this certificate completes no additional #37/#38 checkbox; neither issue closed"
     )
     return 0
 

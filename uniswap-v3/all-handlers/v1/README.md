@@ -1,6 +1,6 @@
 # Uniswap V3 all-handlers v1 certificate
 
-This directory contains the provisional complete, conservative static
+This directory contains the candidate complete, conservative static
 schema-API normalization for all ten retained Uniswap V3 handlers:
 
 - Factory `handlePoolCreated`;
@@ -14,23 +14,32 @@ The matrix covers eight mainnet/Base ancestry segments and reconstructs the
 denominator is therefore `10 * 8 * 299 = 23,920` handler/segment/field cells.
 This is a static certificate, not an integrated runtime or a backfill.
 
-## Provisional publication status
+## Candidate publication status
 
-The implementation base is the exact tested Liquidity candidate
-`d5497c9b89fd2c0eb6e5992c1e2e6434c9159883`, tree
+The implementation base is the canonical corrected Liquidity commit
+`09555b21c1a18767107b92ae7bef20dfb2da77c2`, tree
 `4adcdd646b04ca49631fe33f4b8330bff6d7f905`. Every selected component is an
-ancestor of that base and every selected predecessor edge matches. The
-verifier loads exact pinned Git objects and fails closed when any object,
-contract, verifier, test, tree, parent, ancestry edge, or digest is unavailable
-or changed.
+ancestor of that base, every selected predecessor edge matches, and every
+component root is canonical. The verifier loads exact pinned Git objects and
+fails closed when any object, contract, verifier, test, tree, parent, ancestry
+edge, or digest is unavailable or changed.
 
-Corrected Transfer and Collect are canonical. This candidate is not the
-canonical publication because corrected Liquidity remains an exact tested
-candidate rather than a canonical squash merge. It is linearly composed here
-and must land canonically before the aggregate is regenerated one final time. The contract keeps
-`all_component_roots_canonical_and_ancestral=false`,
-`canonical_publication_root_complete=false`, and
-`component_ci_validation_complete=false`.
+No component reseal remains. `canonical_reseal_required=false` means only that
+the selected component sequence needs no further reseal; it does not publish
+the aggregate. Merging the aggregate to `main` is necessary but not sufficient
+for canonical publication. After merge, a separate post-merge content-addressed
+publication seal must bind the exact canonical aggregate squash commit and
+tree plus a successful exact-head main-push CI run. Until that separate seal is
+committed, this candidate cannot auto-promote and the contract keeps
+`all_component_roots_canonical_and_ancestral=true`,
+`canonical_reseal_required=false`, and
+`canonical_publication_root_complete=false`, while
+`post_merge_aggregate_publication_seal_required=true`. The separate
+`component_ci_validation_complete=true` gate records exact successful `main`
+push runs at all nine canonical component heads, including canonical Liquidity
+run `33438242374` with 6/6 jobs, 179/179 successful steps, and no failed or
+skipped steps. Runtime, history, parity, backfill, deployment, production, and
+readiness gates remain false.
 
 ## Exact normalized matrix
 
@@ -127,6 +136,8 @@ python3 -m unittest scripts.tests.test_uniswap_v3_all_handlers_v1
 post-full detached byte check. It still verifies every pinned Git object and
 digest, but it is not the full publication gate.
 
-No issue #37 or #38 checkbox is completed and neither issue is closed. See
+This certificate completes no additional #37/#38 checkbox; neither issue is
+closed. Existing criteria completed by earlier work are outside this
+certificate's scoped empty checkbox list. See
 [eligibility](docs/eligibility.md) for the fail-closed boundary and
 [provenance](docs/provenance.md) for exact component and source roots.

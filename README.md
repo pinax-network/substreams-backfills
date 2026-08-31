@@ -78,15 +78,15 @@ only after this gate passes.
   Initialize writer contract. It binds every reachable body, setter, save,
   store target, helper, remove path, and indirect target; classifies all 299
   schema fields in each of eight segments; and emits all 28 recursive diffs.
-  Imported host behavior, histories, parity, backfill, production, and both
-  issue acceptance checkboxes remain false.
+  Imported host behavior, histories, parity, backfill, and production remain
+  false; this certificate completes no additional #37/#38 checkbox.
 - **`uniswap-v3/npm-transfer/v2/`** — the complete path-qualified static
   `NonfungiblePositionManager.handleTransfer` schema-API effect contract for
   eight segment bindings and six unique retained WASMs. It separates physical
   sites from 38 stored field authorities, classifies 299 outcomes per segment,
   binds all six relation paths and 28 recursive diffs, and leaves values,
-  persistence, histories, runtime, parity, backfill, readiness, and both issue
-  acceptance checkboxes false.
+  persistence, histories, runtime, parity, backfill, and readiness false; this
+  certificate completes no additional #37/#38 checkbox.
 - **`uniswap-v3/npm-collect/v2/`** — the complete path-qualified static
   `NonfungiblePositionManager.handleCollect` schema-API effect contract for all
   eight ancestry bindings and six unique retained NPM WASMs. It seals five
@@ -94,7 +94,7 @@ only after this gate passes.
   38 stored field authorities, nine relation/Transaction paths, 299 outcomes
   per segment and all 28 recursive diffs. Imported values, numeric meaning,
   store visibility/persistence, histories, runtime, parity, backfill, readiness
-  and both issue acceptance checkboxes remain false.
+  remain false; this certificate completes no additional #37/#38 checkbox.
 - **`uniswap-v3/npm-liquidity/v2/`** — paired complete path-qualified static
   contracts for `handleIncreaseLiquidity` and `handleDecreaseLiquidity` across
   eight bindings and six retained NPM WASMs. Each handler independently seals
@@ -102,9 +102,9 @@ only after this gate passes.
   labeled 2,392-outcome union never implies handler ordering or composition.
   The slice binds guards, Token/null/fatal/trap/store prefixes, nine relations,
   28 cross-segment axes and eight within-segment diffs while leaving arithmetic,
-  visibility, persistence, histories, runtime, parity, backfill, readiness and
-  both issue acceptance checkboxes false.
-- **`uniswap-v3/all-handlers/v1/`** — the provisional complete static
+  visibility, persistence, histories, runtime, parity, backfill, and readiness
+  false; this certificate completes no additional #37/#38 checkbox.
+- **`uniswap-v3/all-handlers/v1/`** — the candidate complete static
   aggregation of Factory, five Pool, and four NPM handlers over eight retained
   segments and the directly reconstructed 299-field schema: 23,920 exact
   handler/segment/field cells. It separates handler-relative overlays from
@@ -112,11 +112,15 @@ only after this gate passes.
   conservatively adapts repaired Swap receiver-origin categories and corrected
   NPM Transaction hit/miss controls, binds raw manifest declaration order and
   all handler/aggregate diffs, and retains heterogeneous physical ledgers
-  without summing them. Corrected Transfer and Collect are canonical; the exact
-  tested Liquidity candidate remains the sole provisional component and requires
-  canonical resealing.
-  Runtime, Store behavior, histories, parity, backfill, readiness, both issue
-  acceptance checkboxes, and issue closure remain false.
+  without summing them. Factory through corrected Liquidity are canonical in
+  one exact ancestry and no component reseal remains. That
+  `canonical_reseal_required=false` result applies only to component resealing.
+  Merging the aggregate to `main` is necessary but not sufficient for canonical
+  publication: a separate post-merge content-addressed publication seal must
+  bind the exact canonical squash commit and tree plus successful exact-head
+  main-push CI. Runtime, Store behavior, histories, parity, backfill, and
+  readiness remain false. This aggregate completes no additional #37/#38
+  checkbox; neither issue is closed.
 - **`uniswap-v3/pool-runtime/v1/`** — the shared all-profile Pool collection,
   allocator, module-state, and global-writer capsule. Handler semantics and all
   readiness gates remain false.

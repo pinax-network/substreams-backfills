@@ -283,7 +283,7 @@ store visibility/persistence, rollback, histories, runtime, continuity, parity,
 backfill, readiness and issue acceptance remain false.
 
 The additive [`all-handlers/v1/`](all-handlers/v1/README.md) certificate is a
-provisional complete static aggregation of all ten retained handlers across
+candidate complete static aggregation of all ten retained handlers across
 eight mainnet/Base segments and the directly reconstructed 299-field schema.
 It binds exactly 23,920 handler/segment/field cells, partitioned as 5,326
 component setter/direct-write-authority, 1,665 component nonsetter, 15,889
@@ -302,13 +302,16 @@ binds repaired Swap's mutually exclusive receiver-origin-overlap taxonomy and
 corrected NPM Transaction hit/miss controls without promoting common execution,
 must-alias, Store visibility, or last-writer semantics. Physical component
 ledgers retain their native denominators and are not globally summed. Every
-selected root is present in one linear ancestry through Liquidity. Corrected
-Transfer and Collect are canonical; the exact tested Liquidity candidate remains
-provisional and requires canonical landing/reseal before final publication.
-Imported values, numeric or alias meaning, Store visibility/persistence,
-histories, scheduler/output/package, continuity, parity, checkpoint, backfill,
-deployment, production, readiness and both issue acceptance checkboxes remain
-false; neither issue is closed.
+selected root is canonical in one linear ancestry through corrected Liquidity,
+and no component reseal remains. That `canonical_reseal_required=false` result
+applies only to component resealing. Merging the aggregate to `main` is
+necessary but not sufficient for canonical publication: a separate post-merge
+content-addressed publication seal must bind the exact canonical squash commit
+and tree plus successful exact-head main-push CI. Imported values, numeric or
+alias meaning, Store visibility/persistence, histories,
+scheduler/output/package, continuity, parity, checkpoint, backfill, deployment,
+production, and readiness remain false. This aggregate completes no additional
+#37/#38 checkbox; neither issue is closed.
 
 The following additive
 [`factory-effects/v1`](factory-effects/v1/README.md) supplement closes only the

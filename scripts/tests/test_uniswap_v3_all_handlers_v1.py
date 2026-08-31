@@ -19,6 +19,14 @@ VERIFIER = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = VERIFIER
 SPEC.loader.exec_module(VERIFIER)
 
+PUBLICATION_DOCS = (
+    Path("README.md"),
+    Path("uniswap-v3/README.md"),
+    Path("uniswap-v3/all-handlers/v1/README.md"),
+    Path("uniswap-v3/all-handlers/v1/docs/eligibility.md"),
+    Path("uniswap-v3/all-handlers/v1/docs/provenance.md"),
+)
+
 
 class AllHandlersV1Test(unittest.TestCase):
     @classmethod
@@ -44,7 +52,7 @@ class AllHandlersV1Test(unittest.TestCase):
         rendered = VERIFIER.render(self.contract)
         self.assertEqual((ROOT / VERIFIER.CONTRACT_PATH).read_text(), rendered)
 
-    def test_02_exact_mixed_canonical_and_provisional_component_roots(self) -> None:
+    def test_02_exact_canonical_component_roots_and_unpublished_aggregate(self) -> None:
         authority = self.contract["authority_contract"]
         self.assertEqual(authority["implementation_base_commit"], VERIFIER.IMPLEMENTATION_BASE_COMMIT)
         self.assertEqual(authority["implementation_base_tree"], VERIFIER.IMPLEMENTATION_BASE_TREE)
@@ -53,20 +61,43 @@ class AllHandlersV1Test(unittest.TestCase):
         self.assertEqual(sum(len(item["handlers"]) for item in manifest), 10)
         self.assertTrue(all(item["parent_matches_selected_predecessor"] for item in manifest))
         self.assertTrue(all(item["reachable_from_implementation_base"] for item in manifest))
-        self.assertTrue(self.contract["canonical_reseal_required"])
-        self.assertEqual(self.contract["canonical_reseal_order"], ["liquidity", "all-handlers"])
+        self.assertFalse(self.contract["canonical_reseal_required"])
+        self.assertEqual(self.contract["canonical_reseal_order"], [])
+        self.assertTrue(self.contract["post_merge_aggregate_publication_seal_required"])
+        self.assertIn("means only", authority["component_publication_boundary"])
+        self.assertIn("does not publish the aggregate", authority["component_publication_boundary"])
+        self.assertEqual(
+            authority["aggregate_publication_boundary"],
+            {
+                "merge_to_main_required": True,
+                "merge_to_main_sufficient": False,
+                "post_merge_aggregate_publication_seal_required": True,
+                "post_merge_aggregate_publication_seal_complete": False,
+                "required_seal_bindings": [
+                    "exact_canonical_aggregate_squash_commit",
+                    "exact_canonical_aggregate_squash_tree",
+                    "successful_exact_head_main_push_ci_run",
+                ],
+                "auto_promote_on_merge": False,
+                "canonical_publication_root_complete": False,
+            },
+        )
         self.assertEqual(
             {item["component"] for item in manifest if item["canonical_component_commit"]},
-            {"factory", "initialize", "flash", "burn", "mint", "swap", "transfer", "collect"},
+            {"factory", "initialize", "flash", "burn", "mint", "swap", "transfer", "collect", "liquidity"},
         )
         self.assertEqual(
             {item["component"] for item in manifest if item["provisional_for_final_publication"]},
-            {"liquidity"},
+            set(),
         )
+        self.assertTrue(self.contract["truth_boundary"]["all_component_roots_canonical_and_ancestral"])
+        self.assertTrue(self.contract["truth_boundary"]["component_ci_validation_complete"])
+        self.assertTrue(self.contract["truth_boundary"]["post_merge_aggregate_publication_seal_required"])
+        self.assertFalse(self.contract["truth_boundary"]["canonical_publication_root_complete"])
         by_component = {item["component"]: item for item in manifest}
         self.assertEqual(by_component["transfer"]["commit"], "0398e6184dc07fe848fcfef4ecd04ac0b64e8ece")
         self.assertEqual(by_component["collect"]["commit"], "5ad75eca9857176e9a9ecdfa6aeff6dd2a763312")
-        self.assertEqual(by_component["liquidity"]["commit"], "d5497c9b89fd2c0eb6e5992c1e2e6434c9159883")
+        self.assertEqual(by_component["liquidity"]["commit"], "09555b21c1a18767107b92ae7bef20dfb2da77c2")
         self.assertEqual(
             by_component["collect"]["contract_canonical_sha256"],
             "cd82fcc5b0ae2ada53b5d2a21d8fbff6ebeee04cd078b3bae964598fa0f89ffe",
@@ -75,6 +106,51 @@ class AllHandlersV1Test(unittest.TestCase):
             by_component["liquidity"]["contract_canonical_sha256"],
             "2673abf1c84388cddb11c9cecb16044eb23e8a71249a4ef4ef4e722847046388",
         )
+
+    def test_02a_every_component_has_exact_successful_main_push_ci_evidence(self) -> None:
+        expected = {
+            "factory": (33359148975, "afaf3af9c25db029091d7699befe557276a442c7", 171),
+            "initialize": (33362881880, "42c6d01f2e719993e41fca9db51be55d33da734c", 172),
+            "flash": (33371981478, "796aa3ebd50a56a7b36a588a70fb0aa7fa092818", 173),
+            "burn": (33377759861, "54bfab587a55a7c81204a166990c03cb659ae113", 174),
+            "mint": (33382459957, "7fdcdc915ab683c1081df307ef867cfde1f1bebd", 175),
+            "swap": (33406602088, "8ac009d06ef05d077430aadac5782c6391a0ca0c", 176),
+            "transfer": (33418534257, "0398e6184dc07fe848fcfef4ecd04ac0b64e8ece", 177),
+            "collect": (33429253753, "5ad75eca9857176e9a9ecdfa6aeff6dd2a763312", 178),
+            "liquidity": (33438242374, "09555b21c1a18767107b92ae7bef20dfb2da77c2", 179),
+        }
+        manifest = {item["component"]: item for item in self.contract["component_manifest"]}
+        self.assertEqual(set(manifest), set(expected))
+        for component, (run, head, steps) in expected.items():
+            with self.subTest(component=component):
+                self.assertEqual(manifest[component]["commit"], head)
+                self.assertEqual(
+                    manifest[component]["validation_status"],
+                    f"canonical component; exact main push CI run {run} at head {head}: "
+                    f"6/6 jobs and {steps}/{steps} steps succeeded; zero failed or skipped steps",
+                )
+
+    def test_02b_publication_docs_require_a_separate_post_merge_seal(self) -> None:
+        forbidden = (
+            "until it lands on `main`",
+            "until its own content lands on `main`",
+            "not a canonical publication until merged",
+            "has not landed as a canonical main commit",
+            "No issue #37 or #38 checkbox is completed",
+            "no issue checkbox completed",
+            "no issue checkbox is completed",
+            "completes no issue 37 or issue 38 checkbox",
+            "both issue acceptance checkboxes",
+        )
+        for relative in PUBLICATION_DOCS:
+            text = (ROOT / relative).read_text()
+            normalized = " ".join(text.split())
+            with self.subTest(path=str(relative)):
+                self.assertIn("necessary but not sufficient", normalized)
+                self.assertIn("post-merge content-addressed publication seal", normalized)
+                self.assertIn("completes no additional #37/#38 checkbox", normalized)
+                for stale in forbidden:
+                    self.assertNotIn(stale, normalized)
 
     def test_03_direct_schema_reconstruction_is_exact(self) -> None:
         schema = self.contract["schema_catalog"]
@@ -289,7 +365,7 @@ class AllHandlersV1Test(unittest.TestCase):
         self.assertEqual(diffs["liquidity_within_segment_handler_diff_count"], 8)
         self.assertEqual(diffs["total_records_including_liquidity_within_handler_axis"], 316)
 
-    def test_19_issue_mapping_checks_nothing_and_closes_nothing(self) -> None:
+    def test_19_issue_mapping_completes_no_additional_checkbox_and_closes_nothing(self) -> None:
         for issue in self.contract["issue_mapping"].values():
             self.assertEqual(issue["checkboxes_completed_by_this_certificate"], [])
             self.assertFalse(issue["issue_closed"])
@@ -371,16 +447,40 @@ class AllHandlersV1Test(unittest.TestCase):
         diffs["liquidity_within_segment_handler_diff_count"] = 7
         self.assert_contract_rejected(mutated)
 
-    def test_29_provisional_ancestry_and_reseal_promotions_fail_closed(self) -> None:
+    def test_29_canonical_ancestry_and_empty_reseal_state_mutations_fail_closed(self) -> None:
         mutated = copy.deepcopy(self.contract)
-        mutated["canonical_reseal_required"] = False
-        mutated["canonical_reseal_order"] = []
+        mutated["canonical_reseal_required"] = True
+        mutated["canonical_reseal_order"] = ["liquidity", "all-handlers"]
         liquidity = next(item for item in mutated["component_manifest"] if item["component"] == "liquidity")
         liquidity["parent_matches_selected_predecessor"] = False
         liquidity["reachable_from_implementation_base"] = False
-        liquidity["canonical_component_commit"] = True
-        liquidity["provisional_for_final_publication"] = False
-        mutated["truth_boundary"]["all_component_roots_canonical_and_ancestral"] = True
+        liquidity["canonical_component_commit"] = False
+        liquidity["provisional_for_final_publication"] = True
+        mutated["truth_boundary"]["all_component_roots_canonical_and_ancestral"] = False
+        self.assert_contract_rejected(mutated)
+
+    def test_29a_two_stage_publication_boundary_rejects_auto_promotion(self) -> None:
+        for key, value in (
+            ("merge_to_main_sufficient", True),
+            ("post_merge_aggregate_publication_seal_complete", True),
+            ("auto_promote_on_merge", True),
+            ("canonical_publication_root_complete", True),
+        ):
+            mutated = copy.deepcopy(self.contract)
+            mutated["authority_contract"]["aggregate_publication_boundary"][key] = value
+            with self.subTest(key=key):
+                self.assert_contract_rejected(mutated)
+
+        mutated = copy.deepcopy(self.contract)
+        mutated["authority_contract"]["aggregate_publication_boundary"]["required_seal_bindings"].pop()
+        self.assert_contract_rejected(mutated)
+
+        mutated = copy.deepcopy(self.contract)
+        mutated["post_merge_aggregate_publication_seal_required"] = False
+        self.assert_contract_rejected(mutated)
+
+        mutated = copy.deepcopy(self.contract)
+        mutated["truth_boundary"]["post_merge_aggregate_publication_seal_required"] = False
         self.assert_contract_rejected(mutated)
 
     def test_30_every_false_gate_mutation_is_rejected(self) -> None:
@@ -420,7 +520,7 @@ class AllHandlersV1Test(unittest.TestCase):
         self.assertEqual(first, second)
         self.assertEqual(hashlib.sha256(first.encode()).hexdigest(), hashlib.sha256(second.encode()).hexdigest())
 
-    def test_35_quick_cli_verifier_passes_and_reports_provisional_status(self) -> None:
+    def test_35_quick_cli_verifier_passes_and_reports_publication_boundary(self) -> None:
         completed = subprocess.run(
             [sys.executable, str(VERIFIER_PATH), "--skip-component-regeneration"],
             cwd=ROOT,
@@ -431,7 +531,10 @@ class AllHandlersV1Test(unittest.TestCase):
         )
         self.assertEqual(completed.returncode, 0, completed.stderr)
         self.assertIn("10 handlers x 8 segments x 299 fields = 23920 cells", completed.stdout)
-        self.assertIn("canonical reseal required", completed.stdout)
+        self.assertIn("all component roots canonical", completed.stdout)
+        self.assertIn("aggregate publication pending", completed.stdout)
+        self.assertIn("this certificate completes no additional #37/#38 checkbox", completed.stdout)
+        self.assertIn("neither issue closed", completed.stdout)
 
 
 if __name__ == "__main__":

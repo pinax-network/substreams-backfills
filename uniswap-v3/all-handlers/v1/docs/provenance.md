@@ -1,40 +1,63 @@
 # All-handlers v1 provenance
 
-## Provisional repository anchor
+## Canonical component anchor
 
 - implementation base commit:
-  `d5497c9b89fd2c0eb6e5992c1e2e6434c9159883`
+  `09555b21c1a18767107b92ae7bef20dfb2da77c2`
 - implementation base tree:
   `4adcdd646b04ca49631fe33f4b8330bff6d7f905`
 
-The base is the sealed local Liquidity candidate and contains every selected
-component in one linear ancestry with matching predecessor edges. Corrected
-Transfer and Collect are canonical. Corrected Liquidity is the exact tested
-candidate and remains the sole provisional component, so the final certificate
-must be regenerated on its canonical squash merge.
+The base is the canonical corrected Liquidity squash merge and contains every
+selected component in one linear canonical ancestry with matching predecessor
+edges. The component reseal queue is empty. That
+`canonical_reseal_required=false` state means only that no component reseal
+remains; it does not publish the aggregate.
+
+Merging the aggregate to `main` is necessary but not sufficient for canonical
+publication. A separate post-merge content-addressed publication seal must
+bind the exact canonical aggregate squash commit and tree plus a successful
+exact-head main-push CI run. This candidate binds none of those post-merge
+aggregate identities, cannot auto-promote on merge, and therefore keeps
+`post_merge_aggregate_publication_seal_required=true` and
+`canonical_publication_root_complete=false`. This certificate completes no
+additional #37/#38 checkbox; neither issue is closed.
 
 ## Component roots
 
-| Component | Commit | Tree | Contract raw SHA-256 | Contract canonical SHA-256 | Status at input |
+| Component | Commit | Tree | Contract raw SHA-256 | Contract canonical SHA-256 | Canonical status |
 |---|---|---|---|---|---|
-| Factory | `afaf3af9c25db029091d7699befe557276a442c7` | `5c2e8f38721448039f09e06b195e019d11332d3f` | `7437a95b9b1cff1c248b0685f59ec098a77fffe0ea4166b8f930a32ba6288118` | `adcd236a56b7a5627f956b23ba44daaeb6c58630b853ddf232516fec964373ef` | canonical |
-| Initialize | `42c6d01f2e719993e41fca9db51be55d33da734c` | `ba8531df0e102ba71fd30b4df2af2977355dabf3` | `6d9c36526ce4e041e18811ff5545efd5b5da96b4b2280c345b1f11379f202b84` | `c213d22dd95973f128059ca6fecfef2900ede9510dfdb344d4ceb3532bc9d224` | canonical |
-| Flash | `796aa3ebd50a56a7b36a588a70fb0aa7fa092818` | `638f8ee61b71111eebeb4a6d7901311e5c9e4018` | `8ca53bf7ca19bdc52a81abda624181030e07d42c30b6771aee1802723e1f1b9b` | `073f9c01ae8066122013d3c43f4f75133fa300ee9f0a1ee325144be08c9ec9f3` | canonical; ancestor of implementation base; exact post-merge push CI run 33371981478 passed |
-| Burn | `54bfab587a55a7c81204a166990c03cb659ae113` | `29616314b951850d0a8f5003c819e7e29baf216c` | `eab3d3e9555c6a2cae4c61de30da41d7af206eb66da76e42a7c34dd53ff5eb6d` | `1081e9d0061a17df58c83a5735f736c432aade2a286959f318bb5e623293790e` | canonical; exact post-merge validation passed |
-| Mint | `7fdcdc915ab683c1081df307ef867cfde1f1bebd` | `976d7c858a3f111bd8ca2380ccf12bfdfa6e1ee7` | `0500fe9d45406e055298389dd3d1e6d44463f73c430469d4112be5ac09e4e013` | `cf1e1b990d0c400146c5615057ce705f8c49caf0d054cca96712bc15c41349f1` | canonical; exact post-merge push CI run 33382459957 passed |
-| Swap | `8ac009d06ef05d077430aadac5782c6391a0ca0c` | `2ddc9d94172eb8f61306280320d63a9029efcce3` | `17cf23150f3cf097c65b2008533ebd61bea28e8b31ff79861c2450a03ae492ae` | `d002ae277913afc79e386911a7bb1a39eff73511a9f95e950f9d6f961ad79fdb` | canonical; exact post-merge push CI run 33406602088 passed |
-| Transfer | `0398e6184dc07fe848fcfef4ecd04ac0b64e8ece` | `ca82557bd179527369f527c1c114a2d3d5ae252e` | `0fcadd7e68ca373ff1b1d202991818c1b36c5ba25ac8ede1515d1b8b1f041d7c` | `c208e1470767054553f8fcef68a2375f300cca90b8b5c1ba495639e7f0b75f12` | canonical; candidate and squash-merge trees are byte-identical; exact post-merge validation passed |
-| Collect | `5ad75eca9857176e9a9ecdfa6aeff6dd2a763312` | `78ae066e45d0175f9efd858969c1d8dd8c968ac3` | `79bd851de40cf85f34d2a56b27f0aedf9792fa10bfa15f16728d857e0acfb139` | `cd82fcc5b0ae2ada53b5d2a21d8fbff6ebeee04cd078b3bae964598fa0f89ffe` | canonical; candidate and squash-merge trees are byte-identical; exact post-merge push CI run 33429253753 passed 6/6 jobs and 178/178 steps |
-| Liquidity | `d5497c9b89fd2c0eb6e5992c1e2e6434c9159883` | `4adcdd646b04ca49631fe33f4b8330bff6d7f905` | `f0749606edc2fd72695b781692e4f3577db5bb79898529e78ae01f7e620a93ba` | `2673abf1c84388cddb11c9cecb16044eb23e8a71249a4ef4ef4e722847046388` | exact tested candidate; direct 8/6/4,784/28, focused 39, inherited 145 plus 154-test superset, full discovery 1,001, direct verifier, Rust, and detached regeneration passed |
+| Factory | `afaf3af9c25db029091d7699befe557276a442c7` | `5c2e8f38721448039f09e06b195e019d11332d3f` | `7437a95b9b1cff1c248b0685f59ec098a77fffe0ea4166b8f930a32ba6288118` | `adcd236a56b7a5627f956b23ba44daaeb6c58630b853ddf232516fec964373ef` | canonical; ancestral |
+| Initialize | `42c6d01f2e719993e41fca9db51be55d33da734c` | `ba8531df0e102ba71fd30b4df2af2977355dabf3` | `6d9c36526ce4e041e18811ff5545efd5b5da96b4b2280c345b1f11379f202b84` | `c213d22dd95973f128059ca6fecfef2900ede9510dfdb344d4ceb3532bc9d224` | canonical; ancestral |
+| Flash | `796aa3ebd50a56a7b36a588a70fb0aa7fa092818` | `638f8ee61b71111eebeb4a6d7901311e5c9e4018` | `8ca53bf7ca19bdc52a81abda624181030e07d42c30b6771aee1802723e1f1b9b` | `073f9c01ae8066122013d3c43f4f75133fa300ee9f0a1ee325144be08c9ec9f3` | canonical; ancestral |
+| Burn | `54bfab587a55a7c81204a166990c03cb659ae113` | `29616314b951850d0a8f5003c819e7e29baf216c` | `eab3d3e9555c6a2cae4c61de30da41d7af206eb66da76e42a7c34dd53ff5eb6d` | `1081e9d0061a17df58c83a5735f736c432aade2a286959f318bb5e623293790e` | canonical; ancestral |
+| Mint | `7fdcdc915ab683c1081df307ef867cfde1f1bebd` | `976d7c858a3f111bd8ca2380ccf12bfdfa6e1ee7` | `0500fe9d45406e055298389dd3d1e6d44463f73c430469d4112be5ac09e4e013` | `cf1e1b990d0c400146c5615057ce705f8c49caf0d054cca96712bc15c41349f1` | canonical; ancestral |
+| Swap | `8ac009d06ef05d077430aadac5782c6391a0ca0c` | `2ddc9d94172eb8f61306280320d63a9029efcce3` | `17cf23150f3cf097c65b2008533ebd61bea28e8b31ff79861c2450a03ae492ae` | `d002ae277913afc79e386911a7bb1a39eff73511a9f95e950f9d6f961ad79fdb` | canonical; ancestral |
+| Transfer | `0398e6184dc07fe848fcfef4ecd04ac0b64e8ece` | `ca82557bd179527369f527c1c114a2d3d5ae252e` | `0fcadd7e68ca373ff1b1d202991818c1b36c5ba25ac8ede1515d1b8b1f041d7c` | `c208e1470767054553f8fcef68a2375f300cca90b8b5c1ba495639e7f0b75f12` | canonical; ancestral |
+| Collect | `5ad75eca9857176e9a9ecdfa6aeff6dd2a763312` | `78ae066e45d0175f9efd858969c1d8dd8c968ac3` | `79bd851de40cf85f34d2a56b27f0aedf9792fa10bfa15f16728d857e0acfb139` | `cd82fcc5b0ae2ada53b5d2a21d8fbff6ebeee04cd078b3bae964598fa0f89ffe` | canonical; ancestral |
+| Liquidity | `09555b21c1a18767107b92ae7bef20dfb2da77c2` | `4adcdd646b04ca49631fe33f4b8330bff6d7f905` | `f0749606edc2fd72695b781692e4f3577db5bb79898529e78ae01f7e620a93ba` | `2673abf1c84388cddb11c9cecb16044eb23e8a71249a4ef4ef4e722847046388` | canonical; ancestral |
 
-Flash ancestry correction: replace `canonical, not in base ancestry` with
-`canonical; ancestor of implementation base; exact post-merge push CI run
-33371981478 passed`.
+## Canonical component CI ledger
+
+Every row below is an exact `push` run on branch `main` at the component commit,
+with `conclusion=success`. All times are on 2026-08-31 UTC. Every recorded
+step succeeded; there were zero failed and zero skipped steps.
+
+| Component | Main push run | Exact head | Jobs | Steps | Six-job window | Component validation step |
+|---|---|---|---:|---:|---|---|
+| Factory | [33359148975](https://github.com/pinax-network/substreams-backfills/actions/runs/33359148975) | `afaf3af9c25db029091d7699befe557276a442c7` | 6/6 | 171/171 | 05:03:12–06:03:46 | `Verify complete all-profile Uniswap V3 Factory static semantics v2` 05:09:45–05:10:21 |
+| Initialize | [33362881880](https://github.com/pinax-network/substreams-backfills/actions/runs/33362881880) | `42c6d01f2e719993e41fca9db51be55d33da734c` | 6/6 | 172/172 | 06:06:37–07:04:00 | `Verify complete path-qualified Uniswap V3 Pool Initialize v2` 06:08:15–06:09:16 |
+| Flash | [33371981478](https://github.com/pinax-network/substreams-backfills/actions/runs/33371981478) | `796aa3ebd50a56a7b36a588a70fb0aa7fa092818` | 6/6 | 173/173 | 08:14:40–09:13:12 | `Recompute complete path-qualified Uniswap V3 Pool Flash v2 matrix` 08:19:24–08:20:18 |
+| Burn | [33377759861](https://github.com/pinax-network/substreams-backfills/actions/runs/33377759861) | `54bfab587a55a7c81204a166990c03cb659ae113` | 6/6 | 174/174 | 09:27:33–10:25:14 | `Verify complete Uniswap V3 Pool Burn schema-API matrix v2` 09:30:44–09:34:28 |
+| Mint | [33382459957](https://github.com/pinax-network/substreams-backfills/actions/runs/33382459957) | `7fdcdc915ab683c1081df307ef867cfde1f1bebd` | 6/6 | 175/175 | 10:27:06–11:17:36 | `Verify complete Uniswap V3 Pool Mint schema-API matrix v2` 10:34:45–10:40:05 |
+| Swap | [33406602088](https://github.com/pinax-network/substreams-backfills/actions/runs/33406602088) | `8ac009d06ef05d077430aadac5782c6391a0ca0c` | 6/6 | 176/176 | 15:07:18–15:48:19 | `Verify complete Uniswap V3 Pool Swap schema-API matrix v2` 15:22:45–15:25:43 |
+| Transfer | [33418534257](https://github.com/pinax-network/substreams-backfills/actions/runs/33418534257) | `0398e6184dc07fe848fcfef4ecd04ac0b64e8ece` | 6/6 | 177/177 | 17:15:05–18:12:19 | `Verify complete path-qualified Uniswap V3 NPM Transfer v2` 17:17:11–17:17:43 |
+| Collect | [33429253753](https://github.com/pinax-network/substreams-backfills/actions/runs/33429253753) | `5ad75eca9857176e9a9ecdfa6aeff6dd2a763312` | 6/6 | 178/178 | 19:12:14–20:08:11 | `Verify complete path-qualified Uniswap V3 NPM Collect v2` 19:15:48–19:17:11 |
+| Liquidity | [33438242374](https://github.com/pinax-network/substreams-backfills/actions/runs/33438242374) | `09555b21c1a18767107b92ae7bef20dfb2da77c2` | 6/6 | 179/179 | 20:51:03–21:50:22 | `Verify paired complete path-qualified Uniswap V3 NPM Liquidity v2` 20:56:08–20:59:22 |
 
 The component manifest additionally pins every verifier/test digest, parent,
 source-contract set, scope, truth boundary and segment-diff surface. Its digest
-is generated into `contract.json`; it must change when any provisional root is
-resealed.
+is generated into `contract.json`; any future component identity change must
+regenerate it.
 
 ## Direct shared roots
 
@@ -103,5 +126,8 @@ python3 scripts/verify-uniswap-v3-all-handlers-v1.py \
 
 In-place and detached regeneration must be byte-identical. Missing Git objects,
 stale parents, digest drift, category/overlay/setter-authority/order/diff
-mutations or any false-gate promotion fail closed. The candidate must be
-regenerated again when the canonical component ancestry becomes available.
+mutations or any false-gate promotion fail closed. A byte-identical aggregate
+squash merge does not alter the bound component roots or require a component
+reseal, but merge alone cannot publish the aggregate. The separate post-merge
+seal must bind the exact canonical squash commit/tree and successful exact-head
+main-push CI; any content change must regenerate the contract.

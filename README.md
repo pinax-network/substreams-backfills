@@ -91,6 +91,13 @@ only after this gate passes.
   selected-TVL persistence, field completeness, host behavior, general alias
   safety, complete Pool history, parity, backfill, and production gates remain
   false.
+- **`uniswap-v3/pool-burn/v2/`** — the complete conservative path-qualified
+  `Pool.handleBurn` schema-API matrix across eight segments and all 299 schema
+  fields. It closes 147 lexical invocations, 151 physical-site edges, 195
+  helper-expanded setter paths, 124 unique stored setter fields, and 17
+  expanded store paths per mapping while keeping numeric, alias, preservation,
+  Graph persistence, history, parity, backfill, production, and readiness
+  claims false.
 - **`uniswap-v3/pool-mint/v1/`** — retained-WAT call-flow evidence for both
   `Pool.handleMint` token-TVL additions. It digest-pins Burn and the shared
   same-WAT runtime capsules, binds ABI indices 5/6, exact amount/decimals and

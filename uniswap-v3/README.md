@@ -302,9 +302,9 @@ binds repaired Swap's mutually exclusive receiver-origin-overlap taxonomy and
 corrected NPM Transaction hit/miss controls without promoting common execution,
 must-alias, Store visibility, or last-writer semantics. Physical component
 ledgers retain their native denominators and are not globally summed. Every
-selected root is present in one linear local ancestry through Liquidity. Burn,
-Mint, and Swap are canonical; corrected Transfer -> Collect -> Liquidity remain
-provisional and require canonical landing/reseal before final publication.
+selected root is present in one linear ancestry through Liquidity. Corrected
+Transfer and Collect are canonical; the exact tested Liquidity candidate remains
+provisional and requires canonical landing/reseal before final publication.
 Imported values, numeric or alias meaning, Store visibility/persistence,
 histories, scheduler/output/package, continuity, parity, checkpoint, backfill,
 deployment, production, readiness and both issue acceptance checkboxes remain

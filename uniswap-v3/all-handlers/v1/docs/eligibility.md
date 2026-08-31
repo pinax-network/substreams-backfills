@@ -13,10 +13,10 @@ heterogeneous component certificates.
 
 It is not presently a canonical publication. Every selected root is present
 in one linear local ancestry through Liquidity, every selected predecessor
-edge matches, and every pinned Git object is available and digest-bound. Burn,
-Mint, and Swap are canonical. Corrected Transfer, Collect, and Liquidity remain
-provisional; the aggregate must be regenerated after that remaining component
-sequence lands canonically.
+edge matches, and every pinned Git object is available and digest-bound.
+Corrected Transfer and Collect are canonical. Corrected Liquidity is the sole
+provisional component; the aggregate must be regenerated after its canonical
+squash merge.
 
 ## Offline completion boundary
 
@@ -55,7 +55,7 @@ The static claim includes:
 
 The following remain false:
 
-- final canonical component ancestry or a final component-manifest digest;
+- final canonical Liquidity ancestry or a final component-manifest digest;
 - complete component CI status at the provisional seal point;
 - imported host behavior, numeric/comparator meaning, conversion values,
   arbitrary aliases or source-package identity;

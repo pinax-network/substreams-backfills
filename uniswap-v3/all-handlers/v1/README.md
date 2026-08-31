@@ -16,18 +16,18 @@ This is a static certificate, not an integrated runtime or a backfill.
 
 ## Provisional publication status
 
-The implementation base is local Liquidity candidate
-`0b66c2403e9440ecce9f7f48d70e9eec85d6b382`, tree
-`6e76693a346efa8a75bd49728866673391fd8b3e`. Every selected component is an
+The implementation base is the exact tested Liquidity candidate
+`d5497c9b89fd2c0eb6e5992c1e2e6434c9159883`, tree
+`4adcdd646b04ca49631fe33f4b8330bff6d7f905`. Every selected component is an
 ancestor of that base and every selected predecessor edge matches. The
 verifier loads exact pinned Git objects and fails closed when any object,
 contract, verifier, test, tree, parent, ancestry edge, or digest is unavailable
 or changed.
 
-Burn, Mint, and Swap are canonical. This candidate is not the canonical
-publication because corrected Transfer, Collect, and Liquidity remain local
-provisional roots. They are linearly composed here and must land canonically
-before the aggregate is regenerated one final time. The contract keeps
+Corrected Transfer and Collect are canonical. This candidate is not the
+canonical publication because corrected Liquidity remains an exact tested
+candidate rather than a canonical squash merge. It is linearly composed here
+and must land canonically before the aggregate is regenerated one final time. The contract keeps
 `all_component_roots_canonical_and_ancestral=false`,
 `canonical_publication_root_complete=false`, and
 `component_ci_validation_complete=false`.

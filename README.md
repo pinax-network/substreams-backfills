@@ -112,8 +112,9 @@ only after this gate passes.
   conservatively adapts repaired Swap receiver-origin categories and corrected
   NPM Transaction hit/miss controls, binds raw manifest declaration order and
   all handler/aggregate diffs, and retains heterogeneous physical ledgers
-  without summing them. Burn, Mint, and Swap are canonical; corrected Transfer,
-  Collect, and Liquidity remain provisional and require canonical resealing.
+  without summing them. Corrected Transfer and Collect are canonical; the exact
+  tested Liquidity candidate remains the sole provisional component and requires
+  canonical resealing.
   Runtime, Store behavior, histories, parity, backfill, readiness, both issue
   acceptance checkboxes, and issue closure remain false.
 - **`uniswap-v3/pool-runtime/v1/`** — the shared all-profile Pool collection,

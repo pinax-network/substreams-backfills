@@ -3,15 +3,15 @@
 ## Provisional repository anchor
 
 - implementation base commit:
-  `0b66c2403e9440ecce9f7f48d70e9eec85d6b382`
+  `d5497c9b89fd2c0eb6e5992c1e2e6434c9159883`
 - implementation base tree:
-  `6e76693a346efa8a75bd49728866673391fd8b3e`
+  `4adcdd646b04ca49631fe33f4b8330bff6d7f905`
 
 The base is the sealed local Liquidity candidate and contains every selected
-component in one linear ancestry with matching predecessor edges. Factory,
-Initialize, Flash, Burn, Mint, and Swap are canonical; corrected Transfer,
-Collect, and Liquidity remain provisional, so the final certificate must be
-regenerated on the canonical ancestry.
+component in one linear ancestry with matching predecessor edges. Corrected
+Transfer and Collect are canonical. Corrected Liquidity is the exact tested
+candidate and remains the sole provisional component, so the final certificate
+must be regenerated on its canonical squash merge.
 
 ## Component roots
 
@@ -23,9 +23,9 @@ regenerated on the canonical ancestry.
 | Burn | `54bfab587a55a7c81204a166990c03cb659ae113` | `29616314b951850d0a8f5003c819e7e29baf216c` | `eab3d3e9555c6a2cae4c61de30da41d7af206eb66da76e42a7c34dd53ff5eb6d` | `1081e9d0061a17df58c83a5735f736c432aade2a286959f318bb5e623293790e` | canonical; exact post-merge validation passed |
 | Mint | `7fdcdc915ab683c1081df307ef867cfde1f1bebd` | `976d7c858a3f111bd8ca2380ccf12bfdfa6e1ee7` | `0500fe9d45406e055298389dd3d1e6d44463f73c430469d4112be5ac09e4e013` | `cf1e1b990d0c400146c5615057ce705f8c49caf0d054cca96712bc15c41349f1` | canonical; exact post-merge push CI run 33382459957 passed |
 | Swap | `8ac009d06ef05d077430aadac5782c6391a0ca0c` | `2ddc9d94172eb8f61306280320d63a9029efcce3` | `17cf23150f3cf097c65b2008533ebd61bea28e8b31ff79861c2450a03ae492ae` | `d002ae277913afc79e386911a7bb1a39eff73511a9f95e950f9d6f961ad79fdb` | canonical; exact post-merge push CI run 33406602088 passed |
-| Transfer | `86c21e35f65f21f78917fa4e3f16228ec2124931` | `ca82557bd179527369f527c1c114a2d3d5ae252e` | `0fcadd7e68ca373ff1b1d202991818c1b36c5ba25ac8ede1515d1b8b1f041d7c` | `c208e1470767054553f8fcef68a2375f300cca90b8b5c1ba495639e7f0b75f12` | corrected provisional local candidate; canonical post-merge validation unavailable |
-| Collect | `648443fec0d10bffd68b5e40f71e594822342968` | `c3500dc8bac4367520f6a512de4af3e7c10b1e86` | `bbcfa10a83abf5d80514ba2a629567796555070275c8c052cf9edcc2bd619a29` | `c0e9382baae5a585efbac5616321384dc9946b126c0c1ec99ce39f59806e965e` | corrected provisional local candidate; canonical post-merge validation unavailable |
-| Liquidity | `0b66c2403e9440ecce9f7f48d70e9eec85d6b382` | `6e76693a346efa8a75bd49728866673391fd8b3e` | `6e4bff6a67baddf06aed51a957e9ba35f510e1bd64a02c7eeb46a66e99b86d71` | `811f9b7c5cba87d27bb954ce2d59f5a229e49df3815f8e112cf1d851880ce04e` | corrected provisional local candidate; focused 39, inherited 145, full discovery 1,001, direct verifier, Rust, and detached regeneration passed |
+| Transfer | `0398e6184dc07fe848fcfef4ecd04ac0b64e8ece` | `ca82557bd179527369f527c1c114a2d3d5ae252e` | `0fcadd7e68ca373ff1b1d202991818c1b36c5ba25ac8ede1515d1b8b1f041d7c` | `c208e1470767054553f8fcef68a2375f300cca90b8b5c1ba495639e7f0b75f12` | canonical; candidate and squash-merge trees are byte-identical; exact post-merge validation passed |
+| Collect | `5ad75eca9857176e9a9ecdfa6aeff6dd2a763312` | `78ae066e45d0175f9efd858969c1d8dd8c968ac3` | `79bd851de40cf85f34d2a56b27f0aedf9792fa10bfa15f16728d857e0acfb139` | `cd82fcc5b0ae2ada53b5d2a21d8fbff6ebeee04cd078b3bae964598fa0f89ffe` | canonical; candidate and squash-merge trees are byte-identical; exact post-merge push CI run 33429253753 passed 6/6 jobs and 178/178 steps |
+| Liquidity | `d5497c9b89fd2c0eb6e5992c1e2e6434c9159883` | `4adcdd646b04ca49631fe33f4b8330bff6d7f905` | `f0749606edc2fd72695b781692e4f3577db5bb79898529e78ae01f7e620a93ba` | `2673abf1c84388cddb11c9cecb16044eb23e8a71249a4ef4ef4e722847046388` | exact tested candidate; direct 8/6/4,784/28, focused 39, inherited 145 plus 154-test superset, full discovery 1,001, direct verifier, Rust, and detached regeneration passed |
 
 Flash ancestry correction: replace `canonical, not in base ancestry` with
 `canonical; ancestor of implementation base; exact post-merge push CI run

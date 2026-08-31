@@ -54,14 +54,26 @@ class AllHandlersV1Test(unittest.TestCase):
         self.assertTrue(all(item["parent_matches_selected_predecessor"] for item in manifest))
         self.assertTrue(all(item["reachable_from_implementation_base"] for item in manifest))
         self.assertTrue(self.contract["canonical_reseal_required"])
-        self.assertEqual(self.contract["canonical_reseal_order"], ["transfer", "collect", "liquidity", "all-handlers"])
+        self.assertEqual(self.contract["canonical_reseal_order"], ["liquidity", "all-handlers"])
         self.assertEqual(
             {item["component"] for item in manifest if item["canonical_component_commit"]},
-            {"factory", "initialize", "flash", "burn", "mint", "swap"},
+            {"factory", "initialize", "flash", "burn", "mint", "swap", "transfer", "collect"},
         )
         self.assertEqual(
             {item["component"] for item in manifest if item["provisional_for_final_publication"]},
-            {"transfer", "collect", "liquidity"},
+            {"liquidity"},
+        )
+        by_component = {item["component"]: item for item in manifest}
+        self.assertEqual(by_component["transfer"]["commit"], "0398e6184dc07fe848fcfef4ecd04ac0b64e8ece")
+        self.assertEqual(by_component["collect"]["commit"], "5ad75eca9857176e9a9ecdfa6aeff6dd2a763312")
+        self.assertEqual(by_component["liquidity"]["commit"], "d5497c9b89fd2c0eb6e5992c1e2e6434c9159883")
+        self.assertEqual(
+            by_component["collect"]["contract_canonical_sha256"],
+            "cd82fcc5b0ae2ada53b5d2a21d8fbff6ebeee04cd078b3bae964598fa0f89ffe",
+        )
+        self.assertEqual(
+            by_component["liquidity"]["contract_canonical_sha256"],
+            "2673abf1c84388cddb11c9cecb16044eb23e8a71249a4ef4ef4e722847046388",
         )
 
     def test_03_direct_schema_reconstruction_is_exact(self) -> None:
@@ -363,11 +375,11 @@ class AllHandlersV1Test(unittest.TestCase):
         mutated = copy.deepcopy(self.contract)
         mutated["canonical_reseal_required"] = False
         mutated["canonical_reseal_order"] = []
-        transfer = next(item for item in mutated["component_manifest"] if item["component"] == "transfer")
-        transfer["parent_matches_selected_predecessor"] = False
-        transfer["reachable_from_implementation_base"] = False
-        transfer["canonical_component_commit"] = True
-        transfer["provisional_for_final_publication"] = False
+        liquidity = next(item for item in mutated["component_manifest"] if item["component"] == "liquidity")
+        liquidity["parent_matches_selected_predecessor"] = False
+        liquidity["reachable_from_implementation_base"] = False
+        liquidity["canonical_component_commit"] = True
+        liquidity["provisional_for_final_publication"] = False
         mutated["truth_boundary"]["all_component_roots_canonical_and_ancestral"] = True
         self.assert_contract_rejected(mutated)
 

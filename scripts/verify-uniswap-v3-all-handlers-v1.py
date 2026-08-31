@@ -27,8 +27,8 @@ from typing import Any
 REPOSITORY = Path(__file__).resolve().parents[1]
 CONTRACT_PATH = Path("uniswap-v3/all-handlers/v1/contract.json")
 CONTRACT_VERSION = "uniswap-v3-all-handlers/v1"
-IMPLEMENTATION_BASE_COMMIT = "0b66c2403e9440ecce9f7f48d70e9eec85d6b382"
-IMPLEMENTATION_BASE_TREE = "6e76693a346efa8a75bd49728866673391fd8b3e"
+IMPLEMENTATION_BASE_COMMIT = "d5497c9b89fd2c0eb6e5992c1e2e6434c9159883"
+IMPLEMENTATION_BASE_TREE = "4adcdd646b04ca49631fe33f4b8330bff6d7f905"
 
 SEGMENT_FIELD_COMMIT = "86ba5eaf978b4751011cdcbc8d764814105c5d02"
 SEGMENT_FIELD_TREE = "69f4d49b02dd65af0bdb8c575fa961f9d09bbd99"
@@ -211,7 +211,7 @@ COMPONENTS: dict[str, dict[str, Any]] = {
         "selected_predecessor": "mint",
     },
     "transfer": {
-        "commit": "86c21e35f65f21f78917fa4e3f16228ec2124931",
+        "commit": "0398e6184dc07fe848fcfef4ecd04ac0b64e8ece",
         "tree": "ca82557bd179527369f527c1c114a2d3d5ae252e",
         "parent": "8ac009d06ef05d077430aadac5782c6391a0ca0c",
         "path": "uniswap-v3/npm-transfer/v2/contract.json",
@@ -222,38 +222,38 @@ COMPONENTS: dict[str, dict[str, Any]] = {
         "verifier_sha256": "5c0fb7131ab98112457eb96a57f0c605bc6a1a52d31657be1dae14c91aaaf623",
         "test": "scripts/tests/test_uniswap_v3_npm_transfer_v2.py",
         "test_sha256": "f81b0ac2f374d97eb0a8f45f2909c43f9de242380ac2936b3456a9845d0af72f",
-        "canonical_component": False,
-        "validation_status": "corrected provisional local candidate; canonical post-merge validation unavailable",
+        "canonical_component": True,
+        "validation_status": "canonical component; candidate and squash-merge trees are byte-identical and exact post-merge validation passed",
         "handlers": ["transfer"],
         "selected_predecessor": "swap",
     },
     "collect": {
-        "commit": "648443fec0d10bffd68b5e40f71e594822342968",
-        "tree": "c3500dc8bac4367520f6a512de4af3e7c10b1e86",
-        "parent": "86c21e35f65f21f78917fa4e3f16228ec2124931",
+        "commit": "5ad75eca9857176e9a9ecdfa6aeff6dd2a763312",
+        "tree": "78ae066e45d0175f9efd858969c1d8dd8c968ac3",
+        "parent": "0398e6184dc07fe848fcfef4ecd04ac0b64e8ece",
         "path": "uniswap-v3/npm-collect/v2/contract.json",
         "version": "uniswap-v3-npm-collect/v2",
-        "raw": "bbcfa10a83abf5d80514ba2a629567796555070275c8c052cf9edcc2bd619a29",
-        "canonical": "c0e9382baae5a585efbac5616321384dc9946b126c0c1ec99ce39f59806e965e",
+        "raw": "79bd851de40cf85f34d2a56b27f0aedf9792fa10bfa15f16728d857e0acfb139",
+        "canonical": "cd82fcc5b0ae2ada53b5d2a21d8fbff6ebeee04cd078b3bae964598fa0f89ffe",
         "verifier": "scripts/verify-uniswap-v3-npm-collect-v2.py",
-        "verifier_sha256": "d291d08b6d849a8074420a8031f9601fabceb3d2ccb428bdffcb60da4600a806",
+        "verifier_sha256": "8d1c75ac839f80d31e94dcff38b45188d8570f6c9ada4a4e2d10b75e4a3676dd",
         "test": "scripts/tests/test_uniswap_v3_npm_collect_v2.py",
         "test_sha256": "9ff074870c7e7ac6967196655cff757f0b888fb632b8017ed98fd756de161c6d",
-        "canonical_component": False,
-        "validation_status": "corrected provisional local candidate; canonical post-merge validation unavailable",
+        "canonical_component": True,
+        "validation_status": "canonical component; candidate and squash-merge trees are byte-identical; exact post-merge push CI run 33429253753 passed 6/6 jobs and 178/178 steps",
         "handlers": ["collect"],
         "selected_predecessor": "transfer",
     },
     "liquidity": {
-        "commit": "0b66c2403e9440ecce9f7f48d70e9eec85d6b382",
-        "tree": "6e76693a346efa8a75bd49728866673391fd8b3e",
-        "parent": "648443fec0d10bffd68b5e40f71e594822342968",
+        "commit": "d5497c9b89fd2c0eb6e5992c1e2e6434c9159883",
+        "tree": "4adcdd646b04ca49631fe33f4b8330bff6d7f905",
+        "parent": "5ad75eca9857176e9a9ecdfa6aeff6dd2a763312",
         "path": "uniswap-v3/npm-liquidity/v2/contract.json",
         "version": "uniswap-v3-npm-liquidity/v2",
-        "raw": "6e4bff6a67baddf06aed51a957e9ba35f510e1bd64a02c7eeb46a66e99b86d71",
-        "canonical": "811f9b7c5cba87d27bb954ce2d59f5a229e49df3815f8e112cf1d851880ce04e",
+        "raw": "f0749606edc2fd72695b781692e4f3577db5bb79898529e78ae01f7e620a93ba",
+        "canonical": "2673abf1c84388cddb11c9cecb16044eb23e8a71249a4ef4ef4e722847046388",
         "verifier": "scripts/verify-uniswap-v3-npm-liquidity-v2.py",
-        "verifier_sha256": "55bffe036872871d4bb8337398197c131dfab25cb35cce0f55061ed2b5f8c2f3",
+        "verifier_sha256": "ea980ae8c3af51684eb72c237eaf622d13070c47368bb4ce0909e3109800b373",
         "test": "scripts/tests/test_uniswap_v3_npm_liquidity_v2.py",
         "test_sha256": "9f3ffb866ac8ca8980185c9f9c0dba43e35914d6905c0633e2266aec7ca257f9",
         "canonical_component": False,
@@ -1374,12 +1374,12 @@ def expected_contract_from_sources(root: Path, sources: dict[str, Any]) -> dict[
     require(not all(item["canonical_component_commit"] for item in component_manifest), "provisional component roots unexpectedly canonical")
     require(
         {item["component"] for item in component_manifest if item["canonical_component_commit"]}
-        == {"factory", "initialize", "flash", "burn", "mint", "swap"},
+        == {"factory", "initialize", "flash", "burn", "mint", "swap", "transfer", "collect"},
         "canonical component set drift",
     )
     require(
         {item["component"] for item in component_manifest if item["provisional_for_final_publication"]}
-        == {"transfer", "collect", "liquidity"},
+        == {"liquidity"},
         "provisional component set drift",
     )
 
@@ -1459,7 +1459,7 @@ def expected_contract_from_sources(root: Path, sources: dict[str, Any]) -> dict[
         "authority_contract": {
             "implementation_base_commit": IMPLEMENTATION_BASE_COMMIT,
             "implementation_base_tree": IMPLEMENTATION_BASE_TREE,
-            "provisional_root_boundary": "the current base contains every selected component in one linear local ancestry; Burn, Mint and Swap are canonical, while corrected Transfer -> Collect -> Liquidity remain provisional and final publication must be regenerated after they land canonically",
+            "provisional_root_boundary": "the current base contains every selected component in one linear ancestry; components through corrected Transfer and Collect are canonical, while corrected Liquidity is the exact tested candidate and final publication must be regenerated after its canonical squash merge",
             "factory_projection_boundary": "Factory #77 natively certifies only 59 written fields plus handler-local absence of Pool.tick; the other 226 stored fields are outside that 60-field contract, not asserted outside runtime store reachability",
             "normalized_category_boundary": "the four categories are conservative handler-relative normalization buckets: setter/direct-write authority, component-native nonsetter classification, outside certified scope, and derived; they preserve exact source-native categories but do not uniformly prove a matching Store path, common execution, branch correlation, receiver must-alias, visibility or persistence",
             "swap_receiver_boundary": "repaired Swap binds exact setter receiver flows, exact store target/receiver/value flows, and lexically later same-group receiver-origin overlap; common execution, branch correlation and receiver must-alias remain false",
@@ -1474,7 +1474,7 @@ def expected_contract_from_sources(root: Path, sources: dict[str, Any]) -> dict[
         "component_manifest": component_manifest,
         "component_manifest_sha256": canonical_sha256(component_manifest),
         "canonical_reseal_required": True,
-        "canonical_reseal_order": ["transfer", "collect", "liquidity", "all-handlers"],
+        "canonical_reseal_order": ["liquidity", "all-handlers"],
         "schema_catalog": sources["schema"],
         "handler_catalog": [
             {
@@ -1509,7 +1509,7 @@ def expected_contract_from_sources(root: Path, sources: dict[str, Any]) -> dict[
         "issue_mapping": issue_mapping,
         "residual_blockers": {
             "provisional_roots": [
-                "all selected roots are present in one linear local ancestry; Burn, Mint and Swap are canonical, but corrected Transfer, Collect, and Liquidity require canonical landing/reseal",
+                "all selected roots are present in one linear ancestry; corrected Transfer and Collect are canonical, while corrected Liquidity requires canonical landing/reseal",
                 "the final component-manifest digest must be regenerated after the canonical composition exists",
             ],
             "semantic": [

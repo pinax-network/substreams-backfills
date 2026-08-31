@@ -1,0 +1,20 @@
+deployment: QmawEzRNeDyaTgjPKb1eRrbyzxczgSHUYzvTMaMnN8jyuh
+family: messari-v3
+variant: uniswap-v3-base
+schema: QmVrng7WZwwCMkcGuay4yEbwepyPFDJjamwmsBcC18Ef2o
+chain: base
+market_qpd: 17568
+query_fees_grt_24h: 21.000
+qos_snapshot_at: "2026-08-31T17:20:00Z"
+placement: kan-subgraphs-a/sgd5299
+milestone: M9
+issues: [94, 90, 95]
+eligibility:
+  policy: graph-node-net-catchup-v1
+  required_clusters: [riv-subgraphs-a, kan-subgraphs-a]
+  latest:
+    decision: indeterminate
+    reason: no_fresh_evidence
+    measured_at: null
+    evidence: null
+    sha256: null

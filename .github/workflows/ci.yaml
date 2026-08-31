@@ -53,6 +53,10 @@ jobs:
           wasm-validate aerodrome-slipstream-base/reference/mappings/Pool.wasm
           python3 scripts/verify-aerodrome-slipstream-base-target.py
           python3 -m unittest scripts.tests.test_aerodrome_slipstream_base_target
+      - name: Verify immutable Messari V3 BSC/Base target baselines
+        run: |
+          python3 scripts/verify-messari-v3-targets.py
+          python3 -m unittest scripts.tests.test_messari_v3_targets
       - name: Verify immutable Uniswap V3 graft ancestry
         run: python3 scripts/verify-uniswap-v3-graft-ancestry.py
       - name: Recompute Uniswap V3 writer compatibility evidence

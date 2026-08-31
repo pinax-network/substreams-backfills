@@ -60,6 +60,11 @@ only after this gate passes.
   target Factory/dynamic-Pair filtering. M8 orders the work while M0 eligibility remains
   indeterminate; source-revision, implementation, runtime, parity, backfill, production,
   and readiness gates remain false.
+- **`messari-v3/`** — the combined immutable M9 baseline for PancakeSwap V3 BSC
+  and Uniswap V3 Base. It retains both exact manifests and their 26-artifact
+  closures, binds schema, ABI, full WASM export, handler, and malformed
+  `mapping.entities` differences, and keeps source reproduction, eligibility,
+  implementation, runtime, parity, backfill, deployment, and readiness false.
 - **`uniswap-v3/source/`** — the source-identical Rust 1.79 import of the reviewed
   mainnet parity fork. Its history is retained at
   `upstream/uniswap-v3-qma8a81t-parity`; the surrounding family directory owns target

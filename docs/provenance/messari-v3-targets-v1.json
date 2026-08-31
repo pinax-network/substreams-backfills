@@ -1,0 +1,1513 @@
+{
+  "artifact_count": 26,
+  "artifact_lock": [
+    {
+      "bytes": 5193,
+      "cid": "QmQjVBdmgZdjHpQsXGSC5uryWLmPkkTAunHN2AnDApZBa3",
+      "role": "deployment",
+      "sha256": "b63daebd56e0044dcf997534a412ff1e0e9ef803f30cf44affd0f2d7329859b6",
+      "target": "pancakeswap-v3-bsc",
+      "vendored_path": "messari-v3/reference/pancakeswap-v3-bsc/deployment.yaml"
+    },
+    {
+      "bytes": 47054,
+      "cid": "QmSY3DAk44RGNbywjXt8PznikJkNMpoNjM8UVde3Hnhocg",
+      "role": "schema",
+      "sha256": "efdc8cc4dd6838a065ec573e28cc9218d73e9ad8858694eb836acae0f977c64a",
+      "target": "pancakeswap-v3-bsc",
+      "vendored_path": "messari-v3/reference/pancakeswap-v3-bsc/schema.graphql"
+    },
+    {
+      "abi": {
+        "canonical_sha256": "8677cba24af40b66f2a87b4d236f9a27d3d4a5de946c01e8443fc6c29ef9a5b0",
+        "entry_count": 12,
+        "entry_type_counts": {
+          "event": 2,
+          "fallback": 1,
+          "function": 9
+        },
+        "events": [
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              true,
+              false
+            ],
+            "signature": "Approval(address,address,uint256)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              true,
+              false
+            ],
+            "signature": "Transfer(address,address,uint256)"
+          }
+        ],
+        "function_signatures": [
+          "name()",
+          "approve(address,uint256)",
+          "totalSupply()",
+          "transferFrom(address,address,uint256)",
+          "decimals()",
+          "balanceOf(address)",
+          "symbol()",
+          "transfer(address,uint256)",
+          "allowance(address,address)"
+        ]
+      },
+      "bytes": 3684,
+      "cid": "QmXuTbDkNrN27VydxbS2huvKRk62PMgUTdPDWkxcr2w7j2",
+      "role": "abi/ERC20",
+      "sha256": "4b83c6645aed2df5e4e9a1d11f372453fc052ac8575348c8c04a33ceacd0ae90",
+      "target": "pancakeswap-v3-bsc",
+      "vendored_path": "messari-v3/reference/pancakeswap-v3-bsc/abis/ERC20.json"
+    },
+    {
+      "abi": {
+        "canonical_sha256": "f33a670948766f92fa064a825f78ecec81d63726dba12d964b5cbdd91b7203ef",
+        "entry_count": 1,
+        "entry_type_counts": {
+          "function": 1
+        },
+        "events": [],
+        "function_signatures": [
+          "name()"
+        ]
+      },
+      "bytes": 268,
+      "cid": "QmQCP6Pdp1MqpwRv2qoPHuUTwZGy7Q3eDHg4w5kzwE9mBj",
+      "role": "abi/ERC20NameBytes",
+      "sha256": "b874c853ffa5309e4b7fbf4934c1efdb4fe31e1a65f7041e67f4a7f2258ffb77",
+      "target": "pancakeswap-v3-bsc",
+      "vendored_path": "messari-v3/reference/pancakeswap-v3-bsc/abis/ERC20NameBytes.json"
+    },
+    {
+      "abi": {
+        "canonical_sha256": "42ba2278c057ead08b6c7a5eefa15e17e3cf12b44259616ae2b9de0fb605b1ec",
+        "entry_count": 1,
+        "entry_type_counts": {
+          "function": 1
+        },
+        "events": [],
+        "function_signatures": [
+          "symbol()"
+        ]
+      },
+      "bytes": 270,
+      "cid": "QmbHnhUFZa6qqqRyubUYhXntox1TCBxqryaBM1iNGqVJzT",
+      "role": "abi/ERC20SymbolBytes",
+      "sha256": "9ccb9b5d95394b2ffb4ced54cffa0c5ea282917f4eec36c121ce28c257965193",
+      "target": "pancakeswap-v3-bsc",
+      "vendored_path": "messari-v3/reference/pancakeswap-v3-bsc/abis/ERC20SymbolBytes.json"
+    },
+    {
+      "abi": {
+        "canonical_sha256": "cbc4009d9af160beb55d60f0b38fcc0ffa3969e432d5bcac5321e56119f55dbe",
+        "entry_count": 22,
+        "entry_type_counts": {
+          "constructor": 1,
+          "event": 6,
+          "function": 15
+        },
+        "events": [
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              true
+            ],
+            "signature": "FeeAmountEnabled(uint24,int24)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              false,
+              false
+            ],
+            "signature": "FeeAmountExtraInfoUpdated(uint24,bool,bool)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              true
+            ],
+            "signature": "OwnerChanged(address,address)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              true,
+              true,
+              false,
+              false
+            ],
+            "signature": "PoolCreated(address,address,uint24,int24,address)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              true
+            ],
+            "signature": "SetLmPoolDeployer(address)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              false
+            ],
+            "signature": "WhiteListAdded(address,bool)"
+          }
+        ],
+        "function_signatures": [
+          "collectProtocol(address,address,uint128,uint128)",
+          "createPool(address,address,uint24)",
+          "enableFeeAmount(uint24,int24)",
+          "feeAmountTickSpacing(uint24)",
+          "feeAmountTickSpacingExtraInfo(uint24)",
+          "getPool(address,address,uint24)",
+          "lmPoolDeployer()",
+          "owner()",
+          "poolDeployer()",
+          "setFeeAmountExtraInfo(uint24,bool,bool)",
+          "setFeeProtocol(address,uint32,uint32)",
+          "setLmPool(address,address)",
+          "setLmPoolDeployer(address)",
+          "setOwner(address)",
+          "setWhiteListAddress(address,bool)"
+        ]
+      },
+      "bytes": 8559,
+      "cid": "QmYxaKG6NxTFjcWvF4VSb9Wk9F4TKLEQZidX9aC89E5CLd",
+      "role": "abi/Factory",
+      "sha256": "6040aedf8e250e4824078449f1d6957e6db1c5a03a070db0988d00d13177448a",
+      "target": "pancakeswap-v3-bsc",
+      "vendored_path": "messari-v3/reference/pancakeswap-v3-bsc/abis/Factory.json"
+    },
+    {
+      "abi": {
+        "canonical_sha256": "8b9a8fbd8faaa4a7eba89304e6ac099eafdc9b2413e1e91f16b23fbe0fce3def",
+        "entry_count": 47,
+        "entry_type_counts": {
+          "constructor": 1,
+          "event": 6,
+          "function": 39,
+          "receive": 1
+        },
+        "events": [
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              true,
+              true
+            ],
+            "signature": "Approval(address,address,uint256)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              true,
+              false
+            ],
+            "signature": "ApprovalForAll(address,address,bool)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              false,
+              false,
+              false
+            ],
+            "signature": "Collect(uint256,address,uint256,uint256)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              false,
+              false,
+              false
+            ],
+            "signature": "DecreaseLiquidity(uint256,uint128,uint256,uint256)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              false,
+              false,
+              false
+            ],
+            "signature": "IncreaseLiquidity(uint256,uint128,uint256,uint256)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              true,
+              true
+            ],
+            "signature": "Transfer(address,address,uint256)"
+          }
+        ],
+        "function_signatures": [
+          "DOMAIN_SEPARATOR()",
+          "PERMIT_TYPEHASH()",
+          "WETH9()",
+          "approve(address,uint256)",
+          "balanceOf(address)",
+          "baseURI()",
+          "burn(uint256)",
+          "collect((uint256,address,uint128,uint128))",
+          "createAndInitializePoolIfNecessary(address,address,uint24,uint160)",
+          "decreaseLiquidity((uint256,uint128,uint256,uint256,uint256))",
+          "deployer()",
+          "factory()",
+          "getApproved(uint256)",
+          "increaseLiquidity((uint256,uint256,uint256,uint256,uint256,uint256))",
+          "isApprovedForAll(address,address)",
+          "mint((address,address,uint24,int24,int24,uint256,uint256,uint256,uint256,address,uint256))",
+          "multicall(bytes[])",
+          "name()",
+          "ownerOf(uint256)",
+          "pancakeV3MintCallback(uint256,uint256,bytes)",
+          "permit(address,uint256,uint256,uint8,bytes32,bytes32)",
+          "positions(uint256)",
+          "refundETH()",
+          "safeTransferFrom(address,address,uint256)",
+          "safeTransferFrom(address,address,uint256,bytes)",
+          "selfPermit(address,uint256,uint256,uint8,bytes32,bytes32)",
+          "selfPermitAllowed(address,uint256,uint256,uint8,bytes32,bytes32)",
+          "selfPermitAllowedIfNecessary(address,uint256,uint256,uint8,bytes32,bytes32)",
+          "selfPermitIfNecessary(address,uint256,uint256,uint8,bytes32,bytes32)",
+          "setApprovalForAll(address,bool)",
+          "supportsInterface(bytes4)",
+          "sweepToken(address,uint256,address)",
+          "symbol()",
+          "tokenByIndex(uint256)",
+          "tokenOfOwnerByIndex(address,uint256)",
+          "tokenURI(uint256)",
+          "totalSupply()",
+          "transferFrom(address,address,uint256)",
+          "unwrapWETH9(uint256,address)"
+        ]
+      },
+      "bytes": 24646,
+      "cid": "QmaWAco4g2iX7B9ar65RhWXUSWSs8yQCpLxBVipzcsDycb",
+      "role": "abi/NonFungiblePositionManager",
+      "sha256": "a06cac5c70cae9069812dce3f9d8c746a3f6988bcbb76332340509049ed0c7e6",
+      "target": "pancakeswap-v3-bsc",
+      "vendored_path": "messari-v3/reference/pancakeswap-v3-bsc/abis/NonFungiblePositionManager.json"
+    },
+    {
+      "abi": {
+        "canonical_sha256": "00303f5ede64fb863a0be16e646f86bd006bccd587efc1f23a8b4fc6c7d682a8",
+        "entry_count": 39,
+        "entry_type_counts": {
+          "constructor": 1,
+          "event": 10,
+          "function": 28
+        },
+        "events": [
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              true,
+              true,
+              false,
+              false,
+              false
+            ],
+            "signature": "Burn(address,int24,int24,uint128,uint256,uint256)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              false,
+              true,
+              true,
+              false,
+              false
+            ],
+            "signature": "Collect(address,address,int24,int24,uint128,uint128)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              true,
+              false,
+              false
+            ],
+            "signature": "CollectProtocol(address,address,uint128,uint128)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              true,
+              false,
+              false,
+              false,
+              false
+            ],
+            "signature": "Flash(address,address,uint256,uint256,uint256,uint256)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              false,
+              false
+            ],
+            "signature": "IncreaseObservationCardinalityNext(uint16,uint16)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              false,
+              false
+            ],
+            "signature": "Initialize(uint160,int24)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              false,
+              true,
+              true,
+              true,
+              false,
+              false,
+              false
+            ],
+            "signature": "Mint(address,address,int24,int24,uint128,uint256,uint256)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "signature": "SetFeeProtocol(uint32,uint32,uint32,uint32)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              false
+            ],
+            "signature": "SetLmPoolEvent(address)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              true,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "signature": "Swap(address,address,int256,int256,uint160,uint128,int24,uint128,uint128)"
+          }
+        ],
+        "function_signatures": [
+          "burn(int24,int24,uint128)",
+          "collect(address,int24,int24,uint128,uint128)",
+          "collectProtocol(address,uint128,uint128)",
+          "factory()",
+          "fee()",
+          "feeGrowthGlobal0X128()",
+          "feeGrowthGlobal1X128()",
+          "flash(address,uint256,uint256,bytes)",
+          "increaseObservationCardinalityNext(uint16)",
+          "initialize(uint160)",
+          "liquidity()",
+          "lmPool()",
+          "maxLiquidityPerTick()",
+          "mint(address,int24,int24,uint128,bytes)",
+          "observations(uint256)",
+          "observe(uint32[])",
+          "positions(bytes32)",
+          "protocolFees()",
+          "setFeeProtocol(uint32,uint32)",
+          "setLmPool(address)",
+          "slot0()",
+          "snapshotCumulativesInside(int24,int24)",
+          "swap(address,bool,int256,uint160,bytes)",
+          "tickBitmap(int16)",
+          "tickSpacing()",
+          "ticks(int24)",
+          "token0()",
+          "token1()"
+        ]
+      },
+      "bytes": 20622,
+      "cid": "QmabUZX7w3JJ8QaYnpuNaZ1iHteB9LfvVwk98YATUg4hVt",
+      "role": "abi/Pool",
+      "sha256": "d11de4a76e9daeac0998eac4b36f17fc307193ce299d54b031940b88b61fecfc",
+      "target": "pancakeswap-v3-bsc",
+      "vendored_path": "messari-v3/reference/pancakeswap-v3-bsc/abis/Pool.json"
+    },
+    {
+      "abi": {
+        "canonical_sha256": "881621b5546e0d4303bf68a8bc20584fda1275ba7245b11190901617d3ce8a2f",
+        "entry_count": 1,
+        "entry_type_counts": {
+          "function": 1
+        },
+        "events": [],
+        "function_signatures": [
+          "getPopulatedTicksInWord(address,int16)"
+        ]
+      },
+      "bytes": 909,
+      "cid": "Qmcew9GU9kikcwYqemJ3x6UqXq5aMs2RBJxqUPeD5Ld5dF",
+      "role": "abi/TickLens",
+      "sha256": "f99008073f8d236d60d63fcc2b17d8f084e0f6e1ec02d0ec8fd8017a152a2252",
+      "target": "pancakeswap-v3-bsc",
+      "vendored_path": "messari-v3/reference/pancakeswap-v3-bsc/abis/TickLens.json"
+    },
+    {
+      "bytes": 145347,
+      "cid": "QmNyz8Cw8ZQCMcrGA9k64TJSpxsxY6duzkJhKdz2amUQ7i",
+      "export_count": 170,
+      "export_table_sha256": "65b3cd9491855f2343c3d26761ee557057a0aea6976ef9a26dce850d28e4547a",
+      "function_exports": [
+        "handlePoolCreated",
+        "id_of_type",
+        "allocate",
+        "__new",
+        "__pin",
+        "__unpin",
+        "__collect",
+        "_start"
+      ],
+      "handler_exports": [
+        "handlePoolCreated"
+      ],
+      "role": "mapping/Factory",
+      "sha256": "653f582fb473f29d94e16624f3714f43ac05c4d44044fc4c9e03ace1100c8f57",
+      "target": "pancakeswap-v3-bsc",
+      "vendored_path": "messari-v3/reference/pancakeswap-v3-bsc/mappings/Factory.wasm"
+    },
+    {
+      "bytes": 93924,
+      "cid": "QmeaUSU4caeboxKLNfeMy4mjJyEND5ht3y7aAUqUnS3CoT",
+      "export_count": 173,
+      "export_table_sha256": "4844a2787ab3aeb78fe4bcfb6eac8f6674515737ffa6f4fd7d228484fdc34cb3",
+      "function_exports": [
+        "getUSDValueFromNativeTokens",
+        "handleIncreaseLiquidity",
+        "handleDecreaseLiquidity",
+        "handleTransfer",
+        "id_of_type",
+        "allocate",
+        "__new",
+        "__pin",
+        "__unpin",
+        "__collect",
+        "_start"
+      ],
+      "handler_exports": [
+        "handleIncreaseLiquidity",
+        "handleDecreaseLiquidity",
+        "handleTransfer"
+      ],
+      "role": "mapping/NonFungiblePositionManager",
+      "sha256": "89f92d94e83ee622c8b9a97288c6a1124a160ac21edc0b9ee3c917ddc3c5b6b5",
+      "target": "pancakeswap-v3-bsc",
+      "vendored_path": "messari-v3/reference/pancakeswap-v3-bsc/mappings/NonFungiblePositionManager.wasm"
+    },
+    {
+      "bytes": 136709,
+      "cid": "QmZ8ncasTQBiLBzb9j7KKCV3Xc1zLLaqKUM9R3VkuS8f1L",
+      "export_count": 174,
+      "export_table_sha256": "0d40fcc7551dc2809e2bd9dbc1cf7fabaeebf83431eabd0276eec243d583cbb6",
+      "function_exports": [
+        "handleInitialize",
+        "handleMint",
+        "handleBurn",
+        "handleSwap",
+        "handleCollectPool",
+        "id_of_type",
+        "allocate",
+        "__new",
+        "__pin",
+        "__unpin",
+        "__collect",
+        "_start"
+      ],
+      "handler_exports": [
+        "handleInitialize",
+        "handleMint",
+        "handleBurn",
+        "handleSwap",
+        "handleCollectPool"
+      ],
+      "role": "mapping/Pool",
+      "sha256": "2e3a917c868d739d96a7f102d6872d110e3c09e80ca0a8ab039e3ffde61ece54",
+      "target": "pancakeswap-v3-bsc",
+      "vendored_path": "messari-v3/reference/pancakeswap-v3-bsc/mappings/Pool.wasm"
+    },
+    {
+      "bytes": 41036,
+      "cid": "QmZh9pwyqnVEknPgTWraJweuyy1qbwzhA2rrSq43xmdgHL",
+      "export_count": 170,
+      "export_table_sha256": "c1ec6e69f4417cff0edf9fc282c0ec4da00928fe3df9fd7efb0375747ef6ce24",
+      "function_exports": [
+        "handleSetFeeProtocol",
+        "id_of_type",
+        "allocate",
+        "__new",
+        "__pin",
+        "__unpin",
+        "__collect",
+        "_start"
+      ],
+      "handler_exports": [
+        "handleSetFeeProtocol"
+      ],
+      "role": "mapping/PancakeSwapPool",
+      "sha256": "cd4d3e44fd7b749ab40baf691099dc6a67d206666f3016dd82bcf2164b41c136",
+      "target": "pancakeswap-v3-bsc",
+      "vendored_path": "messari-v3/reference/pancakeswap-v3-bsc/mappings/PancakeSwapPool.wasm"
+    },
+    {
+      "bytes": 5068,
+      "cid": "QmawEzRNeDyaTgjPKb1eRrbyzxczgSHUYzvTMaMnN8jyuh",
+      "role": "deployment",
+      "sha256": "d19dd5c0aa86c78161306a1beb7df754f2a5eeb066e33d99aece4251732e868b",
+      "target": "uniswap-v3-base",
+      "vendored_path": "messari-v3/reference/uniswap-v3-base/deployment.yaml"
+    },
+    {
+      "bytes": 47061,
+      "cid": "QmVrng7WZwwCMkcGuay4yEbwepyPFDJjamwmsBcC18Ef2o",
+      "role": "schema",
+      "sha256": "e93bf39c118446d0695291d03cd1cbe959010d0b00e18d610e5739711fb3411c",
+      "target": "uniswap-v3-base",
+      "vendored_path": "messari-v3/reference/uniswap-v3-base/schema.graphql"
+    },
+    {
+      "abi": {
+        "canonical_sha256": "8677cba24af40b66f2a87b4d236f9a27d3d4a5de946c01e8443fc6c29ef9a5b0",
+        "entry_count": 12,
+        "entry_type_counts": {
+          "event": 2,
+          "fallback": 1,
+          "function": 9
+        },
+        "events": [
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              true,
+              false
+            ],
+            "signature": "Approval(address,address,uint256)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              true,
+              false
+            ],
+            "signature": "Transfer(address,address,uint256)"
+          }
+        ],
+        "function_signatures": [
+          "name()",
+          "approve(address,uint256)",
+          "totalSupply()",
+          "transferFrom(address,address,uint256)",
+          "decimals()",
+          "balanceOf(address)",
+          "symbol()",
+          "transfer(address,uint256)",
+          "allowance(address,address)"
+        ]
+      },
+      "bytes": 3684,
+      "cid": "QmXuTbDkNrN27VydxbS2huvKRk62PMgUTdPDWkxcr2w7j2",
+      "role": "abi/ERC20",
+      "sha256": "4b83c6645aed2df5e4e9a1d11f372453fc052ac8575348c8c04a33ceacd0ae90",
+      "target": "uniswap-v3-base",
+      "vendored_path": "messari-v3/reference/uniswap-v3-base/abis/ERC20.json"
+    },
+    {
+      "abi": {
+        "canonical_sha256": "f33a670948766f92fa064a825f78ecec81d63726dba12d964b5cbdd91b7203ef",
+        "entry_count": 1,
+        "entry_type_counts": {
+          "function": 1
+        },
+        "events": [],
+        "function_signatures": [
+          "name()"
+        ]
+      },
+      "bytes": 268,
+      "cid": "QmQCP6Pdp1MqpwRv2qoPHuUTwZGy7Q3eDHg4w5kzwE9mBj",
+      "role": "abi/ERC20NameBytes",
+      "sha256": "b874c853ffa5309e4b7fbf4934c1efdb4fe31e1a65f7041e67f4a7f2258ffb77",
+      "target": "uniswap-v3-base",
+      "vendored_path": "messari-v3/reference/uniswap-v3-base/abis/ERC20NameBytes.json"
+    },
+    {
+      "abi": {
+        "canonical_sha256": "42ba2278c057ead08b6c7a5eefa15e17e3cf12b44259616ae2b9de0fb605b1ec",
+        "entry_count": 1,
+        "entry_type_counts": {
+          "function": 1
+        },
+        "events": [],
+        "function_signatures": [
+          "symbol()"
+        ]
+      },
+      "bytes": 270,
+      "cid": "QmbHnhUFZa6qqqRyubUYhXntox1TCBxqryaBM1iNGqVJzT",
+      "role": "abi/ERC20SymbolBytes",
+      "sha256": "9ccb9b5d95394b2ffb4ced54cffa0c5ea282917f4eec36c121ce28c257965193",
+      "target": "uniswap-v3-base",
+      "vendored_path": "messari-v3/reference/uniswap-v3-base/abis/ERC20SymbolBytes.json"
+    },
+    {
+      "abi": {
+        "canonical_sha256": "52e6be29791aa0fe22a5d0e0a7ef063324631fa30b940ef8c3868e5874348e77",
+        "entry_count": 9,
+        "entry_type_counts": {
+          "event": 3,
+          "function": 6
+        },
+        "events": [
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              true
+            ],
+            "signature": "FeeAmountEnabled(uint24,int24)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              true
+            ],
+            "signature": "OwnerChanged(address,address)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              true,
+              true,
+              false,
+              false
+            ],
+            "signature": "PoolCreated(address,address,uint24,int24,address)"
+          }
+        ],
+        "function_signatures": [
+          "createPool(address,address,uint24)",
+          "enableFeeAmount(uint24,int24)",
+          "feeAmountTickSpacing(uint24)",
+          "getPool(address,address,uint24)",
+          "owner()",
+          "setOwner(address)"
+        ]
+      },
+      "bytes": 3703,
+      "cid": "QmTU8eKx6pCgtff6Uvc7srAwR8BPiM3jTMBw9ahrXBjRzY",
+      "role": "abi/Factory",
+      "sha256": "daa769db333fa28d331cc0d866a666ebb98c995a915cb44828a801608ab0d1c1",
+      "target": "uniswap-v3-base",
+      "vendored_path": "messari-v3/reference/uniswap-v3-base/abis/Factory.json"
+    },
+    {
+      "abi": {
+        "canonical_sha256": "97f5a2808e81a073ed6c29c5560a3b0c44e22a3a5580eaf668f8559860f50913",
+        "entry_count": 45,
+        "entry_type_counts": {
+          "constructor": 1,
+          "event": 6,
+          "function": 37,
+          "receive": 1
+        },
+        "events": [
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              true,
+              true
+            ],
+            "signature": "Approval(address,address,uint256)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              true,
+              false
+            ],
+            "signature": "ApprovalForAll(address,address,bool)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              false,
+              false,
+              false
+            ],
+            "signature": "Collect(uint256,address,uint256,uint256)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              false,
+              false,
+              false
+            ],
+            "signature": "DecreaseLiquidity(uint256,uint128,uint256,uint256)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              false,
+              false,
+              false
+            ],
+            "signature": "IncreaseLiquidity(uint256,uint128,uint256,uint256)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              true,
+              true
+            ],
+            "signature": "Transfer(address,address,uint256)"
+          }
+        ],
+        "function_signatures": [
+          "DOMAIN_SEPARATOR()",
+          "PERMIT_TYPEHASH()",
+          "WETH9()",
+          "approve(address,uint256)",
+          "balanceOf(address)",
+          "baseURI()",
+          "burn(uint256)",
+          "collect(uint256,address,uint128,uint128)",
+          "createAndInitializePoolIfNecessary(address,address,uint24,uint160)",
+          "decreaseLiquidity(uint256,uint128,uint256,uint256,uint256)",
+          "factory()",
+          "getApproved(uint256)",
+          "increaseLiquidity(uint256,uint256,uint256,uint256,uint256,uint256)",
+          "isApprovedForAll(address,address)",
+          "mint((address,address,uint24,int24,int24,uint256,uint256,uint256,uint256,address,uint256))",
+          "multicall(bytes[])",
+          "name()",
+          "ownerOf(uint256)",
+          "permit(address,uint256,uint256,uint8,bytes32,bytes32)",
+          "positions(uint256)",
+          "safeTransferFrom(address,address,uint256)",
+          "safeTransferFrom(address,address,uint256,bytes)",
+          "selfPermit(address,uint256,uint256,uint8,bytes32,bytes32)",
+          "selfPermitAllowed(address,uint256,uint256,uint8,bytes32,bytes32)",
+          "selfPermitAllowedIfNecessary(address,uint256,uint256,uint8,bytes32,bytes32)",
+          "selfPermitIfNecessary(address,uint256,uint256,uint8,bytes32,bytes32)",
+          "setApprovalForAll(address,bool)",
+          "supportsInterface(bytes4)",
+          "sweepToken(address,uint256,address)",
+          "symbol()",
+          "tokenByIndex(uint256)",
+          "tokenOfOwnerByIndex(address,uint256)",
+          "tokenURI(uint256)",
+          "totalSupply()",
+          "transferFrom(address,address,uint256)",
+          "uniswapV3MintCallback(uint256,uint256,bytes)",
+          "unwrapWETH9(uint256,address)"
+        ]
+      },
+      "bytes": 23334,
+      "cid": "QmaxxqQ7xzbGDPWu184uoq2g5sofazB9B9tEDrpPjmRZ8q",
+      "role": "abi/NonFungiblePositionManager",
+      "sha256": "456c1726a11497a2b12e719111381203a1e96178ea4547af63e8947dc19490cd",
+      "target": "uniswap-v3-base",
+      "vendored_path": "messari-v3/reference/uniswap-v3-base/abis/NonFungiblePositionManager.json"
+    },
+    {
+      "abi": {
+        "canonical_sha256": "45a128511b7e3558b0d1ac877bec0990de4ccfa25e78cda1ca6139ceaccdfaa9",
+        "entry_count": 36,
+        "entry_type_counts": {
+          "constructor": 1,
+          "event": 9,
+          "function": 26
+        },
+        "events": [
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              true,
+              true,
+              false,
+              false,
+              false
+            ],
+            "signature": "Burn(address,int24,int24,uint128,uint256,uint256)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              false,
+              true,
+              true,
+              false,
+              false
+            ],
+            "signature": "Collect(address,address,int24,int24,uint128,uint128)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              true,
+              false,
+              false
+            ],
+            "signature": "CollectProtocol(address,address,uint128,uint128)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              true,
+              false,
+              false,
+              false,
+              false
+            ],
+            "signature": "Flash(address,address,uint256,uint256,uint256,uint256)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              false,
+              false
+            ],
+            "signature": "IncreaseObservationCardinalityNext(uint16,uint16)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              false,
+              false
+            ],
+            "signature": "Initialize(uint160,int24)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              false,
+              true,
+              true,
+              true,
+              false,
+              false,
+              false
+            ],
+            "signature": "Mint(address,address,int24,int24,uint128,uint256,uint256)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "signature": "SetFeeProtocol(uint8,uint8,uint8,uint8)"
+          },
+          {
+            "anonymous": false,
+            "indexed": [
+              true,
+              true,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "signature": "Swap(address,address,int256,int256,uint160,uint128,int24)"
+          }
+        ],
+        "function_signatures": [
+          "burn(int24,int24,uint128)",
+          "collect(address,int24,int24,uint128,uint128)",
+          "collectProtocol(address,uint128,uint128)",
+          "factory()",
+          "fee()",
+          "feeGrowthGlobal0X128()",
+          "feeGrowthGlobal1X128()",
+          "flash(address,uint256,uint256,bytes)",
+          "increaseObservationCardinalityNext(uint16)",
+          "initialize(uint160)",
+          "liquidity()",
+          "maxLiquidityPerTick()",
+          "mint(address,int24,int24,uint128,bytes)",
+          "observations(uint256)",
+          "observe(uint32[])",
+          "positions(bytes32)",
+          "protocolFees()",
+          "setFeeProtocol(uint8,uint8)",
+          "slot0()",
+          "snapshotCumulativesInside(int24,int24)",
+          "swap(address,bool,int256,uint160,bytes)",
+          "tickBitmap(int16)",
+          "tickSpacing()",
+          "ticks(int24)",
+          "token0()",
+          "token1()"
+        ]
+      },
+      "bytes": 19599,
+      "cid": "QmQ5rynzbQYpebSAUFfnTYm9KDUumWYF5eQb9QRwRLPfwB",
+      "role": "abi/Pool",
+      "sha256": "11ea051e74b9a1bbfa9263dcd28dd4bd9df4898d7b02a79b7fcf545e732dcd4d",
+      "target": "uniswap-v3-base",
+      "vendored_path": "messari-v3/reference/uniswap-v3-base/abis/Pool.json"
+    },
+    {
+      "abi": {
+        "canonical_sha256": "881621b5546e0d4303bf68a8bc20584fda1275ba7245b11190901617d3ce8a2f",
+        "entry_count": 1,
+        "entry_type_counts": {
+          "function": 1
+        },
+        "events": [],
+        "function_signatures": [
+          "getPopulatedTicksInWord(address,int16)"
+        ]
+      },
+      "bytes": 909,
+      "cid": "Qmcew9GU9kikcwYqemJ3x6UqXq5aMs2RBJxqUPeD5Ld5dF",
+      "role": "abi/TickLens",
+      "sha256": "f99008073f8d236d60d63fcc2b17d8f084e0f6e1ec02d0ec8fd8017a152a2252",
+      "target": "uniswap-v3-base",
+      "vendored_path": "messari-v3/reference/uniswap-v3-base/abis/TickLens.json"
+    },
+    {
+      "bytes": 148830,
+      "cid": "QmUJsAqcUbk4CpQxvQyJ7igo5PQknNJgAj1cupLiW21Ejc",
+      "export_count": 172,
+      "export_table_sha256": "e2ff41cc934187de9c320eba6b220dde316ceefd098a77c0fe8129090848468f",
+      "function_exports": [
+        "handlePoolCreated",
+        "id_of_type",
+        "allocate",
+        "__new",
+        "__pin",
+        "__unpin",
+        "__collect",
+        "_start"
+      ],
+      "handler_exports": [
+        "handlePoolCreated"
+      ],
+      "role": "mapping/Factory",
+      "sha256": "2bbbd2960df7e0e3761b08fac5fbb2d966dcda0c017c5ff1f22107131b895708",
+      "target": "uniswap-v3-base",
+      "vendored_path": "messari-v3/reference/uniswap-v3-base/mappings/Factory.wasm"
+    },
+    {
+      "bytes": 97112,
+      "cid": "Qmb3aYhcaVXLT3ouQypKqvC9b62SsdkQwznuabnhdmYLd5",
+      "export_count": 175,
+      "export_table_sha256": "8cd6408cbc8d7b9af50b6eb543f1dcce83ad994f14947723aed1dbeba4e742aa",
+      "function_exports": [
+        "getUSDValueFromNativeTokens",
+        "handleIncreaseLiquidity",
+        "handleDecreaseLiquidity",
+        "handleTransfer",
+        "id_of_type",
+        "allocate",
+        "__new",
+        "__pin",
+        "__unpin",
+        "__collect",
+        "_start"
+      ],
+      "handler_exports": [
+        "handleIncreaseLiquidity",
+        "handleDecreaseLiquidity",
+        "handleTransfer"
+      ],
+      "role": "mapping/NonFungiblePositionManager",
+      "sha256": "f79d4563dbe0e0cef8bf4ff28bfc2e84b6e89e18e4ae39262f5deac18f767e6e",
+      "target": "uniswap-v3-base",
+      "vendored_path": "messari-v3/reference/uniswap-v3-base/mappings/NonFungiblePositionManager.wasm"
+    },
+    {
+      "bytes": 140823,
+      "cid": "QmS9917TbXgmD87MaTpE3asELcn86umKBLJbJUENnZasaz",
+      "export_count": 176,
+      "export_table_sha256": "167c34cbc4468a36cf7a0f87e1c5cfe0f40b7f92116a028a6d0167aa45a60977",
+      "function_exports": [
+        "handleInitialize",
+        "handleMint",
+        "handleBurn",
+        "handleSwap",
+        "handleCollectPool",
+        "id_of_type",
+        "allocate",
+        "__new",
+        "__pin",
+        "__unpin",
+        "__collect",
+        "_start"
+      ],
+      "handler_exports": [
+        "handleInitialize",
+        "handleMint",
+        "handleBurn",
+        "handleSwap",
+        "handleCollectPool"
+      ],
+      "role": "mapping/Pool",
+      "sha256": "a4df46dfbea334093106d21c1eb9553a8bfa65eb6ff3262c3cff0286a7cf6e96",
+      "target": "uniswap-v3-base",
+      "vendored_path": "messari-v3/reference/uniswap-v3-base/mappings/Pool.wasm"
+    },
+    {
+      "bytes": 41790,
+      "cid": "QmXExJr8roifEnTDRLWx8AvooEQ7EzdrWTnLi4qVfvFh9f",
+      "export_count": 172,
+      "export_table_sha256": "d2176ed3a0944f05c0229de38f6e996e14a34ad8ea3d549e99992c0983a72d29",
+      "function_exports": [
+        "handleSetFeeProtocol",
+        "id_of_type",
+        "allocate",
+        "__new",
+        "__pin",
+        "__unpin",
+        "__collect",
+        "_start"
+      ],
+      "handler_exports": [
+        "handleSetFeeProtocol"
+      ],
+      "role": "mapping/UniswapPool",
+      "sha256": "e997b968a6e656d5c57af1016510ed8cdbf4ee980bc4446dd87f6c01d6dc261f",
+      "target": "uniswap-v3-base",
+      "vendored_path": "messari-v3/reference/uniswap-v3-base/mappings/UniswapPool.wasm"
+    }
+  ],
+  "binding_lock": [
+    {
+      "bytes": 558,
+      "path": "messari-v3/QmQjVBdmgZdjHpQsXGSC5uryWLmPkkTAunHN2AnDApZBa3.yaml",
+      "sha256": "7a120509b92ad405b849b3f73122c6b585c5991dac09674fda94e573ee84ae66",
+      "target": "pancakeswap-v3-bsc",
+      "value": {
+        "chain": "bsc",
+        "deployment": "QmQjVBdmgZdjHpQsXGSC5uryWLmPkkTAunHN2AnDApZBa3",
+        "eligibility": {
+          "latest": {
+            "decision": "indeterminate",
+            "evidence": null,
+            "measured_at": null,
+            "reason": "no_fresh_evidence",
+            "sha256": null
+          },
+          "policy": "graph-node-net-catchup-v1",
+          "required_clusters": [
+            "riv-subgraphs-a",
+            "kan-subgraphs-a"
+          ]
+        },
+        "family": "messari-v3",
+        "issues": [
+          85,
+          90,
+          92
+        ],
+        "market_qpd": 143319,
+        "milestone": "M9",
+        "placement": "kan-subgraphs-a/sgd10",
+        "qos_snapshot_at": "2026-08-31T17:20:00Z",
+        "query_fees_grt_24h": 170.76,
+        "schema": "QmSY3DAk44RGNbywjXt8PznikJkNMpoNjM8UVde3Hnhocg",
+        "variant": "pancakeswap-v3-bsc"
+      }
+    },
+    {
+      "bytes": 556,
+      "path": "messari-v3/QmawEzRNeDyaTgjPKb1eRrbyzxczgSHUYzvTMaMnN8jyuh.yaml",
+      "sha256": "3e0e816cb81d6bd7c22c316e712e4801f07672e23971c4d7bc011ac521362e20",
+      "target": "uniswap-v3-base",
+      "value": {
+        "chain": "base",
+        "deployment": "QmawEzRNeDyaTgjPKb1eRrbyzxczgSHUYzvTMaMnN8jyuh",
+        "eligibility": {
+          "latest": {
+            "decision": "indeterminate",
+            "evidence": null,
+            "measured_at": null,
+            "reason": "no_fresh_evidence",
+            "sha256": null
+          },
+          "policy": "graph-node-net-catchup-v1",
+          "required_clusters": [
+            "riv-subgraphs-a",
+            "kan-subgraphs-a"
+          ]
+        },
+        "family": "messari-v3",
+        "issues": [
+          94,
+          90,
+          95
+        ],
+        "market_qpd": 17568,
+        "milestone": "M9",
+        "placement": "kan-subgraphs-a/sgd5299",
+        "qos_snapshot_at": "2026-08-31T17:20:00Z",
+        "query_fees_grt_24h": 21.0,
+        "schema": "QmVrng7WZwwCMkcGuay4yEbwepyPFDJjamwmsBcC18Ef2o",
+        "variant": "uniswap-v3-base"
+      }
+    }
+  ],
+  "boundary": "the contract binds deployed bytes and static layout differences only; source-to-WASM reproduction, handler semantics, runtime behavior, store/error order, parity, backfill, deployment, production, and readiness remain unproved",
+  "contract_id": "messari-v3-targets/v1",
+  "cross_target_diff": {
+    "abis": {
+      "byte_and_semantic_identical_abis": [
+        "ERC20",
+        "ERC20NameBytes",
+        "ERC20SymbolBytes",
+        "TickLens"
+      ],
+      "differing_abis": {
+        "Factory": {
+          "base_canonical_sha256": "52e6be29791aa0fe22a5d0e0a7ef063324631fa30b940ef8c3868e5874348e77",
+          "base_entry_count": 9,
+          "events_only_base": [],
+          "events_only_pancakeswap": [
+            "FeeAmountExtraInfoUpdated(uint24,bool,bool)",
+            "SetLmPoolDeployer(address)",
+            "WhiteListAdded(address,bool)"
+          ],
+          "functions_only_base": [],
+          "functions_only_pancakeswap": [
+            "collectProtocol(address,address,uint128,uint128)",
+            "feeAmountTickSpacingExtraInfo(uint24)",
+            "lmPoolDeployer()",
+            "poolDeployer()",
+            "setFeeAmountExtraInfo(uint24,bool,bool)",
+            "setFeeProtocol(address,uint32,uint32)",
+            "setLmPool(address,address)",
+            "setLmPoolDeployer(address)",
+            "setWhiteListAddress(address,bool)"
+          ],
+          "pancakeswap_canonical_sha256": "cbc4009d9af160beb55d60f0b38fcc0ffa3969e432d5bcac5321e56119f55dbe",
+          "pancakeswap_entry_count": 22
+        },
+        "NonFungiblePositionManager": {
+          "base_canonical_sha256": "97f5a2808e81a073ed6c29c5560a3b0c44e22a3a5580eaf668f8559860f50913",
+          "base_entry_count": 45,
+          "events_only_base": [],
+          "events_only_pancakeswap": [],
+          "functions_only_base": [
+            "collect(uint256,address,uint128,uint128)",
+            "decreaseLiquidity(uint256,uint128,uint256,uint256,uint256)",
+            "increaseLiquidity(uint256,uint256,uint256,uint256,uint256,uint256)",
+            "uniswapV3MintCallback(uint256,uint256,bytes)"
+          ],
+          "functions_only_pancakeswap": [
+            "collect((uint256,address,uint128,uint128))",
+            "decreaseLiquidity((uint256,uint128,uint256,uint256,uint256))",
+            "deployer()",
+            "increaseLiquidity((uint256,uint256,uint256,uint256,uint256,uint256))",
+            "pancakeV3MintCallback(uint256,uint256,bytes)",
+            "refundETH()"
+          ],
+          "pancakeswap_canonical_sha256": "8b9a8fbd8faaa4a7eba89304e6ac099eafdc9b2413e1e91f16b23fbe0fce3def",
+          "pancakeswap_entry_count": 47
+        },
+        "Pool": {
+          "base_canonical_sha256": "45a128511b7e3558b0d1ac877bec0990de4ccfa25e78cda1ca6139ceaccdfaa9",
+          "base_entry_count": 36,
+          "events_only_base": [
+            "SetFeeProtocol(uint8,uint8,uint8,uint8)",
+            "Swap(address,address,int256,int256,uint160,uint128,int24)"
+          ],
+          "events_only_pancakeswap": [
+            "SetFeeProtocol(uint32,uint32,uint32,uint32)",
+            "SetLmPoolEvent(address)",
+            "Swap(address,address,int256,int256,uint160,uint128,int24,uint128,uint128)"
+          ],
+          "functions_only_base": [
+            "setFeeProtocol(uint8,uint8)"
+          ],
+          "functions_only_pancakeswap": [
+            "lmPool()",
+            "setFeeProtocol(uint32,uint32)",
+            "setLmPool(address)"
+          ],
+          "pancakeswap_canonical_sha256": "00303f5ede64fb863a0be16e646f86bd006bccd587efc1f23a8b4fc6c7d682a8",
+          "pancakeswap_entry_count": 39
+        }
+      }
+    },
+    "chains": {
+      "pancakeswap-v3-bsc": "bsc",
+      "uniswap-v3-base": "base"
+    },
+    "deployment_cids": {
+      "pancakeswap-v3-bsc": "QmQjVBdmgZdjHpQsXGSC5uryWLmPkkTAunHN2AnDApZBa3",
+      "uniswap-v3-base": "QmawEzRNeDyaTgjPKb1eRrbyzxczgSHUYzvTMaMnN8jyuh"
+    },
+    "exact": true,
+    "factory_sources": {
+      "pancakeswap-v3-bsc": {
+        "abi": "Factory",
+        "address": "0x0BFbCF9fa4f9C56B0F40a671Ad40E0805A091865",
+        "startBlock": 26956207
+      },
+      "uniswap-v3-base": {
+        "abi": "Factory",
+        "address": "0x33128a8fc17869897dce68ed026d694621f6fdfd",
+        "startBlock": 1371670
+      }
+    },
+    "position_manager_sources": {
+      "pancakeswap-v3-bsc": {
+        "abi": "NonFungiblePositionManager",
+        "address": "0x46A15B0b27311cedF172AB29E4f4766fbE7F4364",
+        "startBlock": 26931961
+      },
+      "uniswap-v3-base": {
+        "abi": "NonFungiblePositionManager",
+        "address": "0x03a520b32c04bf3beef7beb72e919cf822ed34f1",
+        "startBlock": 1371704
+      }
+    },
+    "primary_pool": {
+      "base_primary_pool_declares_set_fee_protocol": false,
+      "base_separate_fee_mapping_exports_handler": true,
+      "base_set_fee_protocol": "SetFeeProtocol(uint8,uint8,uint8,uint8)",
+      "base_swap": "Swap(indexed address,indexed address,int256,int256,uint160,uint128,int24)",
+      "pancakeswap_declared_missing_export": "handleSetFeeProtocol",
+      "pancakeswap_separate_fee_mapping_exports_handler": true,
+      "pancakeswap_set_fee_protocol": "SetFeeProtocol(uint32,uint32,uint32,uint32)",
+      "pancakeswap_swap": "Swap(indexed address,indexed address,int256,int256,uint160,uint128,int24,uint128,uint128)"
+    },
+    "runtime_equivalence_claimed": false,
+    "schema": {
+      "base_only_network_values": [
+        "BASE"
+      ],
+      "entity_directive_differences": {
+        "PositionSnapshot": {
+          "pancakeswap-v3-bsc": [
+            "@entity(immutable:true)",
+            "@regularPolling"
+          ],
+          "uniswap-v3-base": [
+            "@entity(immutable:true)",
+            "@hourlySnapshot"
+          ]
+        }
+      },
+      "field_catalog_identical": true,
+      "field_catalog_sha256": "76ac4b0b03cb16e9cf6112335feff2a94d2a559132f8895842c9f5a5e5678840",
+      "schema_versions": {
+        "pancakeswap-v3-bsc": "4.0.0",
+        "uniswap-v3-base": "4.0.1"
+      }
+    },
+    "shared_manifest_quirks": {
+      "duplicate_multiplicity_by_role": {
+        "Factory": {},
+        "NonFungiblePositionManager": {},
+        "fee_only_template": {},
+        "primary_pool": {
+          "Token": 2
+        }
+      },
+      "metadata_identical_across_targets_by_role": true,
+      "missing_from_schema_type_declarations_by_role": {
+        "Factory": [
+          "_PricesUSD",
+          "_TokenTracker"
+        ],
+        "NonFungiblePositionManager": [],
+        "fee_only_template": [
+          "LiqudityPool"
+        ],
+        "primary_pool": [
+          "LiqudityPool",
+          "PoolDailySnapshot",
+          "_PricesUSD",
+          "_Account",
+          "_DailyActiveAccount",
+          "_TokenTracker"
+        ]
+      },
+      "misspelled_template_entity": "LiqudityPool",
+      "normalization_allowed": false,
+      "primary_pool_token_entity_occurrences": 2
+    }
+  },
+  "eligibility": {
+    "current_decision": "indeterminate",
+    "minimum_eta_days_exclusive": 28,
+    "policy": "graph-node-net-catchup-v1",
+    "reason": "no_fresh_evidence",
+    "required_clusters": [
+      "riv-subgraphs-a",
+      "kan-subgraphs-a"
+    ],
+    "required_forecast_windows_hours": [
+      24,
+      72
+    ]
+  },
+  "family": "messari-v3",
+  "format_version": 1,
+  "issues": [
+    85,
+    94
+  ],
+  "layout_profile": {
+    "bytes": 353666,
+    "canonical_sha256": "2f417282bf79cc987eb2b052e5e47db609defbb29eb5260ccaef8c02762039f3",
+    "path": "messari-v3/layout-profile-v1.json",
+    "sha256": "6db75a3ca74d48912e2f8443bab4bec684ff7aad32bb690ef05101d2a1cad1d6"
+  },
+  "milestone": "M9",
+  "source_provenance": {
+    "anchors": {
+      "pancakeswap-v3-bsc": {
+        "abi_result": "Factory, NonFungiblePositionManager, Pool, and TickLens JSON values are semantically identical; deployed formatting remains independently locked",
+        "commit": "0c4618d6343b5011742a59ec308dd7ce07b9908b",
+        "committed_at": "2023-05-30T20:55:00Z",
+        "parent": "6af451686c1dc783f823e51b28686ef95d219c16",
+        "repository": "https://github.com/messari/subgraphs",
+        "schema_byte_identical": true,
+        "schema_source_path": "subgraphs/uniswap-v3-forks/schema.graphql",
+        "source_template_entity_metadata_matches_deployment": true,
+        "tree": "1a309dcd6e8827db41a00634eaab6d1e1ed70da6"
+      },
+      "uniswap-v3-base": {
+        "abi_result": "Factory, NonFungiblePositionManager, and Pool match after removing one repository trailing LF; deployed TickLens remains independently locked",
+        "commit": "2c60bd10b5e1a090f6e3b55f0634f2a15ec91dbe",
+        "committed_at": "2023-08-14T15:07:15Z",
+        "parent": "b16e506a84247a178a9eae09e799bc75787f4275",
+        "repository": "https://github.com/messari/subgraphs",
+        "schema_byte_identical": true,
+        "schema_source_path": "subgraphs/uniswap-v3-forks/schema.graphql",
+        "source_template_entity_metadata_matches_deployment": true,
+        "tree": "3a2ff3eec89f6ab6f1f61d3c10a546c231c3f06b"
+      }
+    },
+    "bytes": 2907,
+    "path": "docs/provenance/messari-v3-source.md",
+    "reproduction": {
+      "boundary": "source commits are behavioral anchors, not exact mapping-WASM reproduction workspaces",
+      "deleted_dependency": {
+        "available": false,
+        "checked_at": "2026-08-31",
+        "commit": "b34b9003d7bf556836da41b57ef36eb21570620a",
+        "frozen_npm_install_succeeded": false,
+        "frozen_yarn_install_succeeded": false,
+        "repository": "https://github.com/edgeandnode/gluegun"
+      },
+      "deployed_manifest_spec_version": "0.0.4",
+      "source_template_mapping_entity_metadata": {
+        "duplicate_multiplicity_by_role": {
+          "Factory": {},
+          "NonFungiblePositionManager": {},
+          "fee_only_template": {},
+          "primary_pool": {
+            "Token": 2
+          }
+        },
+        "matches_deployed_manifests_by_role": true,
+        "missing_from_schema_type_declarations_by_role": {
+          "Factory": [
+            "_PricesUSD",
+            "_TokenTracker"
+          ],
+          "NonFungiblePositionManager": [],
+          "fee_only_template": [
+            "LiqudityPool"
+          ],
+          "primary_pool": [
+            "LiqudityPool",
+            "PoolDailySnapshot",
+            "_PricesUSD",
+            "_Account",
+            "_DailyActiveAccount",
+            "_TokenTracker"
+          ]
+        },
+        "normalization_allowed": false
+      },
+      "source_template_spec_version": "0.0.2",
+      "spec_version_mismatch": true
+    },
+    "sha256": "758d4c34ee7b4028a8bbebe80d554110a7dcec7159db8c1a4e7e0dee814c02f4"
+  },
+  "status": "immutable_target_baseline_only",
+  "target_count": 2,
+  "truth_boundary": {
+    "backfill_ready": false,
+    "deployment_ready": false,
+    "eligibility_24_hour_passed": false,
+    "eligibility_72_hour_passed": false,
+    "eligibility_complete": false,
+    "error_behavior_complete": false,
+    "graph_store_order_complete": false,
+    "handler_semantics_complete": false,
+    "implementation_complete": false,
+    "logical_parity_complete": false,
+    "physical_parity_complete": false,
+    "poi_parity_complete": false,
+    "production_ready": false,
+    "readiness_complete": false,
+    "runtime_behavior_complete": false,
+    "source_reproducible": false,
+    "source_revision_pinned": false,
+    "source_to_wasm_build_reproduced": false,
+    "vid_parity_complete": false
+  }
+}

@@ -90,6 +90,10 @@ jobs:
         run: |
           python3 scripts/verify-uniswap-v3-pool-mint.py --wasm2wat "$WASM2WAT"
           python3 -m unittest scripts.tests.test_uniswap_v3_pool_mint
+      - name: Verify complete Uniswap V3 Pool Mint schema-API matrix v2
+        run: |
+          python3 scripts/verify-uniswap-v3-pool-mint-v2.py --wasm2wat "$WASM2WAT"
+          python3 -m unittest scripts.tests.test_uniswap_v3_pool_mint_v2
       - name: Recompute retained-WAT Uniswap V3 Pool Swap core-state semantics
         run: |
           python3 scripts/verify-uniswap-v3-pool-swap-core.py --wasm2wat "$WASM2WAT"

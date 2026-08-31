@@ -106,6 +106,14 @@ only after this gate passes.
   effect inventories. Persistence, no-later-overwrite, general alias safety,
   field completeness, history, parity, backfill, production, and readiness
   remain false.
+- **`uniswap-v3/pool-mint/v2/`** — the complete conservative path-qualified
+  `Pool.handleMint` schema-API matrix across eight segments and all 299 schema
+  fields. It binds 172 lexical invocations, 176 physical-site edges, 244
+  helper-expanded paths, 142 unique stored setter fields, 13 lexical and 17
+  expanded Graph-store paths per mapping, plus the exact 13-required/3-nullable
+  Mint schema boundary and zero required-absence overlay. Value, preservation,
+  Graph persistence, history, parity, backfill, production, and readiness
+  remain false.
 - **`uniswap-v3/pool-swap-core/v1/`** — retained-WAT call-flow
   evidence for `Pool.handleSwap` assignments of liquidity, tick, and sqrtPrice
   from exact ABI indices 5, 6, and 4 across all eight mappings. It binds modern

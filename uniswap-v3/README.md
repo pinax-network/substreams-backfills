@@ -371,6 +371,18 @@ effect inventories. Baseline receiver/key/value and direct-memory aliases remain
 unclassified, so persistence, no-later-overwrite, field completeness, Pool
 history, parity, checkpoint, backfill, production, and readiness stay false.
 
+The additive [`pool-mint/v2`](pool-mint/v2/README.md) certificate independently
+recomputes Mint v1, Pool runtime v1, segment-field v2, and the direct schema into
+a complete 8 × 299 path-qualified static schema-API matrix. Each mapping binds
+172 lexical invocations, 176 site edges, 244 expanded setter paths, 142 unique
+stored fields, 13 lexical stores, 12 physical store targets, and 17 expanded
+store paths. The mutually exclusive partition is 142 / 46 / 13 / 98 per
+segment, with Mint's 13 required and three nullable fields all set and a zero
+required-absence overlay. Physical and semantic denominators stay separate;
+values, preservation, aliases, Graph behavior, histories, scheduling, package,
+continuity, parity, checkpoint, backfill, deployment, production, readiness,
+and issue #38 completion remain false.
+
 The [`pool-swap-core/v1`](pool-swap-core/v1/README.md) supplement
 then digest-pins Mint plus the canonical Pool runtime and Initialize capsules.
 Across all eight retained Pool mappings it binds `handleSwap` liquidity, tick,

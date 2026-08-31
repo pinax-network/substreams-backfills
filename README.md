@@ -59,6 +59,12 @@ only after this gate passes.
   the legacy `graph_out`; it corrects the Base runtime/Factory origin to
   1,371,679, keeps the direct NPM gate at 1,371,713, and leaves every parity,
   backfill, and production gate false.
+- **`uniswap-v3/npm-provider-executor/v1/`** — a hermetic host-only executor
+  that evaluates the complete conservative NPM observation plan in Position,
+  Pool, then ordinal Token phases, enforces exact-key preflight, invokes the
+  certified joint reducer, and returns a canonical request-evaluation audit.
+  It is not a live provider, exact Graph call trace, package consumer, output
+  path, parity certificate, or readiness claim.
 - **`uniswap-v3/graft-ancestry/`** — the complete content-addressed mainnet/Base
   manifest ancestry through graft-free roots, with exact boundary ownership,
   handler/schema inventories, static writer-target matrices, and deliberately

@@ -389,6 +389,17 @@ or BlockChanges model, checkpoint authority, continuity, parity, backfill, or
 production gate. Writer code, manifests, descriptors, WASM, and packages stay
 unchanged.
 
+The following sibling
+[`npm-provider-executor/v1/`](npm-provider-executor/v1/README.md) executes that
+closed plan against an explicitly hermetic provider trait. It resolves all
+Position rows before deriving Pool and ordinal Token requests, evaluates the
+entire conservative suffix before reduction, enforces exact-key preflight,
+then invokes the certified joint reducer and returns a deterministic canonical
+request-evaluation audit. It supports exact block-hash and explicit
+block-number scopes, but adds no live provider, exact Graph call-order model,
+Flash or Factory/Pool scheduler, dynamic-stage behavior, output, package
+consumer, checkpoint, continuity, parity, backfill, or production authority.
+
 The sibling [`oracle/`](oracle/README.md) contract retains deployment-scoped
 current-head responses and the asymmetric graft-boundary discovery result:
 mainnet history was queryable without canonical block hashes, while Base

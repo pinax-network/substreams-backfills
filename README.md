@@ -114,6 +114,16 @@ only after this gate passes.
   required-absent Flash rows across all eight mappings. Candidate output, host
   call semantics, persistence, complete Flash, history, parity, backfill,
   production, and readiness remain false.
+- **`uniswap-v3/pool-flash/v2/`** — complete normal-success-path-qualified
+  static schema-API effect matrices for all 299 fields in each of the eight
+  retained segments. The exact 2,392 outcomes comprise 16 selected
+  fee-growth setter-before-save records, 216 other stored Pool fields with no
+  other reachable schema setter before the same-Pool save, 56 Pool-derived
+  fields without direct store transitions, 2,104 fields outside the Pool-only
+  store closure, and 96 explicit Flash required absences. Host values,
+  persistence, history, scheduler/output/Store/package work, continuity,
+  parity, checkpoint, backfill, deployment, production, and readiness remain
+  false.
 - **`uniswap-v3/pool-swap-fee-growth/v1/`** — retained-WAT call-flow evidence
   for both `Pool.handleSwap` fee-growth contract calls, result-zero BigInt
   decodes, uncrossed same-Pool setters, and the second Pool save across all

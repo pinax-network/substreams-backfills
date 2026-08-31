@@ -385,6 +385,19 @@ slice is based on exact canonical Pool Swap squash merge
 identical to the audited candidate before deterministic regeneration and full
 revalidation.
 
+The additive [`pool-flash/v2`](pool-flash/v2/README.md) certificate composes
+that exact Flash v1 authority with the directly recomputed 299-field catalog.
+Across eight segments it classifies 2,392 path-qualified static outcomes: 16
+selected fee-growth setter-before-same-Pool-save records, 216 other stored Pool
+fields with no other reachable schema setter before that save, 56 Pool-derived
+fields with no direct Graph store transition, 2,104 fields outside the
+Pool-only store closure, and 96 explicit Flash required absences. All 28
+recursive segment diffs are regenerated. No value result is inferred for the
+other stored Pool fields; imported host values/errors, persistence, complete
+history, scheduler/output/Store/package work, continuity/parity, checkpoint,
+backfill, deployment, production, and readiness stay false. Pool Flash v1 and
+the field catalog are recomputed directly; Factory static v2 is not an input.
+
 The [`pool-swap-fee-growth/v1`](pool-swap-fee-growth/v1/README.md) certificate
 reuses the audited Flash call model inside the full `handleSwap` body. It binds
 the event-address Pool contract, ordered `feeGrowthGlobal0X128` and

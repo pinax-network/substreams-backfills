@@ -235,6 +235,20 @@ Imported numeric and store semantics, rollback, actual populations, complete
 histories, continuity, parity, writer consumption, backfill, production, and
 issue acceptance remain false.
 
+The additive [`npm-transfer/v2/`](npm-transfer/v2/README.md) certificate closes
+the path-qualified static `NonfungiblePositionManager.handleTransfer` surface
+across all eight segment bindings and six unique NPM WASMs. It retains every
+reachable body, direct call, memory write, setter, constructor, store site, and
+closed indirect target, while keeping physical symbols distinct from 39
+lexical invocations over 38 stored field authorities. Each segment has exactly
+299 outcomes partitioned as 38 classified stored targets, zero saved-no-setter,
+13 derived query fields, and 248 outside the Transfer store closure, plus 33
+required-absence overlays and all 28 recursive diffs. Existing/new/revert/fatal
+paths, both Transaction saves on the new path, the six relation-field source
+chains, and the API-generation `gasUsed` call-shape split are bound. Values,
+no-setter preservation, store persistence, rollback, histories, runtime,
+continuity, parity, backfill, readiness, and issue acceptance remain false.
+
 The following additive
 [`factory-effects/v1`](factory-effects/v1/README.md) supplement closes only the
 six retained Factory effect-order and exact-argument paths. A shared handler-

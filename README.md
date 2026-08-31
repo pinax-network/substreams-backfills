@@ -80,6 +80,13 @@ only after this gate passes.
   schema fields in each of eight segments; and emits all 28 recursive diffs.
   Imported host behavior, histories, parity, backfill, production, and both
   issue acceptance checkboxes remain false.
+- **`uniswap-v3/npm-transfer/v2/`** — the complete path-qualified static
+  `NonfungiblePositionManager.handleTransfer` schema-API effect contract for
+  eight segment bindings and six unique retained WASMs. It separates physical
+  sites from 38 stored field authorities, classifies 299 outcomes per segment,
+  binds all six relation paths and 28 recursive diffs, and leaves values,
+  persistence, histories, runtime, parity, backfill, readiness, and both issue
+  acceptance checkboxes false.
 - **`uniswap-v3/pool-runtime/v1/`** — the shared all-profile Pool collection,
   allocator, module-state, and global-writer capsule. Handler semantics and all
   readiness gates remain false.

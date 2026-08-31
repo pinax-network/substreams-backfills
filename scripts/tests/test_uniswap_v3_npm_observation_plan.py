@@ -219,7 +219,9 @@ class NpmObservationPlanContractTests(unittest.TestCase):
     def test_docs_are_artifact_local_and_name_the_remaining_dependencies(self) -> None:
         overlay = ROOT / VERIFIER.OVERLAY
         eligibility = (overlay / "docs/eligibility.md").read_text()
-        self.assertTrue((overlay / "docs/provenance.md").is_file())
+        provenance = (overlay / "docs/provenance.md").read_text()
+        self.assertIn(VERIFIER.SEMANTICS_SHA256, provenance)
+        self.assertNotIn("1468ddf23c3c70a28c77e657cabaa1d91dd074c5927f37b7f3f49812471ec9df", provenance)
         self.assertFalse((overlay / "evidence").exists())
         self.assertFalse((overlay / "provenance").exists())
         for dependency in ("Factory/Pool", "dynamic data-source", "EntityChanges/BlockChanges"):

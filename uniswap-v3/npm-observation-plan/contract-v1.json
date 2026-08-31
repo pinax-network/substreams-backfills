@@ -6,12 +6,12 @@
     {
       "path": "uniswap-v3/npm-resolved-inputs/contract-v1.json",
       "contract_version": "uniswap-v3-npm-resolved-inputs-runtime/v1",
-      "sha256": "c5ad1556273b0c532f8d00e27c257250b596d022dc25dc4f9443c429303c0a1a"
+      "sha256": "5df1d6f5d6852ff8aea9ef6b054be786d0df78021e6ed271439f744a330cfc1f"
     },
     {
       "path": "uniswap-v3/npm-observation-plan/npm-observation-plan-v1.json",
       "contract_version": "uniswap-v3-npm-observation-plan/v1",
-      "sha256": "6e80d215e6e8fb22a8b1bf69172f973fb065d6a5605e5cdcb7d69298fbed41c9"
+      "sha256": "2d305149664b4c1e83d31a21a4131e585e44f8f25636d311ff741b9c437eaa3f"
     }
   ],
   "repository_artifacts": {
@@ -25,11 +25,11 @@
     },
     "provenance": {
       "path": "uniswap-v3/npm-observation-plan/docs/provenance.md",
-      "sha256": "6e5556b6e29639a2cb53be897b2b5730bad13f738340a23659eb8ab1466577be"
+      "sha256": "fd4a3de9ec334c000bc9645d31b004ade7caca57f141a44ee74e9cdfb64ba517"
     },
     "semantics": {
       "path": "uniswap-v3/npm-observation-plan/npm-observation-plan-v1.json",
-      "sha256": "6e80d215e6e8fb22a8b1bf69172f973fb065d6a5605e5cdcb7d69298fbed41c9",
+      "sha256": "2d305149664b4c1e83d31a21a4131e585e44f8f25636d311ff741b9c437eaa3f",
       "contract_version": "uniswap-v3-npm-observation-plan/v1"
     },
     "plan_proto": {
@@ -42,11 +42,11 @@
     },
     "plan_source": {
       "path": "uniswap-v3/npm-observation-plan/src/npm_observation_plan.rs",
-      "sha256": "f3f854992b262e87c4fef3fbc660a2b0c2ffa8a87344848a6421b6ad3602dc36"
+      "sha256": "da822ad282037ee9ab233bd126ae5d076e5a5d415b121b1021e683d445eb3c5b"
     },
     "combined_harness": {
       "path": "uniswap-v3/npm-observation-plan/tests/npm_observation_plan.rs",
-      "sha256": "8bd218ad3d8fbf2e5cb64232698f8e12c273d45a5eff8dcca05b8250a55180fa"
+      "sha256": "08e26630b082c926c240b9afb7210d4e5352e2d4773691b6b8934f8a2368dbe7"
     },
     "materializer": {
       "path": "scripts/materialize-uniswap-v3-npm-observation-plan.sh",
@@ -54,7 +54,7 @@
     },
     "resolved_input_runtime": {
       "path": "uniswap-v3/npm-resolved-inputs/contract-v1.json",
-      "sha256": "c5ad1556273b0c532f8d00e27c257250b596d022dc25dc4f9443c429303c0a1a",
+      "sha256": "5df1d6f5d6852ff8aea9ef6b054be786d0df78021e6ed271439f744a330cfc1f",
       "contract_version": "uniswap-v3-npm-resolved-inputs-runtime/v1"
     },
     "resolved_input_semantics": {
@@ -72,7 +72,7 @@
     },
     "resolved_input_source": {
       "path": "uniswap-v3/npm-resolved-inputs/src/npm_resolved_inputs.rs",
-      "sha256": "24fe3e9f7f94f156782394b5fc48407735cad2127ad9eec5bb9572fee35c4650"
+      "sha256": "01a836f7dc71b87e980f313b8cc61d1eb5529b7cbe3e590706ed8d2b0a8586c3"
     },
     "resolved_input_harness": {
       "path": "uniswap-v3/npm-resolved-inputs/tests/npm_resolved_inputs.rs",
@@ -80,14 +80,14 @@
     }
   },
   "materialized_runtime_artifacts": {
-    "configs/npm-observation-plan-v1.json": "6e80d215e6e8fb22a8b1bf69172f973fb065d6a5605e5cdcb7d69298fbed41c9",
+    "configs/npm-observation-plan-v1.json": "2d305149664b4c1e83d31a21a4131e585e44f8f25636d311ff741b9c437eaa3f",
     "configs/npm-resolved-inputs-v1.json": "01f7e87b22f52d84f8bb2fe806e963ecfb9dc196ab29804baee4c156eabbdbd9",
     "src/lib.rs": "91a2330a1a1016ab00fae61e8d25fde244591159ab4efd848ecc08b2623aca63",
-    "src/npm_resolved_inputs.rs": "24fe3e9f7f94f156782394b5fc48407735cad2127ad9eec5bb9572fee35c4650",
+    "src/npm_resolved_inputs.rs": "01a836f7dc71b87e980f313b8cc61d1eb5529b7cbe3e590706ed8d2b0a8586c3",
     "src/uniswap.npm.inputs.v1.rs": "d7979c2e98750c8fa1a5fbe4efcb11d7033e5b12b9c239a13963d20f485f3b66",
-    "src/npm_observation_plan.rs": "f3f854992b262e87c4fef3fbc660a2b0c2ffa8a87344848a6421b6ad3602dc36",
+    "src/npm_observation_plan.rs": "da822ad282037ee9ab233bd126ae5d076e5a5d415b121b1021e683d445eb3c5b",
     "src/uniswap.npm.plan.v1.rs": "5a69fd0772ca4c2166e37f8afbb00727bbb8a4a5304c3bdd6dcab4db71a819c5",
-    "tests/npm_observation_plan.rs": "8bd218ad3d8fbf2e5cb64232698f8e12c273d45a5eff8dcca05b8250a55180fa"
+    "tests/npm_observation_plan.rs": "08e26630b082c926c240b9afb7210d4e5352e2d4773691b6b8934f8a2368dbe7"
   },
   "protobuf_contract": {
     "namespace": "uniswap.npm.plan.v1",

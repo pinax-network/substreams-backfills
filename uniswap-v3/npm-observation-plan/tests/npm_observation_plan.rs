@@ -70,6 +70,10 @@ mod planner_tests {
         0x03, 0xa5, 0x20, 0xb3, 0x2c, 0x04, 0xbf, 0x3b, 0xee, 0xf7, 0xbe, 0xb7, 0x2e, 0x91, 0x9c, 0xf8, 0x22, 0xed,
         0x34, 0xf1,
     ];
+    const BASE_FACTORY: [u8; 20] = [
+        0x33, 0x12, 0x8a, 0x8f, 0xc1, 0x78, 0x69, 0x89, 0x7d, 0xce, 0x68, 0xed, 0x02, 0x6d, 0x69, 0x46, 0x21, 0xf6,
+        0xfd, 0xfd,
+    ];
     const POOL: [u8; 20] = [0x77; 20];
 
     #[derive(Clone, Copy)]
@@ -403,6 +407,28 @@ mod planner_tests {
             assert_eq!(complete.plan().pool_requests.len(), 1);
             assert_eq!(complete.plan().token_requests.len(), segment.collect_tokens);
         }
+    }
+
+    #[test]
+    fn base_new_position_value_reaches_exact_preflight_and_reduction() {
+        let block = 1_371_713;
+        let source = source("base", block, vec![increase(1, block, 1)]);
+        let complete = complete(&source, &ReducerState::default());
+        assert_eq!(complete.plan().pool_requests.len(), 1);
+        assert_eq!(complete.plan().pool_requests[0].factory, BASE_FACTORY);
+        let pools = resolved_pools(&complete);
+        let tokens = resolved_tokens(&complete);
+        let preflighted = preflight_resolved_frame(complete, pools, tokens).unwrap();
+        let (reduction, audit) = reduce_preflighted_npm_frame(&ReducerState::default(), preflighted).unwrap();
+        assert!(matches!(
+            reduction.disposition,
+            BlockDisposition::ModeledNpmUserEntityProjectionComplete
+        ));
+        assert_eq!(audit.planned_position_keys, 1);
+        assert_eq!(audit.planned_pool_keys, 1);
+        assert_eq!(audit.planned_token_keys, 2);
+        assert_eq!(audit.resolved_pool_keys, 1);
+        assert_eq!(audit.consumed_pool_calls, 1);
     }
 
     #[test]
@@ -785,11 +811,11 @@ mod planner_tests {
         }
         assert_eq!(
             PLAN_SEMANTICS_SHA256,
-            "6e80d215e6e8fb22a8b1bf69172f973fb065d6a5605e5cdcb7d69298fbed41c9"
+            "2d305149664b4c1e83d31a21a4131e585e44f8f25636d311ff741b9c437eaa3f"
         );
         assert_eq!(
             RESOLVED_INPUT_RUNTIME_SHA256,
-            "c5ad1556273b0c532f8d00e27c257250b596d022dc25dc4f9443c429303c0a1a"
+            "5df1d6f5d6852ff8aea9ef6b054be786d0df78021e6ed271439f744a330cfc1f"
         );
     }
 

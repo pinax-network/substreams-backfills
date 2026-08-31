@@ -110,6 +110,10 @@ jobs:
         run: |
           python3 scripts/verify-uniswap-v3-pool-swap-fee-growth.py --wasm2wat "$WASM2WAT"
           python3 -m unittest scripts.tests.test_uniswap_v3_pool_swap_fee_growth
+      - name: Verify complete Uniswap V3 Pool Swap schema-API matrix v2
+        run: |
+          python3 scripts/verify-uniswap-v3-pool-swap-v2.py --wasm2wat "$WASM2WAT"
+          python3 -m unittest scripts.tests.test_uniswap_v3_pool_swap_v2
       - name: Verify bounded Uniswap V3 Factory effect suffixes
         run: |
           python3 scripts/verify-uniswap-v3-factory-effects.py --wasm2wat "$WASM2WAT"

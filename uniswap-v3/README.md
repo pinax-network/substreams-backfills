@@ -383,6 +383,34 @@ values, preservation, aliases, Graph behavior, histories, scheduling, package,
 continuity, parity, checkpoint, backfill, deployment, production, readiness,
 and issue #38 completion remain false.
 
+The additive [`pool-swap/v2`](pool-swap/v2/README.md) certificate independently
+recomputes Pool Swap core v1, Pool Swap fee-growth v1, Pool runtime v1,
+segment-field v2, and the direct schema into a complete 8 × 299
+lexical static schema-API matrix. Each mapping binds 197 exact setter receiver
+flows, 201 nullable-expanded physical receiver-flow edges, 259 expanded setter
+paths, and 144 unique stored fields. Separately, all 163 lexical stores bind
+exact target/receiver/value operands. The 1,576 setter invocation
+classifications prove only same-group lexical order plus receiver-origin
+overlap: 1,089 reference only equal-origin-set stores and 487 reference
+overlap-only stores. The separate 1,720 setter-to-store edges split 1,233 equal
+and 487 overlap-only. The 60 legacy helper-return invocation classifications
+reference 15 materialized stable-ID helper authority records requiring the
+same receiver local, equal store/return origin sets, and immediate
+store-to-terminal-get adjacency on normal fallthrough. They do not prove that
+every helper invocation or control path returns the stored receiver. Common
+execution, branch correlation, and receiver must-alias remain false.
+The mutually exclusive partition is 144 / 45 / 13 /
+97 per segment, with Swap's fourteen required fields and nullable `logIndex`
+all set and a zero required-absence overlay. The exact store profiles are 19/25
+for five legacy-mainnet mappings, 22/28 for legacy Base, and 23/29 for modern
+mappings; the modern duplicate `PoolHourData` save proves only lexical order
+and a shared receiver operand local name, without common-execution,
+receiver-must-alias, visibility, persistence, version, or last-writer meaning.
+Physical and semantic denominators stay separate; values, preservation,
+numeric/comparator and alias meaning, histories, scheduling, package,
+continuity, parity, checkpoint, backfill, deployment, production, readiness,
+and issue #38 completion remain false.
+
 The [`pool-swap-core/v1`](pool-swap-core/v1/README.md) supplement
 then digest-pins Mint plus the canonical Pool runtime and Initialize capsules.
 Across all eight retained Pool mappings it binds `handleSwap` liquidity, tick,

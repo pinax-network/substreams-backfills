@@ -249,6 +249,22 @@ chains, and the API-generation `gasUsed` call-shape split are bound. Values,
 no-setter preservation, store persistence, rollback, histories, runtime,
 continuity, parity, backfill, readiness, and issue acceptance remain false.
 
+The additive [`npm-collect/v2/`](npm-collect/v2/README.md) certificate closes
+the path-qualified static `NonfungiblePositionManager.handleCollect` surface
+across the same eight segment bindings and six unique retained NPM WASMs. It
+binds five deployed handler profiles, the excluded-pool early return, first and
+second `try_positions` branches, the non-try Factory fatal prefix, legacy
+missing-token and current token-null behavior, 40/42 lexical semantic effects,
+45/47 maximum expanded new-path effects, three fixed store targets and nine
+relation/Transaction paths. Each segment has 38 classified stored targets,
+zero saved-no-setter, 13 derived and 248 outside-closure outcomes, with 33
+required-absence overlays and all 28 recursive diffs. Transaction helper read
+outcomes remain independent because intra-handler store visibility is not
+proved; only ID is miss-only, while the four common setters and Transaction save
+occur on both successful hit and miss paths. Values, numeric meaning,
+preservation, persistence, rollback, complete histories, runtime, continuity,
+parity, backfill, readiness and issue acceptance remain false.
+
 The following additive
 [`factory-effects/v1`](factory-effects/v1/README.md) supplement closes only the
 six retained Factory effect-order and exact-argument paths. A shared handler-

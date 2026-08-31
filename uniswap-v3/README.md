@@ -260,6 +260,22 @@ semantics, parity, backfill, production, or readiness. Its base is the exact
 canonical PR #71 squash merge `cf4d096304c09f150a7ee2ea85de5d479d5ec7ef`;
 that merge tree matches the independently audited candidate tree.
 
+The
+[`factory-pool-bigint-init/v1`](factory-pool-bigint-init/v1/README.md)
+certificate adds bounded legacy initialization call-flow evidence for
+`Pool.liquidityProviderCount`, `Pool.txCount`, `Pool.liquidity`,
+`Pool.sqrtPrice`, and `Pool.observationIndex`. Four writes are direct; the
+`txCount` flow is one selected Pool invocation of a four-use linker-shared
+helper. The helper's static set site remains residual. Six legacy and two
+modern segments produce 40 records and 28 scoped pairwise diffs. After
+composition, six direct sites are fully selected out of 44 reachable static
+sites, and seven of 78 expanded invocations are selected; 38 static sites and
+71 invocations remain residual.
+The field ledger remains 36/230 and Factory closure remains 14/18. Mutation,
+persistence, complete history, host/store semantics, parity, backfill,
+production, and readiness remain false. Its exact base is canonical PR #72
+squash merge `982dd6f049af265cfed4c7b8edce1a90c936f319`.
+
 The sibling [`pool-runtime/v1`](pool-runtime/v1/README.md) supplement closes a
 runtime-only structural capsule for all eight retained Pool artifacts. It
 keeps separate modern exported-initializer and legacy native-start proofs. The

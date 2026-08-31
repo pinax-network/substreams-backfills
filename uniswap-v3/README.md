@@ -282,6 +282,34 @@ within-segment handler diffs. Arithmetic meaning, legacy Params alias meaning,
 store visibility/persistence, rollback, histories, runtime, continuity, parity,
 backfill, readiness and issue acceptance remain false.
 
+The additive [`all-handlers/v1/`](all-handlers/v1/README.md) certificate is a
+provisional complete static aggregation of all ten retained handlers across
+eight mainnet/Base segments and the directly reconstructed 299-field schema.
+It binds exactly 23,920 handler/segment/field cells, partitioned as 5,326
+component setter/direct-write-authority, 1,665 component nonsetter, 15,889
+stored-outside-certified-effect-scope, and 1,040 derived cells. The
+normalization does not assert one uniform matching-Store path. Factory is
+independently projected without widening #77 beyond its 59 written fields plus
+handler-local absence of `Pool.tick`. The certificate separately records
+1,424 handler-relative required-absence occurrences, their 34-field-per-
+segment union, and the 33-field population-required-absence authority.
+
+The same aggregate derives shared entity and seven-handler Transaction setter
+authority, 136 child-association and 264 NPM stored-relation occurrences, raw
+manifest datasource/template declaration order, 280 handler segment-pair
+diffs, 28 aggregate diffs and eight Liquidity within-segment diffs. It also
+binds repaired Swap's mutually exclusive receiver-origin-overlap taxonomy and
+corrected NPM Transaction hit/miss controls without promoting common execution,
+must-alias, Store visibility, or last-writer semantics. Physical component
+ledgers retain their native denominators and are not globally summed. Every
+selected root is present in one linear local ancestry through Liquidity. Burn,
+Mint, and Swap are canonical; corrected Transfer -> Collect -> Liquidity remain
+provisional and require canonical landing/reseal before final publication.
+Imported values, numeric or alias meaning, Store visibility/persistence,
+histories, scheduler/output/package, continuity, parity, checkpoint, backfill,
+deployment, production, readiness and both issue acceptance checkboxes remain
+false; neither issue is closed.
+
 The following additive
 [`factory-effects/v1`](factory-effects/v1/README.md) supplement closes only the
 six retained Factory effect-order and exact-argument paths. A shared handler-

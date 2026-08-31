@@ -104,6 +104,18 @@ only after this gate passes.
   28 cross-segment axes and eight within-segment diffs while leaving arithmetic,
   visibility, persistence, histories, runtime, parity, backfill, readiness and
   both issue acceptance checkboxes false.
+- **`uniswap-v3/all-handlers/v1/`** — the provisional complete static
+  aggregation of Factory, five Pool, and four NPM handlers over eight retained
+  segments and the directly reconstructed 299-field schema: 23,920 exact
+  handler/segment/field cells. It separates handler-relative overlays from
+  their distinct unions, derives shared-entity/Transaction setter authority,
+  conservatively adapts repaired Swap receiver-origin categories and corrected
+  NPM Transaction hit/miss controls, binds raw manifest declaration order and
+  all handler/aggregate diffs, and retains heterogeneous physical ledgers
+  without summing them. Burn, Mint, and Swap are canonical; corrected Transfer,
+  Collect, and Liquidity remain provisional and require canonical resealing.
+  Runtime, Store behavior, histories, parity, backfill, readiness, both issue
+  acceptance checkboxes, and issue closure remain false.
 - **`uniswap-v3/pool-runtime/v1/`** — the shared all-profile Pool collection,
   allocator, module-state, and global-writer capsule. Handler semantics and all
   readiness gates remain false.

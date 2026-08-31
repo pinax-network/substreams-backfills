@@ -346,6 +346,21 @@ semantically closed, so selected-TVL persistence and field completeness remain
 false alongside complete Pool history, parity, checkpoint, backfill, production,
 and readiness.
 
+The additive [`pool-burn/v2`](pool-burn/v2/README.md) certificate independently
+recomputes Burn v1, the same-WAT Pool runtime, segment-field v2, and the direct
+schema into a complete 8 × 299 path-qualified static schema-API matrix. Per
+mapping it classifies 147 lexical invocations, 151 physical-site edges, 195
+helper-expanded setter paths, 124 unique stored setter fields, 12 physical
+store targets, and 17 expanded store paths with zero unclassified setter sites.
+The six mutually exclusive field categories total 16 / 976 / 504 / 40 / 64 /
+792 across all segments, with an independent 264-field required-absence
+overlay. The 63 reachable-store/no-setter fields per segment are not described
+as preserved or unchanged, and the physical, lexical, nullable-edge, and
+expanded-path denominators stay separate. Numeric and comparator meaning,
+aliases, Graph visibility/persistence/rollback, histories, scheduling, package,
+continuity, parity, checkpoint, backfill, deployment, production, readiness,
+and issue #38 completion remain false.
+
 The additive [`pool-mint/v1`](pool-mint/v1/README.md) supplement stacks on the
 digest-pinned Burn contract while independently re-running each same-WAT Pool
 runtime capsule. It binds the trigger-address Pool identity, Mint ABI indices

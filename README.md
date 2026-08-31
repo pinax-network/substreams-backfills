@@ -95,6 +95,15 @@ only after this gate passes.
   per segment and all 28 recursive diffs. Imported values, numeric meaning,
   store visibility/persistence, histories, runtime, parity, backfill, readiness
   and both issue acceptance checkboxes remain false.
+- **`uniswap-v3/npm-liquidity/v2/`** — paired complete path-qualified static
+  contracts for `handleIncreaseLiquidity` and `handleDecreaseLiquidity` across
+  eight bindings and six retained NPM WASMs. Each handler independently seals
+  299 outcomes per segment, 43 lexical and 26/48 expanded effects; a separately
+  labeled 2,392-outcome union never implies handler ordering or composition.
+  The slice binds guards, Token/null/fatal/trap/store prefixes, nine relations,
+  28 cross-segment axes and eight within-segment diffs while leaving arithmetic,
+  visibility, persistence, histories, runtime, parity, backfill, readiness and
+  both issue acceptance checkboxes false.
 - **`uniswap-v3/pool-runtime/v1/`** — the shared all-profile Pool collection,
   allocator, module-state, and global-writer capsule. Handler semantics and all
   readiness gates remain false.

@@ -245,6 +245,18 @@ Value-decoder, token-call, static-lookup, entry-local, and complete decimals
 dataflows and prove `Pool.tick` absent. The four legacy static paths and every
 runtime, continuity, parity, backfill, and production gate remain false.
 
+The additive [`factory-static/v2`](factory-static/v2/README.md) certificate
+then closes the four legacy complete-static paths and composes them with v1.
+For each retained legacy mapping it binds the complete reachable body closure,
+Factory-specific collection and Entity/Value mutation capsules, all 44 static
+setter sites, and all 78 expanded handler invocations. The resulting 60-field
+contract is exactly 59 written fields plus required absence of `Pool.tick`
+across all eight segments, moving scoped Factory closure from 14/18 to 18/18.
+This is a path-qualified static claim: legacy static-array holes and the
+incorrect `totalSupply` pointer flow remain exact modeled behavior, while
+host outcomes, persistence, complete history, continuity, parity, backfill,
+production, readiness, and issues #37/#38 checkboxes remain false.
+
 The
 [`factory-fee-growth-init/v1`](factory-fee-growth-init/v1/README.md)
 certificate then isolates the two legacy Factory initialization setters for

@@ -265,6 +265,23 @@ occur on both successful hit and miss paths. Values, numeric meaning,
 preservation, persistence, rollback, complete histories, runtime, continuity,
 parity, backfill, readiness and issue acceptance remain false.
 
+The additive [`npm-liquidity/v2/`](npm-liquidity/v2/README.md) certificate
+closes independent path-qualified static surfaces for
+`handleIncreaseLiquidity` and `handleDecreaseLiquidity` across all eight
+bindings and six retained NPM WASMs. Each handler has 43 lexical field
+invocations, maximum accepted expansions of 26 existing or 48 new, and a
+38/0/13/248 partition over 299 schema fields per segment. Together that is
+4,784 independent outcomes and 528 required-absence overlays. A separately
+reported 2,392/264 set union binds shared physical authority without inferring
+event order or sequential execution. Historical guards, excluded pool,
+Token-missing/null, current Decrease null-liquidity, try-revert, non-try fatal,
+fee-refresh-revert, trap and store-order prefixes are sealed. Transaction hits
+perform four setters and misses add id; both completed branches save. The slice
+also seals nine relation paths, all 28 handler-plus-union segment axes and eight
+within-segment handler diffs. Arithmetic meaning, legacy Params alias meaning,
+store visibility/persistence, rollback, histories, runtime, continuity, parity,
+backfill, readiness and issue acceptance remain false.
+
 The following additive
 [`factory-effects/v1`](factory-effects/v1/README.md) supplement closes only the
 six retained Factory effect-order and exact-argument paths. A shared handler-

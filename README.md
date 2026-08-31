@@ -87,6 +87,14 @@ only after this gate passes.
   binds all six relation paths and 28 recursive diffs, and leaves values,
   persistence, histories, runtime, parity, backfill, readiness, and both issue
   acceptance checkboxes false.
+- **`uniswap-v3/npm-collect/v2/`** — the complete path-qualified static
+  `NonfungiblePositionManager.handleCollect` schema-API effect contract for all
+  eight ancestry bindings and six unique retained NPM WASMs. It seals five
+  deployed collected-fee profiles, the excluded-pool and call-failure prefixes,
+  38 stored field authorities, nine relation/Transaction paths, 299 outcomes
+  per segment and all 28 recursive diffs. Imported values, numeric meaning,
+  store visibility/persistence, histories, runtime, parity, backfill, readiness
+  and both issue acceptance checkboxes remain false.
 - **`uniswap-v3/pool-runtime/v1/`** — the shared all-profile Pool collection,
   allocator, module-state, and global-writer capsule. Handler semantics and all
   readiness gates remain false.

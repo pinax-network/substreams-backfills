@@ -26,15 +26,21 @@ edge, or digest is unavailable or changed.
 
 No component reseal remains. `canonical_reseal_required=false` means only that
 the selected component sequence needs no further reseal; it does not publish
-the aggregate. Merging the aggregate to `main` is necessary but not sufficient
-for canonical publication. After merge, a separate post-merge content-addressed
-publication seal must bind the exact canonical aggregate squash commit and
-tree plus a successful exact-head main-push CI run. Until that separate seal is
-committed, this candidate cannot auto-promote and the contract keeps
+the aggregate. Merging the aggregate to `main` is necessary but not sufficient.
+A separate post-merge content-addressed publication seal is the only
+publication authority. The immutable aggregate contract remains the
+pre-publication boundary and is never rewritten to claim publication.
+Effective canonical publication exists only when the companion
+`publication-seal.json` passes
+`scripts/verify-uniswap-v3-all-handlers-v1-publication.py`. The seal binds the
+tested PR candidate, byte-identical canonical squash tree, immutable contract
+blob, and successful exact-head `main` push workflow. A missing or invalid seal
+leaves the aggregate unpublished. The contract therefore always keeps
 `all_component_roots_canonical_and_ancestral=true`,
 `canonical_reseal_required=false`, and
 `canonical_publication_root_complete=false`, while
-`post_merge_aggregate_publication_seal_required=true`. The separate
+`post_merge_aggregate_publication_seal_required=true`; only a verified companion
+seal sets the effective canonical aggregate publication root true. The separate
 `component_ci_validation_complete=true` gate records exact successful `main`
 push runs at all nine canonical component heads, including canonical Liquidity
 run `33438242374` with 6/6 jobs, 179/179 successful steps, and no failed or
@@ -130,14 +136,18 @@ temporary archive before checking the aggregate:
 python3 scripts/verify-uniswap-v3-all-handlers-v1.py \
   --wasm2wat /path/to/wasm2wat
 python3 -m unittest scripts.tests.test_uniswap_v3_all_handlers_v1
+
+# Available only after the real post-merge seal is populated.
+python3 scripts/verify-uniswap-v3-all-handlers-v1-publication.py
+python3 -m unittest scripts.tests.test_uniswap_v3_all_handlers_v1_publication
 ```
 
 `--skip-component-regeneration` is only for focused mutation tests or a
 post-full detached byte check. It still verifies every pinned Git object and
 digest, but it is not the full publication gate.
 
-This certificate completes no additional #37/#38 checkbox; neither issue is
-closed. Existing criteria completed by earlier work are outside this
+This publication seal completes no additional #37/#38 checkbox; neither issue
+is closed. Existing criteria completed by earlier work are outside this
 certificate's scoped empty checkbox list. See
 [eligibility](docs/eligibility.md) for the fail-closed boundary and
 [provenance](docs/provenance.md) for exact component and source roots.

@@ -115,12 +115,20 @@ only after this gate passes.
   without summing them. Factory through corrected Liquidity are canonical in
   one exact ancestry and no component reseal remains. That
   `canonical_reseal_required=false` result applies only to component resealing.
-  Merging the aggregate to `main` is necessary but not sufficient for canonical
-  publication: a separate post-merge content-addressed publication seal must
-  bind the exact canonical squash commit and tree plus successful exact-head
-  main-push CI. Runtime, Store behavior, histories, parity, backfill, and
-  readiness remain false. This aggregate completes no additional #37/#38
-  checkbox; neither issue is closed.
+  Merging the aggregate to `main` is necessary but not sufficient. A separate
+  post-merge content-addressed publication seal is the only publication
+  authority.
+
+  The immutable aggregate contract deliberately remains a pre-publication
+  boundary even after merge. Effective canonical publication is represented
+  only by `uniswap-v3/all-handlers/v1/publication-seal.json` when the separate
+  fail-closed verifier binds the tested candidate tree, byte-identical canonical
+  squash tree, immutable contract blob, and successful exact-head `main` push
+  workflow. A missing or invalid seal means the aggregate is not canonically
+  published. The seal promotes no runtime, Store/history, scheduler/output,
+  package, continuity, parity, checkpoint, backfill, deployment, production,
+  readiness, or issue gate; it completes no additional #37/#38 checkbox and
+  closes neither issue.
 - **`uniswap-v3/pool-runtime/v1/`** — the shared all-profile Pool collection,
   allocator, module-state, and global-writer capsule. Handler semantics and all
   readiness gates remain false.

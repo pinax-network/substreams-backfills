@@ -13,14 +13,40 @@ edges. The component reseal queue is empty. That
 `canonical_reseal_required=false` state means only that no component reseal
 remains; it does not publish the aggregate.
 
-Merging the aggregate to `main` is necessary but not sufficient for canonical
-publication. A separate post-merge content-addressed publication seal must
-bind the exact canonical aggregate squash commit and tree plus a successful
-exact-head main-push CI run. This candidate binds none of those post-merge
-aggregate identities, cannot auto-promote on merge, and therefore keeps
+Merging the aggregate to `main` is necessary but not sufficient. A separate
+post-merge content-addressed publication seal is the only publication
+authority.
+
+The immutable aggregate contract remains the pre-publication boundary and is
+not rewritten after merge. Effective canonical publication is represented only
+by a companion `publication-seal.json` that passes
+`scripts/verify-uniswap-v3-all-handlers-v1-publication.py`. The seal binds the
+tested PR candidate tree, byte-identical canonical aggregate squash tree,
+immutable contract path/blob/bytes/digests, and the exact successful `main`
+push workflow at that canonical commit. A missing or invalid seal means the
+aggregate is unpublished. The base contract therefore keeps
 `post_merge_aggregate_publication_seal_required=true` and
-`canonical_publication_root_complete=false`. This certificate completes no
-additional #37/#38 checkbox; neither issue is closed.
+`canonical_publication_root_complete=false`; only the seal's effective
+publication root may be true. This publication seal completes no additional
+#37/#38 checkbox and closes neither issue.
+
+## Canonical aggregate publication record
+
+The marker-delimited record is populated exclusively from the four named
+production pins in
+`scripts/verify-uniswap-v3-all-handlers-v1-publication.py`. Any unresolved
+placeholder is a fail-closed staging state. Once the pins are configured, the
+verifier requires the exact linked commit, parent, tree, run, and payload digest.
+
+<!-- publication-seal-record:start -->
+- tested PR #100 candidate commit: [`ebac0f4c72cf564aee21a34c54e90bc0b0777145`](https://github.com/pinax-network/substreams-backfills/commit/ebac0f4c72cf564aee21a34c54e90bc0b0777145)
+- tested candidate tree: [`e96f0956e76d136664db58e0d210851af38c2c87`](https://github.com/pinax-network/substreams-backfills/tree/ebac0f4c72cf564aee21a34c54e90bc0b0777145)
+- canonical aggregate squash commit: [`{{EXPECTED_CANONICAL_AGGREGATE_COMMIT}}`](https://github.com/pinax-network/substreams-backfills/commit/{{EXPECTED_CANONICAL_AGGREGATE_COMMIT}})
+- canonical aggregate parent: [`{{EXPECTED_CANONICAL_AGGREGATE_PARENT}}`](https://github.com/pinax-network/substreams-backfills/commit/{{EXPECTED_CANONICAL_AGGREGATE_PARENT}})
+- canonical aggregate tree: [`e96f0956e76d136664db58e0d210851af38c2c87`](https://github.com/pinax-network/substreams-backfills/tree/{{EXPECTED_CANONICAL_AGGREGATE_COMMIT}}) (byte-identical to the tested candidate tree)
+- canonical exact-head `main` push run: [`{{EXPECTED_CANONICAL_MAIN_PUSH_RUN_ID}}`](https://github.com/pinax-network/substreams-backfills/actions/runs/{{EXPECTED_CANONICAL_MAIN_PUSH_RUN_ID}})
+- seal payload canonical SHA-256: `{{EXPECTED_PAYLOAD_CANONICAL_SHA256}}`
+<!-- publication-seal-record:end -->
 
 ## Component roots
 
@@ -128,6 +154,7 @@ In-place and detached regeneration must be byte-identical. Missing Git objects,
 stale parents, digest drift, category/overlay/setter-authority/order/diff
 mutations or any false-gate promotion fail closed. A byte-identical aggregate
 squash merge does not alter the bound component roots or require a component
-reseal, but merge alone cannot publish the aggregate. The separate post-merge
-seal must bind the exact canonical squash commit/tree and successful exact-head
-main-push CI; any content change must regenerate the contract.
+reseal. The separate post-merge seal must bind that exact canonical squash
+commit/tree and successful exact-head main-push CI without modifying this
+contract; any contract content change invalidates the seal and requires
+regeneration.

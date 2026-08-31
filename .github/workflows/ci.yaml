@@ -90,6 +90,10 @@ jobs:
         run: |
           python3 scripts/verify-uniswap-v3-all-handlers-v1.py --wasm2wat "$WASM2WAT"
           python3 -m unittest scripts.tests.test_uniswap_v3_all_handlers_v1
+      - name: Verify canonical Uniswap V3 all-handlers v1 publication seal
+        run: |
+          python3 scripts/verify-uniswap-v3-all-handlers-v1-publication.py
+          python3 -m unittest scripts.tests.test_uniswap_v3_all_handlers_v1_publication
       - name: Verify bounded all-profile Uniswap V3 Pool runtime capsules
         run: |
           python3 scripts/verify-uniswap-v3-pool-runtime.py --wasm2wat "$WASM2WAT"

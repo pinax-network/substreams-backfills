@@ -12,19 +12,27 @@ classification, outside certified effect scope, and derived fields. This
 normalization does not assert one uniform matching-Store path across the
 heterogeneous component certificates.
 
-It is not presently a canonical aggregate publication. Every selected root is
-canonical in one linear ancestry through corrected Liquidity, every selected
-predecessor edge matches, and every pinned Git object is available and
-digest-bound. The component reseal queue is empty, which is the entire meaning
-of `canonical_reseal_required=false`. Exact successful `main` push CI is bound
-for all nine canonical component heads, so
+The immutable base contract does not itself claim canonical aggregate
+publication: its publication flag remains false by design. Effective canonical
+publication is a separate statement made only by a verified companion seal.
+Every selected root is canonical in one linear ancestry through corrected
+Liquidity, every selected predecessor edge matches, and every pinned Git object
+is available and digest-bound. The component reseal queue is empty, which is
+the entire meaning of `canonical_reseal_required=false`. Exact successful
+`main` push CI is bound for all nine canonical component heads, so
 `component_ci_validation_complete=true`.
 
-Merging the aggregate to `main` is necessary but not sufficient for canonical
-publication. A separate post-merge content-addressed publication seal must
-bind the exact canonical aggregate squash commit and tree plus a successful
-exact-head main-push CI run. This pre-merge candidate cannot supply those
-content-addressed bindings or auto-promote on merge, so
+Merging the aggregate to `main` is necessary but not sufficient. A separate
+post-merge content-addressed publication seal is the only publication
+authority.
+
+The immutable aggregate contract remains a pre-publication boundary even after
+merge. A separate content-addressed `publication-seal.json` must bind the tested
+candidate tree, byte-identical canonical aggregate squash tree, immutable
+contract blob, and successful exact-head `main` push CI run. Only a passing
+`scripts/verify-uniswap-v3-all-handlers-v1-publication.py` result establishes
+the effective canonical aggregate publication root; a missing or invalid seal
+means it is unpublished. The base contract cannot auto-promote, so it retains
 `post_merge_aggregate_publication_seal_required=true` and
 `canonical_publication_root_complete=false`.
 
@@ -67,9 +75,10 @@ The static claim includes:
 
 The following remain false:
 
-- canonical publication of this aggregate candidate;
-- the exact canonical aggregate squash commit and tree, successful exact-head
-  main-push CI, and separate post-merge publication seal that must bind them;
+- canonical publication by the immutable aggregate contract itself;
+- any effective canonical publication claim when the separate post-merge seal
+  is absent, invalid, or does not bind the exact canonical aggregate squash
+  commit/tree and successful exact-head `main` push CI;
 - imported host behavior, numeric/comparator meaning, conversion values,
   arbitrary aliases or source-package identity;
 - a uniform setter-to-matching-Store path, common execution path, branch
@@ -108,9 +117,10 @@ shared-entity last writer.
 
 ## Issue effect
 
-This certificate completes no additional #37/#38 checkbox and neither issue is
-closed. Its `checkboxes_completed_by_this_certificate` list remains empty for
-both issues; previously completed live criteria are not rolled back or restated:
+This publication seal completes no additional #37/#38 checkbox and neither
+issue is closed. The certificate's `checkboxes_completed_by_this_certificate`
+list remains empty for both issues; previously completed live criteria are not
+rolled back or restated:
 
 - #37 criterion 1 remains incomplete because required-nonempty and runtime
   population authority are not complete.

@@ -37,8 +37,10 @@ production, readiness, and issue-completion gates false.
 target contract for PancakeSwap V3 BSC and Uniswap V3 Base. It locks all 26
 deployed artifacts, exact manifest/schema/ABI/WASM structure, cross-target
 differences, and all-false operational gates. Its ordered top-level `issues`
-list is exhaustive for M9; the per-target bindings retain their distinct BSC
-and Base execution chains. The accompanying
+list is exhaustive for M9; the per-target bindings retain distinct BSC and Base
+traceability associations, not independently executable chains. The dependency
+DAG is `#85 + #94 -> #90 -> #92 -> #95`. Both target locks precede shared
+implementation, and BSC certification precedes Base certification. The accompanying
 [`messari-v3-source.md`](messari-v3-source.md) records the nearest pinned source
 anchors, matching malformed manifest metadata, unreproducible deleted gluegun
 dependency, and the strict source-to-WASM refusal boundary.

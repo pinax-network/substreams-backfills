@@ -321,14 +321,17 @@ subgraph author's) before any allocation is opened.
    only: the generic V2 extractor is decoder prior art, not a Graph-compatible writer, and
    implementation, compute, and load stop whenever either fastest-healthy 24-hour or 72-hour
    path in either required cluster is at or below 28 days.
-9. **M9 — Messari V3 BSC + Base**: complete PancakeSwap V3 BSC
-   [#85](https://github.com/pinax-network/substreams-backfills/issues/85) →
-   [#90](https://github.com/pinax-network/substreams-backfills/issues/90) →
-   [#92](https://github.com/pinax-network/substreams-backfills/issues/92) before
-   Uniswap V3 Base
-   [#94](https://github.com/pinax-network/substreams-backfills/issues/94) →
-   [#90](https://github.com/pinax-network/substreams-backfills/issues/90) →
-   [#95](https://github.com/pinax-network/substreams-backfills/issues/95).
+9. **M9 — Messari V3 BSC + Base**: the dependency DAG is
+   `#85 + #94 -> #90 -> #92 -> #95`. Both target locks precede shared
+   implementation, and BSC certification precedes Base certification. Complete the
+   PancakeSwap V3 BSC target lock in
+   [#85](https://github.com/pinax-network/substreams-backfills/issues/85) and the
+   Uniswap V3 Base target lock in
+   [#94](https://github.com/pinax-network/substreams-backfills/issues/94) before the shared
+   implementation and target adapters in
+   [#90](https://github.com/pinax-network/substreams-backfills/issues/90); then certify and
+   land BSC first in [#92](https://github.com/pinax-network/substreams-backfills/issues/92),
+   followed by Base in [#95](https://github.com/pinax-network/substreams-backfills/issues/95).
    Shared schema shape never substitutes for the separate target locks,
    eligibility decisions, adapters, certifications, or paused landings.
 

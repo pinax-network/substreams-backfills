@@ -9,8 +9,10 @@ non-interchangeable targets:
 The provenance contract's top-level `issues` list is the ordered, exhaustive
 unique M9 issue set: BSC target #85, shared implementation #90, BSC
 certification #92, Base target #94, and Base certification #95. The target
-bindings retain their distinct execution chains, `[85, 90, 92]` and
-`[94, 90, 95]`; the shared issue is intentionally present in both chains.
+bindings retain target-local traceability associations, `[85, 90, 92]` and
+`[94, 90, 95]`; they are not independently executable chains. The dependency
+DAG is `#85 + #94 -> #90 -> #92 -> #95`. Both target locks precede shared
+implementation, and BSC certification precedes Base certification.
 
 Both schemas contain 24 entities and 388 fields, but byte identity and the
 writer contract differ. BSC uses Messari schema 4.0.0, a nine-argument Swap,

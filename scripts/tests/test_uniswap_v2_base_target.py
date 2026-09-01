@@ -483,10 +483,27 @@ class UniswapV2BaseTargetTest(unittest.TestCase):
                 self.write_binding_text(original.replace(old, new))
                 self.assertNotEqual(self.verify().returncode, 0)
 
-    def test_m8_issue_link_omission_extra_and_reordering_are_rejected(self) -> None:
+    def test_m8_roadmap_is_bounded_and_link_drift_is_rejected(self) -> None:
         path = self.root / README_PATH
         original = path.read_text(encoding="utf-8")
         marker = "8. **M8 — Uniswap V2 Base**"
+
+        later_milestone_change = original.replace(
+            "`#85 + #94 -> #90 -> #92 -> #95`",
+            "`independently verified future DAG`",
+            1,
+        ).replace(
+            "\n\nMorpho Blue Base remains outside implementation",
+            "\n10. **M10 — Future family**: independently verified roadmap entry."
+            "\n\nMorpho Blue Base remains outside implementation",
+            1,
+        )
+        self.assertNotEqual(later_milestone_change, original)
+        self.assertIn("10. **M10 — Future family**", later_milestone_change)
+        path.write_text(later_milestone_change, encoding="utf-8")
+        result = self.verify()
+        self.assertEqual(result.returncode, 0, result.stderr)
+
         prefix, section = original.split(marker, 1)
         reordered = section.replace("issues/89", "issues/TEMP", 1)
         reordered = reordered.replace("issues/93", "issues/89", 1)

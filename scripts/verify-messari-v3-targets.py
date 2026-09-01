@@ -19,6 +19,9 @@ REPOSITORY = Path(__file__).resolve().parents[1]
 CONTRACT_PATH = Path("docs/provenance/messari-v3-targets-v1.json")
 PROFILE_PATH = Path("messari-v3/layout-profile-v1.json")
 SOURCE_PROVENANCE_PATH = Path("docs/provenance/messari-v3-source.md")
+ROOT_README_PATH = Path("README.md")
+TARGET_README_PATH = Path("messari-v3/README.md")
+PROVENANCE_INDEX_PATH = Path("docs/provenance/README.md")
 SOURCE_PROVENANCE_BYTES = 2907
 SOURCE_PROVENANCE_SHA256 = "758d4c34ee7b4028a8bbebe80d554110a7dcec7159db8c1a4e7e0dee814c02f4"
 
@@ -27,6 +30,121 @@ FAMILY_ISSUES = (85, 90, 92, 94, 95)
 FAMILY_ISSUES_SEMANTICS = (
     "ordered exhaustive unique M9 issue set: BSC target #85, shared implementation #90, "
     "BSC certification #92, Base target #94, Base certification #95"
+)
+M9_DEPENDENCY_DAG = "#85 + #94 -> #90 -> #92 -> #95"
+M9_DEPENDENCY_ORDER = (
+    "Both target locks precede shared implementation, and BSC certification precedes "
+    "Base certification."
+)
+ROOT_M9_ISSUE_LINK_ORDER = (85, 94, 90, 92, 95)
+TARGET_M9_TRACEABILITY_ARRAYS = ((85, 90, 92), (94, 90, 95))
+
+ROOT_M9_SECTION = "\n".join(
+    (
+        "9. **M9 — Messari V3 BSC + Base**: the dependency DAG is",
+        "   `#85 + #94 -> #90 -> #92 -> #95`. Both target locks precede shared",
+        (
+            "   implementation, and BSC certification precedes Base certification. "
+            "Complete the"
+        ),
+        "   PancakeSwap V3 BSC target lock in",
+        (
+            "   [#85](https://github.com/pinax-network/substreams-backfills/"
+            "issues/85) and the"
+        ),
+        "   Uniswap V3 Base target lock in",
+        (
+            "   [#94](https://github.com/pinax-network/substreams-backfills/"
+            "issues/94) before the shared"
+        ),
+        "   implementation and target adapters in",
+        (
+            "   [#90](https://github.com/pinax-network/substreams-backfills/"
+            "issues/90); then certify and"
+        ),
+        (
+            "   land BSC first in [#92](https://github.com/pinax-network/"
+            "substreams-backfills/issues/92),"
+        ),
+        (
+            "   followed by Base in [#95](https://github.com/pinax-network/"
+            "substreams-backfills/issues/95)."
+        ),
+        "   Shared schema shape never substitutes for the separate target locks,",
+        "   eligibility decisions, adapters, certifications, or paused landings.",
+    )
+)
+
+TARGET_M9_SECTION = "\n".join(
+    (
+        "The provenance contract's top-level `issues` list is the ordered, exhaustive",
+        "unique M9 issue set: BSC target #85, shared implementation #90, BSC",
+        "certification #92, Base target #94, and Base certification #95. The target",
+        "bindings retain target-local traceability associations, `[85, 90, 92]` and",
+        "`[94, 90, 95]`; they are not independently executable chains. The dependency",
+        "DAG is `#85 + #94 -> #90 -> #92 -> #95`. Both target locks precede shared",
+        "implementation, and BSC certification precedes Base certification.",
+    )
+)
+
+PROVENANCE_M9_SECTION = "\n".join(
+    (
+        (
+            "[`messari-v3-targets-v1.json`](messari-v3-targets-v1.json) is the "
+            "combined M9"
+        ),
+        "target contract for PancakeSwap V3 BSC and Uniswap V3 Base. It locks all 26",
+        "deployed artifacts, exact manifest/schema/ABI/WASM structure, cross-target",
+        "differences, and all-false operational gates. Its ordered top-level `issues`",
+        (
+            "list is exhaustive for M9; the per-target bindings retain distinct BSC "
+            "and Base"
+        ),
+        (
+            "traceability associations, not independently executable chains. The "
+            "dependency"
+        ),
+        "DAG is `#85 + #94 -> #90 -> #92 -> #95`. Both target locks precede shared",
+        (
+            "implementation, and BSC certification precedes Base certification. "
+            "The accompanying"
+        ),
+        (
+            "[`messari-v3-source.md`](messari-v3-source.md) records the nearest "
+            "pinned source"
+        ),
+        "anchors, matching malformed manifest metadata, unreproducible deleted gluegun",
+        "dependency, and the strict source-to-WASM refusal boundary.",
+    )
+)
+
+MILESTONE_HEADING_PATTERN = re.compile(r"(?m)^[0-9]+\. \*\*M[0-9]+ — ")
+ISSUE_HREF_PATTERN = re.compile(
+    r"https://github\.com/pinax-network/substreams-backfills/issues/([0-9]+)"
+)
+TRACEABILITY_ARRAY_PATTERN = re.compile(r"`\[([0-9]+(?:, [0-9]+)*)\]`")
+ISSUE_DAG_PATTERN = re.compile(r"#[0-9]+(?:\s*(?:\+|->)\s*#[0-9]+)+")
+CONTRADICTORY_M9_ORDERING_PATTERNS = (
+    re.compile(
+        r"\bbase certification (?:precedes|comes before|must precede) "
+        r"bsc certification\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\bbsc certification (?:follows|comes after|must follow) "
+        r"base certification\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\bshared implementation (?:precedes|comes before|must precede) "
+        r"(?:both )?target locks\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(?:both )?target locks (?:follow|come after|must follow) "
+        r"shared implementation\b",
+        re.IGNORECASE,
+    ),
 )
 
 FALSE_GATES = (
@@ -1441,6 +1559,99 @@ def verify_committed(root: Path, state: dict[str, Any] | None = None) -> tuple[d
     return expected_contract, expected_profile
 
 
+def extract_milestone_section(text: str, marker: str, label: str) -> str:
+    require(text.count(marker) == 1, f"Messari V3 {label} marker inventory drift")
+    _, tail = text.split(marker, 1)
+    next_milestone = MILESTONE_HEADING_PATTERN.search(tail)
+    if next_milestone is None:
+        section = tail.split("\n\n", 1)[0]
+    else:
+        section = tail[: next_milestone.start()]
+    return marker + section.rstrip("\n")
+
+
+def extract_paragraph(text: str, marker: str, label: str) -> str:
+    require(text.count(marker) == 1, f"Messari V3 {label} marker inventory drift")
+    _, tail = text.split(marker, 1)
+    return marker + tail.split("\n\n", 1)[0].rstrip("\n")
+
+
+def parse_traceability_arrays(section: str) -> tuple[tuple[int, ...], ...]:
+    return tuple(
+        tuple(int(value) for value in match.split(", "))
+        for match in TRACEABILITY_ARRAY_PATTERN.findall(section)
+    )
+
+
+def verify_dependency_documentation(root: Path) -> None:
+    documents = {
+        "root roadmap": (root / ROOT_README_PATH).read_text(),
+        "target README": (root / TARGET_README_PATH).read_text(),
+        "provenance index": (root / PROVENANCE_INDEX_PATH).read_text(),
+    }
+    sections = {
+        "root roadmap": extract_milestone_section(
+            documents["root roadmap"],
+            "9. **M9 — Messari V3 BSC + Base**",
+            "root roadmap M9",
+        ),
+        "target README": extract_paragraph(
+            documents["target README"],
+            "The provenance contract's top-level `issues` list",
+            "target README M9",
+        ),
+        "provenance index": extract_paragraph(
+            documents["provenance index"],
+            "[`messari-v3-targets-v1.json`](messari-v3-targets-v1.json)",
+            "provenance index M9",
+        ),
+    }
+    expected_sections = {
+        "root roadmap": ROOT_M9_SECTION,
+        "target README": TARGET_M9_SECTION,
+        "provenance index": PROVENANCE_M9_SECTION,
+    }
+    for label, section in sections.items():
+        require(
+            section == expected_sections[label],
+            f"Messari V3 {label} exact bounded M9 section drift",
+        )
+
+    root_issue_links = tuple(
+        int(value) for value in ISSUE_HREF_PATTERN.findall(sections["root roadmap"])
+    )
+    require(
+        root_issue_links == ROOT_M9_ISSUE_LINK_ORDER,
+        "Messari V3 root roadmap exact M9 issue-link order drift",
+    )
+    require(
+        parse_traceability_arrays(sections["target README"])
+        == TARGET_M9_TRACEABILITY_ARRAYS,
+        "Messari V3 target README exact traceability-array order drift",
+    )
+
+    for label, section in sections.items():
+        normalized = " ".join(section.split())
+        require(
+            ISSUE_DAG_PATTERN.findall(normalized) == [M9_DEPENDENCY_DAG],
+            f"Messari V3 {label} exact dependency DAG inventory drift",
+        )
+        require(
+            normalized.count(M9_DEPENDENCY_ORDER) == 1,
+            f"Messari V3 {label} exact dependency order inventory drift",
+        )
+
+    for label, text in documents.items():
+        normalized = " ".join(text.split())
+        require(
+            not any(
+                pattern.search(normalized)
+                for pattern in CONTRADICTORY_M9_ORDERING_PATTERNS
+            ),
+            f"Messari V3 {label} contradictory dependency ordering",
+        )
+
+
 def write_contracts(root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
     state = build_state(root)
     profile = build_profile(state)
@@ -1458,7 +1669,12 @@ def main() -> int:
     parser.add_argument("--write-contract", action="store_true")
     args = parser.parse_args()
     try:
-        contract, profile = write_contracts(args.root.resolve()) if args.write_contract else verify_committed(args.root.resolve())
+        root = args.root.resolve()
+        verify_dependency_documentation(root)
+        if args.write_contract:
+            contract, profile = write_contracts(root)
+        else:
+            contract, profile = verify_committed(root)
     except (OSError, json.JSONDecodeError, yaml.YAMLError, VerificationError) as error:
         print(f"Messari V3 target verification failed: {error}", file=sys.stderr)
         return 1

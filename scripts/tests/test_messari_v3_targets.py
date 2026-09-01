@@ -18,6 +18,8 @@ VERIFIER = REPOSITORY / "scripts/verify-messari-v3-targets.py"
 CONTRACT_PATH = Path("docs/provenance/messari-v3-targets-v1.json")
 PROFILE_PATH = Path("messari-v3/layout-profile-v1.json")
 SOURCE_PATH = Path("docs/provenance/messari-v3-source.md")
+ROOT_README_PATH = Path("README.md")
+PROVENANCE_INDEX_PATH = Path("docs/provenance/README.md")
 
 SPEC = importlib.util.spec_from_file_location("verify_messari_v3_targets", VERIFIER)
 assert SPEC is not None and SPEC.loader is not None
@@ -34,6 +36,11 @@ class MessariV3TargetsTest(unittest.TestCase):
         (self.root / CONTRACT_PATH.parent).mkdir(parents=True)
         shutil.copy2(REPOSITORY / CONTRACT_PATH, self.root / CONTRACT_PATH)
         shutil.copy2(REPOSITORY / SOURCE_PATH, self.root / SOURCE_PATH)
+        shutil.copy2(REPOSITORY / ROOT_README_PATH, self.root / ROOT_README_PATH)
+        shutil.copy2(
+            REPOSITORY / PROVENANCE_INDEX_PATH,
+            self.root / PROVENANCE_INDEX_PATH,
+        )
 
     def tearDown(self) -> None:
         self.temporary.cleanup()
@@ -114,6 +121,21 @@ class MessariV3TargetsTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("2 targets, 26 artifacts, 48 entity bindings", result.stdout)
 
+    def test_root_m9_section_is_bounded_from_a_future_m10_dag(self) -> None:
+        document = self.root / ROOT_README_PATH
+        original = document.read_text()
+        updated = original.replace(
+            "\n\nMorpho Blue Base remains outside implementation",
+            "\n10. **M10 — Future family**: independent dependency DAG is "
+            "`#100 -> #101`."
+            "\n\nMorpho Blue Base remains outside implementation",
+            1,
+        )
+        self.assertNotEqual(updated, original)
+        document.write_text(updated)
+        result = self.verify()
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_family_issue_linkage_is_exact_ordered_and_exhaustive(self) -> None:
         contract = self.load_contract()
         self.assertEqual(contract["issues"], [85, 90, 92, 94, 95])
@@ -140,6 +162,128 @@ class MessariV3TargetsTest(unittest.TestCase):
                 self.assertNotEqual(result.returncode, 0)
                 self.assertIn("exhaustive family issue linkage drift", result.stderr)
         path.write_bytes(original)
+
+    def test_dependency_dag_and_order_are_exact_across_all_docs(self) -> None:
+        paths = (
+            ROOT_README_PATH,
+            Path("messari-v3/README.md"),
+            PROVENANCE_INDEX_PATH,
+        )
+        for path in paths:
+            document = self.root / path
+            original = document.read_text()
+            wrong_dag = "#85 -> #90 -> #92 -> #94 -> #95"
+            mutations = {
+                "wrong DAG": original.replace(
+                    MODULE.M9_DEPENDENCY_DAG,
+                    wrong_dag,
+                    1,
+                ),
+                "omitted DAG": original.replace(MODULE.M9_DEPENDENCY_DAG, "", 1),
+                "extra DAG": original.replace(
+                    MODULE.M9_DEPENDENCY_DAG,
+                    MODULE.M9_DEPENDENCY_DAG + " and " + wrong_dag,
+                    1,
+                ),
+                "wrong order": original.replace(
+                    "BSC certification precedes Base certification",
+                    "Base certification precedes BSC certification",
+                    1,
+                ),
+            }
+            for name, mutated in mutations.items():
+                with self.subTest(path=path.as_posix(), name=name):
+                    self.assertNotEqual(mutated, original)
+                    document.write_text(mutated)
+                    result = self.verify()
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertIn("drift", result.stderr)
+                    document.write_text(original)
+
+    def test_root_m9_issue_links_reject_substitution_omission_extra_and_reorder(
+        self,
+    ) -> None:
+        document = self.root / ROOT_README_PATH
+        original = document.read_text()
+        issue_links = {
+            issue: (
+                f"[#{issue}](https://github.com/pinax-network/"
+                f"substreams-backfills/issues/{issue})"
+            )
+            for issue in MODULE.ROOT_M9_ISSUE_LINK_ORDER
+        }
+        reordered = original.replace(issue_links[85], "M9_ISSUE_TEMP", 1)
+        reordered = reordered.replace(issue_links[94], issue_links[85], 1)
+        reordered = reordered.replace("M9_ISSUE_TEMP", issue_links[94], 1)
+        mutations = {
+            "href substitution": original.replace(
+                "substreams-backfills/issues/85",
+                "substreams-backfills/issues/999",
+                1,
+            ),
+            "omission": original.replace(issue_links[90], "", 1),
+            "extra": original.replace(
+                issue_links[95],
+                issue_links[95]
+                + " and [#999](https://github.com/pinax-network/"
+                "substreams-backfills/issues/999)",
+                1,
+            ),
+            "reorder": reordered,
+        }
+        for name, mutated in mutations.items():
+            with self.subTest(name=name):
+                self.assertNotEqual(mutated, original)
+                document.write_text(mutated)
+                result = self.verify()
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("root roadmap", result.stderr)
+                document.write_text(original)
+
+    def test_target_traceability_arrays_reject_all_order_and_inventory_drift(
+        self,
+    ) -> None:
+        document = self.root / Path("messari-v3/README.md")
+        original = document.read_text()
+        mutations = {
+            "BSC substitution": ("`[85, 90, 92]`", "`[85, 90, 999]`"),
+            "BSC omission": ("`[85, 90, 92]`", "`[85, 90]`"),
+            "BSC extra": ("`[85, 90, 92]`", "`[85, 90, 92, 999]`"),
+            "BSC reorder": ("`[85, 90, 92]`", "`[90, 85, 92]`"),
+            "Base substitution": ("`[94, 90, 95]`", "`[94, 90, 999]`"),
+            "Base omission": ("`[94, 90, 95]`", "`[94, 90]`"),
+            "Base extra": ("`[94, 90, 95]`", "`[94, 90, 95, 999]`"),
+            "Base reorder": ("`[94, 90, 95]`", "`[90, 94, 95]`"),
+            "traceability semantics": (
+                "traceability associations",
+                "distinct execution chains",
+            ),
+        }
+        for name, (current, replacement) in mutations.items():
+            with self.subTest(name=name):
+                self.assertIn(current, original)
+                document.write_text(original.replace(current, replacement, 1))
+                result = self.verify()
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("target README", result.stderr)
+                document.write_text(original)
+
+    def test_contradictory_ordering_prose_is_rejected_across_all_docs(self) -> None:
+        paths = (
+            ROOT_README_PATH,
+            Path("messari-v3/README.md"),
+            PROVENANCE_INDEX_PATH,
+        )
+        contradiction = "Base certification precedes BSC certification."
+        for path in paths:
+            with self.subTest(path=path.as_posix()):
+                document = self.root / path
+                original = document.read_text()
+                document.write_text(original + f"\n\n{contradiction}\n")
+                result = self.verify()
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("contradictory dependency ordering", result.stderr)
+                document.write_text(original)
 
     def test_contract_generation_is_byte_deterministic(self) -> None:
         before = {

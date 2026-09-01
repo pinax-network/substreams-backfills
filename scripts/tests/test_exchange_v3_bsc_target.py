@@ -125,6 +125,13 @@ class ExchangeV3BscTargetTest(unittest.TestCase):
         self.write_lock(lock)
         self.assertNotEqual(self.verify().returncode, 0)
 
+    def test_same_length_eligibility_metadata_drift_is_rejected(self) -> None:
+        lock = self.load_lock()
+        lock["eligibility_decision"] = "awaiting_same_pod_72_hour_evidence"
+        lock["remaining_gates"][0] = "one fastest copy exceeds 28 days"
+        self.write_lock(lock)
+        self.assertNotEqual(self.verify().returncode, 0)
+
     def test_m4_milestone_regression_is_rejected(self) -> None:
         binding = self.root / "exchange-v3-bsc" / BINDING_NAME
         binding.write_text(binding.read_text().replace("milestone: M6", "milestone: M4"))

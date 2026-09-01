@@ -459,6 +459,7 @@ class UniswapV2BaseTargetTest(unittest.TestCase):
             ("required_windows", ["24h"]),
             ("eligible_when", "any_window_exceeds_28_days"),
             ("stop_when", "never"),
+            ("no_viable_copy", "missing_attachment_is_eligible"),
         )
         for field, value in mutations:
             with self.subTest(field=field):

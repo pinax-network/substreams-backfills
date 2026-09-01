@@ -413,7 +413,7 @@
     "issue_86_complete": false
   },
   "remaining_gates": [
-    "Fresh stable-pod 24-hour and 72-hour fastest-healthy-copy forecasts must both exceed 28 days or be non-converging.",
+    "M0: fully account for both required clusters by inventorying every current copy or fresh structural absence proof; when viable healthy copies exist, independently select the minimum stable same-pod 24-hour ETA and minimum stable same-pod 72-hour ETA across all viable copies, which may be different copies, and require both minima to exceed 28 days or be non-converging; either minimum at or below 28 days stops implementation, compute, and load; with no viable copy, require fresh structural absence proof from both clusters.",
     "Resolve the exact Slipstream source revision and build toolchain, or replace them with a complete independently reviewed retained-WASM behavior specification.",
     "Implement the target-specific decoder, call inputs, stores, reducer, PoI, temporal writer, package, and schema without promoting any parity gate.",
     "Prove canonical Base fixture, Graph Node differential, failure, save-order, PoI, VID, block-range, and PostgreSQL parity.",

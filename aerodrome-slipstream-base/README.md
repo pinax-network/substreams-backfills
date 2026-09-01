@@ -67,8 +67,14 @@ as a complete value/order/persistence proof.
 
 ## Remaining gates
 
-Runtime work must not begin until fresh stable-pod 24-hour and 72-hour evidence
-both put the fastest healthy Graph Node path above 28 days. The exact source
+Runtime work must not begin until fresh evidence fully accounts for both
+required clusters by inventorying every current copy or supplying fresh
+structural absence proof. When viable healthy copies exist, independently select the
+minimum stable same-pod 24-hour ETA and minimum stable same-pod 72-hour ETA across all viable
+copies; the minima may belong to different copies and must both exceed 28 days
+or be non-converging. Either minimum at or below 28 days stops implementation,
+compute, and load. If no viable copy exists anywhere, eligibility requires fresh
+structural absence proof from both clusters. The exact source
 revision or an independently complete retained-WASM specification must also be
 resolved. After implementation, canonical Base fixtures must prove entity
 values, save order, failure behavior, PoI, VID/block ranges, and PostgreSQL

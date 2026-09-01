@@ -121,8 +121,8 @@
   ],
   "layout_profile": {
     "path": "uniswap-v2-base/layout-profile-v1.json",
-    "bytes": 8001,
-    "sha256": "338e94103515bd62764d0c8194deabd10376150c4e594ada624a2eb60c1b421b"
+    "bytes": 8338,
+    "sha256": "036f9caf38ee50cc9314a43e832ebd5f916958a2d6e664d8e0c127332fd20bb4"
   },
   "logical_contract": {
     "entity_count": 15,

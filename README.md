@@ -27,9 +27,14 @@ Tracking: [k8s-subgraphs#779](https://github.com/pinax-network/k8s-subgraphs/iss
 
 ## Backfill eligibility gate
 
-Implementation and compute/load actions are fail-closed unless the target
-binding points at fresh, immutable evidence that the fastest healthy Graph Node
-path exceeds 28 days in both its 24-hour and 72-hour forecast. See
+Implementation and compute/load actions are fail-closed unless fresh, immutable
+evidence fully accounts for both required clusters by inventorying every current
+copy or supplying fresh structural absence proof. When viable healthy Graph Node
+copies exist, independently select the minimum stable same-pod 24-hour ETA and
+minimum stable same-pod 72-hour ETA across all viable copies; the minima may belong to different
+copies, and both must exceed 28 days or be non-converging. Either minimum at or
+below 28 days stops implementation, compute, and load. With no viable copy,
+eligibility requires fresh structural absence proof from both clusters. See
 [`docs/eligibility.md`](docs/eligibility.md) for the exact formula, evidence
 contract, capture workflow, and action checks. Market QoS prioritizes targets
 only after this gate passes.
@@ -286,11 +291,15 @@ subgraph author's) before any allocation is opened.
 
 ## Delivery milestones
 
-0. **M0 — eligibility gates**: inventory both required clusters and use the fastest healthy
-   Graph Node path per cluster and window. Build a new backfill only when both fresh 24-hour
-   and 72-hour net catch-up forecasts in both clusters exceed 28 days or are non-converging.
-   Any fastest-healthy window at or below 28 days stops implementation, compute, and load;
-   native syncing continues.
+0. **M0 — eligibility gates**: fully account for both required clusters by inventorying
+   every current copy or supplying fresh structural absence proof. When viable healthy
+   Graph Node copies exist, independently select the minimum stable same-pod 24-hour ETA
+   and minimum stable same-pod 72-hour ETA across all viable copies; the minima may belong
+   to different copies. Build a new backfill only when both minima exceed 28 days or are
+   non-converging.
+   Either minimum at or below 28 days stops implementation, compute, and load; native
+   syncing continues. With no viable copy, require fresh structural absence proof from
+   both clusters.
 1. **M1 — Uniswap V4 reference port**: preserve the complete Substreams-owned source,
    isolated upstream history, immutable package bytes, module hashes, Store cache boundaries,
    fixtures, and audit packages; then reproduce a certified segment through the pinned engine
@@ -319,8 +328,8 @@ subgraph author's) before any allocation is opened.
    certification and paused landing in
    [#93](https://github.com/pinax-network/substreams-backfills/issues/93). M8 orders work
    only: the generic V2 extractor is decoder prior art, not a Graph-compatible writer, and
-   implementation, compute, and load stop whenever either fastest-healthy 24-hour or 72-hour
-   path in either required cluster is at or below 28 days.
+   implementation, compute, and load stop whenever either independently selected minimum
+   24-hour or 72-hour ETA across all viable healthy copies is at or below 28 days.
 9. **M9 — Messari V3 BSC + Base**: the dependency DAG is
    `#85 + #94 -> #90 -> #92 -> #95`. Both target locks precede shared
    implementation, and BSC certification precedes Base certification. Complete the
@@ -335,8 +344,8 @@ subgraph author's) before any allocation is opened.
    Shared schema shape never substitutes for the separate target locks,
    eligibility decisions, adapters, certifications, or paused landings.
 
-Morpho Blue Base remains outside implementation while either its 24-hour or 72-hour net
-catch-up forecast is at or below 28 days. No milestone grants production activation: every
+Morpho Blue Base remains outside implementation, compute, and load while either independently
+selected minimum 24-hour or 72-hour ETA is at or below 28 days. No milestone grants production activation: every
 target lands paused and requires its own certified evidence and operational approval.
 
 ## Uniswap V4 import contract

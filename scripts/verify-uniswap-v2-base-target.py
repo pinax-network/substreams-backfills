@@ -28,13 +28,13 @@ GENERIC_COMMIT = "970a665e15619de8ad7f686bd89412a1030d46dc"
 GENERIC_TREE = "eac7466daba7f89a8c3b2e4742fcf24a155a2c24"
 LOGICAL_SHA256 = "7d249e34390b4eaaeca84e0fd5638e071fcd812a10813a03d284cf94a0dff5a2"
 PROFILE_CANONICAL_SHA256 = (
-    "0519b31237c3ebbae5167b98d96013102c9914152fbd1b412ba6ecf3f1c3203b"
+    "cb27545302d5f3ae7c80c3651d828f9c800dd4f48eef7cf87c8de19bf155b6c8"
 )
 
 LOCK_SECTION_SHA256 = {
     "deployment": "4b5085167331ac007aa70edd24b325a123df87a364e556c8718a92fa564148bb",
     "artifact_lock": "41b89c98b1e558718fa8c1cf424294f9ed9148ea91dc7feaf6386e6ae4da503c",
-    "layout_profile": "073bb6362f4211dae9d42378110bb0c90d02230c99547ff993fc2cb7d2b8a3d8",
+    "layout_profile": "d7d4eb9f40302b97460e2e1dcd800df0e585098e4ab5416b5de3573792a6d9c5",
     "logical_contract": "ab160572d11461936d229de50910e257ed89b62dd83f5a21a81f1d7091397083",
     "source_evidence": "127a0ace05b87311c10af806d3a6f3259162b5d14caccdd7c85f1c0f560b7ea7",
     "generic_event_extractor": "addec4e3e33a3658712102a5c45e94d381f44513a65bc86107fc0c26bde1efcc",
@@ -140,17 +140,18 @@ EXPECTED_ELIGIBILITY_CONTRACT = {
     "threshold_days": 28,
     "required_clusters": ["riv-subgraphs-a", "kan-subgraphs-a"],
     "copy_inventory": "every_current_copy_or_fresh_structural_absence_proof",
-    "copy_selection": "fastest_healthy_copy_per_cluster_and_window",
+    "copy_selection": "independent_minimum_per_window_across_all_viable_healthy_copies",
     "required_windows": ["24h", "72h"],
-    "eligible_when": "all_required_cluster_window_minima_exceed_28_days_or_are_non_converging",
-    "stop_when": "any_required_cluster_window_minimum_is_at_or_below_28_days",
+    "eligible_when": "independently_selected_minimum_24h_and_72h_etas_exceed_28_days_or_are_non_converging",
+    "stop_when": "either_independently_selected_minimum_eta_is_at_or_below_28_days",
+    "no_viable_copy": "eligible_only_with_fresh_structural_absence_proof_from_both_required_clusters",
     "stopped_actions": ["implementation", "compute", "load"],
     "current_decision": "indeterminate_no_fresh_evidence",
 }
 
 EXPECTED_REMAINING_GATES = [
-    "M0: inventory both required clusters and every current copy or fresh structural absence proof; use each cluster's fastest healthy path; both fresh stable-copy 24-hour and 72-hour forecasts must exceed 28 days or be non-converging.",
-    "M0 stop: if any required cluster's fastest healthy 24-hour or 72-hour forecast is at or below 28 days, stop implementation, compute, and load; native Graph Node syncing continues.",
+    "M0: fully account for both required clusters by inventorying every current copy or fresh structural absence proof; when viable healthy copies exist, independently select the minimum stable same-pod 24-hour ETA and minimum stable same-pod 72-hour ETA across all viable copies, which may be different copies, and require both minima to exceed 28 days or be non-converging; with no viable copy, require fresh structural absence proof from both clusters.",
+    "M0 stop: if either independently selected minimum ETA is at or below 28 days, stop implementation, compute, and load; native Graph Node syncing continues.",
     "Freeze the exact ordered handler and failure contract.",
     "Implement the target-specific runtime.",
     "Prove fixed-range logical and physical differential parity.",
@@ -166,8 +167,8 @@ EXPECTED_M8_ROADMAP = """8. **M8 — Uniswap V2 Base** (`QmQmz5kh…`): complete
    certification and paused landing in
    [#93](https://github.com/pinax-network/substreams-backfills/issues/93). M8 orders work
    only: the generic V2 extractor is decoder prior art, not a Graph-compatible writer, and
-   implementation, compute, and load stop whenever either fastest-healthy 24-hour or 72-hour
-   path in either required cluster is at or below 28 days."""
+   implementation, compute, and load stop whenever either independently selected minimum
+   24-hour or 72-hour ETA across all viable healthy copies is at or below 28 days."""
 
 MILESTONE_HEADING = re.compile(r"(?m)^[0-9]+\. \*\*M[0-9]+ — ")
 

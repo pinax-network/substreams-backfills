@@ -1,9 +1,14 @@
 # Graph Node catch-up eligibility
 
-Backfill engineering starts only when the fastest healthy native Graph Node
-path is projected to take **more than 28 days** to reach chain head. This gate
-is independent of query fees and market priority: QoS decides which eligible
-target is most valuable, never whether a backfill is necessary.
+Backfill engineering starts only after both required clusters are fully
+accounted for by inventorying every current copy or supplying fresh structural
+absence proof. When viable healthy native Graph Node copies exist, the
+independently selected minimum stable same-pod 24-hour ETA and minimum stable same-pod 72-hour
+ETA across all viable copies must each be **more than 28 days** or
+non-converging; the minima may belong to different copies. With no viable copy,
+eligibility requires fresh structural absence proof from both clusters. This
+gate is independent of query fees and market priority: QoS decides which
+eligible target is most valuable, never whether a backfill is necessary.
 
 ## Market-priority metadata
 
@@ -62,7 +67,7 @@ lag * duration_seconds > 28 * net_delta * 86400
 Exactly 28 days does not qualify. A head regression invalidates the evidence;
 it is not a non-positive rate.
 
-## Fastest healthy copy rule
+## Independent per-window minimum rule
 
 Every target covers both `riv-subgraphs-a` and `kan-subgraphs-a`. Evidence must account
 for each cluster by recording either:
@@ -82,9 +87,10 @@ cluster with no subgraph namespaces.
 
 When at least one viable copy exists, fully inventoried failed or stopped copies
 in another required cluster are accounted but excluded from the calculation.
-They do not require a false missing-version/graft claim and cannot override the
-fastest healthy copy. If no viable copy exists anywhere, fresh structural proof
-is still required from every cluster before the target can be eligible.
+They do not require a false missing-version/graft claim and cannot override
+either independently selected minimum. If no viable copy exists anywhere,
+fresh structural proof is still required from every cluster before the target
+can be eligible.
 
 Decision precedence is:
 
@@ -92,9 +98,10 @@ Decision precedence is:
 2. A fresh, healthy `synced=true` copy is `complete`, even if another duplicate
    has stale or regressed samples.
 3. For unsynced copies, stale or regressed required evidence is `indeterminate`.
-4. If either fastest window is at or below 28 days, the target is `monitor` and
-   native syncing continues.
-5. If every viable copy exceeds 28 days in both windows, the target is
+4. If either independently selected minimum is at or below 28 days, the target
+   is `monitor`; native syncing continues and implementation, compute, and load
+   stop.
+5. If both independently selected minima exceed 28 days, the target is
    `eligible`. A non-positive rate is an infinite ETA.
 6. With no viable copy, `eligible` requires explicit structural proof from
    every cluster. A failed-only inventory is `indeterminate`.

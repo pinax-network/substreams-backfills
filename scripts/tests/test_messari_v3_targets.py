@@ -885,12 +885,20 @@ class MessariV3TargetsTest(unittest.TestCase):
         self.assertEqual(
             contract["eligibility"],
             {
+                "copy_inventory": "every_current_copy_or_fresh_structural_absence_proof_per_required_cluster",
+                "copy_selection": "independent_minimum_per_window_across_all_viable_healthy_copies",
                 "current_decision": "indeterminate",
+                "decision_scope": "evaluated_independently_per_target_binding",
+                "eligible_when": "independently_selected_minimum_24h_and_72h_etas_exceed_28_days_or_are_non_converging",
                 "minimum_eta_days_exclusive": 28,
+                "minima_may_belong_to_different_copies": True,
+                "no_viable_copy": "eligible_only_with_fresh_structural_absence_proof_from_both_required_clusters",
                 "policy": "graph-node-net-catchup-v1",
                 "reason": "no_fresh_evidence",
                 "required_clusters": ["riv-subgraphs-a", "kan-subgraphs-a"],
                 "required_forecast_windows_hours": [24, 72],
+                "stop_when": "either_independently_selected_minimum_eta_is_at_or_below_28_days",
+                "stopped_actions": ["implementation", "compute", "load"],
             },
         )
         for record in contract["binding_lock"]:
@@ -941,6 +949,27 @@ class MessariV3TargetsTest(unittest.TestCase):
         def weaken_exclusive_threshold(contract) -> None:
             contract["eligibility"]["minimum_eta_days_exclusive"] = 27
 
+        def couple_window_selection(contract) -> None:
+            contract["eligibility"]["copy_selection"] = "one_fastest_copy_for_both_windows"
+
+        def couple_target_decisions(contract) -> None:
+            contract["eligibility"]["decision_scope"] = "family_wide"
+
+        def deny_cross_copy_minima(contract) -> None:
+            contract["eligibility"]["minima_may_belong_to_different_copies"] = False
+
+        def weaken_eligible_condition(contract) -> None:
+            contract["eligibility"]["eligible_when"] = "either_window_exceeds_28_days"
+
+        def disable_stop_condition(contract) -> None:
+            contract["eligibility"]["stop_when"] = "never"
+
+        def weaken_no_viable_copy_rule(contract) -> None:
+            contract["eligibility"]["no_viable_copy"] = "failed_copy_is_eligible"
+
+        def remove_stopped_action(contract) -> None:
+            contract["eligibility"]["stopped_actions"].remove("implementation")
+
         def promote_eligibility_truth(contract) -> None:
             contract["truth_boundary"]["eligibility_complete"] = True
 
@@ -948,6 +977,13 @@ class MessariV3TargetsTest(unittest.TestCase):
             {
                 "forecast window drift": drift_window,
                 "exclusive greater-than-28-day rule drift": weaken_exclusive_threshold,
+                "24-hour and 72-hour minima coupled to one copy": couple_window_selection,
+                "target decisions coupled across the family": couple_target_decisions,
+                "different-copy minima forbidden": deny_cross_copy_minima,
+                "eligibility condition weakened": weaken_eligible_condition,
+                "eligibility stop condition disabled": disable_stop_condition,
+                "no-viable-copy structural proof weakened": weaken_no_viable_copy_rule,
+                "implementation omitted from stopped actions": remove_stopped_action,
                 "eligibility truth promoted": promote_eligibility_truth,
             }
         )

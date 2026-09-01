@@ -263,6 +263,23 @@ class EligibilityTest(unittest.TestCase):
         self.assertEqual(evidence["summary"]["decision"], "monitor")
         self.assertEqual(evidence["summary"]["fastest_24h"]["copy_id"], "kan/fast")
 
+    def test_window_minima_are_selected_independently_across_copies(self) -> None:
+        evidence = self.build(
+            [
+                cluster(
+                    "riv-subgraphs-a",
+                    [healthy_copy("riv/fast-24h", net_24h=200, net_72h=50)],
+                ),
+                cluster(
+                    "kan-subgraphs-a",
+                    [healthy_copy("kan/fast-72h", net_24h=50, net_72h=200)],
+                ),
+            ]
+        )
+        self.assertEqual(evidence["summary"]["decision"], "monitor")
+        self.assertEqual(evidence["summary"]["fastest_24h"]["copy_id"], "riv/fast-24h")
+        self.assertEqual(evidence["summary"]["fastest_72h"]["copy_id"], "kan/fast-72h")
+
     def test_synced_healthy_copy_is_complete(self) -> None:
         evidence = self.build(
             [

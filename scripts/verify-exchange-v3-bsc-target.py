@@ -24,8 +24,35 @@ EXPECTED_SCHEMA = "QmP9xqULGJzQE7SFKyzkgD8LEkjoy1aChCJnbNkCT4VDRi"
 EXPECTED_SOURCE_COMMIT = "1da7ba61abb26633ff819ce8cdfe945be8770a92"
 EXPECTED_SOURCE_TREE = "a2a113c9eedd7ed0e6fdcaea275153233223c95d"
 EXPECTED_SOURCE_PARENT = "e2019f716f4310f4ce28addc4439980804d9e413"
-EXPECTED_PROFILE_BYTES = 10417
-EXPECTED_PROFILE_SHA256 = "8a5193a2eb5c4e938aed0faed4d829589c1b1e5bc4a0549d5efd7c41e4f96b16"
+EXPECTED_PROFILE_BYTES = 10851
+EXPECTED_PROFILE_SHA256 = "c59a680bd09958d1397872280451750b7f650fd78093b99c99fb135310c29af1"
+
+EXPECTED_M0_GATE = (
+    "M0: fully account for both required clusters by inventorying every current copy "
+    "or fresh structural absence proof; when viable healthy copies exist, independently "
+    "select the minimum stable same-pod 24-hour ETA and minimum stable same-pod 72-hour "
+    "ETA across all viable copies, which may be different copies, and require both minima "
+    "to exceed 28 days or be non-converging; either minimum at or below 28 days stops "
+    "implementation, compute, and load; with no viable copy, require fresh structural "
+    "absence proof from both clusters."
+)
+
+EXPECTED_PROFILE_REMAINING_GATES = [
+    EXPECTED_M0_GATE,
+    "generic_loader_legacy_spec_0_0_2_physical_schema_and_metadata_proof",
+    "certified_uniswap_v3_runtime_functional_gap_after_issues_5_and_9",
+    "paused_restore_differential_validation_and_separate_operational_activation_approval",
+]
+
+EXPECTED_LOCK_REMAINING_GATES = [
+    EXPECTED_M0_GATE,
+    "Prove the generic loader handles spec-0.0.2-derived physical schema and metadata.",
+    "Complete the certified runtime functional gap after issues 5 and 9.",
+    (
+        "Produce a paused differential certificate and obtain separate operational "
+        "approval before activation."
+    ),
+]
 
 EXPECTED_PROFILE_HANDLERS = {
     "Factory": [
@@ -555,7 +582,7 @@ def verify_profile(
         or profile.get("profile_id") != "exchange-v3-bsc-QmY67iZD"
         or profile.get("status") != "immutable_target_and_exact_source_contract_only"
         or profile.get("runtime_parity") is not False
-        or profile.get("eligibility_decision") != "awaiting_same_pod_72_hour_evidence"
+        or profile.get("eligibility_decision") != "indeterminate_no_fresh_evidence"
         or profile.get("family") != "exchange-v3-bsc"
         or profile.get("chain") != "bsc"
     ):
@@ -745,12 +772,7 @@ def verify_profile(
         fail("Exchange V3 frozen Uniswap V3 gap profile drift")
     if profile.get("required_target_changes") != EXPECTED_REQUIRED_CHANGES:
         fail("Exchange V3 required target-change inventory drift")
-    if profile.get("remaining_gates") != [
-        "fresh_24_hour_and_same_pod_72_hour_graph_node_catchup_forecasts_both_greater_than_28_days",
-        "generic_loader_legacy_spec_0_0_2_physical_schema_and_metadata_proof",
-        "certified_uniswap_v3_runtime_functional_gap_after_issues_5_and_9",
-        "paused_restore_differential_validation_and_separate_operational_activation_approval",
-    ]:
+    if profile.get("remaining_gates") != EXPECTED_PROFILE_REMAINING_GATES:
         fail("Exchange V3 remaining-gate profile drift")
 
 
@@ -851,7 +873,7 @@ def verify_source_pin(lock: dict[str, object], artifacts: dict[str, dict[str, ob
     chain = source.get("chain_configuration")
     if not isinstance(chain, dict) or chain.get("minimum_native_locked") != "10":
         fail("exact BSC chain configuration drift")
-    if len(lock.get("remaining_gates", [])) != 4:
+    if lock.get("remaining_gates") != EXPECTED_LOCK_REMAINING_GATES:
         fail("remaining Exchange V3 gates must stay explicit")
 
 
@@ -989,8 +1011,8 @@ def verify(root: Path, lock_path: Path, exact_source_root: Path | None = None) -
         or lock.get("implementation_status")
         != "immutable_target_and_exact_source_baseline_only"
         or lock.get("runtime_parity") is not False
-        or lock.get("eligibility_decision") != "awaiting_same_pod_72_hour_evidence"
-        or len(lock.get("remaining_gates", [])) != 4
+        or lock.get("eligibility_decision") != "indeterminate_no_fresh_evidence"
+        or lock.get("remaining_gates") != EXPECTED_LOCK_REMAINING_GATES
     ):
         fail("Exchange V3 baseline status, runtime-parity refusal, or remaining gates drift")
     deployment = lock.get("deployment")

@@ -28,8 +28,8 @@ QMA8_SCHEMA_PATH = Path(
 EXPECTED_DEPLOYMENT = "QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV"
 EXPECTED_SCHEMA = "QmTiEqVtfjTDY8DRkj17eLKSAyajHNz8r7Yg9cRgXwrWfF"
 EXPECTED_MANIFEST_REPOSITORY = "https://github.com/Uniswap/uniswap-v3-subgraph"
-EXPECTED_PROFILE_BYTES = 16938
-EXPECTED_PROFILE_SHA256 = "a47737893c3d9703f458426581878a0ca41ca48e75632a205e38c762f055e6d1"
+EXPECTED_PROFILE_BYTES = 17350
+EXPECTED_PROFILE_SHA256 = "8f07982c2787d3ed0d23ab833f90eb8fdf0a9bbddf8ce8fa593ad7f5ff299740"
 EXPECTED_QMA8_BYTES = 19034
 EXPECTED_QMA8_SHA256 = "ae03d0c6d3c6c03f87ae8e699b1e71804266c1d4adb7acbf4f4de5d48727c39c"
 EXPECTED_QMA8_LOGICAL = "6c801fc4c141c0ae12dbb937652f0dd49c9be5bd3b1b3c8e38bdb92fe6efec5d"
@@ -179,8 +179,13 @@ EXPECTED_SOURCE_SEARCH_SCOPE = {
 
 EXPECTED_REMAINING_GATES = [
     (
-        "Fresh stable-pod 24-hour and 72-hour fastest-healthy-copy forecasts must "
-        "both exceed 28 days or be non-converging."
+        "M0: fully account for both required clusters by inventorying every current "
+        "copy or fresh structural absence proof; when viable healthy copies exist, "
+        "independently select the minimum stable same-pod 24-hour ETA and minimum "
+        "stable same-pod 72-hour ETA across all viable copies, which may be different copies, and "
+        "require both minima to exceed 28 days or be non-converging; either minimum "
+        "at or below 28 days stops implementation, compute, and load; with no viable "
+        "copy, require fresh structural absence proof from both clusters."
     ),
     (
         "Resolve the exact Slipstream source revision and build toolchain, or replace "

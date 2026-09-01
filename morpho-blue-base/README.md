@@ -14,3 +14,13 @@ public allocator, etc. Schema `QmWL6kvHgo…`, spec 0.0.5.
   target binding. Recapture exact QoS before making a current market claim.
 - The 2026-08-21 intake recorded ordinary Riv/Kan syncing, but live placement
   and progress must be rechecked rather than inferred from that snapshot.
+
+M0 remains monitoring-only. Fresh evidence must fully account for both required
+clusters by inventorying every current copy or supplying fresh structural absence
+proof. When viable healthy copies exist, independently select the minimum stable
+same-pod 24-hour ETA and minimum stable same-pod 72-hour ETA across all viable copies; the minima
+may belong to different copies and must both exceed 28 days or be non-converging
+before any backfill work starts. Either minimum at or below 28 days stops
+implementation, compute, and load while native Graph Node syncing continues. With
+no viable copy, eligibility requires fresh structural absence proof from both
+clusters.

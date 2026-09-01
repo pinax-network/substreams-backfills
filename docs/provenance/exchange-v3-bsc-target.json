@@ -3,7 +3,7 @@
   "family": "exchange-v3-bsc",
   "implementation_status": "immutable_target_and_exact_source_baseline_only",
   "runtime_parity": false,
-  "eligibility_decision": "awaiting_same_pod_72_hour_evidence",
+  "eligibility_decision": "indeterminate_no_fresh_evidence",
   "deployment": {
     "cid": "QmY67iZDTsTdpWXSCotpVPYankwnyHXNT7N95YEn8ccUsn",
     "chain": "bsc",
@@ -133,8 +133,8 @@
   ],
   "layout_profile": {
     "path": "exchange-v3-bsc/layout-profile-v1.json",
-    "bytes": 10417,
-    "sha256": "8a5193a2eb5c4e938aed0faed4d829589c1b1e5bc4a0549d5efd7c41e4f96b16"
+    "bytes": 10851,
+    "sha256": "c59a680bd09958d1397872280451750b7f650fd78093b99c99fb135310c29af1"
   },
   "logical_contract": {
     "entity_count": 20,
@@ -387,7 +387,7 @@
     }
   },
   "remaining_gates": [
-    "Refresh both 24-hour and same-pod 72-hour net catch-up forecasts and require both to exceed 28 days.",
+    "M0: fully account for both required clusters by inventorying every current copy or fresh structural absence proof; when viable healthy copies exist, independently select the minimum stable same-pod 24-hour ETA and minimum stable same-pod 72-hour ETA across all viable copies, which may be different copies, and require both minima to exceed 28 days or be non-converging; either minimum at or below 28 days stops implementation, compute, and load; with no viable copy, require fresh structural absence proof from both clusters.",
     "Prove the generic loader handles spec-0.0.2-derived physical schema and metadata.",
     "Complete the certified runtime functional gap after issues 5 and 9.",
     "Produce a paused differential certificate and obtain separate operational approval before activation."

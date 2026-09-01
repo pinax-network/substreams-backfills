@@ -50,8 +50,14 @@ schema, package, and fixture work before parity can be claimed.
 
 ## Remaining gates
 
-Backfill implementation remains fail-closed until fresh 24-hour and same-pod
-72-hour measurements both show the fastest healthy Graph Node path exceeding 28
-days. After implementation, canonical BSC fixtures must prove Graph Node entity,
+Backfill implementation remains fail-closed until fresh evidence fully accounts
+for both required clusters by inventorying every current copy or supplying fresh
+structural absence proof. When viable healthy copies exist, independently select
+the minimum stable same-pod 24-hour ETA and minimum stable same-pod 72-hour ETA across all viable
+copies; the minima may belong to different copies and must both exceed 28 days or
+be non-converging. Either minimum at or below 28 days stops implementation,
+compute, and load. If no viable copy exists anywhere, eligibility requires fresh
+structural absence proof from both clusters. After implementation, canonical BSC
+fixtures must prove Graph Node entity,
 save-order, PoI, VID, block-range, and PostgreSQL parity. Any restore must first use
 a disposable paused target; allocation or activation needs separate approval.

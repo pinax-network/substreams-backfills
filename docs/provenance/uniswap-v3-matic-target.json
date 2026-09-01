@@ -117,8 +117,8 @@
   ],
   "layout_profile": {
     "path": "uniswap-v3-matic/layout-profile-v1.json",
-    "bytes": 16623,
-    "sha256": "e86e826cee298f74d0f8b941b412cd15cd8bc0b9c5eef00de571cde50200985e"
+    "bytes": 17057,
+    "sha256": "dae4b26bf9ba97f4e8a83facf8494adda7f45e3cd6f330929027e73a71c288a0"
   },
   "qma8_reference": {
     "family": "uniswap-v3-mainnet-base",
@@ -596,7 +596,7 @@
     "production_ready": false
   },
   "remaining_gates": [
-    "Fresh 24-hour and same-pod 72-hour Graph Node catch-up forecasts must both remain greater than 28 days.",
+    "M0: fully account for both required clusters by inventorying every current copy or fresh structural absence proof; when viable healthy copies exist, independently select the minimum stable same-pod 24-hour ETA and minimum stable same-pod 72-hour ETA across all viable copies, which may be different copies, and require both minima to exceed 28 days or be non-converging; either minimum at or below 28 days stops implementation, compute, and load; with no viable copy, require fresh structural absence proof from both clusters.",
     "M2 must ship the ordered BlockChanges generic loader and release contract.",
     "M2 must capture and verify the Matic physical schema and loader metadata profile.",
     "M3 must certify the Qma8 Factory/Pool handler, field-writer, runtime-population, and required-absence contract.",

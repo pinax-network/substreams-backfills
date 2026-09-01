@@ -1131,9 +1131,9 @@
   ],
   "binding_lock": [
     {
-      "bytes": 558,
+      "bytes": 624,
       "path": "messari-v3/QmQjVBdmgZdjHpQsXGSC5uryWLmPkkTAunHN2AnDApZBa3.yaml",
-      "sha256": "7a120509b92ad405b849b3f73122c6b585c5991dac09674fda94e573ee84ae66",
+      "sha256": "966aaac1fa23254e0704caf5337e827ea62e1ab5d6d0d5c9ca49eff92ac5c3c0",
       "target": "pancakeswap-v3-bsc",
       "value": {
         "chain": "bsc",
@@ -1158,19 +1158,21 @@
           90,
           92
         ],
-        "market_qpd": 143319,
+        "market_snapshot": {
+          "authority": "https://github.com/pinax-network/substreams-backfills/issues/83",
+          "measured_at": "2026-08-31T17:20:00Z",
+          "queries_24h": 143319,
+          "query_fees_grt_24h": "170.760"
+        },
         "milestone": "M9",
-        "placement": "kan-subgraphs-a/sgd10",
-        "qos_snapshot_at": "2026-08-31T17:20:00Z",
-        "query_fees_grt_24h": 170.76,
         "schema": "QmSY3DAk44RGNbywjXt8PznikJkNMpoNjM8UVde3Hnhocg",
         "variant": "pancakeswap-v3-bsc"
       }
     },
     {
-      "bytes": 556,
+      "bytes": 620,
       "path": "messari-v3/QmawEzRNeDyaTgjPKb1eRrbyzxczgSHUYzvTMaMnN8jyuh.yaml",
-      "sha256": "3e0e816cb81d6bd7c22c316e712e4801f07672e23971c4d7bc011ac521362e20",
+      "sha256": "686be8c73a8ef4be78f0eb88c64f665ef40b22bfb9ba080f13f692b578673d0b",
       "target": "uniswap-v3-base",
       "value": {
         "chain": "base",
@@ -1195,11 +1197,13 @@
           90,
           95
         ],
-        "market_qpd": 17568,
+        "market_snapshot": {
+          "authority": "https://github.com/pinax-network/substreams-backfills/issues/83",
+          "measured_at": "2026-08-31T17:20:00Z",
+          "queries_24h": 17568,
+          "query_fees_grt_24h": "21.000"
+        },
         "milestone": "M9",
-        "placement": "kan-subgraphs-a/sgd5299",
-        "qos_snapshot_at": "2026-08-31T17:20:00Z",
-        "query_fees_grt_24h": 21.0,
         "schema": "QmVrng7WZwwCMkcGuay4yEbwepyPFDJjamwmsBcC18Ef2o",
         "variant": "uniswap-v3-base"
       }
@@ -1219,6 +1223,333 @@
         "Factory": {
           "base_canonical_sha256": "52e6be29791aa0fe22a5d0e0a7ef063324631fa30b940ef8c3868e5874348e77",
           "base_entry_count": 9,
+          "entries_only_base": [],
+          "entries_only_pancakeswap": [
+            {
+              "canonical_sha256": "3c4998898d15f6c1281c2fb658b9f08d0eada3c2dfbe58d707e640815a2850bf",
+              "entry": {
+                "inputs": [
+                  {
+                    "internalType": "address",
+                    "name": "_poolDeployer",
+                    "type": "address"
+                  }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "constructor"
+              },
+              "identity": "constructor:constructor(address)"
+            },
+            {
+              "canonical_sha256": "e8c1e76d087ac797bead9a68bbe85e695744c0c47bf9f65273d190f2647b7fda",
+              "entry": {
+                "anonymous": false,
+                "inputs": [
+                  {
+                    "indexed": true,
+                    "internalType": "uint24",
+                    "name": "fee",
+                    "type": "uint24"
+                  },
+                  {
+                    "indexed": false,
+                    "internalType": "bool",
+                    "name": "whitelistRequested",
+                    "type": "bool"
+                  },
+                  {
+                    "indexed": false,
+                    "internalType": "bool",
+                    "name": "enabled",
+                    "type": "bool"
+                  }
+                ],
+                "name": "FeeAmountExtraInfoUpdated",
+                "type": "event"
+              },
+              "identity": "event:FeeAmountExtraInfoUpdated(uint24,bool,bool)"
+            },
+            {
+              "canonical_sha256": "f4282e2889bf116938782a540b59b82b43547dcdded8072c9164b041e08e0a8a",
+              "entry": {
+                "anonymous": false,
+                "inputs": [
+                  {
+                    "indexed": true,
+                    "internalType": "address",
+                    "name": "lmPoolDeployer",
+                    "type": "address"
+                  }
+                ],
+                "name": "SetLmPoolDeployer",
+                "type": "event"
+              },
+              "identity": "event:SetLmPoolDeployer(address)"
+            },
+            {
+              "canonical_sha256": "9b4f7df6d4dbf645136986832afbf7d219ace45db09f540487d08d7c27290c84",
+              "entry": {
+                "anonymous": false,
+                "inputs": [
+                  {
+                    "indexed": true,
+                    "internalType": "address",
+                    "name": "user",
+                    "type": "address"
+                  },
+                  {
+                    "indexed": false,
+                    "internalType": "bool",
+                    "name": "verified",
+                    "type": "bool"
+                  }
+                ],
+                "name": "WhiteListAdded",
+                "type": "event"
+              },
+              "identity": "event:WhiteListAdded(address,bool)"
+            },
+            {
+              "canonical_sha256": "67da7b871201e0e4927d8b43f2c7f272c10e5389e9f8731f3262fc73c132a5cf",
+              "entry": {
+                "inputs": [
+                  {
+                    "internalType": "address",
+                    "name": "pool",
+                    "type": "address"
+                  },
+                  {
+                    "internalType": "address",
+                    "name": "recipient",
+                    "type": "address"
+                  },
+                  {
+                    "internalType": "uint128",
+                    "name": "amount0Requested",
+                    "type": "uint128"
+                  },
+                  {
+                    "internalType": "uint128",
+                    "name": "amount1Requested",
+                    "type": "uint128"
+                  }
+                ],
+                "name": "collectProtocol",
+                "outputs": [
+                  {
+                    "internalType": "uint128",
+                    "name": "amount0",
+                    "type": "uint128"
+                  },
+                  {
+                    "internalType": "uint128",
+                    "name": "amount1",
+                    "type": "uint128"
+                  }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function"
+              },
+              "identity": "function:collectProtocol(address,address,uint128,uint128)"
+            },
+            {
+              "canonical_sha256": "9ecb662ffb3f4ba2ec00868811fa13af0a6571764d8a56bd16102a8004faeec3",
+              "entry": {
+                "inputs": [
+                  {
+                    "internalType": "uint24",
+                    "name": "",
+                    "type": "uint24"
+                  }
+                ],
+                "name": "feeAmountTickSpacingExtraInfo",
+                "outputs": [
+                  {
+                    "internalType": "bool",
+                    "name": "whitelistRequested",
+                    "type": "bool"
+                  },
+                  {
+                    "internalType": "bool",
+                    "name": "enabled",
+                    "type": "bool"
+                  }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+              },
+              "identity": "function:feeAmountTickSpacingExtraInfo(uint24)"
+            },
+            {
+              "canonical_sha256": "5828fbdb136af042a7330c4efe909cf50ee865a26a6d572f2501e5f8a33f188c",
+              "entry": {
+                "inputs": [],
+                "name": "lmPoolDeployer",
+                "outputs": [
+                  {
+                    "internalType": "address",
+                    "name": "",
+                    "type": "address"
+                  }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+              },
+              "identity": "function:lmPoolDeployer()"
+            },
+            {
+              "canonical_sha256": "935aa41227c4811a09ccf4c57214375ba368836952f4f5ad75a01f717c19448c",
+              "entry": {
+                "inputs": [],
+                "name": "poolDeployer",
+                "outputs": [
+                  {
+                    "internalType": "address",
+                    "name": "",
+                    "type": "address"
+                  }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+              },
+              "identity": "function:poolDeployer()"
+            },
+            {
+              "canonical_sha256": "62f3bd79eb31c2af89935226db455a9005fe71b50557e7a34a4fe98830d97aad",
+              "entry": {
+                "inputs": [
+                  {
+                    "internalType": "uint24",
+                    "name": "fee",
+                    "type": "uint24"
+                  },
+                  {
+                    "internalType": "bool",
+                    "name": "whitelistRequested",
+                    "type": "bool"
+                  },
+                  {
+                    "internalType": "bool",
+                    "name": "enabled",
+                    "type": "bool"
+                  }
+                ],
+                "name": "setFeeAmountExtraInfo",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+              },
+              "identity": "function:setFeeAmountExtraInfo(uint24,bool,bool)"
+            },
+            {
+              "canonical_sha256": "a43a00ac3228003b4212ae097432a05452a9bd41b961dbc6f7b7f077719bff1e",
+              "entry": {
+                "inputs": [
+                  {
+                    "internalType": "address",
+                    "name": "pool",
+                    "type": "address"
+                  },
+                  {
+                    "internalType": "uint32",
+                    "name": "feeProtocol0",
+                    "type": "uint32"
+                  },
+                  {
+                    "internalType": "uint32",
+                    "name": "feeProtocol1",
+                    "type": "uint32"
+                  }
+                ],
+                "name": "setFeeProtocol",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+              },
+              "identity": "function:setFeeProtocol(address,uint32,uint32)"
+            },
+            {
+              "canonical_sha256": "e7f5a7327c5b4bd6657b8cff9f1eb316e0f9fbbeeeea9ac864bea94ae3cd5ed0",
+              "entry": {
+                "inputs": [
+                  {
+                    "internalType": "address",
+                    "name": "pool",
+                    "type": "address"
+                  },
+                  {
+                    "internalType": "address",
+                    "name": "lmPool",
+                    "type": "address"
+                  }
+                ],
+                "name": "setLmPool",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+              },
+              "identity": "function:setLmPool(address,address)"
+            },
+            {
+              "canonical_sha256": "d00c848eea57581c3e319eeada841875323a0bdfb1e7f7b8fe9bb7dc4d0a1f03",
+              "entry": {
+                "inputs": [
+                  {
+                    "internalType": "address",
+                    "name": "_lmPoolDeployer",
+                    "type": "address"
+                  }
+                ],
+                "name": "setLmPoolDeployer",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+              },
+              "identity": "function:setLmPoolDeployer(address)"
+            },
+            {
+              "canonical_sha256": "6ec57456e1ca5148818958ce2260de467791887e8dc8314b7abf64380524f6f4",
+              "entry": {
+                "inputs": [
+                  {
+                    "internalType": "address",
+                    "name": "user",
+                    "type": "address"
+                  },
+                  {
+                    "internalType": "bool",
+                    "name": "verified",
+                    "type": "bool"
+                  }
+                ],
+                "name": "setWhiteListAddress",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+              },
+              "identity": "function:setWhiteListAddress(address,bool)"
+            }
+          ],
+          "entry_identities_only_base": [],
+          "entry_identities_only_pancakeswap": [
+            "constructor:constructor(address)",
+            "event:FeeAmountExtraInfoUpdated(uint24,bool,bool)",
+            "event:SetLmPoolDeployer(address)",
+            "event:WhiteListAdded(address,bool)",
+            "function:collectProtocol(address,address,uint128,uint128)",
+            "function:feeAmountTickSpacingExtraInfo(uint24)",
+            "function:lmPoolDeployer()",
+            "function:poolDeployer()",
+            "function:setFeeAmountExtraInfo(uint24,bool,bool)",
+            "function:setFeeProtocol(address,uint32,uint32)",
+            "function:setLmPool(address,address)",
+            "function:setLmPoolDeployer(address)",
+            "function:setWhiteListAddress(address,bool)"
+          ],
+          "entry_order_sha256": {
+            "pancakeswap-v3-bsc": "076b140eed5002b8dc03ef7140fff0f3e5d9a163f08cfef5af4c99cf8e9d9944",
+            "uniswap-v3-base": "6ba6ca47aab73aeb63b3e7afca5fbb58be9c43b5a40a8002ab8528f9bd573989"
+          },
           "events_only_base": [],
           "events_only_pancakeswap": [
             "FeeAmountExtraInfoUpdated(uint24,bool,bool)",
@@ -1238,11 +1569,545 @@
             "setWhiteListAddress(address,bool)"
           ],
           "pancakeswap_canonical_sha256": "cbc4009d9af160beb55d60f0b38fcc0ffa3969e432d5bcac5321e56119f55dbe",
-          "pancakeswap_entry_count": 22
+          "pancakeswap_entry_count": 22,
+          "shared_identity_metadata_differences": [
+            {
+              "base_canonical_sha256": "53268041d90c7866c0ebfce0479699df56c925a037ad6ab932a1c0fe920ec875",
+              "field_differences": [
+                {
+                  "base": "fee",
+                  "base_present": true,
+                  "pancakeswap": "",
+                  "pancakeswap_present": true,
+                  "path": "/inputs/0/name"
+                }
+              ],
+              "identity": "function:feeAmountTickSpacing(uint24)",
+              "pancakeswap_canonical_sha256": "0616a5df250f5ee4a6ffbfcc7210fc0c84dfce721fc72ddf6c61658837cd51f2",
+              "semantic_equal": true
+            },
+            {
+              "base_canonical_sha256": "735b281db52d16545ba043b6e84e21fe75184b5f83e1b18b236003b2ea304a9e",
+              "field_differences": [
+                {
+                  "base": "tokenA",
+                  "base_present": true,
+                  "pancakeswap": "",
+                  "pancakeswap_present": true,
+                  "path": "/inputs/0/name"
+                },
+                {
+                  "base": "tokenB",
+                  "base_present": true,
+                  "pancakeswap": "",
+                  "pancakeswap_present": true,
+                  "path": "/inputs/1/name"
+                },
+                {
+                  "base": "fee",
+                  "base_present": true,
+                  "pancakeswap": "",
+                  "pancakeswap_present": true,
+                  "path": "/inputs/2/name"
+                },
+                {
+                  "base": "pool",
+                  "base_present": true,
+                  "pancakeswap": "",
+                  "pancakeswap_present": true,
+                  "path": "/outputs/0/name"
+                }
+              ],
+              "identity": "function:getPool(address,address,uint24)",
+              "pancakeswap_canonical_sha256": "a98be4b8b799ada271733c23d382e67b509c4ef19428e9055202d8fd0dbfe2f4",
+              "semantic_equal": true
+            }
+          ],
+          "shared_identity_semantic_differences": []
         },
         "NonFungiblePositionManager": {
           "base_canonical_sha256": "97f5a2808e81a073ed6c29c5560a3b0c44e22a3a5580eaf668f8559860f50913",
           "base_entry_count": 45,
+          "entries_only_base": [
+            {
+              "canonical_sha256": "9930c50ca16f64e16b995afdcbd71db54381bb60272e23ab953b4a486b938f15",
+              "entry": {
+                "inputs": [
+                  {
+                    "internalType": "address",
+                    "name": "_factory",
+                    "type": "address"
+                  },
+                  {
+                    "internalType": "address",
+                    "name": "_WETH9",
+                    "type": "address"
+                  },
+                  {
+                    "internalType": "address",
+                    "name": "_tokenDescriptor_",
+                    "type": "address"
+                  }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "constructor"
+              },
+              "identity": "constructor:constructor(address,address,address)"
+            },
+            {
+              "canonical_sha256": "77a28e64ca804b0e046e54eee1309abb7582043a435e74dd0ee3df2463980ffb",
+              "entry": {
+                "inputs": [
+                  {
+                    "internalType": "uint256",
+                    "name": "tokenId",
+                    "type": "uint256"
+                  },
+                  {
+                    "internalType": "address",
+                    "name": "recipient",
+                    "type": "address"
+                  },
+                  {
+                    "internalType": "uint128",
+                    "name": "amount0Max",
+                    "type": "uint128"
+                  },
+                  {
+                    "internalType": "uint128",
+                    "name": "amount1Max",
+                    "type": "uint128"
+                  }
+                ],
+                "name": "collect",
+                "outputs": [
+                  {
+                    "internalType": "uint256",
+                    "name": "amount0",
+                    "type": "uint256"
+                  },
+                  {
+                    "internalType": "uint256",
+                    "name": "amount1",
+                    "type": "uint256"
+                  }
+                ],
+                "stateMutability": "payable",
+                "type": "function"
+              },
+              "identity": "function:collect(uint256,address,uint128,uint128)"
+            },
+            {
+              "canonical_sha256": "90ac0693ce2cbf2c8dcaa3d891558c92ee736cc8bc55a07a280e904a83c99a8a",
+              "entry": {
+                "inputs": [
+                  {
+                    "internalType": "uint256",
+                    "name": "tokenId",
+                    "type": "uint256"
+                  },
+                  {
+                    "internalType": "uint128",
+                    "name": "liquidity",
+                    "type": "uint128"
+                  },
+                  {
+                    "internalType": "uint256",
+                    "name": "amount0Min",
+                    "type": "uint256"
+                  },
+                  {
+                    "internalType": "uint256",
+                    "name": "amount1Min",
+                    "type": "uint256"
+                  },
+                  {
+                    "internalType": "uint256",
+                    "name": "deadline",
+                    "type": "uint256"
+                  }
+                ],
+                "name": "decreaseLiquidity",
+                "outputs": [
+                  {
+                    "internalType": "uint256",
+                    "name": "amount0",
+                    "type": "uint256"
+                  },
+                  {
+                    "internalType": "uint256",
+                    "name": "amount1",
+                    "type": "uint256"
+                  }
+                ],
+                "stateMutability": "payable",
+                "type": "function"
+              },
+              "identity": "function:decreaseLiquidity(uint256,uint128,uint256,uint256,uint256)"
+            },
+            {
+              "canonical_sha256": "aa659d1613c6d8e97616145173e8b88036c1fb0ea6dc436b1f3e12e4c9675727",
+              "entry": {
+                "inputs": [
+                  {
+                    "internalType": "uint256",
+                    "name": "tokenId",
+                    "type": "uint256"
+                  },
+                  {
+                    "internalType": "uint256",
+                    "name": "amount0Desired",
+                    "type": "uint256"
+                  },
+                  {
+                    "internalType": "uint256",
+                    "name": "amount1Desired",
+                    "type": "uint256"
+                  },
+                  {
+                    "internalType": "uint256",
+                    "name": "amount0Min",
+                    "type": "uint256"
+                  },
+                  {
+                    "internalType": "uint256",
+                    "name": "amount1Min",
+                    "type": "uint256"
+                  },
+                  {
+                    "internalType": "uint256",
+                    "name": "deadline",
+                    "type": "uint256"
+                  }
+                ],
+                "name": "increaseLiquidity",
+                "outputs": [
+                  {
+                    "internalType": "uint128",
+                    "name": "liquidity",
+                    "type": "uint128"
+                  },
+                  {
+                    "internalType": "uint256",
+                    "name": "amount0",
+                    "type": "uint256"
+                  },
+                  {
+                    "internalType": "uint256",
+                    "name": "amount1",
+                    "type": "uint256"
+                  }
+                ],
+                "stateMutability": "payable",
+                "type": "function"
+              },
+              "identity": "function:increaseLiquidity(uint256,uint256,uint256,uint256,uint256,uint256)"
+            },
+            {
+              "canonical_sha256": "6cb977e25701ff96247ed9642f363b3984fbec23d84930ffbf33e0444bbab7f6",
+              "entry": {
+                "inputs": [
+                  {
+                    "internalType": "uint256",
+                    "name": "amount0Owed",
+                    "type": "uint256"
+                  },
+                  {
+                    "internalType": "uint256",
+                    "name": "amount1Owed",
+                    "type": "uint256"
+                  },
+                  {
+                    "internalType": "bytes",
+                    "name": "data",
+                    "type": "bytes"
+                  }
+                ],
+                "name": "uniswapV3MintCallback",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+              },
+              "identity": "function:uniswapV3MintCallback(uint256,uint256,bytes)"
+            }
+          ],
+          "entries_only_pancakeswap": [
+            {
+              "canonical_sha256": "db1a140b9cbd5a9a2a10e39c751d2cc439e9d44661e50bc0daa72921fb4b8637",
+              "entry": {
+                "inputs": [
+                  {
+                    "internalType": "address",
+                    "name": "_deployer",
+                    "type": "address"
+                  },
+                  {
+                    "internalType": "address",
+                    "name": "_factory",
+                    "type": "address"
+                  },
+                  {
+                    "internalType": "address",
+                    "name": "_WETH9",
+                    "type": "address"
+                  },
+                  {
+                    "internalType": "address",
+                    "name": "_tokenDescriptor_",
+                    "type": "address"
+                  }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "constructor"
+              },
+              "identity": "constructor:constructor(address,address,address,address)"
+            },
+            {
+              "canonical_sha256": "2b2369618237860fafc18affbb7b524cd8d0329d4b3772351e8f6cfb45a2fb55",
+              "entry": {
+                "inputs": [
+                  {
+                    "components": [
+                      {
+                        "internalType": "uint256",
+                        "name": "tokenId",
+                        "type": "uint256"
+                      },
+                      {
+                        "internalType": "address",
+                        "name": "recipient",
+                        "type": "address"
+                      },
+                      {
+                        "internalType": "uint128",
+                        "name": "amount0Max",
+                        "type": "uint128"
+                      },
+                      {
+                        "internalType": "uint128",
+                        "name": "amount1Max",
+                        "type": "uint128"
+                      }
+                    ],
+                    "internalType": "struct INonfungiblePositionManager.CollectParams",
+                    "name": "params",
+                    "type": "tuple"
+                  }
+                ],
+                "name": "collect",
+                "outputs": [
+                  {
+                    "internalType": "uint256",
+                    "name": "amount0",
+                    "type": "uint256"
+                  },
+                  {
+                    "internalType": "uint256",
+                    "name": "amount1",
+                    "type": "uint256"
+                  }
+                ],
+                "stateMutability": "payable",
+                "type": "function"
+              },
+              "identity": "function:collect((uint256,address,uint128,uint128))"
+            },
+            {
+              "canonical_sha256": "b256c38735461d4b6d91a2a9d189f2fc86e3477c164f81cd999f2816569eca0a",
+              "entry": {
+                "inputs": [
+                  {
+                    "components": [
+                      {
+                        "internalType": "uint256",
+                        "name": "tokenId",
+                        "type": "uint256"
+                      },
+                      {
+                        "internalType": "uint128",
+                        "name": "liquidity",
+                        "type": "uint128"
+                      },
+                      {
+                        "internalType": "uint256",
+                        "name": "amount0Min",
+                        "type": "uint256"
+                      },
+                      {
+                        "internalType": "uint256",
+                        "name": "amount1Min",
+                        "type": "uint256"
+                      },
+                      {
+                        "internalType": "uint256",
+                        "name": "deadline",
+                        "type": "uint256"
+                      }
+                    ],
+                    "internalType": "struct INonfungiblePositionManager.DecreaseLiquidityParams",
+                    "name": "params",
+                    "type": "tuple"
+                  }
+                ],
+                "name": "decreaseLiquidity",
+                "outputs": [
+                  {
+                    "internalType": "uint256",
+                    "name": "amount0",
+                    "type": "uint256"
+                  },
+                  {
+                    "internalType": "uint256",
+                    "name": "amount1",
+                    "type": "uint256"
+                  }
+                ],
+                "stateMutability": "payable",
+                "type": "function"
+              },
+              "identity": "function:decreaseLiquidity((uint256,uint128,uint256,uint256,uint256))"
+            },
+            {
+              "canonical_sha256": "8d24e596fdbbc40105ae3c48e4e3aa058a5d92fef2456e9fde6996b759cd3553",
+              "entry": {
+                "inputs": [],
+                "name": "deployer",
+                "outputs": [
+                  {
+                    "internalType": "address",
+                    "name": "",
+                    "type": "address"
+                  }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+              },
+              "identity": "function:deployer()"
+            },
+            {
+              "canonical_sha256": "a329e35709f5b3fa9c226edbc1b77a7f408712de8185c5e222676245adbc8c90",
+              "entry": {
+                "inputs": [
+                  {
+                    "components": [
+                      {
+                        "internalType": "uint256",
+                        "name": "tokenId",
+                        "type": "uint256"
+                      },
+                      {
+                        "internalType": "uint256",
+                        "name": "amount0Desired",
+                        "type": "uint256"
+                      },
+                      {
+                        "internalType": "uint256",
+                        "name": "amount1Desired",
+                        "type": "uint256"
+                      },
+                      {
+                        "internalType": "uint256",
+                        "name": "amount0Min",
+                        "type": "uint256"
+                      },
+                      {
+                        "internalType": "uint256",
+                        "name": "amount1Min",
+                        "type": "uint256"
+                      },
+                      {
+                        "internalType": "uint256",
+                        "name": "deadline",
+                        "type": "uint256"
+                      }
+                    ],
+                    "internalType": "struct INonfungiblePositionManager.IncreaseLiquidityParams",
+                    "name": "params",
+                    "type": "tuple"
+                  }
+                ],
+                "name": "increaseLiquidity",
+                "outputs": [
+                  {
+                    "internalType": "uint128",
+                    "name": "liquidity",
+                    "type": "uint128"
+                  },
+                  {
+                    "internalType": "uint256",
+                    "name": "amount0",
+                    "type": "uint256"
+                  },
+                  {
+                    "internalType": "uint256",
+                    "name": "amount1",
+                    "type": "uint256"
+                  }
+                ],
+                "stateMutability": "payable",
+                "type": "function"
+              },
+              "identity": "function:increaseLiquidity((uint256,uint256,uint256,uint256,uint256,uint256))"
+            },
+            {
+              "canonical_sha256": "6b918da6e11f274f90ec40b0b2a66e6d2762a804372090042c7654727d814b9e",
+              "entry": {
+                "inputs": [
+                  {
+                    "internalType": "uint256",
+                    "name": "amount0Owed",
+                    "type": "uint256"
+                  },
+                  {
+                    "internalType": "uint256",
+                    "name": "amount1Owed",
+                    "type": "uint256"
+                  },
+                  {
+                    "internalType": "bytes",
+                    "name": "data",
+                    "type": "bytes"
+                  }
+                ],
+                "name": "pancakeV3MintCallback",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+              },
+              "identity": "function:pancakeV3MintCallback(uint256,uint256,bytes)"
+            },
+            {
+              "canonical_sha256": "7227ccb922e621eaa40730ddac74bfc53fabedcd7f3c4091b9e1df14bee9b95e",
+              "entry": {
+                "inputs": [],
+                "name": "refundETH",
+                "outputs": [],
+                "stateMutability": "payable",
+                "type": "function"
+              },
+              "identity": "function:refundETH()"
+            }
+          ],
+          "entry_identities_only_base": [
+            "constructor:constructor(address,address,address)",
+            "function:collect(uint256,address,uint128,uint128)",
+            "function:decreaseLiquidity(uint256,uint128,uint256,uint256,uint256)",
+            "function:increaseLiquidity(uint256,uint256,uint256,uint256,uint256,uint256)",
+            "function:uniswapV3MintCallback(uint256,uint256,bytes)"
+          ],
+          "entry_identities_only_pancakeswap": [
+            "constructor:constructor(address,address,address,address)",
+            "function:collect((uint256,address,uint128,uint128))",
+            "function:decreaseLiquidity((uint256,uint128,uint256,uint256,uint256))",
+            "function:deployer()",
+            "function:increaseLiquidity((uint256,uint256,uint256,uint256,uint256,uint256))",
+            "function:pancakeV3MintCallback(uint256,uint256,bytes)",
+            "function:refundETH()"
+          ],
+          "entry_order_sha256": {
+            "pancakeswap-v3-bsc": "9e06fd433d8394abcaba10435714a1b8db49efa25c23443e18aaf0c0a1a06a31",
+            "uniswap-v3-base": "3f910fcb7da74af50d71bd337700cca33c0af19a425460390f42a5f858818e70"
+          },
           "events_only_base": [],
           "events_only_pancakeswap": [],
           "functions_only_base": [
@@ -1260,11 +2125,340 @@
             "refundETH()"
           ],
           "pancakeswap_canonical_sha256": "8b9a8fbd8faaa4a7eba89304e6ac099eafdc9b2413e1e91f16b23fbe0fce3def",
-          "pancakeswap_entry_count": 47
+          "pancakeswap_entry_count": 47,
+          "shared_identity_metadata_differences": [
+            {
+              "base_canonical_sha256": "65559d35ac77f975a969dab20a6dc6297f2da5ef4183eff75f42c3f0479f2c3e",
+              "field_differences": [
+                {
+                  "base": "tokenA",
+                  "base_present": true,
+                  "pancakeswap": "token0",
+                  "pancakeswap_present": true,
+                  "path": "/inputs/0/name"
+                },
+                {
+                  "base": "tokenB",
+                  "base_present": true,
+                  "pancakeswap": "token1",
+                  "pancakeswap_present": true,
+                  "path": "/inputs/1/name"
+                }
+              ],
+              "identity": "function:createAndInitializePoolIfNecessary(address,address,uint24,uint160)",
+              "pancakeswap_canonical_sha256": "75f4502535698cd36f76dea67db75322cca1279958917f6662a21a8fc98a09b8",
+              "semantic_equal": true
+            }
+          ],
+          "shared_identity_semantic_differences": []
         },
         "Pool": {
           "base_canonical_sha256": "45a128511b7e3558b0d1ac877bec0990de4ccfa25e78cda1ca6139ceaccdfaa9",
           "base_entry_count": 36,
+          "entries_only_base": [
+            {
+              "canonical_sha256": "ca24c4a6a07af45b262ec77db85e780abed984cdf5d773c68a43b5c0189c2cf3",
+              "entry": {
+                "anonymous": false,
+                "inputs": [
+                  {
+                    "indexed": false,
+                    "internalType": "uint8",
+                    "name": "feeProtocol0Old",
+                    "type": "uint8"
+                  },
+                  {
+                    "indexed": false,
+                    "internalType": "uint8",
+                    "name": "feeProtocol1Old",
+                    "type": "uint8"
+                  },
+                  {
+                    "indexed": false,
+                    "internalType": "uint8",
+                    "name": "feeProtocol0New",
+                    "type": "uint8"
+                  },
+                  {
+                    "indexed": false,
+                    "internalType": "uint8",
+                    "name": "feeProtocol1New",
+                    "type": "uint8"
+                  }
+                ],
+                "name": "SetFeeProtocol",
+                "type": "event"
+              },
+              "identity": "event:SetFeeProtocol(uint8,uint8,uint8,uint8)"
+            },
+            {
+              "canonical_sha256": "c411520c7bd69930f821dc17d8d183b7ee275a7908b7b6d3eb8d503ff590bcc3",
+              "entry": {
+                "anonymous": false,
+                "inputs": [
+                  {
+                    "indexed": true,
+                    "internalType": "address",
+                    "name": "sender",
+                    "type": "address"
+                  },
+                  {
+                    "indexed": true,
+                    "internalType": "address",
+                    "name": "recipient",
+                    "type": "address"
+                  },
+                  {
+                    "indexed": false,
+                    "internalType": "int256",
+                    "name": "amount0",
+                    "type": "int256"
+                  },
+                  {
+                    "indexed": false,
+                    "internalType": "int256",
+                    "name": "amount1",
+                    "type": "int256"
+                  },
+                  {
+                    "indexed": false,
+                    "internalType": "uint160",
+                    "name": "sqrtPriceX96",
+                    "type": "uint160"
+                  },
+                  {
+                    "indexed": false,
+                    "internalType": "uint128",
+                    "name": "liquidity",
+                    "type": "uint128"
+                  },
+                  {
+                    "indexed": false,
+                    "internalType": "int24",
+                    "name": "tick",
+                    "type": "int24"
+                  }
+                ],
+                "name": "Swap",
+                "type": "event"
+              },
+              "identity": "event:Swap(address,address,int256,int256,uint160,uint128,int24)"
+            },
+            {
+              "canonical_sha256": "f9c5b1bba087ce9b55ef2ae6e74000964b43ae8143a6588e706ca99be8c10e63",
+              "entry": {
+                "inputs": [
+                  {
+                    "internalType": "uint8",
+                    "name": "feeProtocol0",
+                    "type": "uint8"
+                  },
+                  {
+                    "internalType": "uint8",
+                    "name": "feeProtocol1",
+                    "type": "uint8"
+                  }
+                ],
+                "name": "setFeeProtocol",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+              },
+              "identity": "function:setFeeProtocol(uint8,uint8)"
+            }
+          ],
+          "entries_only_pancakeswap": [
+            {
+              "canonical_sha256": "b02eb9b12a746e291bb3deb4994651f8875e42619e6ff34283dff73a8d3f9aa0",
+              "entry": {
+                "anonymous": false,
+                "inputs": [
+                  {
+                    "indexed": false,
+                    "internalType": "uint32",
+                    "name": "feeProtocol0Old",
+                    "type": "uint32"
+                  },
+                  {
+                    "indexed": false,
+                    "internalType": "uint32",
+                    "name": "feeProtocol1Old",
+                    "type": "uint32"
+                  },
+                  {
+                    "indexed": false,
+                    "internalType": "uint32",
+                    "name": "feeProtocol0New",
+                    "type": "uint32"
+                  },
+                  {
+                    "indexed": false,
+                    "internalType": "uint32",
+                    "name": "feeProtocol1New",
+                    "type": "uint32"
+                  }
+                ],
+                "name": "SetFeeProtocol",
+                "type": "event"
+              },
+              "identity": "event:SetFeeProtocol(uint32,uint32,uint32,uint32)"
+            },
+            {
+              "canonical_sha256": "8319e923fc167125c799dc86ef5c452b56d0765a80c78e08fc0147e111ac2ce5",
+              "entry": {
+                "anonymous": false,
+                "inputs": [
+                  {
+                    "indexed": false,
+                    "internalType": "address",
+                    "name": "addr",
+                    "type": "address"
+                  }
+                ],
+                "name": "SetLmPoolEvent",
+                "type": "event"
+              },
+              "identity": "event:SetLmPoolEvent(address)"
+            },
+            {
+              "canonical_sha256": "ef7fce155c931171cc454c61d11a9826da983cb68a2c108d8970d5c46729fe8e",
+              "entry": {
+                "anonymous": false,
+                "inputs": [
+                  {
+                    "indexed": true,
+                    "internalType": "address",
+                    "name": "sender",
+                    "type": "address"
+                  },
+                  {
+                    "indexed": true,
+                    "internalType": "address",
+                    "name": "recipient",
+                    "type": "address"
+                  },
+                  {
+                    "indexed": false,
+                    "internalType": "int256",
+                    "name": "amount0",
+                    "type": "int256"
+                  },
+                  {
+                    "indexed": false,
+                    "internalType": "int256",
+                    "name": "amount1",
+                    "type": "int256"
+                  },
+                  {
+                    "indexed": false,
+                    "internalType": "uint160",
+                    "name": "sqrtPriceX96",
+                    "type": "uint160"
+                  },
+                  {
+                    "indexed": false,
+                    "internalType": "uint128",
+                    "name": "liquidity",
+                    "type": "uint128"
+                  },
+                  {
+                    "indexed": false,
+                    "internalType": "int24",
+                    "name": "tick",
+                    "type": "int24"
+                  },
+                  {
+                    "indexed": false,
+                    "internalType": "uint128",
+                    "name": "protocolFeesToken0",
+                    "type": "uint128"
+                  },
+                  {
+                    "indexed": false,
+                    "internalType": "uint128",
+                    "name": "protocolFeesToken1",
+                    "type": "uint128"
+                  }
+                ],
+                "name": "Swap",
+                "type": "event"
+              },
+              "identity": "event:Swap(address,address,int256,int256,uint160,uint128,int24,uint128,uint128)"
+            },
+            {
+              "canonical_sha256": "f1c7c24c5b83b6541c786fc0e0df9aa29cdda038628fb92806ef4ba725ebf927",
+              "entry": {
+                "inputs": [],
+                "name": "lmPool",
+                "outputs": [
+                  {
+                    "internalType": "contract IPancakeV3LmPool",
+                    "name": "",
+                    "type": "address"
+                  }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+              },
+              "identity": "function:lmPool()"
+            },
+            {
+              "canonical_sha256": "a5ac6fb1c4d5a34cf9223d7f54053d3402386a489b008b3efd843f7ea68ae89a",
+              "entry": {
+                "inputs": [
+                  {
+                    "internalType": "uint32",
+                    "name": "feeProtocol0",
+                    "type": "uint32"
+                  },
+                  {
+                    "internalType": "uint32",
+                    "name": "feeProtocol1",
+                    "type": "uint32"
+                  }
+                ],
+                "name": "setFeeProtocol",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+              },
+              "identity": "function:setFeeProtocol(uint32,uint32)"
+            },
+            {
+              "canonical_sha256": "dbaa26f0418d6acf29898f7587f624076a51782dff95cd4d8105d5473ed8351a",
+              "entry": {
+                "inputs": [
+                  {
+                    "internalType": "address",
+                    "name": "_lmPool",
+                    "type": "address"
+                  }
+                ],
+                "name": "setLmPool",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+              },
+              "identity": "function:setLmPool(address)"
+            }
+          ],
+          "entry_identities_only_base": [
+            "event:SetFeeProtocol(uint8,uint8,uint8,uint8)",
+            "event:Swap(address,address,int256,int256,uint160,uint128,int24)",
+            "function:setFeeProtocol(uint8,uint8)"
+          ],
+          "entry_identities_only_pancakeswap": [
+            "event:SetFeeProtocol(uint32,uint32,uint32,uint32)",
+            "event:SetLmPoolEvent(address)",
+            "event:Swap(address,address,int256,int256,uint160,uint128,int24,uint128,uint128)",
+            "function:lmPool()",
+            "function:setFeeProtocol(uint32,uint32)",
+            "function:setLmPool(address)"
+          ],
+          "entry_order_sha256": {
+            "pancakeswap-v3-bsc": "2e5eae47b8b691d75d06a9a13b50fd5154f25a020bc8a9d8ff8abf9f9a6df1b8",
+            "uniswap-v3-base": "e739db0a074e789b978fdef9de5a91893d7b09a22045d1c9889114838dcb6690"
+          },
           "events_only_base": [
             "SetFeeProtocol(uint8,uint8,uint8,uint8)",
             "Swap(address,address,int256,int256,uint160,uint128,int24)"
@@ -1283,7 +2477,191 @@
             "setLmPool(address)"
           ],
           "pancakeswap_canonical_sha256": "00303f5ede64fb863a0be16e646f86bd006bccd587efc1f23a8b4fc6c7d682a8",
-          "pancakeswap_entry_count": 39
+          "pancakeswap_entry_count": 39,
+          "shared_identity_metadata_differences": [
+            {
+              "base_canonical_sha256": "f47a87bc0646c0b374a9947caff43d1f96e82f53ee81f153b376cdee0d4b5907",
+              "field_differences": [
+                {
+                  "base_present": false,
+                  "pancakeswap": "uint256",
+                  "pancakeswap_present": true,
+                  "path": "/inputs/4/internalType"
+                }
+              ],
+              "identity": "event:Burn(address,int24,int24,uint128,uint256,uint256)",
+              "pancakeswap_canonical_sha256": "91d1ecacde3a86932ab9d6fcd7c169230e297bd6b6b52d89f8f0333dd4e237db",
+              "semantic_equal": true
+            },
+            {
+              "base_canonical_sha256": "1eed1def1f96d27e80ed8812ee4c6da3921c7cb308c507022f5b867578ab830c",
+              "field_differences": [
+                {
+                  "base": "index",
+                  "base_present": true,
+                  "pancakeswap": "",
+                  "pancakeswap_present": true,
+                  "path": "/inputs/0/name"
+                }
+              ],
+              "identity": "function:observations(uint256)",
+              "pancakeswap_canonical_sha256": "5fb8f5379c69a6a53b93ed305a2f91e99e727a5071e75ee69dfaf4fd97a88d2a",
+              "semantic_equal": true
+            },
+            {
+              "base_canonical_sha256": "912f1ceb1b3d35186845ffa78d1fa531bc14a461b84e01450eb07325116cc8cb",
+              "field_differences": [
+                {
+                  "base": "key",
+                  "base_present": true,
+                  "pancakeswap": "",
+                  "pancakeswap_present": true,
+                  "path": "/inputs/0/name"
+                },
+                {
+                  "base": "_liquidity",
+                  "base_present": true,
+                  "pancakeswap": "liquidity",
+                  "pancakeswap_present": true,
+                  "path": "/outputs/0/name"
+                }
+              ],
+              "identity": "function:positions(bytes32)",
+              "pancakeswap_canonical_sha256": "f5db2c9e35f93fed57ae4778481e35553f538c37ed9579de02003fd12ad4d855",
+              "semantic_equal": true
+            },
+            {
+              "base_canonical_sha256": "4fa0d9b4eec86aaa4bbfaf203c6c0e7ec9a7780383551b3d5275d5560d91c0e3",
+              "field_differences": [
+                {
+                  "base": "uint8",
+                  "base_present": true,
+                  "pancakeswap": "uint32",
+                  "pancakeswap_present": true,
+                  "path": "/outputs/5/internalType"
+                },
+                {
+                  "base": "uint8",
+                  "base_present": true,
+                  "pancakeswap": "uint32",
+                  "pancakeswap_present": true,
+                  "path": "/outputs/5/type"
+                }
+              ],
+              "identity": "function:slot0()",
+              "pancakeswap_canonical_sha256": "4829dfe275aa383138bd581e62ace385ef4418fb07f8a443eb3524335d2e43ab",
+              "semantic_equal": false
+            },
+            {
+              "base_canonical_sha256": "c18b802c12469d315dca067650c49b9390f7a1d35ef7560ef59ce11f4ef14efe",
+              "field_differences": [
+                {
+                  "base": "wordPosition",
+                  "base_present": true,
+                  "pancakeswap": "",
+                  "pancakeswap_present": true,
+                  "path": "/inputs/0/name"
+                }
+              ],
+              "identity": "function:tickBitmap(int16)",
+              "pancakeswap_canonical_sha256": "981992076021f61e89c553e98cfdb0cb4bf0668fb1b427067a4bbbccc8d45289",
+              "semantic_equal": true
+            },
+            {
+              "base_canonical_sha256": "4751379732b4fa715cb00fddaa042f7c1cb1ae0d4248d12db4a896efbfe027c4",
+              "field_differences": [
+                {
+                  "base": "tick",
+                  "base_present": true,
+                  "pancakeswap": "",
+                  "pancakeswap_present": true,
+                  "path": "/inputs/0/name"
+                }
+              ],
+              "identity": "function:ticks(int24)",
+              "pancakeswap_canonical_sha256": "f0fcd3426f7417328593c2ce04d764fe807c356e8c6d1f8f6c8b1ab80bf060cb",
+              "semantic_equal": true
+            }
+          ],
+          "shared_identity_semantic_differences": [
+            {
+              "base": {
+                "inputs": [],
+                "name": "slot0",
+                "outputs": [
+                  {
+                    "type": "uint160"
+                  },
+                  {
+                    "type": "int24"
+                  },
+                  {
+                    "type": "uint16"
+                  },
+                  {
+                    "type": "uint16"
+                  },
+                  {
+                    "type": "uint16"
+                  },
+                  {
+                    "type": "uint8"
+                  },
+                  {
+                    "type": "bool"
+                  }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+              },
+              "field_differences": [
+                {
+                  "base": "uint8",
+                  "base_present": true,
+                  "pancakeswap": "uint32",
+                  "pancakeswap_present": true,
+                  "path": "/outputs/5/internalType"
+                },
+                {
+                  "base": "uint8",
+                  "base_present": true,
+                  "pancakeswap": "uint32",
+                  "pancakeswap_present": true,
+                  "path": "/outputs/5/type"
+                }
+              ],
+              "identity": "function:slot0()",
+              "pancakeswap": {
+                "inputs": [],
+                "name": "slot0",
+                "outputs": [
+                  {
+                    "type": "uint160"
+                  },
+                  {
+                    "type": "int24"
+                  },
+                  {
+                    "type": "uint16"
+                  },
+                  {
+                    "type": "uint16"
+                  },
+                  {
+                    "type": "uint16"
+                  },
+                  {
+                    "type": "uint32"
+                  },
+                  {
+                    "type": "bool"
+                  }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+              }
+            }
+          ]
         }
       }
     },
@@ -1385,6 +2763,424 @@
       "misspelled_template_entity": "LiqudityPool",
       "normalization_allowed": false,
       "primary_pool_token_entity_occurrences": 2
+    },
+    "wasm_exports": {
+      "base_only_cosmos_type_id_globals": [
+        {
+          "kind": "global",
+          "name": "TypeId.CosmosMessageData"
+        },
+        {
+          "kind": "global",
+          "name": "TypeId.CosmosTransactionContext"
+        }
+      ],
+      "pairing_complete": true,
+      "pairs": {
+        "Factory": {
+          "base_cid": "QmUJsAqcUbk4CpQxvQyJ7igo5PQknNJgAj1cupLiW21Ejc",
+          "base_export_count": 172,
+          "base_export_table_sha256": "e2ff41cc934187de9c320eba6b220dde316ceefd098a77c0fe8129090848468f",
+          "base_mapping_role": "mapping/Factory",
+          "base_sha256": "2bbbd2960df7e0e3761b08fac5fbb2d966dcda0c017c5ff1f22107131b895708",
+          "exports_only_base": [
+            {
+              "kind": "global",
+              "name": "TypeId.CosmosMessageData"
+            },
+            {
+              "kind": "global",
+              "name": "TypeId.CosmosTransactionContext"
+            }
+          ],
+          "exports_only_pancakeswap": [],
+          "handler_exports": [
+            "handlePoolCreated"
+          ],
+          "handler_exports_identical": true,
+          "pancakeswap_cid": "QmNyz8Cw8ZQCMcrGA9k64TJSpxsxY6duzkJhKdz2amUQ7i",
+          "pancakeswap_export_count": 170,
+          "pancakeswap_export_table_sha256": "65b3cd9491855f2343c3d26761ee557057a0aea6976ef9a26dce850d28e4547a",
+          "pancakeswap_mapping_role": "mapping/Factory",
+          "pancakeswap_sha256": "653f582fb473f29d94e16624f3714f43ac05c4d44044fc4c9e03ace1100c8f57",
+          "shared_export_index_differences": [
+            {
+              "base_index": 185,
+              "kind": "global",
+              "name": "TypeId.ArweaveBlock",
+              "pancakeswap_index": 183
+            },
+            {
+              "base_index": 186,
+              "kind": "global",
+              "name": "TypeId.ArweaveProofOfAccess",
+              "pancakeswap_index": 184
+            },
+            {
+              "base_index": 187,
+              "kind": "global",
+              "name": "TypeId.ArweaveTag",
+              "pancakeswap_index": 185
+            },
+            {
+              "base_index": 188,
+              "kind": "global",
+              "name": "TypeId.ArweaveTagArray",
+              "pancakeswap_index": 186
+            },
+            {
+              "base_index": 189,
+              "kind": "global",
+              "name": "TypeId.ArweaveTransaction",
+              "pancakeswap_index": 187
+            },
+            {
+              "base_index": 190,
+              "kind": "global",
+              "name": "TypeId.ArweaveTransactionArray",
+              "pancakeswap_index": 188
+            },
+            {
+              "base_index": 191,
+              "kind": "global",
+              "name": "TypeId.ArweaveTransactionWithBlockPtr",
+              "pancakeswap_index": 189
+            },
+            {
+              "base_index": 192,
+              "kind": "global",
+              "name": "__rtti_base",
+              "pancakeswap_index": 190
+            }
+          ],
+          "shared_export_kind_differences": []
+        },
+        "NonFungiblePositionManager": {
+          "base_cid": "Qmb3aYhcaVXLT3ouQypKqvC9b62SsdkQwznuabnhdmYLd5",
+          "base_export_count": 175,
+          "base_export_table_sha256": "8cd6408cbc8d7b9af50b6eb543f1dcce83ad994f14947723aed1dbeba4e742aa",
+          "base_mapping_role": "mapping/NonFungiblePositionManager",
+          "base_sha256": "f79d4563dbe0e0cef8bf4ff28bfc2e84b6e89e18e4ae39262f5deac18f767e6e",
+          "exports_only_base": [
+            {
+              "kind": "global",
+              "name": "TypeId.CosmosMessageData"
+            },
+            {
+              "kind": "global",
+              "name": "TypeId.CosmosTransactionContext"
+            }
+          ],
+          "exports_only_pancakeswap": [],
+          "handler_exports": [
+            "handleIncreaseLiquidity",
+            "handleDecreaseLiquidity",
+            "handleTransfer"
+          ],
+          "handler_exports_identical": true,
+          "pancakeswap_cid": "QmeaUSU4caeboxKLNfeMy4mjJyEND5ht3y7aAUqUnS3CoT",
+          "pancakeswap_export_count": 173,
+          "pancakeswap_export_table_sha256": "4844a2787ab3aeb78fe4bcfb6eac8f6674515737ffa6f4fd7d228484fdc34cb3",
+          "pancakeswap_mapping_role": "mapping/NonFungiblePositionManager",
+          "pancakeswap_sha256": "89f92d94e83ee622c8b9a97288c6a1124a160ac21edc0b9ee3c917ddc3c5b6b5",
+          "shared_export_index_differences": [
+            {
+              "base_index": 178,
+              "kind": "global",
+              "name": "TypeId.ArweaveBlock",
+              "pancakeswap_index": 176
+            },
+            {
+              "base_index": 179,
+              "kind": "global",
+              "name": "TypeId.ArweaveProofOfAccess",
+              "pancakeswap_index": 177
+            },
+            {
+              "base_index": 180,
+              "kind": "global",
+              "name": "TypeId.ArweaveTag",
+              "pancakeswap_index": 178
+            },
+            {
+              "base_index": 181,
+              "kind": "global",
+              "name": "TypeId.ArweaveTagArray",
+              "pancakeswap_index": 179
+            },
+            {
+              "base_index": 182,
+              "kind": "global",
+              "name": "TypeId.ArweaveTransaction",
+              "pancakeswap_index": 180
+            },
+            {
+              "base_index": 183,
+              "kind": "global",
+              "name": "TypeId.ArweaveTransactionArray",
+              "pancakeswap_index": 181
+            },
+            {
+              "base_index": 184,
+              "kind": "global",
+              "name": "TypeId.ArweaveTransactionWithBlockPtr",
+              "pancakeswap_index": 182
+            },
+            {
+              "base_index": 136,
+              "kind": "function",
+              "name": "__collect",
+              "pancakeswap_index": 138
+            },
+            {
+              "base_index": 185,
+              "kind": "global",
+              "name": "__rtti_base",
+              "pancakeswap_index": 183
+            },
+            {
+              "base_index": 135,
+              "kind": "function",
+              "name": "__unpin",
+              "pancakeswap_index": 137
+            },
+            {
+              "base_index": 141,
+              "kind": "function",
+              "name": "_start",
+              "pancakeswap_index": 143
+            },
+            {
+              "base_index": 134,
+              "kind": "function",
+              "name": "allocate",
+              "pancakeswap_index": 136
+            },
+            {
+              "base_index": 131,
+              "kind": "function",
+              "name": "handleDecreaseLiquidity",
+              "pancakeswap_index": 133
+            },
+            {
+              "base_index": 130,
+              "kind": "function",
+              "name": "handleIncreaseLiquidity",
+              "pancakeswap_index": 132
+            },
+            {
+              "base_index": 132,
+              "kind": "function",
+              "name": "handleTransfer",
+              "pancakeswap_index": 134
+            },
+            {
+              "base_index": 133,
+              "kind": "function",
+              "name": "id_of_type",
+              "pancakeswap_index": 135
+            }
+          ],
+          "shared_export_kind_differences": []
+        },
+        "fee_only_pool": {
+          "base_cid": "QmXExJr8roifEnTDRLWx8AvooEQ7EzdrWTnLi4qVfvFh9f",
+          "base_export_count": 172,
+          "base_export_table_sha256": "d2176ed3a0944f05c0229de38f6e996e14a34ad8ea3d549e99992c0983a72d29",
+          "base_mapping_role": "mapping/UniswapPool",
+          "base_sha256": "e997b968a6e656d5c57af1016510ed8cdbf4ee980bc4446dd87f6c01d6dc261f",
+          "exports_only_base": [
+            {
+              "kind": "global",
+              "name": "TypeId.CosmosMessageData"
+            },
+            {
+              "kind": "global",
+              "name": "TypeId.CosmosTransactionContext"
+            }
+          ],
+          "exports_only_pancakeswap": [],
+          "handler_exports": [
+            "handleSetFeeProtocol"
+          ],
+          "handler_exports_identical": true,
+          "pancakeswap_cid": "QmZh9pwyqnVEknPgTWraJweuyy1qbwzhA2rrSq43xmdgHL",
+          "pancakeswap_export_count": 170,
+          "pancakeswap_export_table_sha256": "c1ec6e69f4417cff0edf9fc282c0ec4da00928fe3df9fd7efb0375747ef6ce24",
+          "pancakeswap_mapping_role": "mapping/PancakeSwapPool",
+          "pancakeswap_sha256": "cd4d3e44fd7b749ab40baf691099dc6a67d206666f3016dd82bcf2164b41c136",
+          "shared_export_index_differences": [
+            {
+              "base_index": 171,
+              "kind": "global",
+              "name": "TypeId.ArweaveBlock",
+              "pancakeswap_index": 169
+            },
+            {
+              "base_index": 172,
+              "kind": "global",
+              "name": "TypeId.ArweaveProofOfAccess",
+              "pancakeswap_index": 170
+            },
+            {
+              "base_index": 173,
+              "kind": "global",
+              "name": "TypeId.ArweaveTag",
+              "pancakeswap_index": 171
+            },
+            {
+              "base_index": 174,
+              "kind": "global",
+              "name": "TypeId.ArweaveTagArray",
+              "pancakeswap_index": 172
+            },
+            {
+              "base_index": 175,
+              "kind": "global",
+              "name": "TypeId.ArweaveTransaction",
+              "pancakeswap_index": 173
+            },
+            {
+              "base_index": 176,
+              "kind": "global",
+              "name": "TypeId.ArweaveTransactionArray",
+              "pancakeswap_index": 174
+            },
+            {
+              "base_index": 177,
+              "kind": "global",
+              "name": "TypeId.ArweaveTransactionWithBlockPtr",
+              "pancakeswap_index": 175
+            },
+            {
+              "base_index": 49,
+              "kind": "function",
+              "name": "__collect",
+              "pancakeswap_index": 48
+            },
+            {
+              "base_index": 178,
+              "kind": "global",
+              "name": "__rtti_base",
+              "pancakeswap_index": 176
+            },
+            {
+              "base_index": 48,
+              "kind": "function",
+              "name": "__unpin",
+              "pancakeswap_index": 47
+            },
+            {
+              "base_index": 51,
+              "kind": "function",
+              "name": "_start",
+              "pancakeswap_index": 50
+            },
+            {
+              "base_index": 47,
+              "kind": "function",
+              "name": "allocate",
+              "pancakeswap_index": 46
+            },
+            {
+              "base_index": 45,
+              "kind": "function",
+              "name": "handleSetFeeProtocol",
+              "pancakeswap_index": 44
+            },
+            {
+              "base_index": 46,
+              "kind": "function",
+              "name": "id_of_type",
+              "pancakeswap_index": 45
+            }
+          ],
+          "shared_export_kind_differences": []
+        },
+        "primary_pool": {
+          "base_cid": "QmS9917TbXgmD87MaTpE3asELcn86umKBLJbJUENnZasaz",
+          "base_export_count": 176,
+          "base_export_table_sha256": "167c34cbc4468a36cf7a0f87e1c5cfe0f40b7f92116a028a6d0167aa45a60977",
+          "base_mapping_role": "mapping/Pool",
+          "base_sha256": "a4df46dfbea334093106d21c1eb9553a8bfa65eb6ff3262c3cff0286a7cf6e96",
+          "exports_only_base": [
+            {
+              "kind": "global",
+              "name": "TypeId.CosmosMessageData"
+            },
+            {
+              "kind": "global",
+              "name": "TypeId.CosmosTransactionContext"
+            }
+          ],
+          "exports_only_pancakeswap": [],
+          "handler_exports": [
+            "handleInitialize",
+            "handleMint",
+            "handleBurn",
+            "handleSwap",
+            "handleCollectPool"
+          ],
+          "handler_exports_identical": true,
+          "pancakeswap_cid": "QmZ8ncasTQBiLBzb9j7KKCV3Xc1zLLaqKUM9R3VkuS8f1L",
+          "pancakeswap_export_count": 174,
+          "pancakeswap_export_table_sha256": "0d40fcc7551dc2809e2bd9dbc1cf7fabaeebf83431eabd0276eec243d583cbb6",
+          "pancakeswap_mapping_role": "mapping/Pool",
+          "pancakeswap_sha256": "2e3a917c868d739d96a7f102d6872d110e3c09e80ca0a8ab039e3ffde61ece54",
+          "shared_export_index_differences": [
+            {
+              "base_index": 179,
+              "kind": "global",
+              "name": "TypeId.ArweaveBlock",
+              "pancakeswap_index": 177
+            },
+            {
+              "base_index": 180,
+              "kind": "global",
+              "name": "TypeId.ArweaveProofOfAccess",
+              "pancakeswap_index": 178
+            },
+            {
+              "base_index": 181,
+              "kind": "global",
+              "name": "TypeId.ArweaveTag",
+              "pancakeswap_index": 179
+            },
+            {
+              "base_index": 182,
+              "kind": "global",
+              "name": "TypeId.ArweaveTagArray",
+              "pancakeswap_index": 180
+            },
+            {
+              "base_index": 183,
+              "kind": "global",
+              "name": "TypeId.ArweaveTransaction",
+              "pancakeswap_index": 181
+            },
+            {
+              "base_index": 184,
+              "kind": "global",
+              "name": "TypeId.ArweaveTransactionArray",
+              "pancakeswap_index": 182
+            },
+            {
+              "base_index": 185,
+              "kind": "global",
+              "name": "TypeId.ArweaveTransactionWithBlockPtr",
+              "pancakeswap_index": 183
+            },
+            {
+              "base_index": 186,
+              "kind": "global",
+              "name": "__rtti_base",
+              "pancakeswap_index": 184
+            }
+          ],
+          "shared_export_kind_differences": []
+        }
+      },
+      "runtime_equivalence_claimed": false
     }
   },
   "eligibility": {
@@ -1408,10 +3204,10 @@
     94
   ],
   "layout_profile": {
-    "bytes": 353666,
-    "canonical_sha256": "2f417282bf79cc987eb2b052e5e47db609defbb29eb5260ccaef8c02762039f3",
+    "bytes": 417935,
+    "canonical_sha256": "065482151ea9b8b768cb8e79d38c9f0edaae300d1d6f9d7bb65a52e77fe83f0f",
     "path": "messari-v3/layout-profile-v1.json",
-    "sha256": "6db75a3ca74d48912e2f8443bab4bec684ff7aad32bb690ef05101d2a1cad1d6"
+    "sha256": "4b6bccc1ac434c61505be77ce17deccd2948526b3b340a76681e1d5d7d06ad3f"
   },
   "milestone": "M9",
   "source_provenance": {

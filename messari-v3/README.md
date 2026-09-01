@@ -8,10 +8,11 @@ non-interchangeable targets:
 
 Both schemas contain 24 entities and 388 fields, but byte identity and the
 writer contract differ. BSC uses Messari schema 4.0.0, a nine-argument Swap,
-and `uint32` SetFeeProtocol inputs. Base uses schema 4.0.1, adds
+`uint32` SetFeeProtocol inputs, and a `uint32` `slot0().feeProtocol` sixth output.
+Base uses schema 4.0.1, adds
 `Network.BASE`, changes `PositionSnapshot` from `@regularPolling` to
 `@hourlySnapshot`, uses a seven-argument Swap, and uses `uint8`
-SetFeeProtocol inputs.
+SetFeeProtocol inputs and `slot0().feeProtocol` sixth output.
 
 ## Exact artifact boundary
 
@@ -36,6 +37,33 @@ lists `_PricesUSD` and `_TokenTracker`; the primary Pool lists
 `LiqudityPool`. `Protocol` is not in that missing set because it is a declared
 schema interface. The machine contract binds the exact order, missing-name
 inventory, and `Token: 2` multiplicity independently for BSC and Base.
+
+The machine-readable cross-target ledger is exhaustive at the retained static
+boundary. It compares complete ABI entry identities, canonical entry bytes,
+input/output types, mutability, constructor shapes, and metadata. In addition
+to the event and function differences, it preserves the material
+`Pool.slot0().outputs[5]` difference (`uint32` on BSC, `uint8` on Base).
+
+The four paired mapping roles also bind both complete WebAssembly export
+tables. Each Base mapping has the two additional Cosmos type-ID globals, and
+the ledger records every resulting common-export index difference, including
+the additional function-index changes in the position-manager and fee-only
+mapping pairs. These are structural byte/export facts only;
+`runtime_equivalence_claimed` remains false.
+
+## Market snapshot boundary
+
+The bindings retain the `2026-08-31T17:20:00Z` Gateway QoS payload only for
+priority context. It is nested under `market_snapshot`, attributes issue #83
+as its authority, and preserves query-fee decimal precision as strings:
+
+| Target | Queries (24h) | Query fees (24h) |
+| --- | ---: | ---: |
+| PancakeSwap V3 BSC | 143,319 | `170.760 GRT` |
+| Uniswap V3 Base | 17,568 | `21.000 GRT` |
+
+This metadata is neither on-chain signal nor eligibility evidence. Mutable
+placement and legacy flat `market_qpd`/`qos_snapshot_at` fields are excluded.
 
 ## Source boundary
 
@@ -62,6 +90,7 @@ open.
 Run the offline verifier and refusal suite with:
 
 ```console
+find messari-v3/reference -type f -name '*.wasm' -exec wasm-validate {} \;
 python3 scripts/verify-messari-v3-targets.py
 python3 -m unittest scripts.tests.test_messari_v3_targets
 ```

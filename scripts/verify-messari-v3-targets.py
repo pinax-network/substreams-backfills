@@ -116,18 +116,20 @@ SOURCE_REPRODUCTION = {
 EXPECTED_BINDINGS = {
     "pancakeswap-v3-bsc": {
         "path": "messari-v3/QmQjVBdmgZdjHpQsXGSC5uryWLmPkkTAunHN2AnDApZBa3.yaml",
-        "bytes": 558,
-        "sha256": "7a120509b92ad405b849b3f73122c6b585c5991dac09674fda94e573ee84ae66",
+        "bytes": 624,
+        "sha256": "966aaac1fa23254e0704caf5337e827ea62e1ab5d6d0d5c9ca49eff92ac5c3c0",
         "value": {
             "deployment": "QmQjVBdmgZdjHpQsXGSC5uryWLmPkkTAunHN2AnDApZBa3",
             "family": "messari-v3",
             "variant": "pancakeswap-v3-bsc",
             "schema": "QmSY3DAk44RGNbywjXt8PznikJkNMpoNjM8UVde3Hnhocg",
             "chain": "bsc",
-            "market_qpd": 143319,
-            "query_fees_grt_24h": 170.760,
-            "qos_snapshot_at": "2026-08-31T17:20:00Z",
-            "placement": "kan-subgraphs-a/sgd10",
+            "market_snapshot": {
+                "measured_at": "2026-08-31T17:20:00Z",
+                "queries_24h": 143319,
+                "query_fees_grt_24h": "170.760",
+                "authority": "https://github.com/pinax-network/substreams-backfills/issues/83",
+            },
             "milestone": "M9",
             "issues": [85, 90, 92],
             "eligibility": {
@@ -145,18 +147,20 @@ EXPECTED_BINDINGS = {
     },
     "uniswap-v3-base": {
         "path": "messari-v3/QmawEzRNeDyaTgjPKb1eRrbyzxczgSHUYzvTMaMnN8jyuh.yaml",
-        "bytes": 556,
-        "sha256": "3e0e816cb81d6bd7c22c316e712e4801f07672e23971c4d7bc011ac521362e20",
+        "bytes": 620,
+        "sha256": "686be8c73a8ef4be78f0eb88c64f665ef40b22bfb9ba080f13f692b578673d0b",
         "value": {
             "deployment": "QmawEzRNeDyaTgjPKb1eRrbyzxczgSHUYzvTMaMnN8jyuh",
             "family": "messari-v3",
             "variant": "uniswap-v3-base",
             "schema": "QmVrng7WZwwCMkcGuay4yEbwepyPFDJjamwmsBcC18Ef2o",
             "chain": "base",
-            "market_qpd": 17568,
-            "query_fees_grt_24h": 21.000,
-            "qos_snapshot_at": "2026-08-31T17:20:00Z",
-            "placement": "kan-subgraphs-a/sgd5299",
+            "market_snapshot": {
+                "measured_at": "2026-08-31T17:20:00Z",
+                "queries_24h": 17568,
+                "query_fees_grt_24h": "21.000",
+                "authority": "https://github.com/pinax-network/substreams-backfills/issues/83",
+            },
             "milestone": "M9",
             "issues": [94, 90, 95],
             "eligibility": {
@@ -440,6 +444,111 @@ def _abi_signature(entry: dict[str, Any]) -> str:
     inputs = entry.get("inputs", [])
     require(isinstance(name, str) and isinstance(inputs, list), "invalid ABI entry")
     return f"{name}({','.join(_canonical_abi_type(item) for item in inputs)})"
+
+
+def _abi_entry_identity(entry: dict[str, Any]) -> str:
+    kind = entry.get("type")
+    require(isinstance(kind, str), "ABI entry type is missing")
+    return f"{kind}:{_abi_signature(entry)}"
+
+
+def _abi_component_semantics(component: Any) -> dict[str, Any]:
+    require(isinstance(component, dict), "ABI component must be an object")
+    result: dict[str, Any] = {"type": _canonical_abi_type(component)}
+    if "indexed" in component:
+        result["indexed"] = bool(component["indexed"])
+    return result
+
+
+def _abi_entry_semantics(entry: dict[str, Any]) -> dict[str, Any]:
+    kind = entry["type"]
+    result: dict[str, Any] = {"type": kind}
+    if "name" in entry:
+        require(isinstance(entry["name"], str), "ABI entry name must be a string")
+        result["name"] = entry["name"]
+    if "inputs" in entry:
+        require(isinstance(entry["inputs"], list), "ABI entry inputs must be a list")
+        result["inputs"] = [_abi_component_semantics(component) for component in entry["inputs"]]
+    if "outputs" in entry:
+        require(isinstance(entry["outputs"], list), "ABI entry outputs must be a list")
+        result["outputs"] = [_abi_component_semantics(component) for component in entry["outputs"]]
+    for field in ("stateMutability", "anonymous", "payable", "constant"):
+        if field in entry:
+            result[field] = entry[field]
+    return result
+
+
+def _abi_entry_catalog(value: Any) -> tuple[list[str], dict[str, dict[str, Any]]]:
+    require(isinstance(value, list), "ABI must be a JSON array")
+    order: list[str] = []
+    catalog: dict[str, dict[str, Any]] = {}
+    for entry in value:
+        require(isinstance(entry, dict), "ABI entry must be an object")
+        identity = _abi_entry_identity(entry)
+        require(identity not in catalog, f"duplicate ABI entry identity: {identity}")
+        order.append(identity)
+        catalog[identity] = entry
+    return order, catalog
+
+
+def _json_pointer_token(value: str) -> str:
+    return value.replace("~", "~0").replace("/", "~1")
+
+
+def _json_field_differences(left: Any, right: Any, path: str = "") -> list[dict[str, Any]]:
+    if canonical_bytes(left) == canonical_bytes(right):
+        return []
+    if isinstance(left, dict) and isinstance(right, dict):
+        result = []
+        for key in sorted(set(left) | set(right)):
+            child_path = f"{path}/{_json_pointer_token(key)}"
+            if key not in left or key not in right:
+                result.append({
+                    "path": child_path,
+                    "pancakeswap_present": key in left,
+                    "base_present": key in right,
+                    **({"pancakeswap": left[key]} if key in left else {}),
+                    **({"base": right[key]} if key in right else {}),
+                })
+            else:
+                result.extend(_json_field_differences(left[key], right[key], child_path))
+        return result
+    if isinstance(left, list) and isinstance(right, list):
+        result = []
+        for index in range(max(len(left), len(right))):
+            child_path = f"{path}/{index}"
+            if index >= len(left) or index >= len(right):
+                result.append({
+                    "path": child_path,
+                    "pancakeswap_present": index < len(left),
+                    "base_present": index < len(right),
+                    **({"pancakeswap": left[index]} if index < len(left) else {}),
+                    **({"base": right[index]} if index < len(right) else {}),
+                })
+            else:
+                result.extend(_json_field_differences(left[index], right[index], child_path))
+        return result
+    return [{
+        "path": path or "/",
+        "pancakeswap_present": True,
+        "base_present": True,
+        "pancakeswap": left,
+        "base": right,
+    }]
+
+
+def _exclusive_abi_entries(
+    identities: set[str],
+    catalog: dict[str, dict[str, Any]],
+) -> list[dict[str, Any]]:
+    return [
+        {
+            "identity": identity,
+            "canonical_sha256": canonical_sha256(catalog[identity]),
+            "entry": catalog[identity],
+        }
+        for identity in sorted(identities)
+    ]
 
 
 def abi_summary(value: Any) -> dict[str, Any]:
@@ -734,7 +843,48 @@ def _signature_set(summary: dict[str, Any], key: str) -> set[str]:
     return set(summary[key])
 
 
-def build_abi_diff(by_target: dict[str, dict[str, dict[str, Any]]]) -> dict[str, Any]:
+def _full_abi_entry_diff(left_value: Any, right_value: Any) -> dict[str, Any]:
+    left_order, left = _abi_entry_catalog(left_value)
+    right_order, right = _abi_entry_catalog(right_value)
+    shared_metadata_differences = []
+    shared_semantic_differences = []
+    for identity in sorted(set(left) & set(right)):
+        left_sha = canonical_sha256(left[identity])
+        right_sha = canonical_sha256(right[identity])
+        if left_sha == right_sha:
+            continue
+        left_semantics = _abi_entry_semantics(left[identity])
+        right_semantics = _abi_entry_semantics(right[identity])
+        semantic_equal = canonical_bytes(left_semantics) == canonical_bytes(right_semantics)
+        shared_metadata_differences.append({
+            "identity": identity,
+            "pancakeswap_canonical_sha256": left_sha,
+            "base_canonical_sha256": right_sha,
+            "semantic_equal": semantic_equal,
+            "field_differences": _json_field_differences(left[identity], right[identity]),
+        })
+        if not semantic_equal:
+            shared_semantic_differences.append({
+                "identity": identity,
+                "pancakeswap": left_semantics,
+                "base": right_semantics,
+                "field_differences": _json_field_differences(left[identity], right[identity]),
+            })
+    return {
+        "entry_order_sha256": {
+            "pancakeswap-v3-bsc": canonical_sha256(left_order),
+            "uniswap-v3-base": canonical_sha256(right_order),
+        },
+        "entry_identities_only_pancakeswap": sorted(set(left) - set(right)),
+        "entry_identities_only_base": sorted(set(right) - set(left)),
+        "entries_only_pancakeswap": _exclusive_abi_entries(set(left) - set(right), left),
+        "entries_only_base": _exclusive_abi_entries(set(right) - set(left), right),
+        "shared_identity_metadata_differences": shared_metadata_differences,
+        "shared_identity_semantic_differences": shared_semantic_differences,
+    }
+
+
+def build_abi_diff(root: Path, by_target: dict[str, dict[str, dict[str, Any]]]) -> dict[str, Any]:
     bsc = by_target["pancakeswap-v3-bsc"]
     base = by_target["uniswap-v3-base"]
     names = ["ERC20", "ERC20NameBytes", "ERC20SymbolBytes", "Factory", "NonFungiblePositionManager", "Pool", "TickLens"]
@@ -746,6 +896,8 @@ def build_abi_diff(by_target: dict[str, dict[str, dict[str, Any]]]) -> dict[str,
         if left["canonical_sha256"] == right["canonical_sha256"]:
             shared.append(name)
             continue
+        left_value = load_json(root / bsc[f"abi/{name}"]["vendored_path"])
+        right_value = load_json(root / base[f"abi/{name}"]["vendored_path"])
         differing[name] = {
             "pancakeswap_entry_count": left["entry_count"],
             "base_entry_count": right["entry_count"],
@@ -755,13 +907,281 @@ def build_abi_diff(by_target: dict[str, dict[str, dict[str, Any]]]) -> dict[str,
             "events_only_base": sorted(_signature_set(right, "events") - _signature_set(left, "events")),
             "functions_only_pancakeswap": sorted(_signature_set(left, "function_signatures") - _signature_set(right, "function_signatures")),
             "functions_only_base": sorted(_signature_set(right, "function_signatures") - _signature_set(left, "function_signatures")),
+            **_full_abi_entry_diff(left_value, right_value),
         }
     require(shared == ["ERC20", "ERC20NameBytes", "ERC20SymbolBytes", "TickLens"], "shared ABI set drift")
     require(list(differing) == ["Factory", "NonFungiblePositionManager", "Pool"], "differing ABI set drift")
     require(differing["Factory"]["events_only_pancakeswap"] == ["FeeAmountExtraInfoUpdated(uint24,bool,bool)", "SetLmPoolDeployer(address)", "WhiteListAdded(address,bool)"], "Factory event diff drift")
     require(differing["Pool"]["events_only_pancakeswap"] == ["SetFeeProtocol(uint32,uint32,uint32,uint32)", "SetLmPoolEvent(address)", "Swap(address,address,int256,int256,uint160,uint128,int24,uint128,uint128)"], "Pool BSC event diff drift")
     require(differing["Pool"]["events_only_base"] == ["SetFeeProtocol(uint8,uint8,uint8,uint8)", "Swap(address,address,int256,int256,uint160,uint128,int24)"], "Pool Base event diff drift")
+    expected_entry_ledgers = {
+        "Factory": {
+            "entry_identities_only_pancakeswap": [
+                "constructor:constructor(address)",
+                "event:FeeAmountExtraInfoUpdated(uint24,bool,bool)",
+                "event:SetLmPoolDeployer(address)",
+                "event:WhiteListAdded(address,bool)",
+                "function:collectProtocol(address,address,uint128,uint128)",
+                "function:feeAmountTickSpacingExtraInfo(uint24)",
+                "function:lmPoolDeployer()",
+                "function:poolDeployer()",
+                "function:setFeeAmountExtraInfo(uint24,bool,bool)",
+                "function:setFeeProtocol(address,uint32,uint32)",
+                "function:setLmPool(address,address)",
+                "function:setLmPoolDeployer(address)",
+                "function:setWhiteListAddress(address,bool)",
+            ],
+            "entry_identities_only_base": [],
+            "metadata_difference_identities": [
+                "function:feeAmountTickSpacing(uint24)",
+                "function:getPool(address,address,uint24)",
+            ],
+            "semantic_difference_identities": [],
+            "field_difference_paths": {
+                "function:feeAmountTickSpacing(uint24)": ["/inputs/0/name"],
+                "function:getPool(address,address,uint24)": [
+                    "/inputs/0/name",
+                    "/inputs/1/name",
+                    "/inputs/2/name",
+                    "/outputs/0/name",
+                ],
+            },
+        },
+        "NonFungiblePositionManager": {
+            "entry_identities_only_pancakeswap": [
+                "constructor:constructor(address,address,address,address)",
+                "function:collect((uint256,address,uint128,uint128))",
+                "function:decreaseLiquidity((uint256,uint128,uint256,uint256,uint256))",
+                "function:deployer()",
+                "function:increaseLiquidity((uint256,uint256,uint256,uint256,uint256,uint256))",
+                "function:pancakeV3MintCallback(uint256,uint256,bytes)",
+                "function:refundETH()",
+            ],
+            "entry_identities_only_base": [
+                "constructor:constructor(address,address,address)",
+                "function:collect(uint256,address,uint128,uint128)",
+                "function:decreaseLiquidity(uint256,uint128,uint256,uint256,uint256)",
+                "function:increaseLiquidity(uint256,uint256,uint256,uint256,uint256,uint256)",
+                "function:uniswapV3MintCallback(uint256,uint256,bytes)",
+            ],
+            "metadata_difference_identities": [
+                "function:createAndInitializePoolIfNecessary(address,address,uint24,uint160)",
+            ],
+            "semantic_difference_identities": [],
+            "field_difference_paths": {
+                "function:createAndInitializePoolIfNecessary(address,address,uint24,uint160)": [
+                    "/inputs/0/name",
+                    "/inputs/1/name",
+                ],
+            },
+        },
+        "Pool": {
+            "entry_identities_only_pancakeswap": [
+                "event:SetFeeProtocol(uint32,uint32,uint32,uint32)",
+                "event:SetLmPoolEvent(address)",
+                "event:Swap(address,address,int256,int256,uint160,uint128,int24,uint128,uint128)",
+                "function:lmPool()",
+                "function:setFeeProtocol(uint32,uint32)",
+                "function:setLmPool(address)",
+            ],
+            "entry_identities_only_base": [
+                "event:SetFeeProtocol(uint8,uint8,uint8,uint8)",
+                "event:Swap(address,address,int256,int256,uint160,uint128,int24)",
+                "function:setFeeProtocol(uint8,uint8)",
+            ],
+            "metadata_difference_identities": [
+                "event:Burn(address,int24,int24,uint128,uint256,uint256)",
+                "function:observations(uint256)",
+                "function:positions(bytes32)",
+                "function:slot0()",
+                "function:tickBitmap(int16)",
+                "function:ticks(int24)",
+            ],
+            "semantic_difference_identities": ["function:slot0()"],
+            "field_difference_paths": {
+                "event:Burn(address,int24,int24,uint128,uint256,uint256)": [
+                    "/inputs/4/internalType",
+                ],
+                "function:observations(uint256)": ["/inputs/0/name"],
+                "function:positions(bytes32)": [
+                    "/inputs/0/name",
+                    "/outputs/0/name",
+                ],
+                "function:slot0()": [
+                    "/outputs/5/internalType",
+                    "/outputs/5/type",
+                ],
+                "function:tickBitmap(int16)": ["/inputs/0/name"],
+                "function:ticks(int24)": ["/inputs/0/name"],
+            },
+        },
+    }
+    for name, expected in expected_entry_ledgers.items():
+        observed = differing[name]
+        require(observed["entry_identities_only_pancakeswap"] == expected["entry_identities_only_pancakeswap"], f"{name} full-entry BSC-only ABI diff drift")
+        require(observed["entry_identities_only_base"] == expected["entry_identities_only_base"], f"{name} full-entry Base-only ABI diff drift")
+        require([item["identity"] for item in observed["entries_only_pancakeswap"]] == expected["entry_identities_only_pancakeswap"], f"{name} full BSC-only ABI entry projection drift")
+        require([item["identity"] for item in observed["entries_only_base"]] == expected["entry_identities_only_base"], f"{name} full Base-only ABI entry projection drift")
+        require([item["identity"] for item in observed["shared_identity_metadata_differences"]] == expected["metadata_difference_identities"], f"{name} same-identity ABI metadata diff drift")
+        require([item["identity"] for item in observed["shared_identity_semantic_differences"]] == expected["semantic_difference_identities"], f"{name} same-identity ABI semantic diff drift")
+        require(
+            {
+                item["identity"]: [field["path"] for field in item["field_differences"]]
+                for item in observed["shared_identity_metadata_differences"]
+            } == expected["field_difference_paths"],
+            f"{name} exact ABI field-difference path drift",
+        )
     return {"byte_and_semantic_identical_abis": shared, "differing_abis": differing}
+
+
+def build_wasm_diff(by_target: dict[str, dict[str, dict[str, Any]]]) -> dict[str, Any]:
+    bsc = by_target["pancakeswap-v3-bsc"]
+    base = by_target["uniswap-v3-base"]
+    pairs = (
+        ("Factory", "mapping/Factory", "mapping/Factory"),
+        ("NonFungiblePositionManager", "mapping/NonFungiblePositionManager", "mapping/NonFungiblePositionManager"),
+        ("primary_pool", "mapping/Pool", "mapping/Pool"),
+        ("fee_only_pool", "mapping/PancakeSwapPool", "mapping/UniswapPool"),
+    )
+    expected_base_only = [
+        {"name": "TypeId.CosmosMessageData", "kind": "global"},
+        {"name": "TypeId.CosmosTransactionContext", "kind": "global"},
+    ]
+    expected_index_differences = {
+        "Factory": [
+            ("TypeId.ArweaveBlock", "global", 183, 185),
+            ("TypeId.ArweaveProofOfAccess", "global", 184, 186),
+            ("TypeId.ArweaveTag", "global", 185, 187),
+            ("TypeId.ArweaveTagArray", "global", 186, 188),
+            ("TypeId.ArweaveTransaction", "global", 187, 189),
+            ("TypeId.ArweaveTransactionArray", "global", 188, 190),
+            ("TypeId.ArweaveTransactionWithBlockPtr", "global", 189, 191),
+            ("__rtti_base", "global", 190, 192),
+        ],
+        "NonFungiblePositionManager": [
+            ("TypeId.ArweaveBlock", "global", 176, 178),
+            ("TypeId.ArweaveProofOfAccess", "global", 177, 179),
+            ("TypeId.ArweaveTag", "global", 178, 180),
+            ("TypeId.ArweaveTagArray", "global", 179, 181),
+            ("TypeId.ArweaveTransaction", "global", 180, 182),
+            ("TypeId.ArweaveTransactionArray", "global", 181, 183),
+            ("TypeId.ArweaveTransactionWithBlockPtr", "global", 182, 184),
+            ("__collect", "function", 138, 136),
+            ("__rtti_base", "global", 183, 185),
+            ("__unpin", "function", 137, 135),
+            ("_start", "function", 143, 141),
+            ("allocate", "function", 136, 134),
+            ("handleDecreaseLiquidity", "function", 133, 131),
+            ("handleIncreaseLiquidity", "function", 132, 130),
+            ("handleTransfer", "function", 134, 132),
+            ("id_of_type", "function", 135, 133),
+        ],
+        "primary_pool": [
+            ("TypeId.ArweaveBlock", "global", 177, 179),
+            ("TypeId.ArweaveProofOfAccess", "global", 178, 180),
+            ("TypeId.ArweaveTag", "global", 179, 181),
+            ("TypeId.ArweaveTagArray", "global", 180, 182),
+            ("TypeId.ArweaveTransaction", "global", 181, 183),
+            ("TypeId.ArweaveTransactionArray", "global", 182, 184),
+            ("TypeId.ArweaveTransactionWithBlockPtr", "global", 183, 185),
+            ("__rtti_base", "global", 184, 186),
+        ],
+        "fee_only_pool": [
+            ("TypeId.ArweaveBlock", "global", 169, 171),
+            ("TypeId.ArweaveProofOfAccess", "global", 170, 172),
+            ("TypeId.ArweaveTag", "global", 171, 173),
+            ("TypeId.ArweaveTagArray", "global", 172, 174),
+            ("TypeId.ArweaveTransaction", "global", 173, 175),
+            ("TypeId.ArweaveTransactionArray", "global", 174, 176),
+            ("TypeId.ArweaveTransactionWithBlockPtr", "global", 175, 177),
+            ("__collect", "function", 48, 49),
+            ("__rtti_base", "global", 176, 178),
+            ("__unpin", "function", 47, 48),
+            ("_start", "function", 50, 51),
+            ("allocate", "function", 46, 47),
+            ("handleSetFeeProtocol", "function", 44, 45),
+            ("id_of_type", "function", 45, 46),
+        ],
+    }
+    result: dict[str, Any] = {}
+    observed_roles: set[tuple[str, str]] = set()
+    for name, bsc_role, base_role in pairs:
+        left = bsc[bsc_role]
+        right = base[base_role]
+        left_catalog = {item["name"]: item for item in left["export_table"]}
+        right_catalog = {item["name"]: item for item in right["export_table"]}
+        only_bsc = [
+            {"name": export, "kind": left_catalog[export]["kind"]}
+            for export in sorted(set(left_catalog) - set(right_catalog))
+        ]
+        only_base = [
+            {"name": export, "kind": right_catalog[export]["kind"]}
+            for export in sorted(set(right_catalog) - set(left_catalog))
+        ]
+        kind_differences = [
+            {
+                "name": export,
+                "pancakeswap_kind": left_catalog[export]["kind"],
+                "base_kind": right_catalog[export]["kind"],
+            }
+            for export in sorted(set(left_catalog) & set(right_catalog))
+            if left_catalog[export]["kind"] != right_catalog[export]["kind"]
+        ]
+        index_differences = [
+            {
+                "name": export,
+                "kind": left_catalog[export]["kind"],
+                "pancakeswap_index": left_catalog[export]["index"],
+                "base_index": right_catalog[export]["index"],
+            }
+            for export in sorted(set(left_catalog) & set(right_catalog))
+            if left_catalog[export]["index"] != right_catalog[export]["index"]
+        ]
+        require(only_bsc == [], f"{name} unexpected BSC-only WebAssembly export")
+        require(only_base == expected_base_only, f"{name} Base-only Cosmos TypeId export drift")
+        require(kind_differences == [], f"{name} shared WebAssembly export kind drift")
+        require(
+            [
+                (item["name"], item["kind"], item["pancakeswap_index"], item["base_index"])
+                for item in index_differences
+            ] == expected_index_differences[name],
+            f"{name} shared WebAssembly export index diff drift",
+        )
+        require(left["handler_exports"] == right["handler_exports"], f"{name} paired handler export drift")
+        observed_roles.add((bsc_role, base_role))
+        result[name] = {
+            "pancakeswap_mapping_role": bsc_role,
+            "base_mapping_role": base_role,
+            "pancakeswap_cid": left["cid"],
+            "base_cid": right["cid"],
+            "pancakeswap_sha256": left["sha256"],
+            "base_sha256": right["sha256"],
+            "pancakeswap_export_count": left["export_count"],
+            "base_export_count": right["export_count"],
+            "pancakeswap_export_table_sha256": left["export_table_sha256"],
+            "base_export_table_sha256": right["export_table_sha256"],
+            "exports_only_pancakeswap": only_bsc,
+            "exports_only_base": only_base,
+            "shared_export_kind_differences": kind_differences,
+            "shared_export_index_differences": index_differences,
+            "handler_exports": left["handler_exports"],
+            "handler_exports_identical": True,
+        }
+    require(
+        observed_roles == {
+            ("mapping/Factory", "mapping/Factory"),
+            ("mapping/NonFungiblePositionManager", "mapping/NonFungiblePositionManager"),
+            ("mapping/Pool", "mapping/Pool"),
+            ("mapping/PancakeSwapPool", "mapping/UniswapPool"),
+        },
+        "paired WebAssembly mapping-role closure drift",
+    )
+    return {
+        "pairing_complete": True,
+        "base_only_cosmos_type_id_globals": expected_base_only,
+        "runtime_equivalence_claimed": False,
+        "pairs": result,
+    }
 
 
 def verify_bindings(root: Path) -> list[dict[str, Any]]:
@@ -845,7 +1265,8 @@ def build_state(root: Path) -> dict[str, Any]:
         schemas[target] = schema_profile(root / by_target[target]["schema"]["vendored_path"])
         bind_manifest_entity_metadata(target, manifests[target], schemas[target])
     schema_diff = verify_schema_pair(schemas)
-    abi_diff = build_abi_diff(by_target)
+    abi_diff = build_abi_diff(root, by_target)
+    wasm_diff = build_wasm_diff(by_target)
     verify_source_document(root)
     return {
         "bindings": bindings,
@@ -855,6 +1276,7 @@ def build_state(root: Path) -> dict[str, Any]:
         "schemas": schemas,
         "schema_diff": schema_diff,
         "abi_diff": abi_diff,
+        "wasm_diff": wasm_diff,
     }
 
 
@@ -883,6 +1305,7 @@ def build_cross_target_diff(state: dict[str, Any]) -> dict[str, Any]:
         "position_manager_sources": {"pancakeswap-v3-bsc": bsc["components"][1]["source"], "uniswap-v3-base": base["components"][1]["source"]},
         "schema": state["schema_diff"],
         "abis": state["abi_diff"],
+        "wasm_exports": state["wasm_diff"],
         "primary_pool": {
             "pancakeswap_swap": TARGET_EXPECTATIONS["pancakeswap-v3-bsc"]["handlers"]["Pool"][3][1],
             "base_swap": TARGET_EXPECTATIONS["uniswap-v3-base"]["handlers"]["Pool"][2][1],

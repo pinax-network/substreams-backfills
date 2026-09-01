@@ -55,6 +55,11 @@ jobs:
           python3 -m unittest scripts.tests.test_aerodrome_slipstream_base_target
       - name: Verify immutable Messari V3 BSC/Base target baselines
         run: |
+          mapfile -t messari_wasm < <(find messari-v3/reference -type f -name '*.wasm' -print | sort)
+          test "${#messari_wasm[@]}" -eq 8
+          for wasm in "${messari_wasm[@]}"; do
+            wasm-validate "$wasm"
+          done
           python3 scripts/verify-messari-v3-targets.py
           python3 -m unittest scripts.tests.test_messari_v3_targets
       - name: Verify immutable Uniswap V3 graft ancestry

@@ -76,6 +76,39 @@ class MessariV3TargetsTest(unittest.TestCase):
         )
         self.write_contract(contract)
 
+    def assert_relocked_profile_mutations_rejected(self, mutations) -> None:
+        profile_path = self.root / PROFILE_PATH
+        contract_path = self.root / CONTRACT_PATH
+        original_profile = profile_path.read_bytes()
+        original_contract = contract_path.read_bytes()
+        for name, mutate in mutations.items():
+            with self.subTest(name=name):
+                profile_path.write_bytes(original_profile)
+                contract_path.write_bytes(original_contract)
+                profile = self.load_profile()
+                mutate(profile)
+                self.write_profile(profile)
+                self.relock_profile_in_contract()
+                result = self.verify()
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("layout profile differs from retained artifacts", result.stderr)
+        profile_path.write_bytes(original_profile)
+        contract_path.write_bytes(original_contract)
+
+    def assert_contract_mutations_rejected(self, mutations) -> None:
+        path = self.root / CONTRACT_PATH
+        original = path.read_bytes()
+        for name, mutate in mutations.items():
+            with self.subTest(name=name):
+                path.write_bytes(original)
+                contract = self.load_contract()
+                mutate(contract)
+                self.write_contract(contract)
+                result = self.verify()
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("provenance contract differs from retained artifacts", result.stderr)
+        path.write_bytes(original)
+
     def test_exact_baseline_passes(self) -> None:
         result = self.verify()
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -184,21 +217,150 @@ class MessariV3TargetsTest(unittest.TestCase):
             },
         )
 
-    def test_exact_abi_event_differences(self) -> None:
+    def test_exact_full_abi_entry_ledgers_and_slot0_semantics(self) -> None:
         abis = self.load_profile()["cross_target_diff"]["abis"]
         self.assertEqual(abis["byte_and_semantic_identical_abis"], ["ERC20", "ERC20NameBytes", "ERC20SymbolBytes", "TickLens"])
         self.assertEqual(list(abis["differing_abis"]), ["Factory", "NonFungiblePositionManager", "Pool"])
+        expected = {
+            "Factory": {
+                "counts": (22, 9),
+                "only_pancakeswap": [
+                    "constructor:constructor(address)",
+                    "event:FeeAmountExtraInfoUpdated(uint24,bool,bool)",
+                    "event:SetLmPoolDeployer(address)",
+                    "event:WhiteListAdded(address,bool)",
+                    "function:collectProtocol(address,address,uint128,uint128)",
+                    "function:feeAmountTickSpacingExtraInfo(uint24)",
+                    "function:lmPoolDeployer()",
+                    "function:poolDeployer()",
+                    "function:setFeeAmountExtraInfo(uint24,bool,bool)",
+                    "function:setFeeProtocol(address,uint32,uint32)",
+                    "function:setLmPool(address,address)",
+                    "function:setLmPoolDeployer(address)",
+                    "function:setWhiteListAddress(address,bool)",
+                ],
+                "only_base": [],
+                "metadata": [
+                    "function:feeAmountTickSpacing(uint24)",
+                    "function:getPool(address,address,uint24)",
+                ],
+                "semantic": [],
+            },
+            "NonFungiblePositionManager": {
+                "counts": (47, 45),
+                "only_pancakeswap": [
+                    "constructor:constructor(address,address,address,address)",
+                    "function:collect((uint256,address,uint128,uint128))",
+                    "function:decreaseLiquidity((uint256,uint128,uint256,uint256,uint256))",
+                    "function:deployer()",
+                    "function:increaseLiquidity((uint256,uint256,uint256,uint256,uint256,uint256))",
+                    "function:pancakeV3MintCallback(uint256,uint256,bytes)",
+                    "function:refundETH()",
+                ],
+                "only_base": [
+                    "constructor:constructor(address,address,address)",
+                    "function:collect(uint256,address,uint128,uint128)",
+                    "function:decreaseLiquidity(uint256,uint128,uint256,uint256,uint256)",
+                    "function:increaseLiquidity(uint256,uint256,uint256,uint256,uint256,uint256)",
+                    "function:uniswapV3MintCallback(uint256,uint256,bytes)",
+                ],
+                "metadata": ["function:createAndInitializePoolIfNecessary(address,address,uint24,uint160)"],
+                "semantic": [],
+            },
+            "Pool": {
+                "counts": (39, 36),
+                "only_pancakeswap": [
+                    "event:SetFeeProtocol(uint32,uint32,uint32,uint32)",
+                    "event:SetLmPoolEvent(address)",
+                    "event:Swap(address,address,int256,int256,uint160,uint128,int24,uint128,uint128)",
+                    "function:lmPool()",
+                    "function:setFeeProtocol(uint32,uint32)",
+                    "function:setLmPool(address)",
+                ],
+                "only_base": [
+                    "event:SetFeeProtocol(uint8,uint8,uint8,uint8)",
+                    "event:Swap(address,address,int256,int256,uint160,uint128,int24)",
+                    "function:setFeeProtocol(uint8,uint8)",
+                ],
+                "metadata": [
+                    "event:Burn(address,int24,int24,uint128,uint256,uint256)",
+                    "function:observations(uint256)",
+                    "function:positions(bytes32)",
+                    "function:slot0()",
+                    "function:tickBitmap(int16)",
+                    "function:ticks(int24)",
+                ],
+                "semantic": ["function:slot0()"],
+            },
+        }
+        for name, ledger in expected.items():
+            observed = abis["differing_abis"][name]
+            self.assertEqual(
+                (observed["pancakeswap_entry_count"], observed["base_entry_count"]),
+                ledger["counts"],
+            )
+            self.assertEqual(observed["entry_identities_only_pancakeswap"], ledger["only_pancakeswap"])
+            self.assertEqual(observed["entry_identities_only_base"], ledger["only_base"])
+            self.assertEqual(
+                [item["identity"] for item in observed["entries_only_pancakeswap"]],
+                ledger["only_pancakeswap"],
+            )
+            self.assertEqual(
+                [item["identity"] for item in observed["entries_only_base"]],
+                ledger["only_base"],
+            )
+            for side in ("entries_only_pancakeswap", "entries_only_base"):
+                for item in observed[side]:
+                    self.assertEqual(item["canonical_sha256"], MODULE.canonical_sha256(item["entry"]))
+            self.assertEqual(
+                [item["identity"] for item in observed["shared_identity_metadata_differences"]],
+                ledger["metadata"],
+            )
+            self.assertEqual(
+                [item["identity"] for item in observed["shared_identity_semantic_differences"]],
+                ledger["semantic"],
+            )
+
+        slot0 = abis["differing_abis"]["Pool"]["shared_identity_semantic_differences"]
+        self.assertEqual(len(slot0), 1)
+        self.assertEqual(slot0[0]["identity"], "function:slot0()")
         self.assertEqual(
-            abis["differing_abis"]["Factory"]["events_only_pancakeswap"],
-            ["FeeAmountExtraInfoUpdated(uint24,bool,bool)", "SetLmPoolDeployer(address)", "WhiteListAdded(address,bool)"],
+            slot0[0]["field_differences"],
+            [
+                {
+                    "base": "uint8",
+                    "base_present": True,
+                    "pancakeswap": "uint32",
+                    "pancakeswap_present": True,
+                    "path": "/outputs/5/internalType",
+                },
+                {
+                    "base": "uint8",
+                    "base_present": True,
+                    "pancakeswap": "uint32",
+                    "pancakeswap_present": True,
+                    "path": "/outputs/5/type",
+                },
+            ],
         )
         self.assertEqual(
-            abis["differing_abis"]["Pool"]["events_only_pancakeswap"],
-            ["SetFeeProtocol(uint32,uint32,uint32,uint32)", "SetLmPoolEvent(address)", "Swap(address,address,int256,int256,uint160,uint128,int24,uint128,uint128)"],
+            [output["type"] for output in slot0[0]["pancakeswap"]["outputs"]],
+            ["uint160", "int24", "uint16", "uint16", "uint16", "uint32", "bool"],
         )
         self.assertEqual(
-            abis["differing_abis"]["Pool"]["events_only_base"],
-            ["SetFeeProtocol(uint8,uint8,uint8,uint8)", "Swap(address,address,int256,int256,uint160,uint128,int24)"],
+            [output["type"] for output in slot0[0]["base"]["outputs"]],
+            ["uint160", "int24", "uint16", "uint16", "uint16", "uint8", "bool"],
+        )
+        npm = abis["differing_abis"]["NonFungiblePositionManager"]
+        bsc_constructor = next(item for item in npm["entries_only_pancakeswap"] if item["identity"].startswith("constructor:"))
+        base_constructor = next(item for item in npm["entries_only_base"] if item["identity"].startswith("constructor:"))
+        self.assertEqual(
+            [item["name"] for item in bsc_constructor["entry"]["inputs"]],
+            ["_deployer", "_factory", "_WETH9", "_tokenDescriptor_"],
+        )
+        self.assertEqual(
+            [item["name"] for item in base_constructor["entry"]["inputs"]],
+            ["_factory", "_WETH9", "_tokenDescriptor_"],
         )
 
     def test_full_wasm_export_tables_are_bound(self) -> None:
@@ -211,6 +373,86 @@ class MessariV3TargetsTest(unittest.TestCase):
                 self.assertEqual(mapping["export_table_sha256"], expected[1])
                 self.assertEqual(MODULE.canonical_sha256(mapping["export_table"]), expected[1])
                 self.assertEqual(mapping["handler_exports"], expected[2])
+
+    def test_exact_paired_wasm_cosmos_globals_and_export_index_ledgers(self) -> None:
+        wasm = self.load_profile()["cross_target_diff"]["wasm_exports"]
+        cosmos = [
+            {"kind": "global", "name": "TypeId.CosmosMessageData"},
+            {"kind": "global", "name": "TypeId.CosmosTransactionContext"},
+        ]
+        expected_indexes = {
+            "Factory": [
+                ("TypeId.ArweaveBlock", "global", 183, 185),
+                ("TypeId.ArweaveProofOfAccess", "global", 184, 186),
+                ("TypeId.ArweaveTag", "global", 185, 187),
+                ("TypeId.ArweaveTagArray", "global", 186, 188),
+                ("TypeId.ArweaveTransaction", "global", 187, 189),
+                ("TypeId.ArweaveTransactionArray", "global", 188, 190),
+                ("TypeId.ArweaveTransactionWithBlockPtr", "global", 189, 191),
+                ("__rtti_base", "global", 190, 192),
+            ],
+            "NonFungiblePositionManager": [
+                ("TypeId.ArweaveBlock", "global", 176, 178),
+                ("TypeId.ArweaveProofOfAccess", "global", 177, 179),
+                ("TypeId.ArweaveTag", "global", 178, 180),
+                ("TypeId.ArweaveTagArray", "global", 179, 181),
+                ("TypeId.ArweaveTransaction", "global", 180, 182),
+                ("TypeId.ArweaveTransactionArray", "global", 181, 183),
+                ("TypeId.ArweaveTransactionWithBlockPtr", "global", 182, 184),
+                ("__collect", "function", 138, 136),
+                ("__rtti_base", "global", 183, 185),
+                ("__unpin", "function", 137, 135),
+                ("_start", "function", 143, 141),
+                ("allocate", "function", 136, 134),
+                ("handleDecreaseLiquidity", "function", 133, 131),
+                ("handleIncreaseLiquidity", "function", 132, 130),
+                ("handleTransfer", "function", 134, 132),
+                ("id_of_type", "function", 135, 133),
+            ],
+            "primary_pool": [
+                ("TypeId.ArweaveBlock", "global", 177, 179),
+                ("TypeId.ArweaveProofOfAccess", "global", 178, 180),
+                ("TypeId.ArweaveTag", "global", 179, 181),
+                ("TypeId.ArweaveTagArray", "global", 180, 182),
+                ("TypeId.ArweaveTransaction", "global", 181, 183),
+                ("TypeId.ArweaveTransactionArray", "global", 182, 184),
+                ("TypeId.ArweaveTransactionWithBlockPtr", "global", 183, 185),
+                ("__rtti_base", "global", 184, 186),
+            ],
+            "fee_only_pool": [
+                ("TypeId.ArweaveBlock", "global", 169, 171),
+                ("TypeId.ArweaveProofOfAccess", "global", 170, 172),
+                ("TypeId.ArweaveTag", "global", 171, 173),
+                ("TypeId.ArweaveTagArray", "global", 172, 174),
+                ("TypeId.ArweaveTransaction", "global", 173, 175),
+                ("TypeId.ArweaveTransactionArray", "global", 174, 176),
+                ("TypeId.ArweaveTransactionWithBlockPtr", "global", 175, 177),
+                ("__collect", "function", 48, 49),
+                ("__rtti_base", "global", 176, 178),
+                ("__unpin", "function", 47, 48),
+                ("_start", "function", 50, 51),
+                ("allocate", "function", 46, 47),
+                ("handleSetFeeProtocol", "function", 44, 45),
+                ("id_of_type", "function", 45, 46),
+            ],
+        }
+        self.assertTrue(wasm["pairing_complete"])
+        self.assertFalse(wasm["runtime_equivalence_claimed"])
+        self.assertEqual(wasm["base_only_cosmos_type_id_globals"], cosmos)
+        self.assertEqual(set(wasm["pairs"]), set(expected_indexes))
+        for role, expected in expected_indexes.items():
+            pair = wasm["pairs"][role]
+            self.assertEqual(pair["exports_only_pancakeswap"], [])
+            self.assertEqual(pair["exports_only_base"], cosmos)
+            self.assertEqual(pair["shared_export_kind_differences"], [])
+            self.assertTrue(pair["handler_exports_identical"])
+            self.assertEqual(
+                [
+                    (item["name"], item["kind"], item["pancakeswap_index"], item["base_index"])
+                    for item in pair["shared_export_index_differences"]
+                ],
+                expected,
+            )
 
     def test_bsc_missing_handler_and_separate_fee_mapping_are_distinct(self) -> None:
         profile = self.load_profile()
@@ -344,17 +586,56 @@ class MessariV3TargetsTest(unittest.TestCase):
 
     def test_binding_semantic_drift_is_rejected(self) -> None:
         path = self.root / "messari-v3/QmQjVBdmgZdjHpQsXGSC5uryWLmPkkTAunHN2AnDApZBa3.yaml"
-        path.write_text(path.read_text().replace("market_qpd: 143319", "market_qpd: 143320", 1))
+        path.write_text(path.read_text().replace("queries_24h: 143319", "queries_24h: 143320", 1))
         self.assertNotEqual(self.verify().returncode, 0)
 
-    def test_qos_economics_are_not_mislabeled_as_signal(self) -> None:
+    def test_market_snapshots_are_exact_and_not_mislabeled_as_signal(self) -> None:
         contract = self.load_contract()
         bindings = {item["target"]: item["value"] for item in contract["binding_lock"]}
-        self.assertEqual(bindings["pancakeswap-v3-bsc"]["query_fees_grt_24h"], 170.760)
-        self.assertEqual(bindings["uniswap-v3-base"]["query_fees_grt_24h"], 21.000)
+        self.assertEqual(
+            bindings["pancakeswap-v3-bsc"]["market_snapshot"],
+            {
+                "authority": "https://github.com/pinax-network/substreams-backfills/issues/83",
+                "measured_at": "2026-08-31T17:20:00Z",
+                "queries_24h": 143319,
+                "query_fees_grt_24h": "170.760",
+            },
+        )
+        self.assertEqual(
+            bindings["uniswap-v3-base"]["market_snapshot"],
+            {
+                "authority": "https://github.com/pinax-network/substreams-backfills/issues/83",
+                "measured_at": "2026-08-31T17:20:00Z",
+                "queries_24h": 17568,
+                "query_fees_grt_24h": "21.000",
+            },
+        )
+        forbidden = {"market_qpd", "qos_snapshot_at", "placement", "signal_grt", "grt", "generic_grt"}
         for binding in bindings.values():
-            self.assertEqual(binding["qos_snapshot_at"], "2026-08-31T17:20:00Z")
-            self.assertNotIn("signal_grt", binding)
+            snapshot = binding["market_snapshot"]
+            self.assertIsInstance(snapshot["query_fees_grt_24h"], str)
+            self.assertEqual(set(binding) & forbidden, set())
+            self.assertEqual(set(snapshot) & forbidden, set())
+
+    def test_market_snapshot_legacy_numeric_unattributed_and_signal_forms_are_rejected(self) -> None:
+        path = self.root / "messari-v3/QmQjVBdmgZdjHpQsXGSC5uryWLmPkkTAunHN2AnDApZBa3.yaml"
+        original = path.read_text()
+        mutations = {
+            "legacy market_qpd": lambda text: text.replace("market_snapshot:\n", "market_qpd: 143319\nmarket_snapshot:\n", 1),
+            "numeric fee": lambda text: text.replace('query_fees_grt_24h: "170.760"', "query_fees_grt_24h: 170.760", 1),
+            "wrong authority": lambda text: text.replace("issues/83", "issues/82", 1),
+            "missing authority": lambda text: text.replace("  authority: https://github.com/pinax-network/substreams-backfills/issues/83\n", "", 1),
+            "wrong timestamp": lambda text: text.replace("2026-08-31T17:20:00Z", "2026-08-31T17:21:00Z", 1),
+            "missing timestamp": lambda text: text.replace('  measured_at: "2026-08-31T17:20:00Z"\n', "", 1),
+            "signal GRT": lambda text: text.replace("  authority:", '  signal_grt: "170.760"\n  authority:', 1),
+            "generic GRT": lambda text: text.replace("  authority:", '  grt: "170.760"\n  authority:', 1),
+        }
+        for name, mutate in mutations.items():
+            with self.subTest(name=name):
+                path.write_text(mutate(original))
+                result = self.verify()
+                self.assertNotEqual(result.returncode, 0)
+        path.write_text(original)
 
     def test_manifest_semantic_drift_is_rejected_beyond_raw_lock(self) -> None:
         _, artifacts = MODULE.verify_artifacts(self.root)
@@ -373,6 +654,132 @@ class MessariV3TargetsTest(unittest.TestCase):
         self.write_profile(profile)
         self.relock_profile_in_contract()
         self.assertNotEqual(self.verify().returncode, 0)
+
+    def test_abi_ledger_omissions_are_rejected_after_profile_relock(self) -> None:
+        def remove_slot0_semantics(profile) -> None:
+            profile["cross_target_diff"]["abis"]["differing_abis"]["Pool"]["shared_identity_semantic_differences"].clear()
+
+        def remove_constructor_identity(profile) -> None:
+            profile["cross_target_diff"]["abis"]["differing_abis"]["Factory"]["entry_identities_only_pancakeswap"].remove(
+                "constructor:constructor(address)"
+            )
+
+        def remove_exclusive_entry(profile) -> None:
+            profile["cross_target_diff"]["abis"]["differing_abis"]["Pool"]["entry_identities_only_pancakeswap"].remove(
+                "function:lmPool()"
+            )
+
+        self.assert_relocked_profile_mutations_rejected(
+            {
+                "slot0 semantic difference removed": remove_slot0_semantics,
+                "constructor identity removed": remove_constructor_identity,
+                "exclusive ABI entry removed": remove_exclusive_entry,
+            }
+        )
+
+    def test_wasm_pair_omissions_and_equivalence_promotion_are_rejected_after_profile_relock(self) -> None:
+        def remove_cosmos_global(profile) -> None:
+            profile["cross_target_diff"]["wasm_exports"]["pairs"]["Factory"]["exports_only_base"].remove(
+                {"kind": "global", "name": "TypeId.CosmosMessageData"}
+            )
+
+        def change_export_index_delta(profile) -> None:
+            profile["cross_target_diff"]["wasm_exports"]["pairs"]["Factory"]["shared_export_index_differences"][0][
+                "base_index"
+            ] = 184
+
+        def promote_runtime_equivalence(profile) -> None:
+            profile["cross_target_diff"]["wasm_exports"]["runtime_equivalence_claimed"] = True
+
+        self.assert_relocked_profile_mutations_rejected(
+            {
+                "Base-only Cosmos global removed": remove_cosmos_global,
+                "shared export index delta changed": change_export_index_delta,
+                "WASM runtime equivalence promoted": promote_runtime_equivalence,
+            }
+        )
+
+    def test_malformed_wasm_is_rejected_by_the_direct_parser(self) -> None:
+        malformed = {
+            "invalid header": (b"not wasm", "mapping is not WebAssembly v1"),
+            "missing export section": (b"\0asm\x01\0\0\0", "WebAssembly export section missing"),
+        }
+        for name, (payload, message) in malformed.items():
+            with self.subTest(name=name):
+                with self.assertRaisesRegex(MODULE.VerificationError, message):
+                    MODULE.wasm_export_table(payload)
+
+    def test_eligibility_policy_and_empty_evidence_are_exact(self) -> None:
+        contract = self.load_contract()
+        self.assertEqual(
+            contract["eligibility"],
+            {
+                "current_decision": "indeterminate",
+                "minimum_eta_days_exclusive": 28,
+                "policy": "graph-node-net-catchup-v1",
+                "reason": "no_fresh_evidence",
+                "required_clusters": ["riv-subgraphs-a", "kan-subgraphs-a"],
+                "required_forecast_windows_hours": [24, 72],
+            },
+        )
+        for record in contract["binding_lock"]:
+            eligibility = record["value"]["eligibility"]
+            self.assertEqual(eligibility["required_clusters"], ["riv-subgraphs-a", "kan-subgraphs-a"])
+            self.assertEqual(
+                eligibility["latest"],
+                {
+                    "decision": "indeterminate",
+                    "evidence": None,
+                    "measured_at": None,
+                    "reason": "no_fresh_evidence",
+                    "sha256": None,
+                },
+            )
+
+    def test_eligibility_cluster_order_and_undigested_evidence_are_rejected(self) -> None:
+        path = self.root / "messari-v3/QmQjVBdmgZdjHpQsXGSC5uryWLmPkkTAunHN2AnDApZBa3.yaml"
+        original = path.read_text()
+        mutations = {
+            "required cluster removed": lambda text: text.replace(
+                "required_clusters: [riv-subgraphs-a, kan-subgraphs-a]",
+                "required_clusters: [riv-subgraphs-a]",
+                1,
+            ),
+            "required cluster order changed": lambda text: text.replace(
+                "required_clusters: [riv-subgraphs-a, kan-subgraphs-a]",
+                "required_clusters: [kan-subgraphs-a, riv-subgraphs-a]",
+                1,
+            ),
+            "evidence added without digest": lambda text: text.replace(
+                "    evidence: null\n    sha256: null",
+                "    evidence: docs/eligibility/unverified.json\n    sha256: null",
+                1,
+            ),
+        }
+        for name, mutate in mutations.items():
+            with self.subTest(name=name):
+                path.write_text(mutate(original))
+                result = self.verify()
+                self.assertNotEqual(result.returncode, 0)
+        path.write_text(original)
+
+    def test_eligibility_window_exclusive_threshold_and_truth_promotion_are_rejected(self) -> None:
+        def drift_window(contract) -> None:
+            contract["eligibility"]["required_forecast_windows_hours"] = [24, 48]
+
+        def weaken_exclusive_threshold(contract) -> None:
+            contract["eligibility"]["minimum_eta_days_exclusive"] = 27
+
+        def promote_eligibility_truth(contract) -> None:
+            contract["truth_boundary"]["eligibility_complete"] = True
+
+        self.assert_contract_mutations_rejected(
+            {
+                "forecast window drift": drift_window,
+                "exclusive greater-than-28-day rule drift": weaken_exclusive_threshold,
+                "eligibility truth promoted": promote_eligibility_truth,
+            }
+        )
 
     def test_cross_target_diff_drift_is_rejected_after_contract_relock(self) -> None:
         profile = self.load_profile()

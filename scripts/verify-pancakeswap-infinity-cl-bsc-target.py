@@ -617,12 +617,31 @@ def verify_exact_source_build(
 def verify_binding(root: Path) -> None:
     binding = yaml.safe_load((root / BINDING_PATH).read_text())
     if (
-        binding.get("deployment") != EXPECTED_DEPLOYMENT
+        not isinstance(binding, dict)
+        or binding.get("deployment") != EXPECTED_DEPLOYMENT
+        or binding.get("family") != "pancakeswap-infinity-cl-bsc"
+        or binding.get("chain") != "bsc"
         or binding.get("milestone") != "M5"
+        or binding.get("market_snapshot")
+        != {
+            "measured_at": "2026-08-31T17:20:00Z",
+            "queries_24h": 25405,
+            "query_fees_grt_24h": "30.041",
+            "authority": "https://github.com/pinax-network/substreams-backfills/issues/83",
+        }
+        or any(
+            field != "market_snapshot"
+            and (
+                field.startswith(("market_", "qos_", "query_fee"))
+                or "grt" in field
+                or field in {"queries_24h", "query_count_24h", "fees_24h"}
+            )
+            for field in binding
+        )
         or binding.get("eligibility", {}).get("latest", {}).get("decision") != "indeterminate"
         or binding.get("eligibility", {}).get("latest", {}).get("reason") != "no_fresh_evidence"
     ):
-        fail("Pancake target binding, M5 milestone, or fail-closed eligibility drift")
+        fail("Pancake target binding, M5 market snapshot, or fail-closed eligibility drift")
 
 
 def verify(root: Path, lock_path: Path, exact_source_root: Path | None = None) -> None:

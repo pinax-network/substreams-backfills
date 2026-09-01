@@ -4,10 +4,38 @@
   "title": "Substreams backfill target binding",
   "type": "object",
   "required": ["deployment", "family", "chain", "eligibility"],
+  "propertyNames": {
+    "not": {
+      "pattern": "^(market_(?!snapshot$)|qos_|query_fee|queries_24h$|query_count_24h$|fees_24h$|.*grt.*)"
+    }
+  },
   "properties": {
     "deployment": {"type": "string", "pattern": "^Qm[1-9A-HJ-NP-Za-km-z]{44}$"},
     "family": {"type": "string", "minLength": 1},
     "chain": {"type": "string", "minLength": 1},
+    "market_qpd": false,
+    "qos_snapshot_at": false,
+    "signal_grt": false,
+    "market_snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["measured_at", "queries_24h", "query_fees_grt_24h", "authority"],
+      "properties": {
+        "measured_at": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+        },
+        "queries_24h": {"type": "integer", "minimum": 0},
+        "query_fees_grt_24h": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+        },
+        "authority": {
+          "type": "string",
+          "pattern": "^https://github\\.com/pinax-network/substreams-backfills/issues/[1-9][0-9]*$"
+        }
+      }
+    },
     "eligibility": {
       "type": "object",
       "additionalProperties": false,

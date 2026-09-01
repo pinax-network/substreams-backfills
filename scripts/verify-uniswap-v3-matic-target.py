@@ -17,6 +17,7 @@ import yaml
 LOCK_PATH = Path("docs/provenance/uniswap-v3-matic-target.json")
 PROFILE_PATH = Path("uniswap-v3-matic/layout-profile-v1.json")
 EXPECTED_DEPLOYMENT = "QmWqwrVtcTzZzbTLGLgiRSQzbZ7MTH53VwqK4AxXVmf7n3"
+BINDING_PATH = Path(f"uniswap-v3-matic/{EXPECTED_DEPLOYMENT}.yaml")
 EXPECTED_SCHEMA = "QmVYKvi799Cpg4WVXjhSWjRXNcNg4p1JQxj1WBdbcfHvoq"
 EXPECTED_QMA8_SCHEMA = "Qma8a81T9XoX5Pbkrk8J3kxMhWdXJzFSYZge1wGi3QZBru"
 EXPECTED_SOURCE_STATUS = "exact_reproduction"
@@ -84,6 +85,12 @@ EXPECTED_BEHAVIOR_SOURCE_PATHS = [
 EXPECTED_BEHAVIOR_SOURCE_LOCK_SHA256 = (
     "6444ef3af35d15445a86056f65db9aca24c29d94e468e76c95f018609fcdb0aa"
 )
+EXPECTED_MARKET_SNAPSHOT = {
+    "measured_at": "2026-08-31T17:20:00Z",
+    "queries_24h": 386433,
+    "query_fees_grt_24h": "471.970",
+    "authority": "https://github.com/pinax-network/substreams-backfills/issues/83",
+}
 
 EXPECTED_REQUIRED_CHANGES = [
     "matic_chain_config_and_factory_start_block",
@@ -1255,6 +1262,32 @@ def verify_exact_source_build(
             fail(f"installed exact source toolchain drift: {key}")
 
 
+def verify_binding(root: Path) -> None:
+    binding = yaml.safe_load((root / BINDING_PATH).read_text())
+    if (
+        not isinstance(binding, dict)
+        or binding.get("deployment") != EXPECTED_DEPLOYMENT
+        or binding.get("family") != "uniswap-v3-matic"
+        or binding.get("chain") != "matic"
+        or binding.get("milestone") != "M4"
+        or binding.get("market_snapshot") != EXPECTED_MARKET_SNAPSHOT
+        or any(
+            field != "market_snapshot"
+            and (
+                field.startswith(("market_", "qos_", "query_fee"))
+                or "grt" in field
+                or field in {"queries_24h", "query_count_24h", "fees_24h"}
+            )
+            for field in binding
+        )
+        or binding.get("eligibility", {}).get("latest", {}).get("decision")
+        != "indeterminate"
+        or binding.get("eligibility", {}).get("latest", {}).get("reason")
+        != "no_fresh_evidence"
+    ):
+        fail("Matic binding, M4 market snapshot, or fail-closed eligibility drift")
+
+
 def verify(root: Path, lock_path: Path, exact_source_root: Path | None = None) -> None:
     lock = load_json(root / lock_path)
     if not isinstance(lock, dict) or lock.get("format_version") != 1:
@@ -1268,6 +1301,7 @@ def verify(root: Path, lock_path: Path, exact_source_root: Path | None = None) -
     verify_schema(root, lock, artifacts, qma8_reference)
     verify_profile(root, lock, artifacts, qma8_reference)
     verify_source_pin(lock, artifacts)
+    verify_binding(root)
     if exact_source_root is not None:
         verify_exact_source_build(root, exact_source_root.resolve(), lock, artifacts)
 

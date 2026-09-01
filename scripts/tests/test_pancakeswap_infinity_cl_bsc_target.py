@@ -122,6 +122,13 @@ class PancakeInfinityClBscTargetTest(unittest.TestCase):
         binding.write_text(binding.read_text().replace("milestone: M5", "milestone: M4"))
         self.assertNotEqual(self.verify().returncode, 0)
 
+    def test_market_snapshot_contract_drift_is_rejected(self) -> None:
+        binding = self.root / "pancakeswap-infinity-cl-bsc" / BINDING_NAME
+        binding.write_text(
+            binding.read_text().replace("chain: bsc", 'chain: bsc\ngeneric_grt: "30.041"', 1)
+        )
+        self.assertNotEqual(self.verify().returncode, 0)
+
 
 if __name__ == "__main__":
     unittest.main()

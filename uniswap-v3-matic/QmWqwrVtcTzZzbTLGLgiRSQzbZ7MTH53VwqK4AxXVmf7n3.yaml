@@ -1,7 +1,11 @@
 deployment: QmWqwrVtcTzZzbTLGLgiRSQzbZ7MTH53VwqK4AxXVmf7n3
 family: uniswap-v3-matic
 chain: matic
-market_qpd: 5500000
+market_snapshot:
+  measured_at: "2026-08-31T17:20:00Z"
+  queries_24h: 386433
+  query_fees_grt_24h: "471.970"
+  authority: https://github.com/pinax-network/substreams-backfills/issues/83
 competitors: unknown
 note: kan sgd3 died disk-full ~34M blocks behind (matic shard expanded 4Ti->4.5Ti 2026-08-20); revival via backfill, not catch-up
 milestone: M4

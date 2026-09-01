@@ -3,10 +3,15 @@
 The two target deployments share schema `Qma8a81T…` and now have a complete,
 versioned configuration overlay for one shared runtime binary.
 
-| Target | Chain | Factory | Start block | Value signal |
+| Target | Chain | Factory | Start block | Historical untimestamped intake estimate |
 |---|---|---|---:|---:|
 | `QmTZ8ejX…` | Ethereum mainnet | `0x1F98431c8aD98523631AE4a59f267346ea31F984` | 12,369,621 | 11.3M queries/day |
 | `Qmb4VUcA…` | Base | `0x33128a8fC17869897dcE68Ed026d694621f6FDfD` | 1,371,679 | 2.1M queries/day |
+
+Those query-volume estimates came from the 2026-08-21 intake without a
+retained QoS payload timestamp. They are context only: neither target binding
+contains a current `market_snapshot`. Current prioritization must use a new
+provenance-bound QoS capture rather than relabeling these values.
 
 ## Imported source
 

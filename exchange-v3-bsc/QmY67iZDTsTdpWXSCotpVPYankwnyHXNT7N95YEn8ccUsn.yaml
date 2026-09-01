@@ -2,8 +2,11 @@ deployment: QmY67iZDTsTdpWXSCotpVPYankwnyHXNT7N95YEn8ccUsn
 family: exchange-v3-bsc   # schema QmP9xqULGJ…, spec 0.0.2 (oldest — check engine min-spec)
 schema: QmP9xqULGJzQE7SFKyzkgD8LEkjoy1aChCJnbNkCT4VDRi
 chain: bsc
-market_qpd: 1900000
-signal_grt: 14324
+market_snapshot:
+  measured_at: "2026-08-31T17:20:00Z"
+  queries_24h: 73997
+  query_fees_grt_24h: "171.957"
+  authority: https://github.com/pinax-network/substreams-backfills/issues/83
 competitors: 2   # ellipfra 112k + 7k straggler
 note: offchain sync also running (riv sgd5281 bsc_fast + kan sgd5305)
 milestone: M6

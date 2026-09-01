@@ -130,6 +130,13 @@ class ExchangeV3BscTargetTest(unittest.TestCase):
         binding.write_text(binding.read_text().replace("milestone: M6", "milestone: M4"))
         self.assertNotEqual(self.verify().returncode, 0)
 
+    def test_market_snapshot_contract_drift_is_rejected(self) -> None:
+        binding = self.root / "exchange-v3-bsc" / BINDING_NAME
+        binding.write_text(
+            binding.read_text().replace("chain: bsc", 'chain: bsc\ngrt_24h: "171.957"', 1)
+        )
+        self.assertNotEqual(self.verify().returncode, 0)
+
 
 if __name__ == "__main__":
     unittest.main()

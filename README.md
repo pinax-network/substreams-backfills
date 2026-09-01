@@ -46,6 +46,12 @@ only after this gate passes.
   exact reproducible source pin, and machine-readable semantic gap profile for M5.
   This baseline is a target contract for the V4-derived implementation, not a claim
   that a Pancake runtime or Graph Node physical parity already exists.
+- **`aerodrome-slipstream-base/`** — the immutable Aerodrome Slipstream CL Base
+  deployment closure and machine-readable static behavior profile for M7. The
+  deployed manifest, schema, ABIs, and mapping WASMs are content-addressed, but
+  its exact public source revision and toolchain remain unresolved; every
+  implementation, runtime, parity, backfill, production, and readiness gate is
+  therefore false.
 - **`uniswap-v3/source/`** — the source-identical Rust 1.79 import of the reviewed
   mainnet parity fork. Its history is retained at
   `upstream/uniswap-v3-qma8a81t-parity`; the surrounding family directory owns target
@@ -285,6 +291,10 @@ subgraph author's) before any allocation is opened.
 4. **M4 — Uniswap V3 Matic** (`QmWqwrVt…`).
 5. **M5 — PancakeSwap Infinity CL BSC** (`QmVjXU7y…`).
 6. **M6 — Exchange V3 BSC** (`QmY67iZD…`).
+7. **M7 — Aerodrome Slipstream CL Base** (`QmasYjyp…`): pin the exact
+   deployment closure and resolve M0 eligibility before implementing a
+   target-specific Slipstream decoder/reducer/writer. Canonical Uniswap V3 and
+   Solidly V2 packages are prior art only, not drop-in targets.
 
 Morpho Blue Base remains outside implementation while either its 24-hour or 72-hour net
 catch-up forecast is at or below 28 days. No milestone grants production activation: every

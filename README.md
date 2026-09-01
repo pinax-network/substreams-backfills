@@ -60,6 +60,11 @@ only after this gate passes.
   target Factory/dynamic-Pair filtering. M8 orders the work while M0 eligibility remains
   indeterminate; source-revision, implementation, runtime, parity, backfill, production,
   and readiness gates remain false.
+- **`messari-v3/`** — the combined immutable M9 baseline for PancakeSwap V3 BSC
+  and Uniswap V3 Base. It retains both exact manifests and their 26-artifact
+  closures, binds schema, ABI, full WASM export, handler, and malformed
+  `mapping.entities` differences, and keeps source reproduction, eligibility,
+  implementation, runtime, parity, backfill, deployment, and readiness false.
 - **`uniswap-v3/source/`** — the source-identical Rust 1.79 import of the reviewed
   mainnet parity fork. Its history is retained at
   `upstream/uniswap-v3-qma8a81t-parity`; the surrounding family directory owns target
@@ -316,6 +321,19 @@ subgraph author's) before any allocation is opened.
    only: the generic V2 extractor is decoder prior art, not a Graph-compatible writer, and
    implementation, compute, and load stop whenever either fastest-healthy 24-hour or 72-hour
    path in either required cluster is at or below 28 days.
+9. **M9 — Messari V3 BSC + Base**: the dependency DAG is
+   `#85 + #94 -> #90 -> #92 -> #95`. Both target locks precede shared
+   implementation, and BSC certification precedes Base certification. Complete the
+   PancakeSwap V3 BSC target lock in
+   [#85](https://github.com/pinax-network/substreams-backfills/issues/85) and the
+   Uniswap V3 Base target lock in
+   [#94](https://github.com/pinax-network/substreams-backfills/issues/94) before the shared
+   implementation and target adapters in
+   [#90](https://github.com/pinax-network/substreams-backfills/issues/90); then certify and
+   land BSC first in [#92](https://github.com/pinax-network/substreams-backfills/issues/92),
+   followed by Base in [#95](https://github.com/pinax-network/substreams-backfills/issues/95).
+   Shared schema shape never substitutes for the separate target locks,
+   eligibility decisions, adapters, certifications, or paused landings.
 
 Morpho Blue Base remains outside implementation while either its 24-hour or 72-hour net
 catch-up forecast is at or below 28 days. No milestone grants production activation: every

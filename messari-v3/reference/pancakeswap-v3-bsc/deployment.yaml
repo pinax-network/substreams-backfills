@@ -1,0 +1,166 @@
+dataSources:
+  - kind: ethereum/contract
+    mapping:
+      abis:
+        - file:
+            /: /ipfs/QmabUZX7w3JJ8QaYnpuNaZ1iHteB9LfvVwk98YATUg4hVt
+          name: Pool
+        - file:
+            /: /ipfs/QmYxaKG6NxTFjcWvF4VSb9Wk9F4TKLEQZidX9aC89E5CLd
+          name: Factory
+        - file:
+            /: /ipfs/Qmcew9GU9kikcwYqemJ3x6UqXq5aMs2RBJxqUPeD5Ld5dF
+          name: TickLens
+        - file:
+            /: /ipfs/QmXuTbDkNrN27VydxbS2huvKRk62PMgUTdPDWkxcr2w7j2
+          name: ERC20
+        - file:
+            /: /ipfs/QmbHnhUFZa6qqqRyubUYhXntox1TCBxqryaBM1iNGqVJzT
+          name: ERC20SymbolBytes
+        - file:
+            /: /ipfs/QmQCP6Pdp1MqpwRv2qoPHuUTwZGy7Q3eDHg4w5kzwE9mBj
+          name: ERC20NameBytes
+      apiVersion: 0.0.6
+      entities:
+        - Token
+        - DexAmmProtocol
+        - LiquidityPool
+        - Protocol
+        - _PricesUSD
+        - _TokenTracker
+        - _LiquidityPoolAmount
+      eventHandlers:
+        - event: >-
+            PoolCreated(indexed address,indexed address,indexed
+            uint24,int24,address)
+          handler: handlePoolCreated
+      file:
+        /: /ipfs/QmNyz8Cw8ZQCMcrGA9k64TJSpxsxY6duzkJhKdz2amUQ7i
+      kind: ethereum/events
+      language: wasm/assemblyscript
+    name: Factory
+    network: bsc
+    source:
+      abi: Factory
+      address: '0x0BFbCF9fa4f9C56B0F40a671Ad40E0805A091865'
+      startBlock: 26956207
+  - kind: ethereum/contract
+    mapping:
+      abis:
+        - file:
+            /: /ipfs/QmabUZX7w3JJ8QaYnpuNaZ1iHteB9LfvVwk98YATUg4hVt
+          name: Pool
+        - file:
+            /: /ipfs/QmYxaKG6NxTFjcWvF4VSb9Wk9F4TKLEQZidX9aC89E5CLd
+          name: Factory
+        - file:
+            /: /ipfs/QmaWAco4g2iX7B9ar65RhWXUSWSs8yQCpLxBVipzcsDycb
+          name: NonFungiblePositionManager
+        - file:
+            /: /ipfs/QmXuTbDkNrN27VydxbS2huvKRk62PMgUTdPDWkxcr2w7j2
+          name: ERC20
+      apiVersion: 0.0.6
+      entities:
+        - Position
+      eventHandlers:
+        - event: 'IncreaseLiquidity(indexed uint256,uint128,uint256,uint256)'
+          handler: handleIncreaseLiquidity
+        - event: 'DecreaseLiquidity(indexed uint256,uint128,uint256,uint256)'
+          handler: handleDecreaseLiquidity
+        - event: 'Transfer(indexed address,indexed address,indexed uint256)'
+          handler: handleTransfer
+      file:
+        /: /ipfs/QmeaUSU4caeboxKLNfeMy4mjJyEND5ht3y7aAUqUnS3CoT
+      kind: ethereum/events
+      language: wasm/assemblyscript
+    name: NonFungiblePositionManager
+    network: bsc
+    source:
+      abi: NonFungiblePositionManager
+      address: '0x46A15B0b27311cedF172AB29E4f4766fbE7F4364'
+      startBlock: 26931961
+repository: 'https://github.com/messari/subgraphs'
+schema:
+  file:
+    /: /ipfs/QmSY3DAk44RGNbywjXt8PznikJkNMpoNjM8UVde3Hnhocg
+specVersion: 0.0.4
+templates:
+  - kind: ethereum/contract
+    mapping:
+      abis:
+        - file:
+            /: /ipfs/QmabUZX7w3JJ8QaYnpuNaZ1iHteB9LfvVwk98YATUg4hVt
+          name: Pool
+        - file:
+            /: /ipfs/QmYxaKG6NxTFjcWvF4VSb9Wk9F4TKLEQZidX9aC89E5CLd
+          name: Factory
+        - file:
+            /: /ipfs/QmXuTbDkNrN27VydxbS2huvKRk62PMgUTdPDWkxcr2w7j2
+          name: ERC20
+      apiVersion: 0.0.6
+      entities:
+        - LiqudityPool
+        - Token
+        - Deposit
+        - Withdraw
+        - Swap
+        - LiquidityPool
+        - DexAmmProtocol
+        - Token
+        - UsageMetricsDailySnapshot
+        - FinancialsDailySnapshot
+        - PoolDailySnapshot
+        - _PricesUSD
+        - _Account
+        - _DailyActiveAccount
+        - _TokenTracker
+        - _LiquidityPoolAmount
+      eventHandlers:
+        - event: 'Initialize(uint160,int24)'
+          handler: handleInitialize
+        - event: 'SetFeeProtocol(uint32,uint32,uint32,uint32)'
+          handler: handleSetFeeProtocol
+        - event: >-
+            Collect(indexed address,address,indexed int24,indexed
+            int24,uint128,uint128)
+          handler: handleCollectPool
+        - event: >-
+            Swap(indexed address,indexed
+            address,int256,int256,uint160,uint128,int24,uint128,uint128)
+          handler: handleSwap
+        - event: >-
+            Mint(address,indexed address,indexed int24,indexed
+            int24,uint128,uint256,uint256)
+          handler: handleMint
+        - event: >-
+            Burn(indexed address,indexed int24,indexed
+            int24,uint128,uint256,uint256)
+          handler: handleBurn
+      file:
+        /: /ipfs/QmZ8ncasTQBiLBzb9j7KKCV3Xc1zLLaqKUM9R3VkuS8f1L
+      kind: ethereum/events
+      language: wasm/assemblyscript
+    name: Pool
+    network: bsc
+    source:
+      abi: Pool
+  - kind: ethereum/contract
+    mapping:
+      abis:
+        - file:
+            /: /ipfs/QmabUZX7w3JJ8QaYnpuNaZ1iHteB9LfvVwk98YATUg4hVt
+          name: Pool
+      apiVersion: 0.0.6
+      entities:
+        - LiqudityPool
+      eventHandlers:
+        - event: 'SetFeeProtocol(uint32,uint32,uint32,uint32)'
+          handler: handleSetFeeProtocol
+      file:
+        /: /ipfs/QmZh9pwyqnVEknPgTWraJweuyy1qbwzhA2rrSq43xmdgHL
+      kind: ethereum/events
+      language: wasm/assemblyscript
+    name: PancakeSwapPool
+    network: bsc
+    source:
+      abi: Pool

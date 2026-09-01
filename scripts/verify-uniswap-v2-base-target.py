@@ -169,6 +169,8 @@ EXPECTED_M8_ROADMAP = """8. **M8 — Uniswap V2 Base** (`QmQmz5kh…`): complete
    implementation, compute, and load stop whenever either fastest-healthy 24-hour or 72-hour
    path in either required cluster is at or below 28 days."""
 
+MILESTONE_HEADING = re.compile(r"(?m)^[0-9]+\. \*\*M[0-9]+ — ")
+
 TARGET_FILES = {
     "README.md",
     f"{DEPLOYMENT}.yaml",
@@ -699,7 +701,12 @@ def verify_roadmap(root: Path) -> None:
     if readme.count(marker) != 1:
         fail("M8 roadmap entry inventory drift")
     _, tail = readme.split(marker, 1)
-    actual = marker + tail.split("\n\n", 1)[0]
+    next_milestone = MILESTONE_HEADING.search(tail)
+    if next_milestone is None:
+        section = tail.split("\n\n", 1)[0]
+    else:
+        section = tail[: next_milestone.start()].rstrip("\n")
+    actual = marker + section
     work_items = re.findall(
         r"https://github\.com/pinax-network/substreams-backfills/issues/([0-9]+)",
         actual,

@@ -1,0 +1,21 @@
+deployment: QmQjVBdmgZdjHpQsXGSC5uryWLmPkkTAunHN2AnDApZBa3
+family: messari-v3
+variant: pancakeswap-v3-bsc
+schema: QmSY3DAk44RGNbywjXt8PznikJkNMpoNjM8UVde3Hnhocg
+chain: bsc
+market_snapshot:
+  measured_at: "2026-08-31T17:20:00Z"
+  queries_24h: 143319
+  query_fees_grt_24h: "170.760"
+  authority: https://github.com/pinax-network/substreams-backfills/issues/83
+milestone: M9
+issues: [85, 90, 92]
+eligibility:
+  policy: graph-node-net-catchup-v1
+  required_clusters: [riv-subgraphs-a, kan-subgraphs-a]
+  latest:
+    decision: indeterminate
+    reason: no_fresh_evidence
+    measured_at: null
+    evidence: null
+    sha256: null

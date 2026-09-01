@@ -3,7 +3,7 @@
   "profile_id": "exchange-v3-bsc-QmY67iZD",
   "status": "immutable_target_and_exact_source_contract_only",
   "runtime_parity": false,
-  "eligibility_decision": "awaiting_same_pod_72_hour_evidence",
+  "eligibility_decision": "indeterminate_no_fresh_evidence",
   "family": "exchange-v3-bsc",
   "chain": "bsc",
   "deployment": {
@@ -299,7 +299,7 @@
     "exact_graph_node_schema_poi_vid_and_postgresql_parity_certification"
   ],
   "remaining_gates": [
-    "fresh_24_hour_and_same_pod_72_hour_graph_node_catchup_forecasts_both_greater_than_28_days",
+    "M0: fully account for both required clusters by inventorying every current copy or fresh structural absence proof; when viable healthy copies exist, independently select the minimum stable same-pod 24-hour ETA and minimum stable same-pod 72-hour ETA across all viable copies, which may be different copies, and require both minima to exceed 28 days or be non-converging; either minimum at or below 28 days stops implementation, compute, and load; with no viable copy, require fresh structural absence proof from both clusters.",
     "generic_loader_legacy_spec_0_0_2_physical_schema_and_metadata_proof",
     "certified_uniswap_v3_runtime_functional_gap_after_issues_5_and_9",
     "paused_restore_differential_validation_and_separate_operational_activation_approval"

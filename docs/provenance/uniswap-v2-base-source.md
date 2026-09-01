@@ -55,9 +55,14 @@ and has no target Factory, dynamic-Pair-membership, or start-block filter. A tar
 must replace those gaps and implement ordered Graph entity effects before parity work can
 begin.
 
-M8 orders #87, then #89, then #93, but M0 remains indeterminate. Eligibility requires the
-fastest healthy path in both required clusters to exceed 28 days or be non-converging in
-both fresh 24-hour and 72-hour windows. Any fastest-healthy window at or below 28 days stops
+M8 orders #87, then #89, then #93, but M0 remains indeterminate. Eligibility requires both
+required clusters to be fully accounted for by inventorying every current copy or supplying
+fresh structural absence proof. When viable healthy copies exist, the independently
+selected minimum stable same-pod 24-hour ETA and minimum stable same-pod 72-hour ETA across
+all viable copies must exceed 28 days or be non-converging; the minima may belong to
+different copies.
+With no viable copy, fresh structural absence proof is required from both clusters. Either
+minimum at or below 28 days stops
 implementation, compute, and load. The issue #83 market snapshot measured at
 `2026-08-31T17:20:00Z` records `780953` queries and exactly `954.416540` GRT in 24-hour
 Gateway query fees; it ranks market value and does not establish eligibility. All exact

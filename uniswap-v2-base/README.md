@@ -62,12 +62,15 @@ M0. The binding retains the issue #83 Gateway snapshot measured at
 `2026-08-31T17:20:00Z`: `780953` queries over 24 hours and exactly `954.416540` GRT in
 24-hour query fees. Market value does not establish backfill eligibility.
 
-This baseline is deliberately non-executable. M0 requires an inventory of both
-`riv-subgraphs-a` and `kan-subgraphs-a`, using each cluster's fastest healthy copy per
-window. Both fresh stable-copy 24-hour and 72-hour forecasts in both clusters must exceed
-28 days or be non-converging. If either fastest-healthy window in either cluster is at or
-below 28 days, implementation, compute, and load stop while native Graph Node syncing
-continues. Eligibility, exact source revision, source reproducibility, implementation,
+This baseline is deliberately non-executable. M0 requires both `riv-subgraphs-a` and
+`kan-subgraphs-a` to be fully accounted for by inventorying every current copy or supplying
+fresh structural absence proof. When viable healthy copies exist, the independently selected
+minimum stable same-pod 24-hour ETA and minimum stable same-pod 72-hour ETA across all
+viable copies may belong to different copies; both must exceed 28 days or be
+non-converging. If either minimum is at or below 28 days, implementation, compute, and load
+stop while native Graph Node syncing continues. With no viable copy, fresh structural
+absence proof is required from both clusters. Eligibility, exact source revision, source
+reproducibility, implementation,
 runtime, history, logical/physical/VID/PoI parity, backfill, production, readiness, and all
 three issue-completion gates remain false. No package was built, no backfill was run or
 loaded, and no Kubernetes resource was changed. Issues #87, #89, and #93 remain open.

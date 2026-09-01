@@ -23,8 +23,8 @@ EXPECTED_QMA8_SCHEMA = "Qma8a81T9XoX5Pbkrk8J3kxMhWdXJzFSYZge1wGi3QZBru"
 EXPECTED_SOURCE_STATUS = "exact_reproduction"
 EXPECTED_SOURCE_COMMIT = "d07374a05719e68a10a339f79cdfbc048807cfdc"
 EXPECTED_SOURCE_TREE = "8f5cefd138068952bee909522a0f1d88fdc87b42"
-EXPECTED_PROFILE_BYTES = 16623
-EXPECTED_PROFILE_SHA256 = "e86e826cee298f74d0f8b941b412cd15cd8bc0b9c5eef00de571cde50200985e"
+EXPECTED_PROFILE_BYTES = 17057
+EXPECTED_PROFILE_SHA256 = "dae4b26bf9ba97f4e8a83facf8494adda7f45e3cd6f330929027e73a71c288a0"
 
 EXPECTED_PROFILE_HANDLERS = {
     "Factory": [
@@ -106,7 +106,7 @@ EXPECTED_REQUIRED_CHANGES = [
 ]
 
 EXPECTED_REMAINING_GATES = [
-    "fresh_24_hour_and_same_pod_72_hour_graph_node_catchup_forecasts_both_greater_than_28_days",
+    "M0: fully account for both required clusters by inventorying every current copy or fresh structural absence proof; when viable healthy copies exist, independently select the minimum stable same-pod 24-hour ETA and minimum stable same-pod 72-hour ETA across all viable copies, which may be different copies, and require both minima to exceed 28 days or be non-converging; either minimum at or below 28 days stops implementation, compute, and load; with no viable copy, require fresh structural absence proof from both clusters.",
     "M2_ordered_blockchanges_generic_loader_and_release_contract",
     "M2_matic_physical_profile_and_loader_schema_metadata_proof",
     "M3_certified_qma8_factory_pool_handler_field_and_runtime_contract",
@@ -719,7 +719,7 @@ def verify_profile(
         or profile.get("status") != "static_target_layout_and_exact_source_behavior_profile_only"
         or profile.get("implementation_status") != "not_started"
         or profile.get("runtime_parity") is not False
-        or profile.get("eligibility_decision") != "awaiting_same_pod_72_hour_evidence"
+        or profile.get("eligibility_decision") != "indeterminate_no_fresh_evidence"
         or profile.get("family") != "uniswap-v3-matic"
         or profile.get("chain") != "matic"
     ):
@@ -1113,8 +1113,13 @@ def verify_source_pin(lock: dict[str, object], artifacts: dict[str, dict[str, ob
         fail("Matic provenance truth boundary drift")
     if lock.get("remaining_gates") != [
         (
-            "Fresh 24-hour and same-pod 72-hour Graph Node catch-up forecasts must both "
-            "remain greater than 28 days."
+            "M0: fully account for both required clusters by inventorying every current "
+            "copy or fresh structural absence proof; when viable healthy copies exist, "
+            "independently select the minimum stable same-pod 24-hour ETA and minimum "
+            "stable same-pod 72-hour ETA across all viable copies, which may be different copies, and "
+            "require both minima to exceed 28 days or be non-converging; either minimum "
+            "at or below 28 days stops implementation, compute, and load; with no viable "
+            "copy, require fresh structural absence proof from both clusters."
         ),
         "M2 must ship the ordered BlockChanges generic loader and release contract.",
         "M2 must capture and verify the Matic physical schema and loader metadata profile.",

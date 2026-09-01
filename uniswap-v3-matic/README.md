@@ -61,8 +61,14 @@ every transitive mapping source byte and Git blob before accepting the byte-exac
 
 This profile does not authorize implementation, loading, or activation. M4 still requires:
 
-1. fresh 24-hour and same-pod 72-hour evidence proving the fastest healthy Graph Node path
-   remains greater than 28 days; and
+1. fresh evidence fully accounting for both required clusters by inventorying every current
+   copy or supplying fresh structural absence proof; when viable healthy copies exist, the
+   independently selected minimum stable same-pod 24-hour ETA and minimum stable same-pod
+   72-hour ETA, which may belong to different copies, must both exceed 28 days or be
+   non-converging;
+   either minimum at or below 28 days stops implementation, compute, and load; if no viable
+   copy exists anywhere, eligibility requires fresh structural absence proof from both
+   clusters; and
 2. the M2 ordered loader, Matic physical schema profile, and certification harness;
 3. a certified M3 Factory/Pool handler, field-writer, runtime-population, and absence
    contract;

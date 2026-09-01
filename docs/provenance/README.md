@@ -12,8 +12,12 @@ Do not rewrite a record merely to match unexpected local output.
 non-reproducible source search. Its adjacent source note explains why the behavioral source
 candidate and generic event decoder are evidence inputs rather than an exact source,
 implementation, or readiness claim. M8 orders #87, #89, and #93; M0 eligibility remains
-indeterminate and fail-closed under the both-cluster 24-hour/72-hour greater-than-28-day
-rule.
+indeterminate and fail-closed until both required clusters are fully accounted for and the
+independently selected minimum stable same-pod 24-hour and 72-hour ETAs across all viable
+healthy copies both exceed 28 days or are non-converging. The minima may belong to
+different copies, and either minimum at or below 28 days stops implementation, compute,
+and load. With no viable copy, eligibility requires fresh structural absence proof from
+both clusters.
 
 The
 [`uniswap-v4-engine-v0.5.0`](uniswap-v4-engine-v0.5.0/README.md)

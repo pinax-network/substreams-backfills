@@ -88,9 +88,16 @@ not exact mapping-WASM reproduction claims.
 
 ## Readiness boundary
 
-This is an immutable target/static-diff baseline only. Eligibility still
-requires fresh same-pod 24-hour and 72-hour fastest-healthy-copy forecasts,
-both greater than 28 days or non-converging. Implementation, runtime behavior,
+This is an immutable target/static-diff baseline only. Evaluate eligibility for
+each target independently; one target's result never qualifies the other. Each
+target requires both required clusters to be fully accounted for by inventorying
+every current copy or supplying fresh structural absence proof. When viable
+healthy copies exist, independently select the minimum stable same-pod 24-hour
+ETA and minimum stable same-pod 72-hour ETA across all viable copies; the minima
+may belong to different copies and must both exceed 28 days or be non-converging.
+Either minimum at or below 28 days stops implementation, compute, and load for
+that target. If no viable copy exists anywhere for that target, eligibility
+requires fresh structural absence proof from both clusters. Implementation, runtime behavior,
 Graph Store order, error behavior, logical/physical/VID/PoI parity, backfill,
 deployment, production, and readiness remain false. Issues #85 and #94 stay
 open.

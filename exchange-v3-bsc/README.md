@@ -60,8 +60,14 @@ This baseline is Part of issue #20. Issue #20 remains open. The static schema pr
 not the final functional/loader gap proof and this change does not authorize loading,
 deployment, allocation, or activation. M6 still requires:
 
-1. fresh 24-hour and same-pod 72-hour evidence proving the fastest healthy Graph Node
-   path remains greater than 28 days;
+1. fresh evidence fully accounting for both required clusters by inventorying every current
+   copy or supplying fresh structural absence proof; when viable healthy copies exist, the
+   independently selected minimum stable same-pod 24-hour ETA and minimum stable same-pod
+   72-hour ETA, which may belong to different copies, must both exceed 28 days or be
+   non-converging;
+   either minimum at or below 28 days stops implementation, compute, and load; if no viable
+   copy exists anywhere, eligibility requires fresh structural absence proof from both
+   clusters;
 2. legacy spec-0.0.2 physical-schema and metadata support in the certified generic loader;
 3. the final functional gap against the certified V3 family after issues #5 and #9; and
 4. a paused differential certificate plus separate operational approval before activation.

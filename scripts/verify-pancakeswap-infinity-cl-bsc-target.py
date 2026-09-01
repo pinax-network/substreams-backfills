@@ -34,8 +34,42 @@ EXPECTED_SOURCE_REPOSITORY = "https://github.com/NgoKimPhu/infinity-cl-subgraph"
 EXPECTED_SOURCE_COMMIT = "40b0021be04cda3e32dde8e3cf0c3397863fc0c0"
 EXPECTED_SOURCE_TREE = "b7a7778bc5c7f316cc46913b7b1d54ffcfa07c22"
 EXPECTED_SOURCE_PARENT = "e53351269ab0bb9a265ab04d71189156f3fa03a8"
-EXPECTED_PROFILE_BYTES = 9077
-EXPECTED_PROFILE_SHA256 = "372f7845b6426422d1d5b31f972ab5b40ba0106223a2b10a8cf6b55115671d86"
+EXPECTED_PROFILE_BYTES = 9514
+EXPECTED_PROFILE_SHA256 = "1429527858c3d3e38a760b5739f83a7020203ad8cdac099fdde3fa0e0ee365e2"
+
+EXPECTED_M0_GATE = (
+    "M0: fully account for both required clusters by inventorying every current copy "
+    "or fresh structural absence proof; when viable healthy copies exist, independently "
+    "select the minimum stable same-pod 24-hour ETA and minimum stable same-pod 72-hour ETA across all "
+    "viable copies, which may be different copies, and require both minima to exceed 28 "
+    "days or be non-converging; either minimum at or below 28 days stops implementation, "
+    "compute, and load; with no viable copy, require fresh structural absence proof from "
+    "both clusters."
+)
+
+EXPECTED_PROFILE_REMAINING_GATES = [
+    EXPECTED_M0_GATE,
+    "profile_driven_decoder_store_reducer_poi_writer_and_schema_implementation",
+    "canonical_bsc_fixture_and_full_graph_node_differential_certification",
+    "paused_restore_validation_and_separate_operational_activation_approval",
+]
+
+EXPECTED_LOCK_REMAINING_GATES = [
+    EXPECTED_M0_GATE,
+    (
+        "Implement the profile-driven Pancake decoder, protobuf contract, Store "
+        "packages, reducer, POI, temporal writer, seed/replay, and schema paths "
+        "without changing the certified Uniswap V4 deployment."
+    ),
+    (
+        "Capture canonical BSC event and metadata fixtures and prove complete Graph "
+        "Node entity, save-order, POI, VID, block-range, and PostgreSQL parity."
+    ),
+    (
+        "Restore only into a disposable paused target and require separate operational "
+        "approval before allocation or activation."
+    ),
+]
 
 EXPECTED_TOOLCHAIN = {
     "node": "24.13.1",
@@ -466,7 +500,7 @@ def verify_profile(root: Path, lock: dict[str, object]) -> None:
         fail("Pancake BSC pricing configuration drift")
     if profile.get("uniswap_v4_prior_art", {}).get("required_target_changes") != EXPECTED_REQUIRED_CHANGES:
         fail("complete Pancake implementation-gap list drift")
-    if len(profile.get("remaining_gates", [])) != 4:
+    if profile.get("remaining_gates") != EXPECTED_PROFILE_REMAINING_GATES:
         fail("Pancake remaining gate list drift")
 
 
@@ -652,8 +686,8 @@ def verify(root: Path, lock_path: Path, exact_source_root: Path | None = None) -
         lock.get("family") != "pancakeswap-infinity-cl-bsc"
         or lock.get("implementation_status") != "immutable_target_and_exact_source_baseline_only"
         or lock.get("runtime_parity") is not False
-        or lock.get("eligibility_decision") != "awaiting_same_pod_72_hour_evidence"
-        or len(lock.get("remaining_gates", [])) != 4
+        or lock.get("eligibility_decision") != "indeterminate_no_fresh_evidence"
+        or lock.get("remaining_gates") != EXPECTED_LOCK_REMAINING_GATES
     ):
         fail("Pancake baseline status, runtime-parity refusal, or remaining gates drift")
     artifacts = verify_artifact_lock(root, lock)

@@ -265,7 +265,7 @@
     ]
   },
   "remaining_gates": [
-    "fresh_24_hour_and_same_pod_72_hour_graph_node_catchup_forecasts_both_greater_than_28_days",
+    "M0: fully account for both required clusters by inventorying every current copy or fresh structural absence proof; when viable healthy copies exist, independently select the minimum stable same-pod 24-hour ETA and minimum stable same-pod 72-hour ETA across all viable copies, which may be different copies, and require both minima to exceed 28 days or be non-converging; either minimum at or below 28 days stops implementation, compute, and load; with no viable copy, require fresh structural absence proof from both clusters.",
     "profile_driven_decoder_store_reducer_poi_writer_and_schema_implementation",
     "canonical_bsc_fixture_and_full_graph_node_differential_certification",
     "paused_restore_validation_and_separate_operational_activation_approval"

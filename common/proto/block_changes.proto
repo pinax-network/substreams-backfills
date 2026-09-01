@@ -1,0 +1,215 @@
+syntax = "proto3";
+
+package pinax.graph.backfill.v1;
+
+// BlockChanges is the family-neutral, Graph-Node-faithful block boundary.
+// Operations retain exact PoI-event order and are never coalesced. The
+// contract string is fixed by this v1 schema and its fail-closed validator.
+message BlockChanges {
+  string contract = 1;
+
+  // SHA-256 of the producer compatibility descriptor. The descriptor binds
+  // the deployment artifacts, Graph Node semantics, producer, adapter,
+  // deterministic-error policy, and expected PoI causality region.
+  bytes compatibility_id = 2;
+
+  uint64 block_number = 3;
+  bytes block_hash = 4;
+
+  // True exactly when Graph Node started at least one mapping handler for
+  // this block. Offchain-only handlers can make this true while the PoI region
+  // list remains empty because Graph Node intentionally ignores their PoI.
+  bool mapping_triggered = 5;
+
+  // Sorted unique set of PoI streams started for this block. Graph Node v0.44
+  // has one `ethereum/{network}` stream per deployment, bound by the expected
+  // compatibility profile. The field preserves an onchain
+  // empty-but-triggered stream and excludes ignored offchain handlers.
+  repeated string triggered_poi_causality_regions = 6;
+
+  repeated EntityOperation operations = 7;
+
+  // Manifest-level deterministic-error policy. It controls whether otherwise
+  // successful handler effects survive a block that contains an onchain
+  // deterministic error.
+  DeterministicErrorPolicy deterministic_error_policy = 8;
+}
+
+enum DeterministicErrorPolicy {
+  DETERMINISTIC_ERROR_POLICY_UNSPECIFIED = 0;
+  DETERMINISTIC_ERROR_POLICY_FATAL = 1;
+  DETERMINISTIC_ERROR_POLICY_NON_FATAL = 2;
+}
+
+message EntityOperation {
+  // Dense and zero-based within this block. It must not depend on replay
+  // segmentation or checkpoint resets.
+  uint64 operation_index = 1;
+
+  // Stable order of Graph Node's start_handler invocation within the block.
+  // Operations from one invocation share this value. Gaps are allowed for
+  // invocations that emit no operation. Dynamic-data-source rounds can invoke
+  // start_handler again for the same source trigger, so this is distinct from
+  // source_trigger_order.
+  uint64 handler_group_order = 2;
+
+  // Stable order of the matched source/blockchain trigger in its source
+  // trigger sequence. It may repeat or regress across handler groups when a
+  // dynamic data source causes matching block triggers to be reprocessed.
+  uint64 source_trigger_order = 3;
+
+  // Present when this record emits a Graph Node PoI event. It is absent for
+  // offchain store effects, whose SharedProofOfIndexing is intentionally
+  // ignored. This is distinct from EntityKey.storage_causality_region.
+  optional string poi_causality_region = 4;
+
+  // Stable zero-based index of the hosted mapping invocation within the
+  // blockchain trigger. Gaps are allowed for handlers that emit no operation.
+  // On DeterministicError this identifies the failed handler.
+  uint64 handler_order = 5;
+
+  // Causality region of the data source executing this handler. Zero is
+  // onchain and must emit PoI; positive regions are isolated offchain sources
+  // and must not emit PoI. A typed EntityKey must carry the same value.
+  sint32 source_causality_region = 6;
+
+  oneof operation {
+    SetEntity set = 7;
+    RemoveEntity remove = 8;
+    DeterministicError deterministic_error = 9;
+  }
+}
+
+message EntityKey {
+  // Storage entity type selected by the pinned schema profile. Mapping store
+  // writes target ordinary object types; SetEntity.poi_entity_type must match.
+  string entity_type = 1;
+  EntityId id = 2;
+
+  // Integer storage key/column used by Graph Node. On-chain entities use 0.
+  sint32 storage_causality_region = 3;
+}
+
+message EntityId {
+  oneof value {
+    string string = 1;
+    bytes bytes = 2;
+    sint64 int8 = 3;
+  }
+}
+
+enum StoreDisposition {
+  STORE_DISPOSITION_UNSPECIFIED = 0;
+
+  // The handler completed and this operation participated in committed
+  // in-block state. A committed remove may still target a missing entity.
+  STORE_DISPOSITION_COMMITTED = 1;
+
+  // The onchain PoI event exists, but the handler's store effect was discarded
+  // by a deterministic failure. A matching DeterministicError must terminate
+  // the same handler group. Offchain deterministic errors make the block
+  // inapplicable and therefore cannot appear in a committed BlockChanges frame.
+  STORE_DISPOSITION_DISCARDED = 2;
+
+  // The handler completed, but a deterministic error elsewhere in the block
+  // made the manifest's fatal policy discard every non-PoI store effect.
+  STORE_DISPOSITION_BLOCK_DISCARDED = 3;
+}
+
+message SetEntity {
+  EntityKey key = 1;
+
+  // Exact strings hashed by Graph Node. The Set type equals the typed storage
+  // entity type; Set IDs use the canonical display of the typed key.
+  string poi_entity_type = 2;
+  string poi_entity_id = 3;
+
+  // Exact schema-filtered Entity hashed for PoI and passed to EntityCache::set,
+  // including auto-generated id/timeseries timestamp injection, but before
+  // partial-update merging. This is not the raw AssemblyScript object.
+  repeated EntityField written_fields = 4;
+
+  // Complete schema-level, EntityCache/get-visible state after set succeeds at
+  // this individual save boundary. It is absent only when the PoI Set event was
+  // emitted but EntityCache::set then failed deterministically. A top-level
+  // Null is removed when updating an existing entity but remains get-visible
+  // when an absent/removed entity is overwritten; persistence normalization
+  // and internal VID/block columns belong to the physical profile.
+  EntityFields materialized = 5;
+
+  StoreDisposition store_disposition = 6;
+
+  // Distinguishes the two Graph Node EntityCache::set failure points whose
+  // handler effects are both discarded but whose block-global capacity/VID
+  // side effects differ. It is unspecified when materialized is present.
+  SetFailureStage failure_stage = 7;
+}
+
+enum SetFailureStage {
+  SET_FAILURE_STAGE_UNSPECIFIED = 0;
+
+  // The write-capacity check failed before capacity decrement or VID use.
+  SET_FAILURE_STAGE_BEFORE_CACHE_SIDE_EFFECTS = 1;
+
+  // Capacity was decremented and a VID was consumed before the staged update
+  // failed validation and was rolled back with the rest of the handler.
+  SET_FAILURE_STAGE_AFTER_CAPACITY_AND_VID = 2;
+}
+
+message RemoveEntity {
+  // Graph Node hashes the caller strings before resolving the schema and
+  // parsing the typed key. A discarded invalid remove can therefore lack key.
+  EntityKey key = 1;
+  string poi_entity_type = 2;
+  string poi_entity_id = 3;
+  StoreDisposition store_disposition = 4;
+}
+
+message DeterministicError {
+  // Number of earlier PoI events since this handler group's start_handler
+  // call. Graph Node hashes this count as event variant 3.
+  uint64 redacted_events = 1;
+}
+
+message EntityField {
+  string name = 1;
+  GraphValue value = 2;
+}
+
+message EntityFields {
+  repeated EntityField fields = 1;
+}
+
+message GraphValue {
+  oneof kind {
+    string string = 1;
+    sint32 int = 2;
+    sint64 int8 = 3;
+    sint64 timestamp_micros = 4;
+    BigDecimalValue big_decimal = 5;
+    bool bool = 6;
+    ListValue list = 7;
+    NullValue null = 8;
+    bytes bytes = 9;
+    BigIntValue big_int = 10;
+  }
+}
+
+message BigIntValue {
+  // Minimal two's-complement signed big-endian bytes; empty is the sole zero
+  // representation. Values must fit Graph Node's 435,412-bit limit.
+  bytes signed_be = 1;
+}
+
+message BigDecimalValue {
+  // Normalized old_bigdecimal tuple where value = coefficient * 10^-scale.
+  // The coefficient uses the same canonical representation as BigIntValue.
+  bytes coefficient_signed_be = 1;
+  sint64 scale = 2;
+}
+
+message ListValue {
+  repeated GraphValue values = 1;
+}
+
+message NullValue {}

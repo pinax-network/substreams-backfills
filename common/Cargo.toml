@@ -6,3 +6,11 @@ edition.workspace = true
 [dependencies]
 substreams.workspace = true
 prost.workspace = true
+hex.workspace = true
+num-bigint.workspace = true
+chrono.workspace = true
+sha2.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+substreams-entity-change.workspace = true

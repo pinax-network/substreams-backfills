@@ -305,10 +305,15 @@ ledgers retain their native denominators and are not globally summed. Every
 selected root is canonical in one linear ancestry through corrected Liquidity,
 and no component reseal remains. That `canonical_reseal_required=false` result
 applies only to component resealing. Merging the aggregate to `main` is
-necessary but not sufficient for canonical publication: a separate post-merge
-content-addressed publication seal must bind the exact canonical squash commit
-and tree plus successful exact-head main-push CI. Imported values, numeric or
-alias meaning, Store visibility/persistence, histories,
+necessary but not sufficient. A separate post-merge content-addressed
+publication seal is the only publication authority. The immutable aggregate
+contract keeps its own canonical-publication flag false. Effective canonical
+publication exists only when `all-handlers/v1/publication-seal.json` passes its
+separate verifier, which binds the tested candidate tree, byte-identical
+canonical squash tree, immutable contract blob, and successful exact-head
+`main` push workflow. A missing or invalid seal leaves the aggregate
+unpublished. Imported values,
+numeric or alias meaning, Store visibility/persistence, histories,
 scheduler/output/package, continuity, parity, checkpoint, backfill, deployment,
 production, and readiness remain false. This aggregate completes no additional
 #37/#38 checkbox; neither issue is closed.

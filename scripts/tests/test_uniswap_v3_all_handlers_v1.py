@@ -141,6 +141,7 @@ class AllHandlersV1Test(unittest.TestCase):
             "no issue checkbox is completed",
             "completes no issue 37 or issue 38 checkbox",
             "both issue acceptance checkboxes",
+            "not presently a canonical aggregate publication",
         )
         for relative in PUBLICATION_DOCS:
             text = (ROOT / relative).read_text()

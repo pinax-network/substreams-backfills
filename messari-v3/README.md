@@ -6,6 +6,12 @@ non-interchangeable targets:
 - PancakeSwap V3 BSC `QmQjVBdmgZdjHpQsXGSC5uryWLmPkkTAunHN2AnDApZBa3`
 - Uniswap V3 Base `QmawEzRNeDyaTgjPKb1eRrbyzxczgSHUYzvTMaMnN8jyuh`
 
+The provenance contract's top-level `issues` list is the ordered, exhaustive
+unique M9 issue set: BSC target #85, shared implementation #90, BSC
+certification #92, Base target #94, and Base certification #95. The target
+bindings retain their distinct execution chains, `[85, 90, 92]` and
+`[94, 90, 95]`; the shared issue is intentionally present in both chains.
+
 Both schemas contain 24 entities and 388 fields, but byte identity and the
 writer contract differ. BSC uses Messari schema 4.0.0, a nine-argument Swap,
 `uint32` SetFeeProtocol inputs, and a `uint32` `slot0().feeProtocol` sixth output.

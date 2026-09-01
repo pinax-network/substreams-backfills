@@ -114,6 +114,33 @@ class MessariV3TargetsTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("2 targets, 26 artifacts, 48 entity bindings", result.stdout)
 
+    def test_family_issue_linkage_is_exact_ordered_and_exhaustive(self) -> None:
+        contract = self.load_contract()
+        self.assertEqual(contract["issues"], [85, 90, 92, 94, 95])
+        self.assertEqual(contract["issues_semantics"], MODULE.FAMILY_ISSUES_SEMANTICS)
+        bindings = {item["target"]: item["value"]["issues"] for item in contract["binding_lock"]}
+        self.assertEqual(bindings["pancakeswap-v3-bsc"], [85, 90, 92])
+        self.assertEqual(bindings["uniswap-v3-base"], [94, 90, 95])
+
+    def test_family_issue_linkage_omission_reordering_and_extra_are_rejected(self) -> None:
+        path = self.root / CONTRACT_PATH
+        original = path.read_bytes()
+        mutations = {
+            "omission": [85, 90, 92, 94],
+            "reordering": [85, 92, 90, 94, 95],
+            "extra": [85, 90, 92, 94, 95, 83],
+        }
+        for name, issues in mutations.items():
+            with self.subTest(name=name):
+                path.write_bytes(original)
+                contract = self.load_contract()
+                contract["issues"] = issues
+                self.write_contract(contract)
+                result = self.verify()
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("exhaustive family issue linkage drift", result.stderr)
+        path.write_bytes(original)
+
     def test_contract_generation_is_byte_deterministic(self) -> None:
         before = {
             path: (self.root / path).read_bytes()

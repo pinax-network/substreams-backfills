@@ -36,7 +36,9 @@ production, readiness, and issue-completion gates false.
 [`messari-v3-targets-v1.json`](messari-v3-targets-v1.json) is the combined M9
 target contract for PancakeSwap V3 BSC and Uniswap V3 Base. It locks all 26
 deployed artifacts, exact manifest/schema/ABI/WASM structure, cross-target
-differences, and all-false operational gates. The accompanying
+differences, and all-false operational gates. Its ordered top-level `issues`
+list is exhaustive for M9; the per-target bindings retain their distinct BSC
+and Base execution chains. The accompanying
 [`messari-v3-source.md`](messari-v3-source.md) records the nearest pinned source
 anchors, matching malformed manifest metadata, unreproducible deleted gluegun
 dependency, and the strict source-to-WASM refusal boundary.

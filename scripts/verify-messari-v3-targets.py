@@ -23,6 +23,11 @@ SOURCE_PROVENANCE_BYTES = 2907
 SOURCE_PROVENANCE_SHA256 = "758d4c34ee7b4028a8bbebe80d554110a7dcec7159db8c1a4e7e0dee814c02f4"
 
 TARGET_ORDER = ("pancakeswap-v3-bsc", "uniswap-v3-base")
+FAMILY_ISSUES = (85, 90, 92, 94, 95)
+FAMILY_ISSUES_SEMANTICS = (
+    "ordered exhaustive unique M9 issue set: BSC target #85, shared implementation #90, "
+    "BSC certification #92, Base target #94, Base certification #95"
+)
 
 FALSE_GATES = (
     "source_revision_pinned",
@@ -1385,7 +1390,8 @@ def build_contract(state: dict[str, Any], profile: dict[str, Any]) -> dict[str, 
         "status": "immutable_target_baseline_only",
         "family": "messari-v3",
         "milestone": "M9",
-        "issues": [85, 94],
+        "issues": list(FAMILY_ISSUES),
+        "issues_semantics": FAMILY_ISSUES_SEMANTICS,
         "artifact_count": 26,
         "target_count": 2,
         "artifact_lock": [_contract_artifact_record(record) for record in state["artifact_records"]],
@@ -1428,6 +1434,8 @@ def verify_committed(root: Path, state: dict[str, Any] | None = None) -> tuple[d
     contract_path = root / CONTRACT_PATH
     actual_contract = load_json(contract_path)
     require(contract_path.read_text() == render(actual_contract), "Messari V3 provenance contract byte rendering drift")
+    require(actual_contract.get("issues") == list(FAMILY_ISSUES), "Messari V3 exhaustive family issue linkage drift")
+    require(actual_contract.get("issues_semantics") == FAMILY_ISSUES_SEMANTICS, "Messari V3 family issue linkage semantics drift")
     require(canonical_bytes(actual_contract) == canonical_bytes(expected_contract), "Messari V3 provenance contract differs from retained artifacts")
     require(all(actual_contract["truth_boundary"][gate] is False for gate in FALSE_GATES), "Messari V3 false gate promoted")
     return expected_contract, expected_profile

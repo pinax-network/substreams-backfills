@@ -3201,8 +3201,12 @@
   "format_version": 1,
   "issues": [
     85,
-    94
+    90,
+    92,
+    94,
+    95
   ],
+  "issues_semantics": "ordered exhaustive unique M9 issue set: BSC target #85, shared implementation #90, BSC certification #92, Base target #94, Base certification #95",
   "layout_profile": {
     "bytes": 417935,
     "canonical_sha256": "065482151ea9b8b768cb8e79d38c9f0edaae300d1d6f9d7bb65a52e77fe83f0f",

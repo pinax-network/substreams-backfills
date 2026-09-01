@@ -321,6 +321,16 @@ subgraph author's) before any allocation is opened.
    only: the generic V2 extractor is decoder prior art, not a Graph-compatible writer, and
    implementation, compute, and load stop whenever either fastest-healthy 24-hour or 72-hour
    path in either required cluster is at or below 28 days.
+9. **M9 — Messari V3 BSC + Base**: complete PancakeSwap V3 BSC
+   [#85](https://github.com/pinax-network/substreams-backfills/issues/85) →
+   [#90](https://github.com/pinax-network/substreams-backfills/issues/90) →
+   [#92](https://github.com/pinax-network/substreams-backfills/issues/92) before
+   Uniswap V3 Base
+   [#94](https://github.com/pinax-network/substreams-backfills/issues/94) →
+   [#90](https://github.com/pinax-network/substreams-backfills/issues/90) →
+   [#95](https://github.com/pinax-network/substreams-backfills/issues/95).
+   Shared schema shape never substitutes for the separate target locks,
+   eligibility decisions, adapters, certifications, or paused landings.
 
 Morpho Blue Base remains outside implementation while either its 24-hour or 72-hour net
 catch-up forecast is at or below 28 days. No milestone grants production activation: every

@@ -8,9 +8,10 @@ successful ``main`` push workflow at the canonical aggregate commit.  It
 promotes only the effective aggregate publication root; it does not modify or
 reinterpret any semantic, runtime, parity, backfill, delivery, or issue gate.
 
-The four values marked ``None`` below must be filled from the real PR #100
-squash merge and its completed canonical workflow before a seal can verify.
-Leaving any one unset is an intentional fail-closed preparation state.
+The four production pins below were captured from canonical PR #100 squash and
+main-push evidence.  They bind its exact commit, parent, workflow run, and seal
+payload digest.  Configuration remains fail closed: any unset pin prevents a
+seal from verifying.
 """
 
 from __future__ import annotations
@@ -42,10 +43,10 @@ CONTRACT_TRUTH_BOUNDARY_SHA256 = "d45d3bf272471a7ebe28840317e2b51e4fa464a92b85b7
 
 # Fill only after the tested PR #100 head is squash-merged and its exact
 # canonical main-push workflow has completed successfully.
-EXPECTED_CANONICAL_AGGREGATE_COMMIT: str | None = None
-EXPECTED_CANONICAL_AGGREGATE_PARENT: str | None = None
-EXPECTED_CANONICAL_MAIN_PUSH_RUN_ID: int | None = None
-EXPECTED_PAYLOAD_CANONICAL_SHA256: str | None = None
+EXPECTED_CANONICAL_AGGREGATE_COMMIT: str | None = "9edaa39f612bb5a1d3a6559b2adf816ae2da56fc"
+EXPECTED_CANONICAL_AGGREGATE_PARENT: str | None = "09555b21c1a18767107b92ae7bef20dfb2da77c2"
+EXPECTED_CANONICAL_MAIN_PUSH_RUN_ID: int | None = 33451016360
+EXPECTED_PAYLOAD_CANONICAL_SHA256: str | None = "4529dc81ec1a692358767dde84793f6b8d092b89d09514105ecf774e823900da"
 
 EXPECTED_REPOSITORY = "pinax-network/substreams-backfills"
 EXPECTED_WORKFLOW_NAME = "ci"

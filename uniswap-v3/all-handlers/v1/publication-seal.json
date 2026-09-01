@@ -1,0 +1,205 @@
+{
+  "format_version": 1,
+  "payload": {
+    "candidate_anchor": {
+      "head": "ebac0f4c72cf564aee21a34c54e90bc0b0777145",
+      "pull_request_number": 100,
+      "tree": "e96f0956e76d136664db58e0d210851af38c2c87"
+    },
+    "canonical_aggregate": {
+      "candidate_tree_identical": true,
+      "parent": "09555b21c1a18767107b92ae7bef20dfb2da77c2",
+      "squash_commit": "9edaa39f612bb5a1d3a6559b2adf816ae2da56fc",
+      "tree": "e96f0956e76d136664db58e0d210851af38c2c87"
+    },
+    "canonical_main_push_ci": {
+      "branch": "main",
+      "conclusion": "success",
+      "dedicated_all_handlers_validation_step": {
+        "completed_at": "2026-08-31T23:42:16Z",
+        "conclusion": "success",
+        "job_id": 99680691165,
+        "job_name": "build",
+        "name": "Verify candidate complete Uniswap V3 all-handlers v1 matrix",
+        "number": 26,
+        "started_at": "2026-08-31T23:39:08Z",
+        "status": "completed"
+      },
+      "event": "push",
+      "head_sha": "9edaa39f612bb5a1d3a6559b2adf816ae2da56fc",
+      "job_window_completed_at": "2026-09-01T00:28:40Z",
+      "job_window_started_at": "2026-08-31T23:31:14Z",
+      "jobs": [
+        {
+          "completed_at": "2026-09-01T00:23:57Z",
+          "conclusion": "success",
+          "job_id": 99680691165,
+          "name": "build",
+          "started_at": "2026-08-31T23:31:14Z",
+          "status": "completed",
+          "step_counts": {
+            "failed": 0,
+            "skipped": 0,
+            "successful": 46,
+            "total": 46
+          }
+        },
+        {
+          "completed_at": "2026-08-31T23:32:20Z",
+          "conclusion": "success",
+          "job_id": 99680691406,
+          "name": "exchange-v3-bsc-reference",
+          "started_at": "2026-08-31T23:31:15Z",
+          "status": "completed",
+          "step_counts": {
+            "failed": 0,
+            "skipped": 0,
+            "successful": 11,
+            "total": 11
+          }
+        },
+        {
+          "completed_at": "2026-08-31T23:32:04Z",
+          "conclusion": "success",
+          "job_id": 99680691605,
+          "name": "pancakeswap-infinity-cl-bsc-reference",
+          "started_at": "2026-08-31T23:31:14Z",
+          "status": "completed",
+          "step_counts": {
+            "failed": 0,
+            "skipped": 0,
+            "successful": 11,
+            "total": 11
+          }
+        },
+        {
+          "completed_at": "2026-08-31T23:32:23Z",
+          "conclusion": "success",
+          "job_id": 99680691464,
+          "name": "uniswap-v3-matic-reference",
+          "started_at": "2026-08-31T23:31:14Z",
+          "status": "completed",
+          "step_counts": {
+            "failed": 0,
+            "skipped": 0,
+            "successful": 10,
+            "total": 10
+          }
+        },
+        {
+          "completed_at": "2026-09-01T00:28:40Z",
+          "conclusion": "success",
+          "job_id": 99680691679,
+          "name": "uniswap-v3-reference",
+          "started_at": "2026-08-31T23:31:14Z",
+          "status": "completed",
+          "step_counts": {
+            "failed": 0,
+            "skipped": 0,
+            "successful": 84,
+            "total": 84
+          }
+        },
+        {
+          "completed_at": "2026-08-31T23:38:14Z",
+          "conclusion": "success",
+          "job_id": 99680691436,
+          "name": "uniswap-v4-reference",
+          "started_at": "2026-08-31T23:31:14Z",
+          "status": "completed",
+          "step_counts": {
+            "failed": 0,
+            "skipped": 0,
+            "successful": 18,
+            "total": 18
+          }
+        }
+      ],
+      "repository": "pinax-network/substreams-backfills",
+      "run_attempt": 1,
+      "run_id": 33451016360,
+      "run_url": "https://github.com/pinax-network/substreams-backfills/actions/runs/33451016360",
+      "status": "completed",
+      "summary": {
+        "jobs_failed": 0,
+        "jobs_skipped": 0,
+        "jobs_successful": 6,
+        "jobs_total": 6,
+        "steps_failed": 0,
+        "steps_skipped": 0,
+        "steps_successful": 180,
+        "steps_total": 180
+      },
+      "workflow_name": "ci",
+      "workflow_path": ".github/workflows/ci.yaml"
+    },
+    "publication_truth": {
+      "effective_canonical_aggregate_publication_root_complete": true,
+      "issue_effect": {
+        "37": {
+          "checkboxes_completed_by_this_seal": [],
+          "issue_closed": false
+        },
+        "38": {
+          "checkboxes_completed_by_this_seal": [],
+          "issue_closed": false
+        }
+      },
+      "post_merge_aggregate_publication_seal_complete": true,
+      "sealed_contract_canonical_publication_root_complete": false,
+      "sealed_contract_post_merge_publication_seal_required": true,
+      "semantic_promotions": [],
+      "third_order_publication_seal_required": false,
+      "unchanged_false_gates": {
+        "arbitrary_alias_safety_complete": false,
+        "backfill_ready": false,
+        "boundary_continuity_proven": false,
+        "checkpoint_authority_complete": false,
+        "combined_handler_scheduler_implemented": false,
+        "complete_entity_histories": false,
+        "deployment_ready": false,
+        "global_flattened_event_order_proven": false,
+        "graph_store_persistence_proven": false,
+        "graph_store_rollback_proven": false,
+        "graph_store_visibility_or_version_proven": false,
+        "imported_host_semantics_rederived": false,
+        "imported_numeric_or_comparator_semantics_rederived": false,
+        "issue_37_acceptance_criterion_completed": false,
+        "issue_38_acceptance_criterion_completed": false,
+        "issue_checkbox_completed": false,
+        "issue_closed": false,
+        "logical_parity_proven": false,
+        "no_setter_means_preserved_or_unchanged": false,
+        "output_or_graph_out_complete": false,
+        "package_consumer_complete": false,
+        "physical_or_poi_parity_proven": false,
+        "post_fatal_execution_complete": false,
+        "production_ready": false,
+        "provider_or_graph_oracle_compared": false,
+        "query_visibility_complete": false,
+        "readiness_complete": false,
+        "required_nonempty_certified": false,
+        "runtime_population_complete": false,
+        "shared_entity_last_writer_complete": false,
+        "source_package_identity_proven": false,
+        "store_consumer_complete": false,
+        "target_runtime_identity_proven": false,
+        "transaction_last_writer_complete": false,
+        "uniform_setter_store_branch_correlation_proven": false,
+        "uniform_setter_store_common_execution_path_proven": false,
+        "uniform_setter_store_receiver_must_alias_proven": false,
+        "uniform_setter_to_matching_store_path_proven": false
+      }
+    },
+    "sealed_contract": {
+      "byte_length": 14769915,
+      "canonical_json_sha256": "9184573f56492131e803bfaf77f5e42ecaccb9fe388f5b71bc78ff35b992976f",
+      "git_blob": "d34393070324970f758b38b2cc80e4e533f6f1ae",
+      "path": "uniswap-v3/all-handlers/v1/contract.json",
+      "raw_sha256": "04d0608da305bcd6575a9f9e02711d21cc3aaa7362701d85763d23afe9881fd0",
+      "truth_boundary_canonical_sha256": "d45d3bf272471a7ebe28840317e2b51e4fa464a92b85b7f8c5672555227280fb"
+    }
+  },
+  "payload_canonical_sha256": "4529dc81ec1a692358767dde84793f6b8d092b89d09514105ecf774e823900da",
+  "seal_version": "uniswap-v3-all-handlers/v1/publication-seal/v1"
+}

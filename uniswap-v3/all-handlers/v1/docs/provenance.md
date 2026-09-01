@@ -41,11 +41,11 @@ verifier requires the exact linked commit, parent, tree, run, and payload digest
 <!-- publication-seal-record:start -->
 - tested PR #100 candidate commit: [`ebac0f4c72cf564aee21a34c54e90bc0b0777145`](https://github.com/pinax-network/substreams-backfills/commit/ebac0f4c72cf564aee21a34c54e90bc0b0777145)
 - tested candidate tree: [`e96f0956e76d136664db58e0d210851af38c2c87`](https://github.com/pinax-network/substreams-backfills/tree/ebac0f4c72cf564aee21a34c54e90bc0b0777145)
-- canonical aggregate squash commit: [`{{EXPECTED_CANONICAL_AGGREGATE_COMMIT}}`](https://github.com/pinax-network/substreams-backfills/commit/{{EXPECTED_CANONICAL_AGGREGATE_COMMIT}})
-- canonical aggregate parent: [`{{EXPECTED_CANONICAL_AGGREGATE_PARENT}}`](https://github.com/pinax-network/substreams-backfills/commit/{{EXPECTED_CANONICAL_AGGREGATE_PARENT}})
-- canonical aggregate tree: [`e96f0956e76d136664db58e0d210851af38c2c87`](https://github.com/pinax-network/substreams-backfills/tree/{{EXPECTED_CANONICAL_AGGREGATE_COMMIT}}) (byte-identical to the tested candidate tree)
-- canonical exact-head `main` push run: [`{{EXPECTED_CANONICAL_MAIN_PUSH_RUN_ID}}`](https://github.com/pinax-network/substreams-backfills/actions/runs/{{EXPECTED_CANONICAL_MAIN_PUSH_RUN_ID}})
-- seal payload canonical SHA-256: `{{EXPECTED_PAYLOAD_CANONICAL_SHA256}}`
+- canonical aggregate squash commit: [`9edaa39f612bb5a1d3a6559b2adf816ae2da56fc`](https://github.com/pinax-network/substreams-backfills/commit/9edaa39f612bb5a1d3a6559b2adf816ae2da56fc)
+- canonical aggregate parent: [`09555b21c1a18767107b92ae7bef20dfb2da77c2`](https://github.com/pinax-network/substreams-backfills/commit/09555b21c1a18767107b92ae7bef20dfb2da77c2)
+- canonical aggregate tree: [`e96f0956e76d136664db58e0d210851af38c2c87`](https://github.com/pinax-network/substreams-backfills/tree/9edaa39f612bb5a1d3a6559b2adf816ae2da56fc) (byte-identical to the tested candidate tree)
+- canonical exact-head `main` push run: [`33451016360`](https://github.com/pinax-network/substreams-backfills/actions/runs/33451016360)
+- seal payload canonical SHA-256: `4529dc81ec1a692358767dde84793f6b8d092b89d09514105ecf774e823900da`
 <!-- publication-seal-record:end -->
 
 ## Component roots

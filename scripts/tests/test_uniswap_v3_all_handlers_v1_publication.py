@@ -219,6 +219,21 @@ class AllHandlersV1PublicationSealTest(unittest.TestCase):
         else:
             VERIFIER.production_expectations()
 
+    def test_00a_verifier_docstring_has_no_stale_preparation_claim(self) -> None:
+        source = VERIFIER_PATH.read_text(encoding="utf-8")
+        for stale in (
+            "values marked ``None``",
+            "must be filled from the real PR #100",
+            "intentional fail-closed preparation state",
+        ):
+            with self.subTest(stale=stale):
+                self.assertNotIn(stale, source)
+        self.assertIn(
+            "production pins below were captured from canonical PR #100",
+            source,
+        )
+        self.assertIn("any unset pin prevents a", source)
+
     def test_01_exact_synthetic_seal_passes(self) -> None:
         self.write_seal(self.seal)
         self.assertEqual(

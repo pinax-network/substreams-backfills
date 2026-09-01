@@ -14,6 +14,7 @@ REPOSITORY = Path(__file__).resolve().parents[2]
 VERIFIER = REPOSITORY / "scripts/verify-uniswap-v3-matic-target.py"
 LOCK_PATH = Path("docs/provenance/uniswap-v3-matic-target.json")
 PROFILE_PATH = Path("uniswap-v3-matic/layout-profile-v1.json")
+BINDING_NAME = "QmWqwrVtcTzZzbTLGLgiRSQzbZ7MTH53VwqK4AxXVmf7n3.yaml"
 QMA8_REFERENCE_FILES = [
     Path(
         "uniswap-v3/graft-ancestry/v1/artifacts/"
@@ -106,6 +107,13 @@ class UniswapV3MaticTargetTest(unittest.TestCase):
     def test_artifact_byte_drift_is_rejected(self) -> None:
         schema = self.root / "uniswap-v3-matic/reference/schema.graphql"
         schema.write_text(schema.read_text().replace("type Bundle", "type BundleDrift", 1))
+        self.assertNotEqual(self.verify().returncode, 0)
+
+    def test_market_snapshot_contract_drift_is_rejected(self) -> None:
+        binding = self.root / "uniswap-v3-matic" / BINDING_NAME
+        binding.write_text(
+            binding.read_text().replace("chain: matic", 'chain: matic\ngrt_24h: "471.970"', 1)
+        )
         self.assertNotEqual(self.verify().returncode, 0)
 
     def test_semantic_manifest_drift_is_rejected_even_if_relocked(self) -> None:

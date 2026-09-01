@@ -3,8 +3,6 @@ family: uniswap-v3
 display_name: Uniswap-V3
 schema: Qma8a81T9XoX5Pbkrk8J3kxMhWdXJzFSYZge1wGi3QZBru
 chain: mainnet
-market_qpd: 11300000
-signal_grt: 110000
 competitors: 5   # ellipfra top allocator
 graft:            # why ordinary deploy never resolves — full ancestry must exist locally
   - { base: QmZeCuoZeadgHkGwLwMeguyqUKz1WPWQYKcKyMCeQqGhsF, block: 19470000 }

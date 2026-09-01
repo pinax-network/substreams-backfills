@@ -2,8 +2,6 @@ deployment: QmWSfh5qnidd1tBd6FY6eDvbSQUPTNhNG7o8CUGenvbaht
 family: morpho-blue-base   # own schema QmWL6kvHgo…, 7 datasources, spec 0.0.5
 schema: QmWL6kvHgoUYezDhGLm9N2yS8AJL2zkPcFTCKimSomvXku
 chain: base
-market_qpd: 3400000
-signal_grt: 670   # query-fees-only economics
 competitors: 1    # ellipfra only
 note: ordinary offchain sync also running (riv sgd5284 base_fast + kan sgd5307) — backfill wins if sync proves months-long
 milestone: M0

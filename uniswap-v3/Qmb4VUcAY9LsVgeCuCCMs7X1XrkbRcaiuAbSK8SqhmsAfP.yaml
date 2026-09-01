@@ -3,8 +3,6 @@ family: uniswap-v3
 display_name: Uniswap V3 Base
 schema: Qma8a81T9XoX5Pbkrk8J3kxMhWdXJzFSYZge1wGi3QZBru
 chain: base
-market_qpd: 2100000
-signal_grt: 26000
 competitors: 1   # ellipfra only, 15k GRT
 graft:
   - { base: QmPWDTWRfS8XewMJhxXoQiZX6RkrUMYH7BFnnB846v6wzR, block: 19852000 }  # base is graft-free

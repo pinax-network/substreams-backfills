@@ -4,12 +4,14 @@ Per-subgraph Substreams modules that materialize graph-node deployments **at hea
 bypassing sync-from-genesis and graft-ancestry replay. This is how we enter markets that
 are otherwise locked to incumbents with custom infra.
 
-## Why this exists (2026-08-21)
+## Why this exists (historical 2026-08-21 intake)
 
-6 of The Graph network's top-40 deployments by query volume (~17M q/day combined) cannot be
-served by ordinary graph-node syncing in reasonable time:
+The initial intake identified six Graph Network deployments that appeared
+impractical to serve through ordinary Graph Node syncing. Its query-volume
+figures were untimestamped estimates and are retained below only as historical
+context; they are not current QoS authority or valid target-binding metadata.
 
-| Deployment | Chain | q/day | Blocker |
+| Deployment | Chain | historical q/day estimate | Blocker |
 |---|---|---|---|
 | `QmTZ8ejX…` **Uniswap V3 (mainnet)** | mainnet | 11.3M | graft chain back to 2021 (base @19,470,000 → base @13,605,860) |
 | `QmWSfh5q…` morpho-blue-base | base | 3.4M | ellipfra-monopoly; from-genesis sync ≈ months |
@@ -258,7 +260,9 @@ only after this gate passes.
   the mainnet + base "ERC20" targets share schema `Qma8a81T…` and are one family
   parameterized by chain/addresses/start-block).
 - **`<family>/<Qm-hash>.yaml`** — the per-deployment binding living next to its module:
-  schema hash, chain, graft ancestry, market data, sgd/shard placement per cluster.
+  immutable target identity, chain/graft facts, an optional provenance-bound market
+  snapshot, the latest digest-bound eligibility pointer, and any retained historical
+  operational context. Time-sensitive placement must be revalidated before use.
 
 ## Deployment-hash fidelity — the one invariant
 
@@ -282,7 +286,7 @@ subgraph author's) before any allocation is opened.
    schema profiles, metadata finalization, and certification harness while retaining V4 as
    a golden regression.
 3. **M3 — Uniswap V3** (`uniswap-v3`, schema `Qma8a81T…`): **mainnet variant first**
-   (`QmTZ8ejX…`, 11.3M q/day — highest QV, per operator 2026-08-21) via the
+   (`QmTZ8ejX…`, historical 11.3M q/day intake estimate from 2026-08-21) via the
    [pinax-network/substreams-uniswap-v3](https://github.com/pinax-network/substreams-uniswap-v3)
    fork; gap list in `uniswap-v3/PARITY.md`. Verified differentially, landed paused via the
    engine, activated behind a 200-GRT allocation.

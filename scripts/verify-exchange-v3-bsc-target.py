@@ -956,12 +956,28 @@ def verify_binding(root: Path) -> None:
         or binding.get("schema") != EXPECTED_SCHEMA
         or binding.get("chain") != "bsc"
         or binding.get("milestone") != "M6"
+        or binding.get("market_snapshot")
+        != {
+            "measured_at": "2026-08-31T17:20:00Z",
+            "queries_24h": 73997,
+            "query_fees_grt_24h": "171.957",
+            "authority": "https://github.com/pinax-network/substreams-backfills/issues/83",
+        }
+        or any(
+            field != "market_snapshot"
+            and (
+                field.startswith(("market_", "qos_", "query_fee"))
+                or "grt" in field
+                or field in {"queries_24h", "query_count_24h", "fees_24h"}
+            )
+            for field in binding
+        )
         or binding.get("eligibility", {}).get("latest", {}).get("decision")
         != "indeterminate"
         or binding.get("eligibility", {}).get("latest", {}).get("reason")
         != "no_fresh_evidence"
     ):
-        fail("Exchange V3 target binding, M6 milestone, or fail-closed eligibility drift")
+        fail("Exchange V3 target binding, M6 market snapshot, or fail-closed eligibility drift")
 
 
 def verify(root: Path, lock_path: Path, exact_source_root: Path | None = None) -> None:

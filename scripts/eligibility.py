@@ -6,6 +6,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import re
 from datetime import datetime, timezone
 from decimal import Decimal, ROUND_HALF_UP
 from pathlib import Path
@@ -25,6 +26,11 @@ DERIVED_WINDOW_FIELDS = {
     "eta_days",
     "eta_kind",
 }
+LEGACY_MARKET_FIELDS = {"market_qpd", "qos_snapshot_at", "signal_grt"}
+MARKET_AUTHORITY_PATTERN = re.compile(
+    r"^https://github\.com/pinax-network/substreams-backfills/issues/[1-9][0-9]*$"
+)
+MARKET_FEE_PATTERN = re.compile(r"^(?:0|[1-9][0-9]*)(?:\.[0-9]+)?$")
 
 
 class EligibilityError(ValueError):
@@ -157,6 +163,69 @@ def canonical_json(value: dict[str, Any]) -> bytes:
     return (json.dumps(value, indent=2, sort_keys=True) + "\n").encode("utf-8")
 
 
+def validate_market_metadata(binding: dict[str, Any]) -> None:
+    ambiguous = sorted(
+        field
+        for field in binding
+        if field != "market_snapshot"
+        and (
+            field in LEGACY_MARKET_FIELDS
+            or field.startswith(("market_", "qos_", "query_fee"))
+            or "grt" in field
+            or field in {"queries_24h", "query_count_24h", "fees_24h"}
+        )
+    )
+    if ambiguous:
+        raise EligibilityError(
+            "binding contains ambiguous top-level market fields: "
+            + ", ".join(ambiguous)
+        )
+
+    if "market_snapshot" not in binding:
+        return
+
+    snapshot = _mapping(binding.get("market_snapshot"), "binding.market_snapshot")
+    required = {
+        "measured_at",
+        "queries_24h",
+        "query_fees_grt_24h",
+        "authority",
+    }
+    if set(snapshot) != required:
+        raise EligibilityError(
+            "binding.market_snapshot contains missing or unknown fields"
+        )
+
+    measured_at = parse_utc(
+        snapshot.get("measured_at"), "binding.market_snapshot.measured_at"
+    )
+    if utc_text(measured_at) != snapshot["measured_at"]:
+        raise EligibilityError(
+            "binding.market_snapshot.measured_at must use canonical second-precision UTC"
+        )
+    _integer(
+        snapshot.get("queries_24h"),
+        "binding.market_snapshot.queries_24h",
+        minimum=0,
+    )
+    fees = _string(
+        snapshot.get("query_fees_grt_24h"),
+        "binding.market_snapshot.query_fees_grt_24h",
+    )
+    if not MARKET_FEE_PATTERN.fullmatch(fees):
+        raise EligibilityError(
+            "binding.market_snapshot.query_fees_grt_24h must be a non-negative "
+            "fixed-point decimal string"
+        )
+    authority = _string(
+        snapshot.get("authority"), "binding.market_snapshot.authority"
+    )
+    if not MARKET_AUTHORITY_PATTERN.fullmatch(authority):
+        raise EligibilityError(
+            "binding.market_snapshot.authority must name a repository issue"
+        )
+
+
 def validate_binding(
     binding: dict[str, Any],
     policy: dict[str, Any],
@@ -167,6 +236,7 @@ def validate_binding(
         _string(binding.get(field), f"binding.{field}")
     if binding_path is not None and binding["deployment"] not in binding_path.name:
         raise EligibilityError(f"{binding_path}: deployment does not match filename")
+    validate_market_metadata(binding)
 
     eligibility = _mapping(binding.get("eligibility"), "binding.eligibility")
     if set(eligibility) != {"policy", "required_clusters", "latest"}:

@@ -156,6 +156,59 @@ class EligibilityTest(unittest.TestCase):
     def test_empty_binding_is_fail_closed(self) -> None:
         validate_binding(binding(), self.policy)
 
+    def test_exact_market_snapshot_is_valid(self) -> None:
+        candidate = binding()
+        candidate["market_snapshot"] = {
+            "measured_at": "2026-08-31T17:20:00Z",
+            "queries_24h": 73997,
+            "query_fees_grt_24h": "171.957",
+            "authority": "https://github.com/pinax-network/substreams-backfills/issues/83",
+        }
+        validate_binding(candidate, self.policy)
+
+    def test_ambiguous_legacy_market_fields_are_rejected(self) -> None:
+        for field, value in (
+            ("market_qpd", 1900000),
+            ("qos_snapshot_at", "2026-08-31T17:20:00Z"),
+            ("signal_grt", 14324),
+            ("grt_24h", "171.957"),
+            ("generic_grt", "171.957"),
+            ("queries_24h", 73997),
+            ("query_fees_grt_24h", "171.957"),
+        ):
+            with self.subTest(field=field):
+                candidate = binding()
+                candidate[field] = value
+                with self.assertRaises(EligibilityError):
+                    validate_binding(candidate, self.policy)
+
+    def test_market_snapshot_shape_and_types_are_fail_closed(self) -> None:
+        baseline = {
+            "measured_at": "2026-08-31T17:20:00Z",
+            "queries_24h": 73997,
+            "query_fees_grt_24h": "171.957",
+            "authority": "https://github.com/pinax-network/substreams-backfills/issues/83",
+        }
+        mutations = {
+            "numeric fees": {"query_fees_grt_24h": 171.957},
+            "generic fee label": {"query_fees_grt_24h": None, "grt_24h": "171.957"},
+            "noncanonical timestamp": {"measured_at": "2026-08-31T17:20:00.000Z"},
+            "external authority": {"authority": "https://example.invalid/issues/83"},
+            "boolean queries": {"queries_24h": True},
+        }
+        for name, mutation in mutations.items():
+            with self.subTest(name=name):
+                snapshot = copy.deepcopy(baseline)
+                if mutation.get("query_fees_grt_24h", "unchanged") is None:
+                    del snapshot["query_fees_grt_24h"]
+                snapshot.update(
+                    {key: value for key, value in mutation.items() if value is not None}
+                )
+                candidate = binding()
+                candidate["market_snapshot"] = snapshot
+                with self.assertRaises(EligibilityError):
+                    validate_binding(candidate, self.policy)
+
     def test_both_windows_above_threshold_are_eligible(self) -> None:
         evidence = self.build(
             [

@@ -5,6 +5,28 @@ path is projected to take **more than 28 days** to reach chain head. This gate
 is independent of query fees and market priority: QoS decides which eligible
 target is most valuable, never whether a backfill is necessary.
 
+## Market-priority metadata
+
+When a binding retains Gateway QoS, `market_snapshot` is the only accepted
+machine-readable shape. It records the exact payload time, integer 24-hour
+query count, precision-preserving string value for 24-hour Gateway query fees,
+and the repository issue that retains the source evidence:
+
+```yaml
+market_snapshot:
+  measured_at: "2026-08-31T17:20:00Z"
+  queries_24h: 386433
+  query_fees_grt_24h: "471.970"
+  authority: https://github.com/pinax-network/substreams-backfills/issues/83
+```
+
+If the payload timestamp, aggregation window, or authority was not retained,
+the binding omits `market_snapshot`; an old estimate must not be relabeled as a
+current measurement. The validator rejects the ambiguous legacy fields
+`market_qpd`, `qos_snapshot_at`, and `signal_grt`. Gateway query fees are not
+on-chain signal; separately sourced signal metadata needs its own explicit
+contract and must never be inferred from QoS.
+
 The versioned policy is
 [`eligibility/policy-v1.yaml`](../eligibility/policy-v1.yaml). Target and
 evidence shapes are documented by the JSON Schemas under [`schemas/`](../schemas/)

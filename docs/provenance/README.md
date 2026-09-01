@@ -21,9 +21,14 @@ both clusters.
 
 The
 [`uniswap-v4-engine-v0.5.0`](uniswap-v4-engine-v0.5.0/README.md)
-directory is a closed, repository-only pre-execution capsule. Its copied JSON
-files remain byte-identical to the engine's `v0.5.0` tag; `closure.json`
-records the explicit evidence gaps and all-false operational gates.
+directory keeps two ranges separate. Its root capsule is the older,
+repository-only pre-execution reference whose copied JSON files remain
+byte-identical to the engine's `v0.5.0` tag. Its
+[`q8/`](uniswap-v4-engine-v0.5.0/q8/README.md) child pins the canonical
+prepared q8 manifests, topology contracts, and recovered compact metadata
+archive. The q8 closure records that no raw frame digest or payload,
+COPY payload, or checkpoint bytes are retained and keeps criterion 2 plus
+every operational gate false.
 
 `uniswap-v4-release-assets-v1.json` locks the two historical V4 packages that were release
 assets rather than tracked files in the imported source tree. The corresponding bytes live

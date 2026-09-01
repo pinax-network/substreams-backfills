@@ -1,5 +1,8 @@
 # IPFS objects are retained byte-for-byte; disable EOL normalization and mark only opaque formats binary.
 uniswap-v3/graft-ancestry/v1/artifacts/* binary
 artifacts/releases/uniswap-v4/**/*.spkg binary
+docs/provenance/uniswap-v4-engine-v0.5.0/q8/*.json -text
+docs/provenance/uniswap-v4-engine-v0.5.0/q8/LICENSE.source -text
+docs/provenance/uniswap-v4-engine-v0.5.0/q8/*.tar.gz binary
 messari-v3/reference/** -text
 messari-v3/reference/**/mappings/*.wasm binary

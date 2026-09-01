@@ -361,14 +361,17 @@ unrelated roadmap issues here. Run `./scripts/verify-uniswap-v4-import.sh` to pr
 imported tree, file modes, frozen package bytes, and release lock are unchanged.
 
 The repository-only
-[`v0.5.0 pre-execution reference`](docs/provenance/uniswap-v4-engine-v0.5.0/README.md)
-pins the engine OCI/binary compatibility contract and one retained 100,000-block
-certificate before any authorized replay. Its fail-closed verifier binds the
-imported Store-state SPKG to the range, canonical hashes, frame summary,
-20-table/PoI inventory, checkpoint, and historical GraphQL evidence while
-keeping every scratch, zero-writer, K3, workflow, database, and readiness gate
-false. The capsule is preparation evidence only; it is not a reproduction or
-execution certificate.
+[`v0.5.0 reference evidence`](docs/provenance/uniswap-v4-engine-v0.5.0/README.md)
+keeps two ranges separate. The older root capsule pins the engine compatibility
+contract and retained `32,374,155..32,474,154` pre-execution evidence. Its
+[`q8/`](docs/provenance/uniswap-v4-engine-v0.5.0/q8/README.md) child retains
+the prepared `33,374,155..33,574,154` manifests, 19 ordered COPY-file
+identities plus seed-preserved `data_sources$`, declared checkpoint/PoI
+identities, source-observation topology, and recovered compact metadata
+archive. The q8 archive does not contain raw frames, a frame-stream digest,
+COPY payloads, or checkpoint bytes; historical `input_stream_exact` therefore
+means input-shape equality only. Both verifiers keep every scratch,
+zero-writer, K3, workflow, database, criterion-2, and readiness gate false.
 
 The two release packages that were intentionally outside the imported Git tree are mirrored
 under `artifacts/releases/uniswap-v4/`. Their source release identities, byte sizes, and

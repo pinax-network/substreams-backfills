@@ -1,0 +1,172 @@
+{
+  "format_version": 1,
+  "adapter": "uniswap-v4-base",
+  "deployment": "Qmbsc6XQWbiv4DfLVfaNciScqYLyDWUYjWzrFBbzzmRsMB",
+  "graft_base": "QmS1ehFzXTD9eA1f1EgjZvdyAj2EHtVNMrEN91H3pLuHMy",
+  "graft_block": 26990278,
+  "spkg": {
+    "repository": "pinax-network/substreams-v4-subgraph",
+    "release": "v0.1.0",
+    "asset": "uniswap-v4-base-backfill-v0.1.0.spkg",
+    "sha256": "75b810d18ec1dc78ca5535b2cc56828334c873b93d39500f93ca036499048453",
+    "package_name": "uniswap_v4_base_backfill",
+    "package_version": "v0.1.0",
+    "network": "base",
+    "module": "map_events",
+    "module_hash": "8fbf7c14cefe3d5b0c249a8cf4566bcaa8d2ed26",
+    "output_type": "proto:pinax.uniswap.v4.base.v1.Events",
+    "initial_block": 25350988
+  },
+  "store_spkg": {
+    "repository": "pinax-network/substreams-v4-subgraph",
+    "release": "v0.4.0",
+    "asset": "uniswap-v4-base-state-stores-v0.1.0.spkg",
+    "sha256": "ac3b295591e68949881509379aa99d8460134873f895187746a35ece003fa440",
+    "package_name": "uniswap_v4_base_state_stores",
+    "package_version": "v0.1.0",
+    "module_hashes": {
+      "store_pool_tick": "18281ae53a9d9dfea9370377d04f2acd3b721bb1",
+      "store_pool_transaction_count": "9bba8546c2e0e00d043d657b3188057c3cebcb3a",
+      "store_tick_liquidity": "6abfe7cad14187870e808e940ae4f4b3b56a0bfd",
+      "store_pool_liquidity": "7591d9dbe72fc6b7253e3e2ad0ae92a6c08e982d"
+    }
+  },
+  "store_fed_spkg": {
+    "repository": "pinax-network/substreams-v4-subgraph",
+    "release": "v0.4.0",
+    "asset": "uniswap-v4-base-store-fed-reducer-v0.1.0.spkg",
+    "sha256": "7cf06bb4b73c1409c581a7f878fb832c3e15c1d82193103d8bc7609dce8b58f3",
+    "package_name": "uniswap_v4_base_store_fed_reducer",
+    "package_version": "v0.1.0",
+    "network": "base",
+    "module": "map_reducer_inputs",
+    "module_hash": "a0bf241d5388f66eb990728ba8f9ef768fde6bb4",
+    "output_type": "proto:pinax.uniswap.v4.base.store.v1.ReducerInputs",
+    "initial_block": 25350988
+  },
+  "store_state_spkg": {
+    "repository": "pinax-network/substreams-v4-subgraph",
+    "release": "v0.4.0",
+    "asset": "uniswap-v4-base-store-state-reducer-v0.4.0.spkg",
+    "sha256": "bc8a841dbb74f9bbc7d90826251ab766ad350170a4832fc3e9b084664d22254a",
+    "package_name": "uniswap_v4_base_store_state_reducer",
+    "package_version": "v0.4.0",
+    "network": "base",
+    "module": "map_store_state_inputs",
+    "module_hash": "223408b90abae80960c41e11205fad2294accfa9",
+    "output_type": "proto:pinax.uniswap.v4.base.store.v1.ReducerInputs",
+    "initial_block": 25350988,
+    "imported_module_hashes": {
+      "store_pool_tick": "18281ae53a9d9dfea9370377d04f2acd3b721bb1",
+      "store_pool_transaction_count": "9bba8546c2e0e00d043d657b3188057c3cebcb3a",
+      "store_pool_liquidity": "7591d9dbe72fc6b7253e3e2ad0ae92a6c08e982d"
+    },
+    "tick_liquidity_shards": {
+      "count": 16,
+      "partition": "pool_id_first_byte_mod_16",
+      "legacy_key_encoding": true,
+      "replaces_module": "store_tick_liquidity",
+      "replaced_module_hash": "6abfe7cad14187870e808e940ae4f4b3b56a0bfd",
+      "module_hashes": {
+        "store_tick_liquidity_00": "e754962e01dd79f0f39c823cc43159e1ff066378",
+        "store_tick_liquidity_01": "5ae15c8b92205647e64675836ff7d37667937085",
+        "store_tick_liquidity_02": "ae3a83d9065345807234d5b0a9d3d3feff59fad6",
+        "store_tick_liquidity_03": "38ee72219d450eae3347488c514e1b1ff2001a5a",
+        "store_tick_liquidity_04": "688c7e733c4649532b7a480273fc1f214ba96343",
+        "store_tick_liquidity_05": "6954016e63ff68928dc34dd129551c2266178373",
+        "store_tick_liquidity_06": "387a95fb627d202857d272688ba7022ffea45e2e",
+        "store_tick_liquidity_07": "81b65cd8dcb21a600cf07af44cdf0b92619354f0",
+        "store_tick_liquidity_08": "d9d6c2b9aedd76d1637196ac8fd88362263b3831",
+        "store_tick_liquidity_09": "349305f76d59ecddca3a92d6f5d8f2891ac94a34",
+        "store_tick_liquidity_10": "618c9835b8f5448c183d3a3f6b098a0ded48c41f",
+        "store_tick_liquidity_11": "4c6673530f20acc1a3c3a26f8c10b1b64b03004c",
+        "store_tick_liquidity_12": "6f05351b84b4e2b58ea2c120aa72aa04db2493f5",
+        "store_tick_liquidity_13": "8de5a56aa44df4e48ee4d80edaf712d23272ea22",
+        "store_tick_liquidity_14": "f0dce3fc9f15b66c44365f5373857b7719dd2553",
+        "store_tick_liquidity_15": "d55c2ca1b2677e530015f44ede16d9aa86abc8a7"
+      }
+    },
+    "built_modules": [
+      "store_tick_liquidity_00",
+      "store_tick_liquidity_01",
+      "store_tick_liquidity_02",
+      "store_tick_liquidity_03",
+      "store_tick_liquidity_04",
+      "store_tick_liquidity_05",
+      "store_tick_liquidity_06",
+      "store_tick_liquidity_07",
+      "store_tick_liquidity_08",
+      "store_tick_liquidity_09",
+      "store_tick_liquidity_10",
+      "store_tick_liquidity_11",
+      "store_tick_liquidity_12",
+      "store_tick_liquidity_13",
+      "store_tick_liquidity_14",
+      "store_tick_liquidity_15",
+      "store_pool_sqrt_price",
+      "store_token_decimals",
+      "store_pool_token_decimals",
+      "map_store_state_inputs"
+    ]
+  },
+  "direct_postgres": {
+    "default_input_mode": "store-state-protobuf-framed",
+    "spkg_contract": "store_state_spkg",
+    "module": "map_store_state_inputs",
+    "parallel_workers": 500,
+    "legacy_input_modes": [
+      "jsonl",
+      "protobuf-framed",
+      "store-fed-protobuf-framed"
+    ],
+    "compatibility_profiles": {
+      "default": "graph-node-exact",
+      "postgres_nul_truncate_v1": {
+        "name": "postgres-nul-truncate-v1",
+        "first_exception_block": 34546213,
+        "entity": "Token",
+        "fields": [
+          "symbol",
+          "name"
+        ],
+        "operation": "truncate-at-first-u0000",
+        "observed_string_bytes": 39,
+        "observed_trailing_u0000": 32,
+        "observed_block_hash": "0x65ff5b64deea0e1d0d24b494b12f8f0ac6ac62ab5fafb4afd3060abb51ed838f",
+        "affected_tokens": [
+          "0x12118f0cb58fda162b407a9f02242d15415262ec",
+          "0x4d237f6d484e9adba7b1f1c656a718a47379c67f"
+        ],
+        "observed_initializes": [
+          {
+            "token": "0x4d237f6d484e9adba7b1f1c656a718a47379c67f",
+            "pool": "0xa871cbb9e45773cb1eb1539b1c9d2603692f2945886b1180f9204d75648175b9",
+            "transaction": "0x5e317d95d29ac547e11ab572c61468aafb6a368d71c52e504d57e233062f66a7",
+            "block_log_index": 1104
+          },
+          {
+            "token": "0x12118f0cb58fda162b407a9f02242d15415262ec",
+            "pool": "0xfe42b1845139bd36776ef207567df08ace9d981e489e6b11b3cc5d9c9f3d2579",
+            "transaction": "0xb8b74db5bb15b95746f19e2b52d2c97b70bbea27a24c0e1567b539b9ba9a0476",
+            "block_log_index": 1160
+          }
+        ],
+        "last_exact_block": 34546212
+      }
+    }
+  },
+  "runtime": {
+    "release": "v0.4.1",
+    "platform": "linux/amd64",
+    "binary_sha256": {
+      "state-replay": "d3ba5b001bf748167fa30baa82520badbbe10bf76d80b0c1f6cf0930ce0bbfbc",
+      "parquet-backfill": "9dd4ef404befa41256bac6761209a7c5851bf557a3fa13d15075ffe45ee156db",
+      "substreams-native": "4d8bdd9077551b4f7b55105828721d6fca252de96e30c625c4912d5bb2097ddf"
+    }
+  },
+  "graph_node": {
+    "version": "v0.44.0",
+    "commit": "77823b5a7adc4eac4abf03202c8dd7cb00dea31d",
+    "dump_format": 1
+  }
+}

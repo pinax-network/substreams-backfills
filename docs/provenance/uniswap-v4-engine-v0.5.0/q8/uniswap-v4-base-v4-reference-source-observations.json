@@ -1,0 +1,580 @@
+{
+  "schema": "pinax.v4-reference-replay-source-observations.v1",
+  "scope": "successful-source-workflow",
+  "count": 53,
+  "observations": [
+    {
+      "key": "certified_candidate_graphql",
+      "producer_task": "graphql-certified-candidate",
+      "producer_template": "graphql-check",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/graphql-certified-candidate.json",
+        "/work/performance/{{workflow.parameters.experiment-id}}/graphql-certified-candidate-by-id.json"
+      ],
+      "source_path": "v4-reference/source/observations/certified_candidate_graphql.json"
+    },
+    {
+      "key": "certified_candidate_physical",
+      "producer_task": "graphql-certified-candidate",
+      "producer_template": "graphql-check",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/database-certified-candidate-physical.json"
+      ],
+      "source_path": "v4-reference/source/observations/certified_candidate_physical.json"
+    },
+    {
+      "key": "certified_candidate_sequences",
+      "producer_task": "graphql-certified-candidate",
+      "producer_template": "graphql-check",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/database-certified-candidate-sequences.json"
+      ],
+      "source_path": "v4-reference/source/observations/certified_candidate_sequences.json"
+    },
+    {
+      "key": "certified_load_receipt_provenance",
+      "producer_task": "load-certified-segment",
+      "producer_template": "load-certified-segment",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/reference-replay-load/checkpoints/checkpoint-33474154.json.load-receipt.json"
+      ],
+      "source_path": "v4-reference/source/observations/certified_load_receipt_provenance.json"
+    },
+    {
+      "key": "certified_noop_resume",
+      "producer_task": "load-certified-segment",
+      "producer_template": "load-certified-segment",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/certified-load-noop.json"
+      ],
+      "source_path": "v4-reference/source/observations/certified_noop_resume.json"
+    },
+    {
+      "key": "certified_pre_mutation_graphql_baseline",
+      "producer_task": "graphql-certified-pre-mutation",
+      "producer_template": "graphql-check",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/graphql-certified-pre-mutation.json",
+        "/work/performance/{{workflow.parameters.experiment-id}}/graphql-certified-pre-mutation-by-id.json"
+      ],
+      "source_path": "v4-reference/source/observations/certified_pre_mutation_graphql_baseline.json"
+    },
+    {
+      "key": "certified_write_guard",
+      "producer_task": "load-certified-segment",
+      "producer_template": "load-certified-segment",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/write-guard.json"
+      ],
+      "source_path": "v4-reference/source/observations/certified_write_guard.json"
+    },
+    {
+      "key": "chain_targets_primary",
+      "producer_task": "capture-lifecycle-targets",
+      "producer_template": "capture-lifecycle-targets",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/chain-targets-primary.json"
+      ],
+      "source_path": "v4-reference/source/observations/chain_targets_primary.json"
+    },
+    {
+      "key": "chain_targets_secondary",
+      "producer_task": "capture-lifecycle-targets",
+      "producer_template": "capture-lifecycle-targets",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/chain-targets-secondary.json"
+      ],
+      "source_path": "v4-reference/source/observations/chain_targets_secondary.json"
+    },
+    {
+      "key": "continuation_graphman_command",
+      "producer_task": "continuation",
+      "producer_template": "graphman-run",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/graphman-continuation-command.txt"
+      ],
+      "source_path": "v4-reference/source/observations/continuation_graphman_command.txt"
+    },
+    {
+      "key": "continuation_graphman_receipt",
+      "producer_task": "continuation",
+      "producer_template": "graphman-run",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/graphman-continuation-receipt.json"
+      ],
+      "source_path": "v4-reference/source/observations/continuation_graphman_receipt.json"
+    },
+    {
+      "key": "continuation_graphql",
+      "producer_task": "graphql-continuation",
+      "producer_template": "graphql-check",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/graphql-continuation.json",
+        "/work/performance/{{workflow.parameters.experiment-id}}/graphql-continuation-by-id.json"
+      ],
+      "source_path": "v4-reference/source/observations/continuation_graphql.json"
+    },
+    {
+      "key": "continuation_lifecycle",
+      "producer_task": "continuation",
+      "producer_template": "graphman-run",
+      "producer_container": "lifecycle-observer",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/continuation-lifecycle.json"
+      ],
+      "source_path": "v4-reference/source/observations/continuation_lifecycle.json"
+    },
+    {
+      "key": "continuation_post_cleanup_registry",
+      "producer_task": "continuation",
+      "producer_template": "graphman-run",
+      "producer_container": "lifecycle-observer",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/continuation-post-cleanup-registry.json"
+      ],
+      "source_path": "v4-reference/source/observations/continuation_post_cleanup_registry.json"
+    },
+    {
+      "key": "continuation_sequences",
+      "producer_task": "continuation",
+      "producer_template": "graphman-run",
+      "producer_container": "lifecycle-observer",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/continuation-sequences.json"
+      ],
+      "source_path": "v4-reference/source/observations/continuation_sequences.json"
+    },
+    {
+      "key": "continuation_temporary_registry",
+      "producer_task": "continuation",
+      "producer_template": "graphman-run",
+      "producer_container": "lifecycle-observer",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/continuation-temporary-registry.json"
+      ],
+      "source_path": "v4-reference/source/observations/continuation_temporary_registry.json"
+    },
+    {
+      "key": "execution_receipts",
+      "producer_task": "onExit.seal-source-observations",
+      "producer_template": "seal-source-observations",
+      "producer_container": "main",
+      "raw_paths": [],
+      "api_source": "/api/v1/namespaces/{{workflow.namespace}}/pods?labelSelector=workflows.argoproj.io%2Fworkflow%3D{{workflow.name}}",
+      "required_workflow_label": {
+        "key": "workflows.argoproj.io/workflow",
+        "value": "{{workflow.name}}"
+      },
+      "required_owner_reference": {
+        "apiVersion": "argoproj.io/v1alpha1",
+        "kind": "Workflow",
+        "name": "{{workflow.name}}",
+        "uid": "{{workflow.uid}}",
+        "controller": true
+      },
+      "required_pod_annotations": [
+        "workflows.argoproj.io/node-id",
+        "workflows.argoproj.io/node-name"
+      ],
+      "required_init_container_environment": {
+        "path": "spec.initContainers[*].env",
+        "name": "ARGO_TEMPLATE",
+        "minimum_occurrences_per_pod": 1,
+        "all_occurrences_must_match": true,
+        "forbidden_values": [
+          "offloaded"
+        ]
+      },
+      "required_template_resolution": {
+        "template_name_json_pointer": "/name",
+        "sources": [
+          "workflow.spec.templates",
+          "workflow.status.storedTemplates"
+        ],
+        "match_policy": "exactly-one-by-name"
+      },
+      "source_path": "v4-reference/source/observations/execution_receipts.json"
+    },
+    {
+      "key": "post_approval_guard",
+      "producer_task": "post-approval-guard",
+      "producer_template": "post-approval-guard",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/v4-reference/source/post-approval-guard.json"
+      ],
+      "source_path": "v4-reference/source/post-approval-guard.json"
+    },
+    {
+      "key": "registry_baseline",
+      "producer_task": "scratch-preflight",
+      "producer_template": "scratch-preflight",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/scratch-preflight.initial.json"
+      ],
+      "source_path": "v4-reference/source/observations/registry_baseline.json"
+    },
+    {
+      "key": "replay_graphman_command",
+      "producer_task": "replay",
+      "producer_template": "graphman-run",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/graphman-replay-command.txt"
+      ],
+      "source_path": "v4-reference/source/observations/replay_graphman_command.txt"
+    },
+    {
+      "key": "replay_graphman_receipt",
+      "producer_task": "replay",
+      "producer_template": "graphman-run",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/graphman-replay-receipt.json"
+      ],
+      "source_path": "v4-reference/source/observations/replay_graphman_receipt.json"
+    },
+    {
+      "key": "replay_graphql",
+      "producer_task": "graphql-replay",
+      "producer_template": "graphql-check",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/graphql-replay.json",
+        "/work/performance/{{workflow.parameters.experiment-id}}/graphql-replay-by-id.json"
+      ],
+      "source_path": "v4-reference/source/observations/replay_graphql.json"
+    },
+    {
+      "key": "replay_lifecycle",
+      "producer_task": "replay",
+      "producer_template": "graphman-run",
+      "producer_container": "lifecycle-observer",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/replay-lifecycle.json"
+      ],
+      "source_path": "v4-reference/source/observations/replay_lifecycle.json"
+    },
+    {
+      "key": "replay_post_cleanup_registry",
+      "producer_task": "replay",
+      "producer_template": "graphman-run",
+      "producer_container": "lifecycle-observer",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/replay-post-cleanup-registry.json"
+      ],
+      "source_path": "v4-reference/source/observations/replay_post_cleanup_registry.json"
+    },
+    {
+      "key": "replay_sequences",
+      "producer_task": "replay",
+      "producer_template": "graphman-run",
+      "producer_container": "lifecycle-observer",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/replay-sequences.json"
+      ],
+      "source_path": "v4-reference/source/observations/replay_sequences.json"
+    },
+    {
+      "key": "replay_temporary_registry",
+      "producer_task": "replay",
+      "producer_template": "graphman-run",
+      "producer_container": "lifecycle-observer",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/replay-temporary-registry.json"
+      ],
+      "source_path": "v4-reference/source/observations/replay_temporary_registry.json"
+    },
+    {
+      "key": "restart_graphman_command",
+      "producer_task": "restart",
+      "producer_template": "graphman-run",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/graphman-restart-command.txt"
+      ],
+      "source_path": "v4-reference/source/observations/restart_graphman_command.txt"
+    },
+    {
+      "key": "restart_graphman_receipt",
+      "producer_task": "restart",
+      "producer_template": "graphman-run",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/graphman-restart-receipt.json"
+      ],
+      "source_path": "v4-reference/source/observations/restart_graphman_receipt.json"
+    },
+    {
+      "key": "restart_graphql",
+      "producer_task": "graphql-restart",
+      "producer_template": "graphql-check",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/graphql-restart.json",
+        "/work/performance/{{workflow.parameters.experiment-id}}/graphql-restart-by-id.json"
+      ],
+      "source_path": "v4-reference/source/observations/restart_graphql.json"
+    },
+    {
+      "key": "restart_lifecycle",
+      "producer_task": "restart",
+      "producer_template": "graphman-run",
+      "producer_container": "lifecycle-observer",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/restart-lifecycle.json"
+      ],
+      "source_path": "v4-reference/source/observations/restart_lifecycle.json"
+    },
+    {
+      "key": "restart_post_cleanup_registry",
+      "producer_task": "restart",
+      "producer_template": "graphman-run",
+      "producer_container": "lifecycle-observer",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/restart-post-cleanup-registry.json"
+      ],
+      "source_path": "v4-reference/source/observations/restart_post_cleanup_registry.json"
+    },
+    {
+      "key": "restart_sequences",
+      "producer_task": "restart",
+      "producer_template": "graphman-run",
+      "producer_container": "lifecycle-observer",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/restart-sequences.json"
+      ],
+      "source_path": "v4-reference/source/observations/restart_sequences.json"
+    },
+    {
+      "key": "restart_temporary_registry",
+      "producer_task": "restart",
+      "producer_template": "graphman-run",
+      "producer_container": "lifecycle-observer",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/restart-temporary-registry.json"
+      ],
+      "source_path": "v4-reference/source/observations/restart_temporary_registry.json"
+    },
+    {
+      "key": "restore_load_receipt_provenance",
+      "producer_task": "restore-starting-head",
+      "producer_template": "restore-starting-head",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/reference-replay-load/checkpoints/checkpoint-33574154.json.load-receipt.json"
+      ],
+      "source_path": "v4-reference/source/observations/restore_load_receipt_provenance.json"
+    },
+    {
+      "key": "restore_write_guard",
+      "producer_task": "restore-starting-head",
+      "producer_template": "restore-starting-head",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/restore-write-guard.json"
+      ],
+      "source_path": "v4-reference/source/observations/restore_write_guard.json"
+    },
+    {
+      "key": "restored_candidate_graphql",
+      "producer_task": "graphql-restored-candidate",
+      "producer_template": "graphql-check",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/graphql-restored-candidate.json",
+        "/work/performance/{{workflow.parameters.experiment-id}}/graphql-restored-candidate-by-id.json"
+      ],
+      "source_path": "v4-reference/source/observations/restored_candidate_graphql.json"
+    },
+    {
+      "key": "restored_candidate_sequences",
+      "producer_task": "graphql-restored-candidate",
+      "producer_template": "graphql-check",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/database-restored-candidate-sequences.json"
+      ],
+      "source_path": "v4-reference/source/observations/restored_candidate_sequences.json"
+    },
+    {
+      "key": "restored_full_candidate_physical",
+      "producer_task": "graphql-restored-candidate",
+      "producer_template": "graphql-check",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/database-restored-candidate-physical.json"
+      ],
+      "source_path": "v4-reference/source/observations/restored_full_candidate_physical.json"
+    },
+    {
+      "key": "restored_noop_resume",
+      "producer_task": "restore-starting-head",
+      "producer_template": "restore-starting-head",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/restore-noop.json"
+      ],
+      "source_path": "v4-reference/source/observations/restored_noop_resume.json"
+    },
+    {
+      "key": "rewind_graphman_command",
+      "producer_task": "rewind",
+      "producer_template": "graphman-rewind",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/graphman-rewind-command.txt"
+      ],
+      "source_path": "v4-reference/source/observations/rewind_graphman_command.txt"
+    },
+    {
+      "key": "rewind_graphman_receipt",
+      "producer_task": "rewind",
+      "producer_template": "graphman-rewind",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/graphman-rewind-receipt.json"
+      ],
+      "source_path": "v4-reference/source/observations/rewind_graphman_receipt.json"
+    },
+    {
+      "key": "rewind_graphql",
+      "producer_task": "graphql-rewind",
+      "producer_template": "graphql-check",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/graphql-rewind.json",
+        "/work/performance/{{workflow.parameters.experiment-id}}/graphql-rewind-by-id.json"
+      ],
+      "source_path": "v4-reference/source/observations/rewind_graphql.json"
+    },
+    {
+      "key": "rewind_lifecycle",
+      "producer_task": "rewind",
+      "producer_template": "graphman-rewind",
+      "producer_container": "lifecycle-observer",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/rewind-lifecycle.json"
+      ],
+      "source_path": "v4-reference/source/observations/rewind_lifecycle.json"
+    },
+    {
+      "key": "rewind_post_cleanup_registry",
+      "producer_task": "rewind",
+      "producer_template": "graphman-rewind",
+      "producer_container": "lifecycle-observer",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/rewind-post-cleanup-registry.json"
+      ],
+      "source_path": "v4-reference/source/observations/rewind_post_cleanup_registry.json"
+    },
+    {
+      "key": "rewind_sequences",
+      "producer_task": "rewind",
+      "producer_template": "graphman-rewind",
+      "producer_container": "lifecycle-observer",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/rewind-sequences.json"
+      ],
+      "source_path": "v4-reference/source/observations/rewind_sequences.json"
+    },
+    {
+      "key": "rewind_temporary_registry",
+      "producer_task": "rewind",
+      "producer_template": "graphman-rewind",
+      "producer_container": "lifecycle-observer",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/rewind-temporary-registry.json"
+      ],
+      "source_path": "v4-reference/source/observations/rewind_temporary_registry.json"
+    },
+    {
+      "key": "scratch_final",
+      "producer_task": "onExit.verify-restored-scratch",
+      "producer_template": "cleanup-verify-restored-scratch",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/exit-restoration.json"
+      ],
+      "source_path": "v4-reference/source/observations/scratch_final.json"
+    },
+    {
+      "key": "scratch_initial",
+      "producer_task": "scratch-preflight",
+      "producer_template": "scratch-preflight",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/scratch-preflight.initial.json"
+      ],
+      "source_path": "v4-reference/source/observations/scratch_initial.json"
+    },
+    {
+      "key": "starting_pre_mutation_graphql_baseline",
+      "producer_task": "graphql-starting-pre-mutation",
+      "producer_template": "graphql-check",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/graphql-starting-pre-mutation.json",
+        "/work/performance/{{workflow.parameters.experiment-id}}/graphql-starting-pre-mutation-by-id.json"
+      ],
+      "source_path": "v4-reference/source/observations/starting_pre_mutation_graphql_baseline.json"
+    },
+    {
+      "key": "starting_pre_mutation_physical_baseline",
+      "producer_task": "graphql-starting-pre-mutation",
+      "producer_template": "graphql-check",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/database-starting-pre-mutation-physical.json"
+      ],
+      "source_path": "v4-reference/source/observations/starting_pre_mutation_physical_baseline.json"
+    },
+    {
+      "key": "starting_pre_mutation_sequences_baseline",
+      "producer_task": "graphql-starting-pre-mutation",
+      "producer_template": "graphql-check",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/database-starting-pre-mutation-sequences.json"
+      ],
+      "source_path": "v4-reference/source/observations/starting_pre_mutation_sequences_baseline.json"
+    },
+    {
+      "key": "submission_contract",
+      "producer_task": "seal-submission-contract",
+      "producer_template": "seal-submission-contract",
+      "producer_container": "main",
+      "raw_paths": [
+        "/work/performance/{{workflow.parameters.experiment-id}}/v4-reference/source/submission-contract.json"
+      ],
+      "source_path": "v4-reference/source/submission-contract.json"
+    },
+    {
+      "key": "workflow_provenance",
+      "producer_task": "onExit.seal-source-observations",
+      "producer_template": "seal-source-observations",
+      "producer_container": "main",
+      "raw_paths": [],
+      "api_source": "argoproj.io/v1alpha1/namespaces/{{workflow.namespace}}/workflows/{{workflow.name}}",
+      "status_node_policy": "nodes-and-compressedNodes-optional-not-an-evidence-source",
+      "required_template_sources": [
+        "spec.templates",
+        "status.storedTemplates"
+      ],
+      "source_path": "v4-reference/source/observations/workflow_provenance.json"
+    }
+  ]
+}

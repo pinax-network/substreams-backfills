@@ -1,0 +1,42 @@
+deployment: QmQmz5kh1f83Re1Zaj9UYrzKmcWqpKf1tNs9K6M9WrvPC8
+family: uniswap-v2-base
+display_name: Uniswap V2 Base
+schema: QmeyYQ8ZJnzuQsoXnizGXLyFSt7mcuRNkmNQxMv3pXiMnW
+chain: base
+milestone: M8
+market_snapshot:
+  measured_at: "2026-08-31T17:20:00Z"
+  queries_24h: 780953
+  query_fees_grt_24h: "954.416540"
+  authority: https://github.com/pinax-network/substreams-backfills/issues/83
+target_reference:
+  provenance: docs/provenance/uniswap-v2-base-target.json
+  deployment_manifest: uniswap-v2-base/reference/deployment.yaml
+  status: immutable_target_pinned_source_revision_unresolved
+truth_gates:
+  eligibility_complete: false
+  source_revision_pinned: false
+  source_reproducible: false
+  implementation_complete: false
+  runtime_complete: false
+  runtime_parity: false
+  logical_parity: false
+  history_complete: false
+  physical_profile_complete: false
+  physical_parity: false
+  poi_parity: false
+  backfill_ready: false
+  production_ready: false
+  readiness: false
+  issue_87_complete: false
+  issue_89_complete: false
+  issue_93_complete: false
+eligibility:
+  policy: graph-node-net-catchup-v1
+  required_clusters: [riv-subgraphs-a, kan-subgraphs-a]
+  latest:
+    decision: indeterminate
+    reason: no_fresh_evidence
+    measured_at: null
+    evidence: null
+    sha256: null

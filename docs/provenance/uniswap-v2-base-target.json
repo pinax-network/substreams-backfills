@@ -1,0 +1,449 @@
+{
+  "format_version": 1,
+  "family": "uniswap-v2-base",
+  "deployment": {
+    "cid": "QmQmz5kh1f83Re1Zaj9UYrzKmcWqpKf1tNs9K6M9WrvPC8",
+    "chain": "base",
+    "spec_version": "0.0.8",
+    "mapping_api_version": "0.0.7",
+    "factory": "0x8909Dc15e40173Ff4699343b6eB8132c65e18eC6",
+    "start_block": 6601915,
+    "data_sources": [
+      "Factory"
+    ],
+    "templates": [
+      "Pair"
+    ],
+    "features": [],
+    "graft": false
+  },
+  "artifact_lock": [
+    {
+      "role": "deployment",
+      "cid": "QmQmz5kh1f83Re1Zaj9UYrzKmcWqpKf1tNs9K6M9WrvPC8",
+      "source_bytes": 2323,
+      "source_sha256": "8e70b5424d014e9e7737a3685b2661cea00ecd0c1b0c54465d4821cde03865e9",
+      "vendored_path": "uniswap-v2-base/reference/deployment.yaml",
+      "vendored_bytes": 2323,
+      "vendored_sha256": "8e70b5424d014e9e7737a3685b2661cea00ecd0c1b0c54465d4821cde03865e9",
+      "normalization": "identity"
+    },
+    {
+      "role": "schema",
+      "cid": "QmeyYQ8ZJnzuQsoXnizGXLyFSt7mcuRNkmNQxMv3pXiMnW",
+      "source_bytes": 7422,
+      "source_sha256": "310d8ce01f22505f20f8654e60fb67ac29a0a0c11d7e4fc19d57f5c23b4f1d97",
+      "vendored_path": "uniswap-v2-base/reference/schema.graphql",
+      "vendored_bytes": 7423,
+      "vendored_sha256": "65ffb0aabeedaf9351c60fffd7350b6e5b12665626df16c17468f9beb9f482cc",
+      "normalization": "remove_one_trailing_lf"
+    },
+    {
+      "role": "factory_abi",
+      "cid": "QmZ55G1yYFzde8Vcq4cpLfNgPSEibpLi9aYCqS1jEvCKQ9",
+      "source_bytes": 3570,
+      "source_sha256": "7e654ea123ea3567fe94cbce7eae1a44a91ff659d3def3134a6695ce3ac0a7c5",
+      "vendored_path": "uniswap-v2-base/reference/abis/factory.json",
+      "vendored_bytes": 3571,
+      "vendored_sha256": "f6ffa26f915120dffffa8d2dc23d7ee53c312f89d0070dfe73546b960d65c30a",
+      "normalization": "remove_one_trailing_lf"
+    },
+    {
+      "role": "erc20_abi",
+      "cid": "QmXuTbDkNrN27VydxbS2huvKRk62PMgUTdPDWkxcr2w7j2",
+      "source_bytes": 3684,
+      "source_sha256": "4b83c6645aed2df5e4e9a1d11f372453fc052ac8575348c8c04a33ceacd0ae90",
+      "vendored_path": "uniswap-v2-base/reference/abis/ERC20.json",
+      "vendored_bytes": 3685,
+      "vendored_sha256": "6fcb7ab4f5218c1a3974716af22a6c2be8a1fe0dbd74e4db588d0605988458bf",
+      "normalization": "remove_one_trailing_lf"
+    },
+    {
+      "role": "erc20_symbol_bytes_abi",
+      "cid": "QmbHnhUFZa6qqqRyubUYhXntox1TCBxqryaBM1iNGqVJzT",
+      "source_bytes": 270,
+      "source_sha256": "9ccb9b5d95394b2ffb4ced54cffa0c5ea282917f4eec36c121ce28c257965193",
+      "vendored_path": "uniswap-v2-base/reference/abis/ERC20SymbolBytes.json",
+      "vendored_bytes": 271,
+      "vendored_sha256": "6e114ca21ff78fcae5364358aec454862cdcef2cebdb541752e45ee84d38ace9",
+      "normalization": "remove_one_trailing_lf"
+    },
+    {
+      "role": "erc20_name_bytes_abi",
+      "cid": "QmQCP6Pdp1MqpwRv2qoPHuUTwZGy7Q3eDHg4w5kzwE9mBj",
+      "source_bytes": 268,
+      "source_sha256": "b874c853ffa5309e4b7fbf4934c1efdb4fe31e1a65f7041e67f4a7f2258ffb77",
+      "vendored_path": "uniswap-v2-base/reference/abis/ERC20NameBytes.json",
+      "vendored_bytes": 269,
+      "vendored_sha256": "f2931748c6851e1636b458030361de258db60441c353351e7eb4616c90039bce",
+      "normalization": "remove_one_trailing_lf"
+    },
+    {
+      "role": "pair_abi",
+      "cid": "QmbPLMADBP8L6LBVP3ZBQ8RgG7ghamD8DvbdUxHAjZrLgm",
+      "source_bytes": 13408,
+      "source_sha256": "135a86127ce17542e6d7515761069d5a8a9aca81250126bd62fbf7e38170dadd",
+      "vendored_path": "uniswap-v2-base/reference/abis/pair.json",
+      "vendored_bytes": 13409,
+      "vendored_sha256": "fc64a9145fc5f36cc08a255a3f7e113139b838ce8390da519053c39dc5005502",
+      "normalization": "remove_one_trailing_lf"
+    },
+    {
+      "role": "factory_mapping_wasm",
+      "cid": "QmeZQ3tfFC5seP2x8evCKyrnYKP5fSotua19vu83BuQBDB",
+      "source_bytes": 46977,
+      "source_sha256": "e2b818dec1f27531f7d3740715a644063f291b20365a1d7eb52bc4552d3f080f",
+      "exports": [
+        "handleNewPair"
+      ],
+      "vendored_path": "uniswap-v2-base/reference/mappings/Factory.wasm",
+      "vendored_bytes": 46977,
+      "vendored_sha256": "e2b818dec1f27531f7d3740715a644063f291b20365a1d7eb52bc4552d3f080f",
+      "normalization": "identity"
+    },
+    {
+      "role": "pair_mapping_wasm",
+      "cid": "QmRi6hb3qXs6wQdDvDekFRVJM6QiJWB9z6q66U2xE3a6oj",
+      "source_bytes": 66546,
+      "source_sha256": "9a467e04780a80b8a3cef10c3f9188ba44cda5e7a32b1913ac881ca632592a92",
+      "exports": [
+        "handleTransfer",
+        "handleSync",
+        "handleMint",
+        "handleBurn",
+        "handleSwap"
+      ],
+      "vendored_path": "uniswap-v2-base/reference/mappings/Pair.wasm",
+      "vendored_bytes": 66546,
+      "vendored_sha256": "9a467e04780a80b8a3cef10c3f9188ba44cda5e7a32b1913ac881ca632592a92",
+      "normalization": "identity"
+    }
+  ],
+  "layout_profile": {
+    "path": "uniswap-v2-base/layout-profile-v1.json",
+    "bytes": 8001,
+    "sha256": "338e94103515bd62764d0c8194deabd10376150c4e594ada624a2eb60c1b421b"
+  },
+  "logical_contract": {
+    "entity_count": 15,
+    "field_count": 157,
+    "logical_sha256": "7d249e34390b4eaaeca84e0fd5638e071fcd812a10813a03d284cf94a0dff5a2",
+    "entities": [
+      "Bundle",
+      "Burn",
+      "Mint",
+      "Pair",
+      "PairDayData",
+      "PairHourData",
+      "PairTokenLookup",
+      "Swap",
+      "Token",
+      "TokenDayData",
+      "TokenHourData",
+      "Transaction",
+      "UniswapDayData",
+      "UniswapFactory",
+      "User"
+    ],
+    "immutable_entities": [
+      "PairTokenLookup"
+    ],
+    "mutable_entities": [
+      "Bundle",
+      "Burn",
+      "Mint",
+      "Pair",
+      "PairDayData",
+      "PairHourData",
+      "Swap",
+      "Token",
+      "TokenDayData",
+      "TokenHourData",
+      "Transaction",
+      "UniswapDayData",
+      "UniswapFactory",
+      "User"
+    ]
+  },
+  "source_evidence": {
+    "status": "non_reproducible_deployment_workspace",
+    "exact_output_reproduction": false,
+    "repository": "https://github.com/Uniswap/v2-subgraph",
+    "manifest_repository_alias": "https://github.com/Uniswap/uniswap-v2-subgraph",
+    "behavioral_candidate": {
+      "role": "earliest_behavioral_source_with_uint256_decimals_overflow_guard",
+      "commit": "6fba1a6f7304df83c08c3555bc90a38028f1435c",
+      "tree": "c80a1d0ddfb378a1fd7e9177e59a94420b01bd5e",
+      "parent": "d4d8f520d349c0a9e234e7c9b9daa05975630c9c",
+      "committed_at": "2025-12-18T20:50:46Z"
+    },
+    "source_records": [
+      {
+        "path": "package.json",
+        "git_blob": "efd85bf68595fb20d304b3558da600317881d04b",
+        "bytes": 855,
+        "sha256": "77190367eeea71d4b319a93cf7044502db8e212f77cf878ab6fdf60661b8cf21"
+      },
+      {
+        "path": "v2-subgraph.template.yaml",
+        "git_blob": "e3e650f3486effb951544e1ba007668d60ae8de9",
+        "bytes": 1978,
+        "sha256": "443997b2f753cff341993a8868bc04e9c72c88db98e6139202da5052b699fcf9"
+      },
+      {
+        "path": "config/base/config.json",
+        "git_blob": "678486f279db30dcb06ae0d2201d3d2b6cdb1a8e",
+        "bytes": 110,
+        "sha256": "b6cf7ccd2d9ea242f65a8ed2842045f4cec194918d0988baa29d52edaa8bcec4"
+      },
+      {
+        "path": "config/base/chain.ts",
+        "git_blob": "164652d995d0d03de18c58f0db6a9cfcbbdba1e9",
+        "bytes": 1304,
+        "sha256": "991bcfd8af552ee8f795e1f5d7eaf67aee65d75f697ca87034b338c9dfcdd8d0"
+      },
+      {
+        "path": "abis/factory.json",
+        "git_blob": "a2f13276781bb187c53afc0c7dadcc83583fa44b",
+        "bytes": 3571,
+        "sha256": "f6ffa26f915120dffffa8d2dc23d7ee53c312f89d0070dfe73546b960d65c30a"
+      },
+      {
+        "path": "abis/ERC20.json",
+        "git_blob": "405d6b36486f22de992ddd1d1fb0d5e351eb2fa5",
+        "bytes": 3685,
+        "sha256": "6fcb7ab4f5218c1a3974716af22a6c2be8a1fe0dbd74e4db588d0605988458bf"
+      },
+      {
+        "path": "abis/ERC20SymbolBytes.json",
+        "git_blob": "a76d6163668c1de4a5b3dff3881a7b8dc345183a",
+        "bytes": 271,
+        "sha256": "6e114ca21ff78fcae5364358aec454862cdcef2cebdb541752e45ee84d38ace9"
+      },
+      {
+        "path": "abis/ERC20NameBytes.json",
+        "git_blob": "2d3c877a8c0df7d21753ad32432a7e42e2626611",
+        "bytes": 269,
+        "sha256": "f2931748c6851e1636b458030361de258db60441c353351e7eb4616c90039bce"
+      },
+      {
+        "path": "abis/ERC20BigDecimals.json",
+        "git_blob": "230110ac4ef9088a2d9e7e2507f126b47da0209d",
+        "bytes": 205,
+        "sha256": "e604e2e09de0f0afd916fe9e04e0fa1ddd3aeab575dcb5f6c8be7b27a290363b"
+      },
+      {
+        "path": "abis/pair.json",
+        "git_blob": "53582c1ed689fe10abe2e3afddd5ba3b0fa273f0",
+        "bytes": 13409,
+        "sha256": "fc64a9145fc5f36cc08a255a3f7e113139b838ce8390da519053c39dc5005502"
+      },
+      {
+        "path": "src/common/constants.ts",
+        "git_blob": "3e6343b285a03610505b3a38c2f7e860747e14da",
+        "bytes": 652,
+        "sha256": "e55168db1a18de4b5f0590f55979a60aeed5740e364b5c5fd0e303066a005de7"
+      },
+      {
+        "path": "src/common/helpers.ts",
+        "git_blob": "7f5fd741c8c66ad3671d85b8f05b258e0ce79f5c",
+        "bytes": 4796,
+        "sha256": "914132bbf81f0d67e33ac43e770bc7e89e64e9c7d5cd1063f51efc790a218ac4"
+      },
+      {
+        "path": "src/common/hourDayUpdates.ts",
+        "git_blob": "75880e9ca5eccfef99b2c540de77371c09f42014",
+        "bytes": 7771,
+        "sha256": "b664d21a7e075c93ed574ef4e2dd9f4287ffcc81bd4ba94b9bc50a0f873fbbb1"
+      },
+      {
+        "path": "src/common/pricing.ts",
+        "git_blob": "095a8e6313bfe594fc656b6d86a7bedd8daa9ace",
+        "bytes": 7841,
+        "sha256": "2293ad9ca980d76d8ca6498b9a9471a5e567288e59fd764e34e95ee371f0cc0d"
+      },
+      {
+        "path": "src/common/tokenDefinition.ts",
+        "git_blob": "19afbca49291c98d1e6fe62176417f68c8e852e6",
+        "bytes": 653,
+        "sha256": "7cea81b9b81072a48387e0d324b31f4524b9c12a3fddaa50b12a2913202af13b"
+      },
+      {
+        "path": "src/v2/mappings/core.ts",
+        "git_blob": "ff8a3f3f09fe0b614b06a6ed121535c2d2361a76",
+        "bytes": 20119,
+        "sha256": "d5b8730ada08313ea205de83f88710bf58bb6578f2250a287797c4687b7120cd"
+      },
+      {
+        "path": "src/v2/mappings/factory.ts",
+        "git_blob": "174897008535d76ba94be08a06ca2d8befbf5040",
+        "bytes": 4030,
+        "sha256": "3e40150f15018212c722557f74ed1fb236cd0d2ab70d2c9cb5d7c730f1a66d17"
+      },
+      {
+        "path": "src/v2/schema.graphql",
+        "git_blob": "693559258f4e5c409aa9cf41e1d984aa06fe7392",
+        "bytes": 7170,
+        "sha256": "cae8cfe46e595c953eb365487b1b9c525578f45be5e67f04bcfea33bada7b3b7"
+      }
+    ],
+    "toolchain_evidence": {
+      "upstream_ci_node": "18.x",
+      "package_manager": "yarn",
+      "lockfile_present": false,
+      "package_constraints": {
+        "@graphprotocol/graph-cli": "^0.64.1",
+        "@graphprotocol/graph-ts": "^0.32.0"
+      },
+      "bounded_attempt": {
+        "node": "23.6.0",
+        "yarn": "1.22.22",
+        "@graphprotocol/graph-cli": "0.64.1",
+        "@graphprotocol/graph-ts": "0.32.0",
+        "assemblyscript": "0.19.10",
+        "target_schema_injected": true,
+        "pair_wasm_bytes": 66546,
+        "pair_wasm_sha256": "9a467e04780a80b8a3cef10c3f9188ba44cda5e7a32b1913ac881ca632592a92",
+        "factory_wasm_bytes": 46951,
+        "factory_wasm_sha256": "8e1f18481a2f5bb26d0b6223050335664f6e0746f117a79d71a8bca4b04a01d5",
+        "factory_target_bytes": 46977,
+        "factory_target_sha256": "e2b818dec1f27531f7d3740715a644063f291b20365a1d7eb52bc4552d3f080f",
+        "result": "pair_exact_only_after_non_source_schema_injection_factory_still_mismatch"
+      }
+    },
+    "schema_history_search": {
+      "revisions_checked": 7,
+      "unique_blobs_checked": 6,
+      "exact_target_matches": 0,
+      "revisions": [
+        {
+          "commit": "cc2937655d30b2018aea1b3be926d66ff1063904",
+          "tree": "f5924496837867bf009aa363a54d958aa366020e",
+          "schema_git_blob": "d08fa71b3cb55e8851b559984bc2ab3c822338ef",
+          "schema_bytes": 7421,
+          "schema_sha256": "99caa3d3026b964f0a1b24ffbb595e6f04ab7ae7044a6ad9ad64481f58f4e76c"
+        },
+        {
+          "commit": "2fe2b1cc2f904a76418ca816e355dabf7e4e8d78",
+          "tree": "0c8f5c6b4589243db710c8dda1a9afaec264b125",
+          "schema_git_blob": "6257a065fdea084baa71e3bdb42e4b523c9dc0b6",
+          "schema_bytes": 7233,
+          "schema_sha256": "bebbb8ec64b1fe276f5f1fabbdfe84e6eceb4dbb902dbf7fa2366dff33cf008b"
+        },
+        {
+          "commit": "84f2b0e2ad00b33af9c64695be842c744d86ff04",
+          "tree": "4b87a165e079fae5d54345299ffca44ab7189d09",
+          "schema_git_blob": "693559258f4e5c409aa9cf41e1d984aa06fe7392",
+          "schema_bytes": 7170,
+          "schema_sha256": "cae8cfe46e595c953eb365487b1b9c525578f45be5e67f04bcfea33bada7b3b7"
+        },
+        {
+          "commit": "fd314244a7e98e41ad6dbe6ddc60e507b310209c",
+          "tree": "da78ccd969bdc3137030a15f2d98850b84af398a",
+          "schema_git_blob": "2eec3c0cb799fb2bee2a71f69430e257daee1c48",
+          "schema_bytes": 7168,
+          "schema_sha256": "7bd07c6139b24d1277f9ae193d7f6138bfd87d8420d273dac287f9cca0aeb597"
+        },
+        {
+          "commit": "5b4d53d0e421586e3bb0ad8d97df3254e1e046d5",
+          "tree": "82ee6c107736b391fe28e62133414fcc49ce3ea7",
+          "schema_git_blob": "ccd8c2f3c1e399175a6e846026a98652ac93c23c",
+          "schema_bytes": 7408,
+          "schema_sha256": "95e51acd539cf9705de7244d239e6942fef864a738cdf9b9349e1e5d55bb6d80"
+        },
+        {
+          "commit": "c157bd3e6186499268875010836b34be066875e8",
+          "tree": "8c3faf424859a8db3f7303d012ceff153b7b2014",
+          "schema_git_blob": "c9706b7620a505b8742c0e596607a84edda05a2d",
+          "schema_bytes": 7109,
+          "schema_sha256": "2b262c13eca28674d5215131e8f58378904c6f9e3151d58257359c0558d549d5"
+        },
+        {
+          "commit": "ec90ef8f86a6a9075c3dd48bc63698347d50651a",
+          "tree": "86b396a51d2f0ec14b7eadabfe497af529b69da4",
+          "schema_git_blob": "2eec3c0cb799fb2bee2a71f69430e257daee1c48",
+          "schema_bytes": 7168,
+          "schema_sha256": "7bd07c6139b24d1277f9ae193d7f6138bfd87d8420d273dac287f9cca0aeb597"
+        }
+      ],
+      "closest_commit": "cc2937655d30b2018aea1b3be926d66ff1063904",
+      "closest_tree": "f5924496837867bf009aa363a54d958aa366020e",
+      "closest_difference": "closest_schema_marks_Swap_immutable_true_target_marks_Swap_immutable_false"
+    },
+    "related_merge": {
+      "pull_request": 208,
+      "merge_commit": "c19077b1e3e74e7b93691b9bed725a4ef5fbcbb9",
+      "tree": "f5924496837867bf009aa363a54d958aa366020e"
+    },
+    "contradictions": [
+      "no_upstream_schema_revision_matches_the_deployed_schema_bytes",
+      "closest_upstream_schema_marks_Swap_immutable_while_the_target_does_not",
+      "deployed_manifest_omits_ERC20BigDecimals_but_the_behavioral_candidate_template_and_factory_binding_require_it",
+      "upstream_has_no_dependency_lockfile_or_exact_deployment_toolchain_record",
+      "generated_schema_and_contract_bindings_are_not_versioned_inputs"
+    ]
+  },
+  "generic_event_extractor": {
+    "status": "decoder_seed_only",
+    "repository": "https://github.com/pinax-network/substreams-evm",
+    "commit": "970a665e15619de8ad7f686bd89412a1030d46dc",
+    "tree": "eac7466daba7f89a8c3b2e4742fcf24a155a2c24",
+    "package_version": "v0.6.0",
+    "records": [
+      {
+        "path": "dex/uniswap-v2/src/lib.rs",
+        "git_blob": "de4528b789f24612bec952478cfb41d1bab8a309",
+        "bytes": 4409,
+        "sha256": "0bf8e6dd482c42255900c67da22c113e60d9cf5e6ba663608cd63ba78e0dcba2"
+      },
+      {
+        "path": "dex/uniswap-v2/substreams.yaml",
+        "git_blob": "09abe993765c11a8983e6da48b548556b037f5f4",
+        "bytes": 549,
+        "sha256": "90045ce47c9ad0ffa50c007f7c6f43d84c4d6f8b2126d4e79857d9d980268272"
+      },
+      {
+        "path": "dex/uniswap-v2/Cargo.toml",
+        "git_blob": "24e5615996a7d429b14727673351dec61803a53b",
+        "bytes": 387,
+        "sha256": "ac6a09c80fbba8b0b0f40f1505c3f8309a15408f6771a3755893dc839d675b58"
+      },
+      {
+        "path": "proto/v1/dex/uniswap-v2.proto",
+        "git_blob": "90f83f37c1427224316b5116ce8f712fa14c7734",
+        "bytes": 2489,
+        "sha256": "fd16c107addb454723b8b16e6188c1658647690758812f4ff56cd0e03703ac50"
+      }
+    ],
+    "decoded_event_kinds": [
+      "Burn",
+      "Mint",
+      "PairCreated",
+      "Swap",
+      "Sync"
+    ],
+    "pair_transfer_supported": false,
+    "target_factory_filter_supported": false,
+    "dynamic_pair_membership_filter_supported": false,
+    "target_start_block_bound": false
+  },
+  "truth_gates": {
+    "eligibility_complete": false,
+    "source_revision_pinned": false,
+    "source_reproducible": false,
+    "implementation_complete": false,
+    "runtime_complete": false,
+    "runtime_parity": false,
+    "logical_parity": false,
+    "history_complete": false,
+    "physical_profile_complete": false,
+    "physical_parity": false,
+    "poi_parity": false,
+    "backfill_ready": false,
+    "production_ready": false,
+    "readiness": false,
+    "issue_87_complete": false,
+    "issue_89_complete": false,
+    "issue_93_complete": false
+  }
+}

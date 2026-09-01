@@ -1,0 +1,237 @@
+{
+  "format_version": 1,
+  "family": "uniswap-v2-base",
+  "deployment": "QmQmz5kh1f83Re1Zaj9UYrzKmcWqpKf1tNs9K6M9WrvPC8",
+  "target": {
+    "network": "base",
+    "factory": "0x8909Dc15e40173Ff4699343b6eB8132c65e18eC6",
+    "start_block": 6601915,
+    "factory_data_source": "Factory",
+    "dynamic_template": "Pair",
+    "pair_scope_source": "Factory.handleNewPair -> PairTemplate.create",
+    "factory_handler": {
+      "name": "handleNewPair",
+      "event": "PairCreated(indexed address,indexed address,address,uint256)",
+      "topic0": "0x0d3648bd0f6ba80134a33ba9275ac585d9d315f0ad8355cddefde31afa28d0e9"
+    },
+    "pair_handlers": [
+      {
+        "name": "handleMint",
+        "event": "Mint(indexed address,uint256,uint256)",
+        "topic0": "0x4c209b5fc8ad50758f13e2e1088ba56a560dff690a1c6fef26394f4c03821c4f"
+      },
+      {
+        "name": "handleBurn",
+        "event": "Burn(indexed address,uint256,uint256,indexed address)",
+        "topic0": "0xdccd412f0b1252819cb1fd330b93224ca42612892bb3f4f789976e6d81936496"
+      },
+      {
+        "name": "handleSwap",
+        "event": "Swap(indexed address,uint256,uint256,uint256,uint256,indexed address)",
+        "topic0": "0xd78ad95fa46c994b6551d0da85fc275fe613ce37657fb8d5e3d130840159d822"
+      },
+      {
+        "name": "handleTransfer",
+        "event": "Transfer(indexed address,indexed address,uint256)",
+        "topic0": "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+      },
+      {
+        "name": "handleSync",
+        "event": "Sync(uint112,uint112)",
+        "topic0": "0x1c411e9a96e071241c2f21f7726b17ae89e3cab4c78be50e062b03a9fffbbad1"
+      }
+    ]
+  },
+  "schema": {
+    "entity_count": 15,
+    "field_count": 157,
+    "logical_sha256": "7d249e34390b4eaaeca84e0fd5638e071fcd812a10813a03d284cf94a0dff5a2",
+    "immutable_entities": [
+      "PairTokenLookup"
+    ],
+    "mutable_entities": [
+      "Bundle",
+      "Burn",
+      "Mint",
+      "Pair",
+      "PairDayData",
+      "PairHourData",
+      "Swap",
+      "Token",
+      "TokenDayData",
+      "TokenHourData",
+      "Transaction",
+      "UniswapDayData",
+      "UniswapFactory",
+      "User"
+    ],
+    "derived_fields": {
+      "Pair": [
+        "burns",
+        "mints",
+        "pairHourData",
+        "swaps"
+      ],
+      "Token": [
+        "pairBase",
+        "pairDayDataBase",
+        "pairDayDataQuote",
+        "pairQuote",
+        "tokenDayData"
+      ]
+    }
+  },
+  "mapping_behavior": {
+    "authority": "static_summary_of_behavioral_source_candidate_not_deployed_runtime_certification",
+    "factory_handle_new_pair": {
+      "prefix_effects": [
+        "load_or_create_UniswapFactory",
+        "load_or_create_Bundle_1",
+        "increment_and_save_factory_pairCount",
+        "load_or_create_token0",
+        "load_or_create_token1"
+      ],
+      "nullable_decimals_abort": "returns_after_factory_and_bundle_prefix_effects_when_either_token_decimals_is_null",
+      "success_suffix": [
+        "create_Pair",
+        "create_dynamic_Pair_template",
+        "save_token0",
+        "save_token1",
+        "save_pair",
+        "save_factory",
+        "save_pair_lookup_token0",
+        "save_pair_lookup_token1"
+      ]
+    },
+    "pair_handle_transfer": {
+      "ignored_initial_transfer": "to_zero_and_value_1000",
+      "common_prefix": [
+        "load_or_create_from_User",
+        "load_or_create_to_User",
+        "load_Pair",
+        "load_or_create_Transaction"
+      ],
+      "from_zero": "increase_pair_totalSupply_and_append_pending_Mint",
+      "to_pair": "append_incomplete_Burn",
+      "pair_to_zero": "decrease_pair_totalSupply_and_complete_or_remove_fee_mint_and_burn_correlation",
+      "final_effect": "save_Transaction"
+    },
+    "pair_handle_sync": {
+      "summary": "update_pair_reserves_prices_bundle_factory_and_token_liquidity",
+      "final_save_suffix": [
+        "save_pair",
+        "save_factory",
+        "save_token0",
+        "save_token1"
+      ]
+    },
+    "pair_handle_mint": {
+      "correlation": "requires_last_pending_Mint_from_prior_Transfer_in_same_Transaction",
+      "primary_save_order": [
+        "save_token0",
+        "save_token1",
+        "save_pair",
+        "save_factory",
+        "save_mint"
+      ],
+      "interval_updates_follow": true
+    },
+    "pair_handle_burn": {
+      "correlation": "requires_last_pending_Burn_from_prior_Transfer_in_same_Transaction",
+      "primary_save_order": [
+        "save_token0",
+        "save_token1",
+        "save_pair",
+        "save_factory",
+        "save_burn"
+      ],
+      "interval_updates_follow": true
+    },
+    "pair_handle_swap": {
+      "summary": "compute_tracked_and_untracked_volume_then_update_pair_tokens_factory_transaction_and_intervals",
+      "transaction_effects": [
+        "load_or_create_Transaction",
+        "save_Swap",
+        "save_Transaction"
+      ],
+      "additional_volume_saves_after_intervals": true
+    }
+  },
+  "generic_event_extractor": {
+    "repository": "https://github.com/pinax-network/substreams-evm",
+    "commit": "970a665e15619de8ad7f686bd89412a1030d46dc",
+    "tree": "eac7466daba7f89a8c3b2e4742fcf24a155a2c24",
+    "package": "dex/uniswap-v2@v0.6.0",
+    "decoded_event_kinds": [
+      "Burn",
+      "Mint",
+      "PairCreated",
+      "Swap",
+      "Sync"
+    ],
+    "pair_transfer_supported": false,
+    "target_factory_filter_supported": false,
+    "dynamic_pair_membership_filter_supported": false,
+    "target_start_block_bound": false,
+    "scope": "decoder_seed_only",
+    "required_replacements": [
+      "add_Pair_Transfer_decode_and_ordered_delivery",
+      "filter_PairCreated_to_the_target_Factory",
+      "derive_and_enforce_dynamic_target_Pair_membership",
+      "bind_Base_start_block_6601915",
+      "implement_all_entity_load_create_mutation_save_remove_and_interval_semantics",
+      "certify_ordered_BlockChanges_and_Graph_Node_failure_semantics"
+    ]
+  },
+  "eligibility_contract": {
+    "policy": "graph-node-net-catchup-v1",
+    "threshold_days": 28,
+    "required_clusters": [
+      "riv-subgraphs-a",
+      "kan-subgraphs-a"
+    ],
+    "copy_inventory": "every_current_copy_or_fresh_structural_absence_proof",
+    "copy_selection": "fastest_healthy_copy_per_cluster_and_window",
+    "required_windows": [
+      "24h",
+      "72h"
+    ],
+    "eligible_when": "all_required_cluster_window_minima_exceed_28_days_or_are_non_converging",
+    "stop_when": "any_required_cluster_window_minimum_is_at_or_below_28_days",
+    "stopped_actions": [
+      "implementation",
+      "compute",
+      "load"
+    ],
+    "current_decision": "indeterminate_no_fresh_evidence"
+  },
+  "remaining_gates": [
+    "M0: inventory both required clusters and every current copy or fresh structural absence proof; use each cluster's fastest healthy path; both fresh stable-copy 24-hour and 72-hour forecasts must exceed 28 days or be non-converging.",
+    "M0 stop: if any required cluster's fastest healthy 24-hour or 72-hour forecast is at or below 28 days, stop implementation, compute, and load; native Graph Node syncing continues.",
+    "Freeze the exact ordered handler and failure contract.",
+    "Implement the target-specific runtime.",
+    "Prove fixed-range logical and physical differential parity.",
+    "Certify VID, PoI, failure, and PostgreSQL restore semantics.",
+    "Validate a paused backfill load only after every preceding gate passes.",
+    "Obtain separate production activation approval."
+  ],
+  "truth_gates": {
+    "eligibility_complete": false,
+    "source_revision_pinned": false,
+    "source_reproducible": false,
+    "implementation_complete": false,
+    "runtime_complete": false,
+    "runtime_parity": false,
+    "logical_parity": false,
+    "history_complete": false,
+    "physical_profile_complete": false,
+    "physical_parity": false,
+    "poi_parity": false,
+    "backfill_ready": false,
+    "production_ready": false,
+    "readiness": false,
+    "issue_87_complete": false,
+    "issue_89_complete": false,
+    "issue_93_complete": false
+  }
+}

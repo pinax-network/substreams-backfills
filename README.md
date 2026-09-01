@@ -54,6 +54,12 @@ only after this gate passes.
   its exact public source revision and toolchain remain unresolved; every
   implementation, runtime, parity, backfill, production, and readiness gate is
   therefore false.
+- **`uniswap-v2-base/`** — the immutable Factory/dynamic-Pair deployment closure and
+  15-entity static behavior profile for `QmQmz5kh…`. Its closest upstream revision is
+  explicitly non-reproducible, and the generic event extractor lacks Pair Transfer plus
+  target Factory/dynamic-Pair filtering. M8 orders the work while M0 eligibility remains
+  indeterminate; source-revision, implementation, runtime, parity, backfill, production,
+  and readiness gates remain false.
 - **`uniswap-v3/source/`** — the source-identical Rust 1.79 import of the reviewed
   mainnet parity fork. Its history is retained at
   `upstream/uniswap-v3-qma8a81t-parity`; the surrounding family directory owns target
@@ -275,9 +281,11 @@ subgraph author's) before any allocation is opened.
 
 ## Delivery milestones
 
-0. **M0 — eligibility gates**: build a new backfill only when the fastest healthy Graph
-   Node copy has a net catch-up ETA greater than 28 days. Borderline deployments remain
-   monitoring-only.
+0. **M0 — eligibility gates**: inventory both required clusters and use the fastest healthy
+   Graph Node path per cluster and window. Build a new backfill only when both fresh 24-hour
+   and 72-hour net catch-up forecasts in both clusters exceed 28 days or are non-converging.
+   Any fastest-healthy window at or below 28 days stops implementation, compute, and load;
+   native syncing continues.
 1. **M1 — Uniswap V4 reference port**: preserve the complete Substreams-owned source,
    isolated upstream history, immutable package bytes, module hashes, Store cache boundaries,
    fixtures, and audit packages; then reproduce a certified segment through the pinned engine
@@ -299,6 +307,15 @@ subgraph author's) before any allocation is opened.
    deployment closure and resolve M0 eligibility before implementing a
    target-specific Slipstream decoder/reducer/writer. Canonical Uniswap V3 and
    Solidly V2 packages are prior art only, not drop-in targets.
+8. **M8 — Uniswap V2 Base** (`QmQmz5kh…`): complete the immutable target and M0
+   eligibility work in [#87](https://github.com/pinax-network/substreams-backfills/issues/87),
+   then the target-specific implementation in
+   [#89](https://github.com/pinax-network/substreams-backfills/issues/89), then differential
+   certification and paused landing in
+   [#93](https://github.com/pinax-network/substreams-backfills/issues/93). M8 orders work
+   only: the generic V2 extractor is decoder prior art, not a Graph-compatible writer, and
+   implementation, compute, and load stop whenever either fastest-healthy 24-hour or 72-hour
+   path in either required cluster is at or below 28 days.
 
 Morpho Blue Base remains outside implementation while either its 24-hour or 72-hour net
 catch-up forecast is at or below 28 days. No milestone grants production activation: every

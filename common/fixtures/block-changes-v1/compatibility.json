@@ -1,0 +1,44 @@
+{
+  "adapter": "backfill-common/tests/block_changes_v1.rs::golden_changes/v1",
+  "artifacts": {
+    "block_changes_proto": {
+      "path": "common/proto/block_changes.proto",
+      "sha256": "7f9888a44138d7917d2addf332e5f04cf7980c6d3f51fa10248f6ecbab07fdee"
+    },
+    "initial_state": {
+      "path": "common/fixtures/block-changes-v1/initial-state.json",
+      "sha256": "4d82de655dc63ffd7f9f58228ed1d0ecc131c9655355c1b263972740fb930e28"
+    },
+    "prost_binding": {
+      "path": "common/src/pb/pinax.graph.backfill.v1.rs",
+      "sha256": "6cbb2a3b1dadb90c5898a69b3feeb886e3fc3ca31edc7716ed545892d5ce3f0e"
+    },
+    "schema": {
+      "path": "common/fixtures/block-changes-v1/schema.graphql",
+      "sha256": "54562538cbce53b2f8f04d6474c417e35cc30c1c793234500dbcb88d461e2592"
+    }
+  },
+  "contract": "pinax.graph.backfill.block-changes/v1",
+  "descriptor_version": 1,
+  "deterministic_error_policy": "non_fatal",
+  "expected_poi_causality_region": "ethereum/base",
+  "fixture_only": true,
+  "graph_node": {
+    "chrono": "0.4.44",
+    "commit": "77823b5a7adc4eac4abf03202c8dd7cb00dea31d",
+    "poi_version": "fast",
+    "version": "0.44.0"
+  },
+  "network": "base",
+  "producer": "pinax-network/substreams-backfills",
+  "storage_profile": {
+    "entity_types": [
+      "BytesEntity",
+      "Counter",
+      "OffchainEntity",
+      "Pool"
+    ],
+    "id": "synthetic-all-values-v1",
+    "mutability": "mutable"
+  }
+}

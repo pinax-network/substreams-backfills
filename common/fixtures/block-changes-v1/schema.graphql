@@ -1,0 +1,25 @@
+type Pool @entity {
+  id: ID!
+  active: Boolean!
+  bigDecimal: BigDecimal!
+  bigInt: BigInt!
+  bytes: Bytes!
+  int: Int!
+  int8: Int8!
+  list: [String]
+  nullable: String
+  timestamp: Timestamp!
+}
+
+type BytesEntity @entity {
+  id: Bytes!
+}
+
+type Counter @entity {
+  id: Int8!
+  value: Int!
+}
+
+type OffchainEntity @entity {
+  id: ID!
+}

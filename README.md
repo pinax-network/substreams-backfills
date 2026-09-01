@@ -350,6 +350,18 @@ target lands paused and requires its own certified evidence and operational appr
 
 ## Uniswap V4 import contract
 
+The repository-wide ordered engine boundary is now specified by
+[`docs/block-changes-v1.md`](docs/block-changes-v1.md) and the machine-readable
+[`common/proto/block_changes.proto`](common/proto/block_changes.proto).
+BlockChanges v1 preserves every Graph Node PoI event, committed versus
+handler-discarded versus fatal-block-discarded store effects, typed values and
+IDs, partial-save materialization, and the empty-but-triggered deployment PoI
+region. Its fail-closed compatibility profile binds the descriptor digest,
+manifest error policy, and expected `ethereum/{network}` region by deriving all
+three from the exact descriptor bytes. The canonical golden fixture and
+adversarial validator tests are repository-only M2 evidence; they do not switch
+V4, reproduce q8, or authorize a live database write.
+
 The imported directory is pinned to source commit
 `6812a4deaa5a520020e8d727e17f6d0b7113d0a9` (`v0.4.1`) and Git tree
 `2d60d30242443adc2c021a5b609c27edcb75128a`. It remains an independent Cargo project so

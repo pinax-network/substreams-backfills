@@ -42,7 +42,6 @@ dependencies = [
  "prost",
  "serde_json",
  "sha2",
- "substreams",
  "substreams-entity-change",
 ]
 

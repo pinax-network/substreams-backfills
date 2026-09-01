@@ -1,4 +1,12 @@
-# Uniswap V4 engine v0.5.0 pre-execution reference
+# Uniswap V4 engine v0.5.0 reference evidence
+
+This directory contains two deliberately separate ranges. The root files retain
+the older pre-execution reference at `32,374,155..32,474,154`. The
+[`q8/`](q8/) subdirectory retains the canonical prepared q8 metadata at
+`33,374,155..33,574,154`, including its recovered compact metadata archive.
+Do not combine hashes, manifests, checkpoints, or claims between the ranges.
+
+## Older pre-execution reference
 
 This directory retains the smallest tagged evidence set needed to prepare GitHub
 issue #26 without invoking Substreams, Kubernetes, a workflow, or PostgreSQL.

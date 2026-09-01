@@ -351,11 +351,17 @@ def verify_inventory(root: Path) -> None:
 
     expected = set(EXPECTED_FILE_LOCKS) | {"closure.json", "README.md"}
     actual: set[str] = set()
-    for path in capsule.rglob("*"):
-        relative = path.relative_to(capsule).as_posix()
+    child_capsules: set[str] = set()
+    for path in capsule.iterdir():
+        relative = path.name
         require(not path.is_symlink(), f"capsule entry must not be a symlink: {relative}")
+        if relative == "q8":
+            require(path.is_dir(), "q8 child capsule must be a directory")
+            child_capsules.add(relative)
+            continue
         require(path.is_file(), f"capsule contains an unexpected directory: {relative}")
         actual.add(relative)
+    require(child_capsules == {"q8"}, "q8 child capsule inventory drift")
     require(
         actual == expected,
         (

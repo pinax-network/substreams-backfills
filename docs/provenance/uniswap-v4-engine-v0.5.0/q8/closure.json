@@ -1,0 +1,205 @@
+{
+  "format_version": 1,
+  "contract": "uniswap-v4-engine-v0.5.0-q8-declared-reference/v1",
+  "source": {
+    "repository": "pinax-network/substreams-graph-node-backfill",
+    "commit": "395c9fb0d5377cba058d506043b7891c2f2016a8",
+    "tree": "c3568b472faf13e07618e14dc9551f9400551fa3",
+    "license": {
+      "spdx": "Apache-2.0",
+      "local_path": "LICENSE.source",
+      "source_path": "LICENSE",
+      "bytes": 11357,
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "git_blob": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64"
+    }
+  },
+  "files": [
+    {
+      "local_path": "LICENSE.source",
+      "source_path": "LICENSE",
+      "role": "source-license",
+      "bytes": 11357,
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "git_blob": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64"
+    },
+    {
+      "local_path": "uniswap-v4-base-q8-producer-compatibility.json",
+      "source_path": "fixtures/uniswap-v4-base-q8-producer-compatibility.json",
+      "role": "historical-producer-compatibility",
+      "bytes": 7252,
+      "sha256": "86b7c38e5d98700b9841aadefaad8ada8543e1d49e5e95d3db881f842b980ce6",
+      "git_blob": "e0dee4eaeaec71219491c445374be57e61e32715"
+    },
+    {
+      "local_path": "uniswap-v4-base-v0.5.0-q8-READY.json",
+      "source_path": "fixtures/uniswap-v4-base-v0.5.0-q8-READY.json",
+      "role": "certified-segment-ready-seal",
+      "bytes": 215,
+      "sha256": "073081a599d164c929326ea6eb46599884a927bd2fb21ed944bc75d2171f7de2",
+      "git_blob": "b5ee568af9989a47f7d311369dd15f61cb090dc9"
+    },
+    {
+      "local_path": "uniswap-v4-base-v0.5.0-q8-manifest.json",
+      "source_path": "fixtures/uniswap-v4-base-v0.5.0-q8-manifest.json",
+      "role": "certified-segment-copy-manifest",
+      "bytes": 12877,
+      "sha256": "44718ce74c0a60cdc9f5c452d1ce7b804257c887ec1ce8f34e930cfdb7c4d91a",
+      "git_blob": "8401eb8b7e85b7917fdd653ae5d4b8e6cdae0c87"
+    },
+    {
+      "local_path": "uniswap-v4-base-v0.5.0-q8-reference.json",
+      "source_path": "fixtures/uniswap-v4-base-v0.5.0-q8-reference.json",
+      "role": "declared-historical-reference-metadata",
+      "bytes": 12671,
+      "sha256": "9a9d2ac3423f19199d527993a97d4e125160f4d07c57cbfde44eb67f7006fc82",
+      "git_blob": "f8167150383a610f6bbe41411a24a70fbcf6263b"
+    },
+    {
+      "local_path": "uniswap-v4-base-v0.5.0-q8-restore-READY.json",
+      "source_path": "fixtures/uniswap-v4-base-v0.5.0-q8-restore-READY.json",
+      "role": "restore-segment-ready-seal",
+      "bytes": 215,
+      "sha256": "1a8bd8a749aa0c4a74059dcfebf2dcf9cfabfb234ac01729d90dc98b8a2ea233",
+      "git_blob": "9a0a2700eb44f68c9c715207458fc4133c8e06c3"
+    },
+    {
+      "local_path": "uniswap-v4-base-v0.5.0-q8-restore-manifest.json",
+      "source_path": "fixtures/uniswap-v4-base-v0.5.0-q8-restore-manifest.json",
+      "role": "restore-segment-copy-manifest",
+      "bytes": 12876,
+      "sha256": "9d398169ac19416ace56d429e186fbabae71f924ce538ea7fa9173556c5abdd2",
+      "git_blob": "958525256fb5e23dc85c2944ba20efd9de210225"
+    },
+    {
+      "local_path": "uniswap-v4-base-v4-reference-pod-topology.json",
+      "source_path": "fixtures/uniswap-v4-base-v4-reference-pod-topology.json",
+      "role": "declared-clean-run-pod-topology",
+      "bytes": 9142,
+      "sha256": "3758fac03502479027a76925cd52b872b26f7b8c82a1aae329fbcbb1630d9aec",
+      "git_blob": "4a19c81ddd2911e6759eb11e730ca99f751b6b4b"
+    },
+    {
+      "local_path": "uniswap-v4-base-v4-reference-source-observations.json",
+      "source_path": "fixtures/uniswap-v4-base-v4-reference-source-observations.json",
+      "role": "declared-source-observation-contract",
+      "bytes": 23284,
+      "sha256": "7e7d5847ce33ae7e8469825cf2a3a7ff0a58a213e5cd1b68964eb0d0792fced9",
+      "git_blob": "b2a80ed376fdd51b3e03c9fc69a73cdf6e54f2ae"
+    }
+  ],
+  "recovered_archive": {
+    "local_path": "release-complete-q8-200k-20260815-r1-evidence-20260815.tar.gz",
+    "declared_name": "release-complete-q8-200k-20260815-r1-evidence-20260815.tar.gz",
+    "status": "locally-recovered-compact-metadata-archive",
+    "acceptance_role": "none",
+    "bytes": 9047,
+    "sha256": "3072f55bac5f0a1bcdff799642cf0b4deeb414381fb19e6a9d18322627ff34d1",
+    "file_members": 11,
+    "checksum_bound_members": 10,
+    "recovery_evidence": "https://github.com/pinax-network/substreams-graph-node-backfill/issues/32#issuecomment-5303965641",
+    "source_reference_availability_is_stale": true
+  },
+  "selected_reference": {
+    "network": "base",
+    "deployment": "Qmbsc6XQWbiv4DfLVfaNciScqYLyDWUYjWzrFBbzzmRsMB",
+    "seed": {
+      "block": 33374154,
+      "hash": "5e8c1de6fe2065fcf08b382b10342e01fd8585052ca39ee1c9f80f37904c72a6",
+      "checkpoint_bytes": 11093835518,
+      "checkpoint_sha256": "be434078b1b71c3e51a36e37c0473f6b4d7864777511d8119426234d398e397d"
+    },
+    "certified_segment": {
+      "start_block": 33374155,
+      "end_block": 33474154,
+      "blocks": 100000,
+      "target_hash": "53ec0561c1a6d3b867e7a188678cd50256e2baca0ad72ea5ed5b7aefe86316e0",
+      "input_frames": 99248,
+      "input_payload_bytes": 9061879073,
+      "manifest_sha256": "44718ce74c0a60cdc9f5c452d1ce7b804257c887ec1ce8f34e930cfdb7c4d91a",
+      "ready_sha256": "073081a599d164c929326ea6eb46599884a927bd2fb21ed944bc75d2171f7de2",
+      "copy_file_set_sha256": "f7ac5e9b551f835d9c75baf3bc99e55ce5259d91bd02b9231d52201411ec1ca6",
+      "copy_tables": 19,
+      "seed_preserved_table": "data_sources$",
+      "copy_payload_bytes": 21065457930,
+      "checkpoint_bytes": 13589557635,
+      "checkpoint_sha256": "329a3be191125b90f5e56fa9e5f9da79484c15edcc9d6786405cd3033f238626"
+    },
+    "restore_segment": {
+      "start_block": 33474155,
+      "end_block": 33574154,
+      "blocks": 100000,
+      "target_hash": "fe88afd7188b33c593fa4eb81409106a220a9d83ca874af714b21b08a30c9116",
+      "input_frames": 97580,
+      "input_payload_bytes": 6948696921,
+      "manifest_sha256": "9d398169ac19416ace56d429e186fbabae71f924ce538ea7fa9173556c5abdd2",
+      "ready_sha256": "1a8bd8a749aa0c4a74059dcfebf2dcf9cfabfb234ac01729d90dc98b8a2ea233",
+      "copy_file_set_sha256": "81ad8bb4da493ea463c8c3fb632f364f6069d7e08896ad6268ffadfd94db4e43",
+      "copy_tables": 19,
+      "seed_preserved_table": "data_sources$",
+      "copy_payload_bytes": 18165472516,
+      "checkpoint_bytes": 15996029671,
+      "checkpoint_sha256": "0232aa8f53e42d45e7cdc57c75f84ef7804f1ec6abec73b84aef472db2e9c9d6"
+    }
+  },
+  "retention": {
+    "manifest_bytes": true,
+    "ready_seal_bytes": true,
+    "literal_copy_filenames_sizes_and_digests": true,
+    "compute_metadata_archive": true,
+    "source_observation_contract": true,
+    "pod_topology_contract": true,
+    "raw_frame_payload_bytes": false,
+    "raw_frame_stream_digest": false,
+    "copy_row_and_clamp_payload_bytes": false,
+    "seed_checkpoint_bytes": false,
+    "certified_checkpoint_bytes": false,
+    "restore_checkpoint_bytes": false
+  },
+  "historical_field_semantics": {
+    "input_stream_exact": {
+      "observed_value": true,
+      "meaning": "input-shape-equality-only",
+      "compared_fields": [
+        "input_format",
+        "input_frames",
+        "input_payload_bytes"
+      ],
+      "raw_byte_identity_proven": false,
+      "future_requirement": "emit-and-verify-frame-stream-receipt-sha256"
+    }
+  },
+  "scope": {
+    "issue": 26,
+    "status": "declared-historical-reference-metadata",
+    "supports_acceptance_criteria": [
+      2
+    ],
+    "fully_satisfied_acceptance_criteria": [],
+    "acceptance_role": "none"
+  },
+  "gates": {
+    "criterion_2_complete": false,
+    "raw_frame_stream_retained": false,
+    "raw_frame_stream_digest_retained": false,
+    "copy_payload_retained": false,
+    "checkpoint_payloads_retained": false,
+    "scratch_target_authorized": false,
+    "independent_zero_writer_proven": false,
+    "k3_runtime_contract_approved": false,
+    "workflow_submission_authorized": false,
+    "workflow_submitted": false,
+    "database_write_authorized": false,
+    "database_mutation_performed": false,
+    "backfill_ready": false,
+    "production_ready": false,
+    "promotion_eligible": false
+  },
+  "non_claims": [
+    "The recovered compact archive is metadata-only and has acceptance role none.",
+    "Historical input_stream_exact means input format, frame count, and payload byte-count equality; it does not prove raw frame-stream byte identity.",
+    "No raw frame payload, COPY row or clamp payload, seed checkpoint, or output checkpoint bytes are retained here.",
+    "The historical archive cannot replace a new authorized two-phase replay.",
+    "No scratch target, Kubernetes submission, workflow, database write, backfill, production, or promotion authority is represented."
+  ]
+}

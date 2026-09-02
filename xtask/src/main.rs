@@ -11,6 +11,9 @@ mod evidence;
 mod fixtures;
 mod github;
 mod import_verify;
+// Shared helpers for the target-baseline verifier ports; consumers land per family.
+#[allow(dead_code)]
+mod target_common;
 mod v4_engine_reference;
 mod v4_q8_reference;
 mod v4_release_assets;

@@ -99,5 +99,67 @@
       "bytes": 2785821,
       "sha256": "7f6d1a34a8c885fe5ddcd81895818ba7ae8a0d736d541b881c1cc7cd54275161"
     }
+  ],
+  "tracked": [
+    {
+      "path": "uniswap-v3/execution-order/v1/contract.json",
+      "bytes": 22216,
+      "sha256": "241e970cfcec4d76610b29a10141d3bff2512d80454a6308594f3db23621cde2"
+    },
+    {
+      "path": "uniswap-v3/factory-effects/v1/contract.json",
+      "bytes": 123800,
+      "sha256": "f737d67550721ed418d8b5fb83424a55e429dceea7596643c69748458c5ac892"
+    },
+    {
+      "path": "uniswap-v3/factory-fee-growth-init/v1/contract.json",
+      "bytes": 209446,
+      "sha256": "38301b81ae36e346595847c62a0ffc4bf12ce67e0b437abda7790e379e1489d1"
+    },
+    {
+      "path": "uniswap-v3/factory-guard/v1/contract.json",
+      "bytes": 41438,
+      "sha256": "8b9637519a4debc9d875245ca3318ad8269bc7a440837e716750dd007ffd3216"
+    },
+    {
+      "path": "uniswap-v3/factory-pool-bigint-init/v1/contract.json",
+      "bytes": 327120,
+      "sha256": "75ee8f9891e7f7835108d634d1fca2a74aedecd7e2a2ed1581c63fd8805bea25"
+    },
+    {
+      "path": "uniswap-v3/factory-pool-price-init/v1/contract.json",
+      "bytes": 198843,
+      "sha256": "fe441948746b6bf7b7fd8f0872ebc58c8297412a643ed4fe1fd0120dca14e56a"
+    },
+    {
+      "path": "uniswap-v3/factory-static/v1/contract.json",
+      "bytes": 197083,
+      "sha256": "c5a71b98fc28082aff3dea6b0b22916c86e7efb8ccbec24b2af228948091ed51"
+    },
+    {
+      "path": "uniswap-v3/pool-flash/v1/contract.json",
+      "bytes": 308207,
+      "sha256": "e90a292497f0771128a3e4859c8950b3496cbee9dcfd431334d19fe44926f696"
+    },
+    {
+      "path": "uniswap-v3/pool-initialize/v1/contract.json",
+      "bytes": 251497,
+      "sha256": "63bbec1b3190f1ccd54f9c9cb9a29bbd5a7d730be0165a2277412ea0b3adea14"
+    },
+    {
+      "path": "uniswap-v3/pool-runtime/v1/contract.json",
+      "bytes": 208464,
+      "sha256": "66daf481b5b3a8627110ff2dd736460611688887d3cbd6fdd41365fec9731b53"
+    },
+    {
+      "path": "uniswap-v3/pool-swap-core/v1/contract.json",
+      "bytes": 411125,
+      "sha256": "5437e87329ae98eaf26e273903e53078a05c068c8be52f19a9673ed41cf4dd8b"
+    },
+    {
+      "path": "uniswap-v3/pool-swap-fee-growth/v1/contract.json",
+      "bytes": 438425,
+      "sha256": "28e12268ebd6ddf78c4d6e59805967793630c6475ca6f0b332fefcf46c5b6b9b"
+    }
   ]
 }

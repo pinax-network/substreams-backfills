@@ -6,7 +6,6 @@ source_url="https://github.com/NgoKimPhu/infinity-cl-subgraph.git"
 source_commit="40b0021be04cda3e32dde8e3cf0c3397863fc0c0"
 source_tree="b7a7778bc5c7f316cc46913b7b1d54ffcfa07c22"
 source_parent="e53351269ab0bb9a265ab04d71189156f3fa03a8"
-python_executable="${PANCAKE_SOURCE_PYTHON:-python3}"
 
 temporary_root=$(mktemp -d)
 cleanup() {
@@ -76,7 +75,8 @@ cp -R "$source_snapshot/." "$source_work/"
 # under npm. Keep the source snapshot immutable and attach only the build outputs.
 cp -R "$source_work/build" "$source_snapshot/build"
 
-"$python_executable" "$repository_root/scripts/verify-pancakeswap-infinity-cl-bsc-target.py" \
+cargo +stable run --quiet --manifest-path "$repository_root/Cargo.toml" --package xtask -- \
+  verify-target pancakeswap-infinity-cl-bsc \
   --root "$repository_root" \
   --exact-source-root "$source_snapshot"
 

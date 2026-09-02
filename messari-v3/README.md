@@ -106,6 +106,5 @@ Run the offline verifier and refusal suite with:
 
 ```console
 find messari-v3/reference -type f -name '*.wasm' -exec wasm-validate {} \;
-python3 scripts/verify-messari-v3-targets.py
-python3 -m unittest scripts.tests.test_messari_v3_targets
+cargo xtask verify-target messari-v3
 ```

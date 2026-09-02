@@ -15,7 +15,6 @@ schema_history_commits=(
 )
 generic_url="https://github.com/pinax-network/substreams-evm.git"
 generic_commit="970a665e15619de8ad7f686bd89412a1030d46dc"
-python_executable="${UNISWAP_V2_BASE_SOURCE_PYTHON:-python3}"
 
 temporary_root=$(mktemp -d)
 cleanup() {
@@ -43,7 +42,8 @@ else
   git -C "$generic_repository" checkout -q --detach FETCH_HEAD
 fi
 
-"$python_executable" "$repository_root/scripts/verify-uniswap-v2-base-target.py" \
+cargo +stable run --quiet --manifest-path "$repository_root/Cargo.toml" --package xtask -- \
+  verify-target uniswap-v2-base \
   --root "$repository_root" \
   --source-root "$source_repository" \
   --generic-source-root "$generic_repository"

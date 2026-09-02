@@ -5,7 +5,6 @@ repository_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 source_url="https://github.com/Uniswap/v3-subgraph.git"
 source_commit="d07374a05719e68a10a339f79cdfbc048807cfdc"
 source_tree="8f5cefd138068952bee909522a0f1d88fdc87b42"
-python_executable="${MATIC_SOURCE_PYTHON:-python3}"
 
 temporary_root=$(mktemp -d)
 cleanup() {
@@ -54,7 +53,8 @@ git -C "$source_repository" archive "$source_commit" | tar -x -C "$source_work"
 # verifier checks the archived source bytes and Git blob.
 git -C "$source_repository" show "${source_commit}:package.json" > "$source_work/package.json"
 
-"$python_executable" "$repository_root/scripts/verify-uniswap-v3-matic-target.py" \
+cargo +stable run --quiet --manifest-path "$repository_root/Cargo.toml" --package xtask -- \
+  verify-target uniswap-v3-matic \
   --root "$repository_root" \
   --exact-source-root "$source_work"
 

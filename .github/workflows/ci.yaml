@@ -67,6 +67,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: cargo xtask evidence fetch
+      - name: Restore checksum-keyed block fixture cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/substreams-backfills/block-fixtures
+          key: block-fixtures-${{ hashFiles('uniswap-v3/fixtures/blocks.lock.json') }}
+      - name: Fetch and verify Uniswap V3 block fixtures and module goldens
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          cargo xtask evidence fetch --lock uniswap-v3/fixtures/blocks.lock.json --cache-dir ~/.cache/substreams-backfills/block-fixtures
+          cargo xtask fixtures check
       - name: Verify scoped Uniswap V3 segment field semantics
         run: |
           python3 scripts/verify-uniswap-v3-segment-field-semantics.py

@@ -41,8 +41,6 @@ jobs:
         run: >-
           git fetch --no-tags origin
           refs/heads/upstream/uniswap-v4-v0.4.1:refs/remotes/origin/upstream/uniswap-v4-v0.4.1
-      - name: Verify isolated history mirror and exact source import
-        run: ./scripts/verify-uniswap-v4-import.sh
       - name: Verify offline V4 engine, retained 100K reference, and q8 metadata closures
         run: |
           python3 scripts/verify-uniswap-v4-engine-reference.py
@@ -63,8 +61,8 @@ jobs:
             uniswap-v4/store-tick-shards
             uniswap-v4/nul-audit
           cache-on-failure: true
-      - name: Verify immutable Uniswap V4 historical release assets
-        run: cargo xtask verify-v4-release-assets
+      - name: Verify isolated history mirror, exact source import, frozen packages, and release assets
+        run: cargo xtask verify-import uniswap-v4
       - name: Restore checksum-pinned Substreams CLI archive
         uses: actions/cache@v4
         with:

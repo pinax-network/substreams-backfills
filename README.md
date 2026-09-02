@@ -375,7 +375,7 @@ its Rust/Substreams versions and lockfiles do not get silently unified with othe
 The exact upstream commit history is mirrored at
 `refs/heads/upstream/uniswap-v4-v0.4.1`, outside the default-branch ancestry. This preserves
 the history without allowing its old repository-local `Closes #…` commit messages to close
-unrelated roadmap issues here. Run `./scripts/verify-uniswap-v4-import.sh` to prove the mirror,
+unrelated roadmap issues here. Run `cargo xtask verify-import uniswap-v4` to prove the mirror,
 imported tree, file modes, frozen package bytes, and release lock are unchanged.
 
 The repository-only

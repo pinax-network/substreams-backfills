@@ -9,6 +9,7 @@
 mod eligibility;
 mod evidence;
 mod github;
+mod import_verify;
 mod v4_release_assets;
 mod verify_all;
 
@@ -22,6 +23,7 @@ const USAGE: &str = "usage: cargo xtask <evidence|verify-all|verify-targets|elig
   eligibility check --binding FILE --purpose implementation-start|compute-or-load-start [--now RFC3339] [--json] [--policy PATH] [--root DIR]
   verify-targets [--root DIR] [--policy PATH]   validate every target binding and pinned evidence (offline)
   verify-v4-release-assets [--root DIR] [--manifest PATH]   verify the immutable Uniswap V4 release-asset mirror
+  verify-import <uniswap-v3|uniswap-v4> [--root DIR]   verify a frozen source import against its mirror, inventory, and contracts
   evidence <check|fetch|lock|audit-release> [options]
   verify-all [--list] [--family core|targets|uniswap-v3|uniswap-v4] [--keep-going]
 
@@ -112,6 +114,27 @@ fn run() -> Result<(), String> {
     ) {
         (Some("verify-all"), _) => verify_all_command(&args),
         (Some("verify-targets"), _) => verify_targets_command(&args),
+        (Some("verify-import"), Some(family)) => {
+            let root = PathBuf::from(args.value("root").unwrap_or("."));
+            let contract = match family {
+                "uniswap-v3" | "v3" => &import_verify::UNISWAP_V3,
+                "uniswap-v4" | "v4" => &import_verify::UNISWAP_V4,
+                other => return Err(format!("unknown import {other}")),
+            };
+            let report = import_verify::verify_import(&root, contract)
+                .map_err(|e| format!("{} import verification failed: {e}", contract.label))?;
+            for line in report {
+                println!("{line}");
+            }
+            if contract.label == "Uniswap V4" {
+                v4_release_assets::verify(&root, &v4_release_assets::default_manifest_path())
+                    .map_err(|e| e.to_string())?;
+                println!("verified mirrored Uniswap V4 history, exact imported tree, 98 files, 13 executable modes, frozen v0.4.0 packages, and external release assets");
+            } else {
+                println!("verified mirrored Uniswap V3 history, exact imported tree and inventory, 75 files, one executable mode, and the 20-entity logical contract");
+            }
+            Ok(())
+        }
         (Some("verify-v4-release-assets"), _) => {
             let root = PathBuf::from(args.value("root").unwrap_or("."));
             let manifest = args

@@ -114,6 +114,18 @@ pub const CHECKS: &[Check] = &[
         argv: &["python3", "scripts/verify-messari-v3-targets.py"],
     },
     Check {
+        name: "uniswap-v3-import",
+        family: Family::UniswapV3,
+        requires: &[Requires::Nothing],
+        argv: &["cargo", "xtask", "verify-import", "uniswap-v3"],
+    },
+    Check {
+        name: "uniswap-v4-import",
+        family: Family::UniswapV4,
+        requires: &[Requires::Nothing],
+        argv: &["cargo", "xtask", "verify-import", "uniswap-v4"],
+    },
+    Check {
         name: "uniswap-v4-engine-reference",
         family: Family::UniswapV4,
         requires: &[Requires::Nothing],

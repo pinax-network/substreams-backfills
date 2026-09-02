@@ -110,10 +110,8 @@ jobs:
         run: >-
           git fetch --no-tags origin
           refs/heads/upstream/uniswap-v3-qma8a81t-parity:refs/remotes/origin/upstream/uniswap-v3-qma8a81t-parity
-      - name: Verify isolated history mirror and exact source import
-        run: ./scripts/verify-uniswap-v3-import.sh
-      - name: Test logical-contract expected refusals
-        run: python3 -m unittest scripts/tests/test_uniswap_v3_logical_contract.py
+      - name: Verify isolated history mirror, exact source import, and logical contract
+        run: cargo xtask verify-import uniswap-v3
       - name: Verify versioned mainnet/Base ChainConfig contract
         run: |
           python3 scripts/build-uniswap-v3-chain-manifests.py --check

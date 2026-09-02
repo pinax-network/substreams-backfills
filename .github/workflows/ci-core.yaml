@@ -1,0 +1,40 @@
+name: ci-core
+# Always runs. Required status check for main: formatting, workspace tests and
+# lints, and the target/eligibility contract validation shared by every family.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-ci.txt
+      - name: Install checksum-pinned validation dependencies
+        run: python3 -m pip install --require-hashes -r requirements-ci.txt
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@49a0bdc70d2e1b713ca9e2869b211fcce03d3c1c # v2.9.2
+        with:
+          cache-on-failure: true
+      - name: Check workspace formatting
+        run: cargo fmt --all --check
+      - name: Test workspace
+        run: cargo test --workspace --locked
+      - name: Verify canonical BlockChanges v1 schema and golden wire
+        run: cargo test -p backfill-common --test block_changes_v1 --locked
+      - name: Run strict workspace lints
+        run: cargo clippy --workspace --locked --all-targets -- -D warnings
+      - name: Validate target and eligibility contracts
+        run: python3 scripts/validate-targets.py
+      - name: Test eligibility decisions, freshness gates, and market snapshots
+        run: python3 -m unittest scripts.tests.test_eligibility scripts.tests.test_target_market_snapshots

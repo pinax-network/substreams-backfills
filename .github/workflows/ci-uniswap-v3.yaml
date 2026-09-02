@@ -1,10 +1,42 @@
-name: ci
+name: ci-uniswap-v3
+# Uniswap V3 mainnet/Base family: retained-WAT evidence verifiers with their
+# adversarial unittests (v3-evidence), and the frozen-import reference job that
+# materializes, tests, builds, and packs the configured runtimes (v3-reference).
 on:
   pull_request:
   push:
     branches: [main]
+  workflow_dispatch:
 jobs:
-  build:
+  changes:
+    # Path gate: on pull requests only the listed paths trigger the heavy jobs;
+    # every push to main runs everything. The job itself always reports, so a
+    # required status check never sits pending on an unrelated PR.
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    outputs:
+      run: ${{ steps.filter.outputs.run }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        id: filter
+        with:
+          filters: |
+            run:
+              - '.github/workflows/ci-uniswap-v3.yaml'
+              - 'scripts/**'
+              - 'requirements-ci.txt'
+              - 'uniswap-v3/**'
+              - 'common/**'
+              - 'xtask/**'
+              - 'Cargo.toml'
+              - 'Cargo.lock'
+              - '.cargo/**'
+              - 'evidence-assets.lock.json'
+              - 'docs/provenance/uniswap-v3*'
+  v3-evidence:
+    needs: changes
+    if: ${{ !cancelled() && (github.event_name != 'pull_request' || needs.changes.outputs.run == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,62 +49,42 @@ jobs:
           cache-dependency-path: requirements-ci.txt
       - name: Install checksum-pinned validation dependencies
         run: python3 -m pip install --require-hashes -r requirements-ci.txt
+      - name: Restore checksum-pinned WABT archive
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/toolchains/wabt-1.0.35-ubuntu-20.04.tar.gz
+          key: wabt-1.0.35-cb3d22440273b1e8ee641e622b7a32222d97b519ad46169b1f8fcc6ce9af0b9b
       - name: Install checksum-pinned WABT writer-evidence tool
         run: |
-          curl -fsSL \
-            https://github.com/WebAssembly/wabt/releases/download/1.0.35/wabt-1.0.35-ubuntu-20.04.tar.gz \
-            -o "$RUNNER_TEMP/wabt-1.0.35-ubuntu-20.04.tar.gz"
-          echo "cb3d22440273b1e8ee641e622b7a32222d97b519ad46169b1f8fcc6ce9af0b9b  $RUNNER_TEMP/wabt-1.0.35-ubuntu-20.04.tar.gz" | sha256sum -c -
-          tar -xzf "$RUNNER_TEMP/wabt-1.0.35-ubuntu-20.04.tar.gz" -C "$RUNNER_TEMP"
+          mkdir -p ~/.cache/toolchains
+          archive=~/.cache/toolchains/wabt-1.0.35-ubuntu-20.04.tar.gz
+          if [ ! -f "$archive" ]; then
+            curl -fsSL \
+              https://github.com/WebAssembly/wabt/releases/download/1.0.35/wabt-1.0.35-ubuntu-20.04.tar.gz \
+              -o "$archive"
+          fi
+          echo "cb3d22440273b1e8ee641e622b7a32222d97b519ad46169b1f8fcc6ce9af0b9b  $archive" | sha256sum -c -
+          tar -xzf "$archive" -C "$RUNNER_TEMP"
           test "$("$RUNNER_TEMP/wabt-1.0.35/bin/wasm2wat" --version)" = "1.0.35"
           echo "WASM2WAT=$RUNNER_TEMP/wabt-1.0.35/bin/wasm2wat" >> "$GITHUB_ENV"
           echo "$RUNNER_TEMP/wabt-1.0.35/bin" >> "$GITHUB_PATH"
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-unknown-unknown
-      - name: Restore checksum-keyed evidence asset cache
+      - uses: Swatinem/rust-cache@49a0bdc70d2e1b713ca9e2869b211fcce03d3c1c # v2.9.2
+        with:
+          cache-on-failure: true
+      - name: Restore checksum-keyed evidence asset cache (#108 lock)
+        if: hashFiles('evidence-assets.lock.json') != ''
         uses: actions/cache@v4
         with:
           path: ~/.cache/substreams-backfills/evidence-assets
           key: evidence-assets-${{ hashFiles('evidence-assets.lock.json') }}
-      - name: Fetch and verify externalized evidence assets
+      - name: Fetch and verify externalized evidence assets (#108 lock)
+        if: hashFiles('evidence-assets.lock.json') != ''
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: cargo xtask evidence fetch
-      - name: Check workspace formatting
-        run: cargo fmt --all --check
-      - name: Test workspace
-        run: cargo test --workspace --locked
-      - name: Verify canonical BlockChanges v1 schema and golden wire
-        run: cargo test -p backfill-common --test block_changes_v1 --locked
-      - name: Run strict workspace lints
-        run: cargo clippy --workspace --locked --all-targets -- -D warnings
-      - name: Validate target and eligibility contracts
-        run: python3 scripts/validate-targets.py
-      - name: Verify immutable Uniswap V3 Matic target and static layout profile
-        run: python3 scripts/verify-uniswap-v3-matic-target.py
-      - name: Verify immutable Uniswap V2 Base target and static source-gap profile
-        run: python3 scripts/verify-uniswap-v2-base-target.py
-      - name: Verify immutable PancakeSwap Infinity CL BSC target
-        run: python3 scripts/verify-pancakeswap-infinity-cl-bsc-target.py
-      - name: Verify immutable Exchange V3 BSC target
-        run: python3 scripts/verify-exchange-v3-bsc-target.py
-      - name: Verify immutable Aerodrome Slipstream CL Base target
-        run: |
-          wasm-validate aerodrome-slipstream-base/reference/mappings/Factory.wasm
-          wasm-validate aerodrome-slipstream-base/reference/mappings/NonfungiblePositionManager.wasm
-          wasm-validate aerodrome-slipstream-base/reference/mappings/Pool.wasm
-          python3 scripts/verify-aerodrome-slipstream-base-target.py
-          python3 -m unittest scripts.tests.test_aerodrome_slipstream_base_target
-      - name: Verify immutable Messari V3 BSC/Base target baselines
-        run: |
-          mapfile -t messari_wasm < <(find messari-v3/reference -type f -name '*.wasm' -print | sort)
-          test "${#messari_wasm[@]}" -eq 8
-          for wasm in "${messari_wasm[@]}"; do
-            wasm-validate "$wasm"
-          done
-          python3 scripts/verify-messari-v3-targets.py
-          python3 -m unittest scripts.tests.test_messari_v3_targets
       - name: Verify immutable Uniswap V3 graft ancestry
         run: python3 scripts/verify-uniswap-v3-graft-ancestry.py
       - name: Recompute Uniswap V3 writer compatibility evidence
@@ -192,7 +204,9 @@ jobs:
       - name: Test eligibility decisions and freshness gates
         run: python3 -m unittest discover -s scripts/tests -p 'test_*.py'
 
-  uniswap-v3-reference:
+  v3-reference:
+    needs: changes
+    if: ${{ !cancelled() && (github.event_name != 'pull_request' || needs.changes.outputs.run == 'true') }}
     runs-on: ubuntu-latest
     env:
       SOURCE_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
@@ -201,16 +215,6 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
-      - uses: dtolnay/rust-toolchain@stable
-      - name: Restore checksum-keyed evidence asset cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/substreams-backfills/evidence-assets
-          key: evidence-assets-${{ hashFiles('evidence-assets.lock.json') }}
-      - name: Fetch and verify externalized evidence assets
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: cargo xtask evidence fetch
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -220,6 +224,18 @@ jobs:
         with:
           go-version: "1.26.5"
           cache-dependency-path: scripts/parity-client/go.sum
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Restore checksum-keyed evidence asset cache (#108 lock)
+        if: hashFiles('evidence-assets.lock.json') != ''
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/substreams-backfills/evidence-assets
+          key: evidence-assets-${{ hashFiles('evidence-assets.lock.json') }}
+      - name: Fetch and verify externalized evidence assets (#108 lock)
+        if: hashFiles('evidence-assets.lock.json') != ''
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: cargo xtask evidence fetch
       - name: Install checksum-pinned validation dependencies
         run: python3 -m pip install --require-hashes -r requirements-ci.txt
       - name: Fetch pinned V3 history mirror
@@ -292,16 +308,32 @@ jobs:
           fi
           CGO_ENABLED=0 GOTOOLCHAIN=local go build -mod=readonly -trimpath -buildvcs=false -ldflags=-buildid= -o "$RUNNER_TEMP/uniswap-v3-parity-client" .
           test "$("$RUNNER_TEMP/uniswap-v3-parity-client" --version)" = "uniswap-v3-mainnet-parity-client-v1 (protocol v3; upstream v1.20.3 cc555bd4e325b65ac3f95dfde4655076f88d4a0a)"
+      - name: Restore Cargo registry cache for the frozen Rust 1.79 imports
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+          key: cargo-registry-v3-${{ hashFiles('uniswap-v3/source/Cargo.lock', 'uniswap-v3/contract-tests/Cargo.lock', 'Cargo.lock') }}
       - uses: dtolnay/rust-toolchain@1.79
         with:
           components: clippy, rustfmt
           targets: wasm32-unknown-unknown
+      - name: Restore checksum-pinned Substreams CLI archive
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/toolchains/substreams-v1.20.3-linux_x86_64.tar.gz
+          key: substreams-v1.20.3-90c71d04a75490efdf0493254a8563c3555690e622b3c6ade5100c0c773f8675
       - name: Install checksum-pinned Substreams CLI
         run: |
-          curl -fsSL https://github.com/streamingfast/substreams/releases/download/v1.20.3/substreams_linux_x86_64.tar.gz -o /tmp/substreams.tar.gz
-          echo "90c71d04a75490efdf0493254a8563c3555690e622b3c6ade5100c0c773f8675  /tmp/substreams.tar.gz" | sha256sum -c -
-          sudo tar -xzf /tmp/substreams.tar.gz -C /usr/local/bin substreams
-          test "$(substreams --version)" = "substreams version 1.20.3 (Commit cc555bd, Commit Date 2026-07-31T14:30:54Z)"
+          mkdir -p ~/.cache/toolchains
+          archive=~/.cache/toolchains/substreams-v1.20.3-linux_x86_64.tar.gz
+          if [ ! -f "$archive" ]; then
+            curl -fsSL https://github.com/streamingfast/substreams/releases/download/v1.20.3/substreams_linux_x86_64.tar.gz -o "$archive"
+          fi
+          echo "90c71d04a75490efdf0493254a8563c3555690e622b3c6ade5100c0c773f8675  $archive" | sha256sum -c -
+          sudo tar -xzf "$archive" -C /usr/local/bin substreams
       - name: Test imported source on the host target
         working-directory: uniswap-v3/source
         run: cargo test --locked --target x86_64-unknown-linux-gnu
@@ -738,149 +770,3 @@ jobs:
             ${{ runner.temp }}/uniswap-v3-parity-client
           if-no-files-found: error
 
-  uniswap-v3-matic-reference:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - name: Restore checksum-keyed evidence asset cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/substreams-backfills/evidence-assets
-          key: evidence-assets-${{ hashFiles('evidence-assets.lock.json') }}
-      - name: Fetch and verify externalized evidence assets
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: cargo xtask evidence fetch
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: pip
-          cache-dependency-path: requirements-ci.txt
-      - name: Install checksum-pinned validation dependencies
-        run: python3 -m pip install --require-hashes -r requirements-ci.txt
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "18.18.0"
-      - name: Reproduce exact deployed Matic source and behavior closure
-        run: ./scripts/verify-uniswap-v3-matic-source.sh
-
-  uniswap-v2-base-reference:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: pip
-          cache-dependency-path: requirements-ci.txt
-      - name: Install checksum-pinned validation dependencies
-        run: python3 -m pip install --require-hashes -r requirements-ci.txt
-      - name: Verify pinned behavioral source and generic extractor gap
-        run: ./scripts/verify-uniswap-v2-base-source.sh
-
-  pancakeswap-infinity-cl-bsc-reference:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: pip
-          cache-dependency-path: requirements-ci.txt
-      - name: Install checksum-pinned validation dependencies
-        run: python3 -m pip install --require-hashes -r requirements-ci.txt
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "24.13.1"
-      - name: Pin exact npm reproduction tool
-        run: |
-          npm install --global npm@11.11.0
-          test "$(npm --version)" = "11.11.0"
-      - name: Reproduce exact deployed Pancake source
-        run: ./scripts/verify-pancakeswap-infinity-cl-bsc-source.sh
-
-  exchange-v3-bsc-reference:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: pip
-          cache-dependency-path: requirements-ci.txt
-      - name: Install checksum-pinned validation dependencies
-        run: python3 -m pip install --require-hashes -r requirements-ci.txt
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "14.21.3"
-      - name: Pin exact Yarn reproduction tool
-        run: |
-          npm install --global yarn@1.22.22
-          test "$(yarn --version)" = "1.22.22"
-      - name: Reproduce exact deployed Exchange V3 BSC source
-        run: ./scripts/verify-exchange-v3-bsc-source.sh
-
-  uniswap-v4-reference:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Fetch pinned V4 history mirror
-        run: >-
-          git fetch --no-tags origin
-          refs/heads/upstream/uniswap-v4-v0.4.1:refs/remotes/origin/upstream/uniswap-v4-v0.4.1
-      - name: Verify isolated history mirror and exact source import
-        run: ./scripts/verify-uniswap-v4-import.sh
-      - name: Verify offline V4 engine, retained 100K reference, and q8 metadata closures
-        run: |
-          python3 scripts/verify-uniswap-v4-engine-reference.py
-          python3 -m unittest scripts.tests.test_uniswap_v4_engine_reference
-          python3 scripts/verify-uniswap-v4-q8-reference.py
-          python3 -m unittest scripts.tests.test_uniswap_v4_q8_reference
-      - uses: dtolnay/rust-toolchain@1.90.0
-        with:
-          targets: wasm32-unknown-unknown
-      - name: Install checksum-pinned Substreams CLI
-        run: |
-          curl -fsSL https://github.com/streamingfast/substreams/releases/download/v1.20.3/substreams_linux_x86_64.tar.gz -o /tmp/substreams.tar.gz
-          echo "90c71d04a75490efdf0493254a8563c3555690e622b3c6ade5100c0c773f8675  /tmp/substreams.tar.gz" | sha256sum -c -
-          sudo tar -xzf /tmp/substreams.tar.gz -C /usr/local/bin substreams
-      - name: Run offline parity fixtures
-        working-directory: uniswap-v4
-        run: ./scripts/offline-parity-ci.sh "$RUNNER_TEMP/uniswap-v4-parity"
-      - name: Check imported source formatting
-        working-directory: uniswap-v4
-        run: cargo fmt --all --check
-      - name: Run imported source strict lints
-        working-directory: uniswap-v4
-        run: cargo clippy --locked --all-targets -- -D warnings
-      - name: Validate imported Store packages and cache boundaries
-        working-directory: uniswap-v4
-        run: make stores-validate
-      - name: Verify frozen production packages
-        working-directory: uniswap-v4
-        run: make release-packages RELEASE_DIST="$RUNNER_TEMP/uniswap-v4-release"
-      - name: Build evidence-only NUL audit candidate
-        working-directory: uniswap-v4
-        run: make release-nul-audit-package RELEASE_DIST="$RUNNER_TEMP/uniswap-v4-nul-audit"
-      - name: Upload V4 parity evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: uniswap-v4-offline-parity
-          path: ${{ runner.temp }}/uniswap-v4-parity
-          if-no-files-found: warn
-      - name: Upload frozen package evidence
-        uses: actions/upload-artifact@v4
-        with:
-          name: uniswap-v4-frozen-packages
-          path: ${{ runner.temp }}/uniswap-v4-release
-          if-no-files-found: error
-      - name: Upload NUL audit candidate
-        uses: actions/upload-artifact@v4
-        with:
-          name: uniswap-v4-nul-audit-candidate
-          path: ${{ runner.temp }}/uniswap-v4-nul-audit
-          if-no-files-found: error

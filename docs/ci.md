@@ -63,8 +63,12 @@ job counts as success for the workflow but a required job that never ran blocks
 the merge. Changing branch protection is an operator action outside this
 repository's pull requests.
 
-## Interim verifier driver
+## Verifier driver
 
-`v3-evidence` still runs each retained Python verifier and its paired unittest
-as separate steps, followed by `python -m unittest discover`. #110 replaces
-those with `cargo xtask verify-all`; this layout is not the final interface.
+`cargo xtask verify-all [--list] [--family core|targets|uniswap-v3|uniswap-v4] [--keep-going]`
+is the single driver for retained checks. Its registry names each check, its
+family, its requirements (hydrated evidence blobs), and the exact command;
+entries are replaced by native Rust implementations as #110 ports them. The
+29 Uniswap V3 static-certificate verifiers and their tests were retired under
+#110 (tag `static-verifiers-retired-v1`), which removed 29 steps and about 50
+minutes from `v3-evidence`; their contract outputs remain digest-locked.

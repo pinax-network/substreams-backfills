@@ -8,13 +8,18 @@
 
 mod evidence;
 mod github;
+mod verify_all;
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use evidence::{DirectoryFetcher, FetchOptions, Fetcher, Lock, Outcome, Status, DEFAULT_LOCK_PATH};
 
-const USAGE: &str = "usage: cargo xtask evidence <check|fetch|lock|audit-release> [options]
+const USAGE: &str = "usage: cargo xtask <evidence|verify-all> ...
+  evidence <check|fetch|lock|audit-release> [options]
+  verify-all [--list] [--family core|targets|uniswap-v3|uniswap-v4] [--keep-going]
+
+evidence subcommands:
   check          verify every locked blob in the working tree (offline)
   fetch          place missing or mismatched blobs from the checksum-keyed cache or the release
   lock           regenerate the lock from in-tree files (review before committing)
@@ -27,24 +32,34 @@ options:
   --mirror DIR       fetch: read assets from a local directory instead of GitHub
   --release-tag TAG  lock: immutable release tag the assets live on
   --repository O/N   lock: GitHub repository (default pinax-network/substreams-backfills)
+  --track PATH       lock: also pin an in-tree contract file (repeatable)
   --write            lock: write the lock file instead of printing it";
 
 struct Args {
     positional: Vec<String>,
     flags: std::collections::BTreeMap<String, Option<String>>,
+    tracked: Vec<String>,
 }
 
 fn parse_args(raw: Vec<String>) -> Result<Args, String> {
     let mut positional = Vec::new();
     let mut flags = std::collections::BTreeMap::new();
+    let mut tracked = Vec::new();
     let mut iter = raw.into_iter();
     while let Some(arg) = iter.next() {
         if let Some(name) = arg.strip_prefix("--") {
             match name {
-                "offline" | "write" => {
+                "offline" | "write" | "list" | "keep-going" => {
                     flags.insert(name.to_string(), None);
                 }
-                "lock" | "root" | "cache-dir" | "mirror" | "release-tag" | "repository" => {
+                "track" => {
+                    let value = iter
+                        .next()
+                        .ok_or_else(|| "--track requires a value".to_string())?;
+                    tracked.push(value);
+                }
+                "lock" | "root" | "cache-dir" | "mirror" | "release-tag" | "repository"
+                | "family" => {
                     let value = iter
                         .next()
                         .ok_or_else(|| format!("--{name} requires a value"))?;
@@ -56,7 +71,11 @@ fn parse_args(raw: Vec<String>) -> Result<Args, String> {
             positional.push(arg);
         }
     }
-    Ok(Args { positional, flags })
+    Ok(Args {
+        positional,
+        flags,
+        tracked,
+    })
 }
 
 impl Args {
@@ -84,6 +103,7 @@ fn run() -> Result<(), String> {
         positional.next().map(String::as_str),
         positional.next().map(String::as_str),
     ) {
+        (Some("verify-all"), _) => verify_all_command(&args),
         (Some("evidence"), Some(sub)) => {
             let root = PathBuf::from(args.value("root").unwrap_or("."));
             let lock_path = root.join(args.value("lock").unwrap_or(DEFAULT_LOCK_PATH));
@@ -190,9 +210,9 @@ fn evidence_lock(
         .value("repository")
         .unwrap_or("pinax-network/substreams-backfills");
     if paths.is_empty() {
-        return Err("at least one path is required".into());
+        return Err("at least one externalized path is required (positional); use --track PATH for in-tree pins".into());
     }
-    let lock = evidence::lock_from_tree(root, repository, release_tag, paths)
+    let lock = evidence::lock_from_tree(root, repository, release_tag, paths, args.tracked.clone())
         .map_err(|e| e.to_string())?;
     let rendered = lock.render();
     if args.has("write") {
@@ -230,5 +250,45 @@ fn main() -> ExitCode {
             eprintln!("{message}");
             ExitCode::FAILURE
         }
+    }
+}
+
+fn verify_all_command(args: &Args) -> Result<(), String> {
+    let family = match args.value("family") {
+        Some(value) => Some(
+            verify_all::Family::parse(value).ok_or_else(|| format!("unknown family {value}"))?,
+        ),
+        None => None,
+    };
+    if args.has("list") {
+        for check in verify_all::list(family) {
+            println!(
+                "{:<12} {:<40} {}",
+                check.family.label(),
+                check.name,
+                check.argv.join(" ")
+            );
+        }
+        return Ok(());
+    }
+    let root = PathBuf::from(args.value("root").unwrap_or("."));
+    let lock_path = root.join(args.value("lock").unwrap_or(DEFAULT_LOCK_PATH));
+    let evidence_ok = Lock::load(&lock_path)
+        .map(|lock| evidence::check(&lock, &root).ok())
+        .unwrap_or(false);
+    let (outcomes, all_ok) = verify_all::run(family, args.has("keep-going"), evidence_ok);
+    for outcome in &outcomes {
+        let tag = if outcome.ok { "ok  " } else { "FAIL" };
+        println!(
+            "{tag} {:<40} {:>8.1}s  {}",
+            outcome.name, outcome.seconds, outcome.detail
+        );
+    }
+    let passed = outcomes.iter().filter(|o| o.ok).count();
+    println!("verify-all: {passed}/{} checks passed", outcomes.len());
+    if all_ok {
+        Ok(())
+    } else {
+        Err("verify-all failed".into())
     }
 }

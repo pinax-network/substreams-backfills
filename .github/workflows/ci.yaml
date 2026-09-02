@@ -1,5 +1,8 @@
-name: ci-uniswap-v3
-# Uniswap V3 mainnet/Base family: retained-WAT evidence verifiers with their
+name: ci
+# Uniswap V3 mainnet/Base family. The file keeps the historical path and name
+# `ci` because retained verifiers and unittests read `.github/workflows/ci.yaml`
+# by path and the all-handlers publication seal records that workflow identity.
+# retained-WAT evidence verifiers with their
 # adversarial unittests (v3-evidence), and the frozen-import reference job that
 # materializes, tests, builds, and packs the configured runtimes (v3-reference).
 on:
@@ -23,7 +26,7 @@ jobs:
         with:
           filters: |
             run:
-              - '.github/workflows/ci-uniswap-v3.yaml'
+              - '.github/workflows/ci.yaml'
               - 'scripts/**'
               - 'requirements-ci.txt'
               - 'uniswap-v3/**'
@@ -334,6 +337,7 @@ jobs:
           fi
           echo "90c71d04a75490efdf0493254a8563c3555690e622b3c6ade5100c0c773f8675  $archive" | sha256sum -c -
           sudo tar -xzf "$archive" -C /usr/local/bin substreams
+          test "$(substreams --version)" = "substreams version 1.20.3 (Commit cc555bd, Commit Date 2026-07-31T14:30:54Z)"
       - name: Test imported source on the host target
         working-directory: uniswap-v3/source
         run: cargo test --locked --target x86_64-unknown-linux-gnu

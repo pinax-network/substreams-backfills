@@ -8,6 +8,7 @@
 
 mod eligibility;
 mod evidence;
+mod fixtures;
 mod github;
 mod import_verify;
 mod v4_engine_reference;
@@ -28,6 +29,7 @@ const USAGE: &str = "usage: cargo xtask <evidence|verify-all|verify-targets|elig
   verify-v4-engine-reference [--root DIR]   verify the engine v0.5.0 reference capsule (offline)
   verify-v4-q8-reference [--root DIR]   verify the q8 declared-metadata capsule (offline)
   verify-import <uniswap-v3|uniswap-v4> [--root DIR]   verify a frozen source import against its mirror, inventory, and contracts
+  fixtures check [--root DIR]   verify hydrated Uniswap V3 block fixtures and module goldens (offline)
   evidence <check|fetch|lock|audit-release> [options]
   verify-all [--list] [--family core|targets|uniswap-v3|uniswap-v4] [--keep-going]
 
@@ -118,6 +120,14 @@ fn run() -> Result<(), String> {
     ) {
         (Some("verify-all"), _) => verify_all_command(&args),
         (Some("verify-targets"), _) => verify_targets_command(&args),
+        (Some("fixtures"), Some("check")) => {
+            let root = PathBuf::from(args.value("root").unwrap_or("."));
+            let report = fixtures::check(&root).map_err(|e| e.to_string())?;
+            for line in report.lines {
+                println!("{line}");
+            }
+            Ok(())
+        }
         (Some("verify-import"), Some(family)) => {
             let root = PathBuf::from(args.value("root").unwrap_or("."));
             let contract = match family {

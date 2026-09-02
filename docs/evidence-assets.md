@@ -25,6 +25,13 @@ what brings a plain checkout of `uniswap-v3/` under 10 MiB; the 11 files over
 1 MiB alone left it at 11 MiB. The `uniswap-v3/graft-ancestry/v1/artifacts/`
 IPFS objects stay in the tree: they are inputs, not outputs.
 
+## Additional locks
+
+The same format and commands serve other content-addressed sets through
+`--lock PATH`: `uniswap-v3/fixtures/blocks.lock.json` (release
+`block-fixtures-v1`, Firehose block protobufs for #113, asset names keep the
+`.pb` extension). Each lock maps to exactly one immutable release tag.
+
 ## Tracked in-tree pins
 
 Besides the externalized `assets`, the lock may carry a `tracked` list: in-tree

@@ -69,6 +69,17 @@ pub struct Lock {
     pub repository: String,
     pub release_tag: String,
     pub assets: Vec<Asset>,
+    /// In-tree contract files whose bytes are pinned but not externalized.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub tracked: Vec<Tracked>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Tracked {
+    pub path: String,
+    pub bytes: u64,
+    pub sha256: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -188,6 +199,42 @@ impl Lock {
             }
             previous = Some(asset.path.as_str());
         }
+        let mut previous_tracked: Option<&str> = None;
+        for tracked in &self.tracked {
+            validate_relative_path(&tracked.path)?;
+            if tracked.bytes == 0 {
+                return Err(EvidenceError::Lock(format!(
+                    "{}: bytes must be positive",
+                    tracked.path
+                )));
+            }
+            if tracked.sha256.len() != 64
+                || !tracked
+                    .sha256
+                    .chars()
+                    .all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase())
+            {
+                return Err(EvidenceError::Lock(format!(
+                    "{}: sha256 must be 64 lowercase hex characters",
+                    tracked.path
+                )));
+            }
+            if paths.contains(tracked.path.as_str()) {
+                return Err(EvidenceError::Lock(format!(
+                    "{} is both externalized and tracked",
+                    tracked.path
+                )));
+            }
+            if let Some(prev) = previous_tracked {
+                if prev >= tracked.path.as_str() {
+                    return Err(EvidenceError::Lock(format!(
+                        "tracked must be sorted by unique path; {} follows {prev}",
+                        tracked.path
+                    )));
+                }
+            }
+            previous_tracked = Some(tracked.path.as_str());
+        }
         Ok(())
     }
 }
@@ -265,7 +312,7 @@ impl CheckReport {
 
 /// Verify every locked path in `root`; never touches the network or cache.
 pub fn check(lock: &Lock, root: &Path) -> CheckReport {
-    let mut rows = Vec::with_capacity(lock.assets.len());
+    let mut rows = Vec::with_capacity(lock.assets.len() + lock.tracked.len());
     for asset in &lock.assets {
         let path = root.join(&asset.path);
         let row = if !path.is_file() {
@@ -281,6 +328,32 @@ pub fn check(lock: &Lock, root: &Path) -> CheckReport {
                     format!("{} bytes", asset.bytes),
                 ),
                 Err(e) => (asset.path.clone(), Status::Mismatch, e.to_string()),
+            }
+        };
+        rows.push(row);
+    }
+    for tracked in &lock.tracked {
+        let asset = Asset {
+            path: tracked.path.clone(),
+            asset: String::new(),
+            bytes: tracked.bytes,
+            sha256: tracked.sha256.clone(),
+        };
+        let path = root.join(&tracked.path);
+        let row = if !path.is_file() {
+            (
+                tracked.path.clone(),
+                Status::Missing,
+                format!("tracked contract missing: {}", tracked.path),
+            )
+        } else {
+            match verify_file(&path, &asset) {
+                Ok(()) => (
+                    tracked.path.clone(),
+                    Status::Verified,
+                    format!("{} bytes (tracked)", tracked.bytes),
+                ),
+                Err(e) => (tracked.path.clone(), Status::Mismatch, e.to_string()),
             }
         };
         rows.push(row);
@@ -419,7 +492,19 @@ pub fn lock_from_tree(
     repository: &str,
     release_tag: &str,
     mut paths: Vec<String>,
+    mut tracked_paths: Vec<String>,
 ) -> Result<Lock> {
+    tracked_paths.sort();
+    let mut tracked = Vec::with_capacity(tracked_paths.len());
+    for path in tracked_paths {
+        validate_relative_path(&path)?;
+        let (bytes, sha256) = digest_file(&root.join(&path))?;
+        tracked.push(Tracked {
+            path,
+            bytes,
+            sha256,
+        });
+    }
     paths.sort();
     let mut assets = Vec::with_capacity(paths.len());
     for path in paths {
@@ -438,6 +523,7 @@ pub fn lock_from_tree(
         repository: repository.into(),
         release_tag: release_tag.into(),
         assets,
+        tracked,
     };
     lock.validate()?;
     Ok(lock)
@@ -490,6 +576,7 @@ mod tests {
             "pinax-network/substreams-backfills",
             "evidence-assets-v1",
             files.iter().map(|(p, _)| p.to_string()).collect(),
+            Vec::new(),
         )
         .unwrap()
     }
@@ -671,5 +758,73 @@ mod tests {
             .contains("unlocked asset"));
         let wrong_size = vec![(lock.assets[0].asset.clone(), 4)];
         assert!(audit_release_assets(&lock, &wrong_size).is_err());
+    }
+}
+
+#[cfg(test)]
+mod tracked_tests {
+    use super::*;
+
+    #[test]
+    fn tracked_entries_are_verified_and_cannot_overlap_assets() {
+        let dir = tempfile::tempdir().unwrap();
+        for (p, b) in [
+            ("ext/contract.json", b"ext".as_slice()),
+            ("small/contract.json", b"small".as_slice()),
+        ] {
+            let path = dir.path().join(p);
+            fs::create_dir_all(path.parent().unwrap()).unwrap();
+            fs::write(&path, b).unwrap();
+        }
+        let lock = lock_from_tree(
+            dir.path(),
+            "pinax-network/substreams-backfills",
+            "evidence-assets-v1",
+            vec!["ext/contract.json".into()],
+            vec!["small/contract.json".into()],
+        )
+        .unwrap();
+        assert_eq!(lock.tracked.len(), 1);
+        assert!(check(&lock, dir.path()).ok());
+        let parsed = Lock::parse(&lock.render()).unwrap();
+        assert_eq!(parsed, lock);
+
+        fs::write(dir.path().join("small/contract.json"), b"smal").unwrap();
+        let report = check(&lock, dir.path());
+        assert_eq!(report.rows[1].1, Status::Mismatch);
+        fs::remove_file(dir.path().join("small/contract.json")).unwrap();
+        let report = check(&lock, dir.path());
+        assert_eq!(report.rows[1].1, Status::Missing);
+        assert!(report.rows[1].2.contains("tracked contract missing"));
+
+        let mut overlap = lock.clone();
+        overlap.tracked[0].path = "ext/contract.json".into();
+        assert!(overlap
+            .validate()
+            .unwrap_err()
+            .to_string()
+            .contains("both externalized and tracked"));
+        let mut unsorted = lock.clone();
+        unsorted.tracked.push(Tracked {
+            path: "a/contract.json".into(),
+            bytes: 1,
+            sha256: "0".repeat(64),
+        });
+        assert!(unsorted
+            .validate()
+            .unwrap_err()
+            .to_string()
+            .contains("sorted"));
+        // Old locks without a tracked field still parse.
+        let legacy = lock
+            .render()
+            .replace(",\n  \"tracked\": [", ",\n  \"tracked_legacy_removed\": [");
+        assert!(Lock::parse(&legacy).is_err(), "unknown field is rejected");
+        let mut no_tracked = lock.clone();
+        no_tracked.tracked.clear();
+        assert!(Lock::parse(&no_tracked.render())
+            .unwrap()
+            .tracked
+            .is_empty());
     }
 }

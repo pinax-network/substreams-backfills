@@ -3,3 +3,22 @@ target/
 !artifacts/releases/uniswap-v4/**/*.spkg
 __pycache__/
 *.py[cod]
+
+# Externalized evidence assets (see docs/evidence-assets.md). Fetched copies are
+# placed at their original paths by `cargo xtask evidence fetch`; never commit them.
+uniswap-v3/all-handlers/v1/contract.json
+uniswap-v3/factory-static/v2/contract.json
+uniswap-v3/graft-ancestry/v1/contract.json
+uniswap-v3/graft-ancestry/v2/contract.json
+uniswap-v3/npm-collect/v2/contract.json
+uniswap-v3/npm-liquidity/v2/contract.json
+uniswap-v3/npm-transfer/v2/contract.json
+uniswap-v3/pool-burn/v1/contract.json
+uniswap-v3/pool-burn/v2/contract.json
+uniswap-v3/pool-flash/v2/contract.json
+uniswap-v3/pool-initialize/v2/contract.json
+uniswap-v3/pool-mint/v1/contract.json
+uniswap-v3/pool-mint/v2/contract.json
+uniswap-v3/pool-swap/v2/contract.json
+uniswap-v3/segment-field-semantics/v2/contract.json
+uniswap-v3/segment-writer-matrix/v1/contract.json

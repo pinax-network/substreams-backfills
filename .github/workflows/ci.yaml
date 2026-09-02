@@ -30,6 +30,15 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-unknown-unknown
+      - name: Restore checksum-keyed evidence asset cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/substreams-backfills/evidence-assets
+          key: evidence-assets-${{ hashFiles('evidence-assets.lock.json') }}
+      - name: Fetch and verify externalized evidence assets
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: cargo xtask evidence fetch
       - name: Check workspace formatting
         run: cargo fmt --all --check
       - name: Test workspace
@@ -192,6 +201,16 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Restore checksum-keyed evidence asset cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/substreams-backfills/evidence-assets
+          key: evidence-assets-${{ hashFiles('evidence-assets.lock.json') }}
+      - name: Fetch and verify externalized evidence assets
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: cargo xtask evidence fetch
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -723,6 +742,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Restore checksum-keyed evidence asset cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/substreams-backfills/evidence-assets
+          key: evidence-assets-${{ hashFiles('evidence-assets.lock.json') }}
+      - name: Fetch and verify externalized evidence assets
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: cargo xtask evidence fetch
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"

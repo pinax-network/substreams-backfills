@@ -1,0 +1,103 @@
+{
+  "schema": "pinax.substreams-backfills.evidence-assets/v1",
+  "repository": "pinax-network/substreams-backfills",
+  "release_tag": "evidence-assets-v1",
+  "assets": [
+    {
+      "path": "uniswap-v3/all-handlers/v1/contract.json",
+      "asset": "sha256-04d0608da305bcd6575a9f9e02711d21cc3aaa7362701d85763d23afe9881fd0.json",
+      "bytes": 14769915,
+      "sha256": "04d0608da305bcd6575a9f9e02711d21cc3aaa7362701d85763d23afe9881fd0"
+    },
+    {
+      "path": "uniswap-v3/factory-static/v2/contract.json",
+      "asset": "sha256-7437a95b9b1cff1c248b0685f59ec098a77fffe0ea4166b8f930a32ba6288118.json",
+      "bytes": 616306,
+      "sha256": "7437a95b9b1cff1c248b0685f59ec098a77fffe0ea4166b8f930a32ba6288118"
+    },
+    {
+      "path": "uniswap-v3/graft-ancestry/v1/contract.json",
+      "asset": "sha256-70c0f726bd81b4e4f023006f00c66e792af9af4c9fbe8e89207fc16014b07cd9.json",
+      "bytes": 539679,
+      "sha256": "70c0f726bd81b4e4f023006f00c66e792af9af4c9fbe8e89207fc16014b07cd9"
+    },
+    {
+      "path": "uniswap-v3/graft-ancestry/v2/contract.json",
+      "asset": "sha256-ae8c3e0099fedf2879b3071c2bcf545050fa4d448d0154fa6b895618bb8e203e.json",
+      "bytes": 541804,
+      "sha256": "ae8c3e0099fedf2879b3071c2bcf545050fa4d448d0154fa6b895618bb8e203e"
+    },
+    {
+      "path": "uniswap-v3/npm-collect/v2/contract.json",
+      "asset": "sha256-79bd851de40cf85f34d2a56b27f0aedf9792fa10bfa15f16728d857e0acfb139.json",
+      "bytes": 5089788,
+      "sha256": "79bd851de40cf85f34d2a56b27f0aedf9792fa10bfa15f16728d857e0acfb139"
+    },
+    {
+      "path": "uniswap-v3/npm-liquidity/v2/contract.json",
+      "asset": "sha256-f0749606edc2fd72695b781692e4f3577db5bb79898529e78ae01f7e620a93ba.json",
+      "bytes": 18110269,
+      "sha256": "f0749606edc2fd72695b781692e4f3577db5bb79898529e78ae01f7e620a93ba"
+    },
+    {
+      "path": "uniswap-v3/npm-transfer/v2/contract.json",
+      "asset": "sha256-0fcadd7e68ca373ff1b1d202991818c1b36c5ba25ac8ede1515d1b8b1f041d7c.json",
+      "bytes": 4371092,
+      "sha256": "0fcadd7e68ca373ff1b1d202991818c1b36c5ba25ac8ede1515d1b8b1f041d7c"
+    },
+    {
+      "path": "uniswap-v3/pool-burn/v1/contract.json",
+      "asset": "sha256-54c309fa1e55ad6645f93ceab21b2c579ca55ba9b6a167fa563f1e782eb5d1b7.json",
+      "bytes": 798974,
+      "sha256": "54c309fa1e55ad6645f93ceab21b2c579ca55ba9b6a167fa563f1e782eb5d1b7"
+    },
+    {
+      "path": "uniswap-v3/pool-burn/v2/contract.json",
+      "asset": "sha256-eab3d3e9555c6a2cae4c61de30da41d7af206eb66da76e42a7c34dd53ff5eb6d.json",
+      "bytes": 8626268,
+      "sha256": "eab3d3e9555c6a2cae4c61de30da41d7af206eb66da76e42a7c34dd53ff5eb6d"
+    },
+    {
+      "path": "uniswap-v3/pool-flash/v2/contract.json",
+      "asset": "sha256-8ca53bf7ca19bdc52a81abda624181030e07d42c30b6771aee1802723e1f1b9b.json",
+      "bytes": 4596576,
+      "sha256": "8ca53bf7ca19bdc52a81abda624181030e07d42c30b6771aee1802723e1f1b9b"
+    },
+    {
+      "path": "uniswap-v3/pool-initialize/v2/contract.json",
+      "asset": "sha256-6d9c36526ce4e041e18811ff5545efd5b5da96b4b2280c345b1f11379f202b84.json",
+      "bytes": 3549115,
+      "sha256": "6d9c36526ce4e041e18811ff5545efd5b5da96b4b2280c345b1f11379f202b84"
+    },
+    {
+      "path": "uniswap-v3/pool-mint/v1/contract.json",
+      "asset": "sha256-1040c821093b4f5afff3e99df58aa0e4b8021c643226d42dabd1255587fbf14c.json",
+      "bytes": 917526,
+      "sha256": "1040c821093b4f5afff3e99df58aa0e4b8021c643226d42dabd1255587fbf14c"
+    },
+    {
+      "path": "uniswap-v3/pool-mint/v2/contract.json",
+      "asset": "sha256-0500fe9d45406e055298389dd3d1e6d44463f73c430469d4112be5ac09e4e013.json",
+      "bytes": 9322154,
+      "sha256": "0500fe9d45406e055298389dd3d1e6d44463f73c430469d4112be5ac09e4e013"
+    },
+    {
+      "path": "uniswap-v3/pool-swap/v2/contract.json",
+      "asset": "sha256-17cf23150f3cf097c65b2008533ebd61bea28e8b31ff79861c2450a03ae492ae.json",
+      "bytes": 15270365,
+      "sha256": "17cf23150f3cf097c65b2008533ebd61bea28e8b31ff79861c2450a03ae492ae"
+    },
+    {
+      "path": "uniswap-v3/segment-field-semantics/v2/contract.json",
+      "asset": "sha256-0ca8708bd2ed60d4799559d52b3f7e0602abfd7c3edbd35f579476f00baba6ef.json",
+      "bytes": 4356972,
+      "sha256": "0ca8708bd2ed60d4799559d52b3f7e0602abfd7c3edbd35f579476f00baba6ef"
+    },
+    {
+      "path": "uniswap-v3/segment-writer-matrix/v1/contract.json",
+      "asset": "sha256-7f6d1a34a8c885fe5ddcd81895818ba7ae8a0d736d541b881c1cc7cd54275161.json",
+      "bytes": 2785821,
+      "sha256": "7f6d1a34a8c885fe5ddcd81895818ba7ae8a0d736d541b881c1cc7cd54275161"
+    }
+  ]
+}

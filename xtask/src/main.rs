@@ -11,6 +11,8 @@ mod evidence;
 mod fixtures;
 mod github;
 mod import_verify;
+mod target_common;
+mod targets;
 mod v4_engine_reference;
 mod v4_q8_reference;
 mod v4_release_assets;
@@ -30,6 +32,9 @@ const USAGE: &str = "usage: cargo xtask <evidence|verify-all|verify-targets|elig
   verify-v4-q8-reference [--root DIR]   verify the q8 declared-metadata capsule (offline)
   verify-import <uniswap-v3|uniswap-v4> [--root DIR]   verify a frozen source import against its mirror, inventory, and contracts
   fixtures check [--root DIR]   verify hydrated Uniswap V3 block fixtures and module goldens (offline)
+  verify-target <family> [--root DIR] [--lock PATH] [--exact-source-root DIR] [--write-contract]   verify a pinned target baseline (offline)
+                 uniswap-v2-base source mode: --source-root DIR --generic-source-root DIR; messari-v3: --write-contract
+                 families: uniswap-v3-matic uniswap-v2-base pancakeswap-infinity-cl-bsc exchange-v3-bsc aerodrome-slipstream-base messari-v3
   evidence <check|fetch|lock|audit-release> [options]
   verify-all [--list] [--family core|targets|uniswap-v3|uniswap-v4] [--keep-going]
 
@@ -63,7 +68,7 @@ fn parse_args(raw: Vec<String>) -> Result<Args, String> {
     while let Some(arg) = iter.next() {
         if let Some(name) = arg.strip_prefix("--") {
             match name {
-                "offline" | "write" | "list" | "keep-going" | "json" => {
+                "offline" | "write" | "list" | "keep-going" | "json" | "write-contract" => {
                     flags.insert(name.to_string(), None);
                 }
                 "track" => {
@@ -72,9 +77,22 @@ fn parse_args(raw: Vec<String>) -> Result<Args, String> {
                         .ok_or_else(|| "--track requires a value".to_string())?;
                     tracked.push(value);
                 }
-                "lock" | "root" | "cache-dir" | "mirror" | "release-tag" | "repository"
-                | "family" | "policy" | "binding" | "measurements" | "output" | "purpose"
-                | "now" => {
+                "lock"
+                | "root"
+                | "cache-dir"
+                | "mirror"
+                | "release-tag"
+                | "repository"
+                | "family"
+                | "policy"
+                | "binding"
+                | "measurements"
+                | "output"
+                | "purpose"
+                | "now"
+                | "exact-source-root"
+                | "source-root"
+                | "generic-source-root" => {
                     let value = iter
                         .next()
                         .ok_or_else(|| format!("--{name} requires a value"))?;
@@ -149,6 +167,7 @@ fn run() -> Result<(), String> {
             }
             Ok(())
         }
+        (Some("verify-target"), Some(family)) => verify_target_command(family, &args),
         (Some("verify-v4-q8-reference"), _) => {
             let root = PathBuf::from(args.value("root").unwrap_or("."));
             v4_q8_reference::verify(&root).map_err(|e| format!("ERROR: {e}"))?;
@@ -520,4 +539,80 @@ fn eligibility_command(sub: &str, args: &Args) -> Result<(), String> {
         }
         other => Err(format!("unknown eligibility subcommand {other}\n{USAGE}")),
     }
+}
+
+fn verify_target_command(family: &str, args: &Args) -> Result<(), String> {
+    use targets::{
+        aerodrome_slipstream_base, exchange_v3_bsc, messari_v3, pancakeswap_infinity_cl_bsc,
+        uniswap_v2_base, uniswap_v3_matic,
+    };
+    let root = PathBuf::from(args.value("root").unwrap_or("."));
+    let exact_source_root = args.value("exact-source-root").map(PathBuf::from);
+    let lock = |default: &str| PathBuf::from(args.value("lock").unwrap_or(default));
+    let (label, outcome) = match family {
+        "uniswap-v3-matic" => (
+            "Uniswap V3 Matic target",
+            uniswap_v3_matic::verify(
+                &root,
+                &lock(uniswap_v3_matic::LOCK_PATH),
+                exact_source_root.as_deref(),
+            ),
+        ),
+        "uniswap-v2-base" => {
+            let sources =
+                match (args.value("source-root"), args.value("generic-source-root")) {
+                    (None, None) => None,
+                    (Some(behavioral), Some(generic)) => {
+                        Some((PathBuf::from(behavioral), PathBuf::from(generic)))
+                    }
+                    _ => return Err(
+                        "uniswap-v2-base needs --source-root and --generic-source-root together"
+                            .into(),
+                    ),
+                };
+            if exact_source_root.is_some() {
+                return Err("uniswap-v2-base takes --source-root and --generic-source-root, not --exact-source-root".into());
+            }
+            (
+                "Uniswap V2 Base target",
+                uniswap_v2_base::verify(
+                    &root,
+                    &lock(uniswap_v2_base::LOCK_PATH),
+                    sources.as_ref().map(|(b, g)| (b.as_path(), g.as_path())),
+                ),
+            )
+        }
+        "pancakeswap-infinity-cl-bsc" => (
+            "Pancake Infinity CL BSC target",
+            pancakeswap_infinity_cl_bsc::verify(
+                &root,
+                &lock(pancakeswap_infinity_cl_bsc::LOCK_PATH),
+                exact_source_root.as_deref(),
+            ),
+        ),
+        "exchange-v3-bsc" => (
+            "Exchange V3 BSC target",
+            exchange_v3_bsc::verify(
+                &root,
+                &lock(exchange_v3_bsc::LOCK_PATH),
+                exact_source_root.as_deref(),
+            ),
+        ),
+        "aerodrome-slipstream-base" => (
+            "Aerodrome Slipstream Base target",
+            aerodrome_slipstream_base::verify(
+                &root,
+                &lock(aerodrome_slipstream_base::LOCK_PATH),
+                exact_source_root.as_deref(),
+            ),
+        ),
+        "messari-v3" => (
+            "Messari V3 targets",
+            messari_v3::verify(&root, args.has("write-contract")),
+        ),
+        other => return Err(format!("unknown target family {other}\n{USAGE}")),
+    };
+    let line = outcome.map_err(|e| format!("{label} verification failed: {e}"))?;
+    println!("{line}");
+    Ok(())
 }

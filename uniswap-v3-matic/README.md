@@ -15,7 +15,7 @@ and digests, exact data-source/template and handler shape, entity mutability, an
 logical schema difference from the imported `Qma8a81T…` family. Run:
 
 ```console
-python3 scripts/verify-uniswap-v3-matic-target.py
+cargo xtask verify-target uniswap-v3-matic
 ```
 
 The earliest exact source is Uniswap/v3-subgraph commit

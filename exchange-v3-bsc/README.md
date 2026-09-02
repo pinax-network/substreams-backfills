@@ -21,7 +21,7 @@ data-source/template address and handler, the 20-entity all-mutable schema profi
 the static schema difference from the frozen imported Uniswap V3 reference. Run:
 
 ```console
-python3 scripts/verify-exchange-v3-bsc-target.py
+cargo xtask verify-target exchange-v3-bsc
 ```
 
 The earliest byte-exact source is

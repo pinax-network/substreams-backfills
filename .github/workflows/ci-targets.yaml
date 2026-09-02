@@ -24,7 +24,6 @@ jobs:
             run:
               - '.github/workflows/ci-targets.yaml'
               - 'scripts/**'
-              - 'requirements-ci.txt'
               - 'aerodrome-slipstream-base/**'
               - 'exchange-v3-bsc/**'
               - 'messari-v3/**'
@@ -43,14 +42,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: pip
-          cache-dependency-path: requirements-ci.txt
-      - name: Install checksum-pinned validation dependencies
-        run: python3 -m pip install --require-hashes -r requirements-ci.txt
       - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@49a0bdc70d2e1b713ca9e2869b211fcce03d3c1c # v2.9.2
       - name: Restore checksum-keyed evidence asset cache
         uses: actions/cache@v4
         with:
@@ -80,20 +73,19 @@ jobs:
           echo "WASM2WAT=$RUNNER_TEMP/wabt-1.0.35/bin/wasm2wat" >> "$GITHUB_ENV"
           echo "$RUNNER_TEMP/wabt-1.0.35/bin" >> "$GITHUB_PATH"
       - name: Verify immutable Uniswap V3 Matic target and static layout profile
-        run: python3 scripts/verify-uniswap-v3-matic-target.py
+        run: cargo xtask verify-target uniswap-v3-matic
       - name: Verify immutable Uniswap V2 Base target and static source-gap profile
-        run: python3 scripts/verify-uniswap-v2-base-target.py
+        run: cargo xtask verify-target uniswap-v2-base
       - name: Verify immutable PancakeSwap Infinity CL BSC target
-        run: python3 scripts/verify-pancakeswap-infinity-cl-bsc-target.py
+        run: cargo xtask verify-target pancakeswap-infinity-cl-bsc
       - name: Verify immutable Exchange V3 BSC target
-        run: python3 scripts/verify-exchange-v3-bsc-target.py
+        run: cargo xtask verify-target exchange-v3-bsc
       - name: Verify immutable Aerodrome Slipstream CL Base target
         run: |
           wasm-validate aerodrome-slipstream-base/reference/mappings/Factory.wasm
           wasm-validate aerodrome-slipstream-base/reference/mappings/NonfungiblePositionManager.wasm
           wasm-validate aerodrome-slipstream-base/reference/mappings/Pool.wasm
-          python3 scripts/verify-aerodrome-slipstream-base-target.py
-          python3 -m unittest scripts.tests.test_aerodrome_slipstream_base_target
+          cargo xtask verify-target aerodrome-slipstream-base
       - name: Verify immutable Messari V3 BSC/Base target baselines
         run: |
           mapfile -t messari_wasm < <(find messari-v3/reference -type f -name '*.wasm' -print | sort)
@@ -101,8 +93,7 @@ jobs:
           for wasm in "${messari_wasm[@]}"; do
             wasm-validate "$wasm"
           done
-          python3 scripts/verify-messari-v3-targets.py
-          python3 -m unittest scripts.tests.test_messari_v3_targets
+          cargo xtask verify-target messari-v3
   uniswap-v3-matic-reference:
     needs: changes
     if: ${{ !cancelled() && (github.event_name != 'pull_request' || needs.changes.outputs.run == 'true') }}
@@ -110,6 +101,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@49a0bdc70d2e1b713ca9e2869b211fcce03d3c1c # v2.9.2
       - name: Restore checksum-keyed evidence asset cache
         uses: actions/cache@v4
         with:
@@ -119,13 +111,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: cargo xtask evidence fetch
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: pip
-          cache-dependency-path: requirements-ci.txt
-      - name: Install checksum-pinned validation dependencies
-        run: python3 -m pip install --require-hashes -r requirements-ci.txt
       - uses: actions/setup-node@v4
         with:
           node-version: "18.18.0"
@@ -138,13 +123,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: pip
-          cache-dependency-path: requirements-ci.txt
-      - name: Install checksum-pinned validation dependencies
-        run: python3 -m pip install --require-hashes -r requirements-ci.txt
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@49a0bdc70d2e1b713ca9e2869b211fcce03d3c1c # v2.9.2
       - name: Verify pinned behavioral source and generic extractor gap
         run: ./scripts/verify-uniswap-v2-base-source.sh
 
@@ -154,13 +134,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: pip
-          cache-dependency-path: requirements-ci.txt
-      - name: Install checksum-pinned validation dependencies
-        run: python3 -m pip install --require-hashes -r requirements-ci.txt
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@49a0bdc70d2e1b713ca9e2869b211fcce03d3c1c # v2.9.2
       - uses: actions/setup-node@v4
         with:
           node-version: "24.13.1"
@@ -177,13 +152,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: pip
-          cache-dependency-path: requirements-ci.txt
-      - name: Install checksum-pinned validation dependencies
-        run: python3 -m pip install --require-hashes -r requirements-ci.txt
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@49a0bdc70d2e1b713ca9e2869b211fcce03d3c1c # v2.9.2
       - uses: actions/setup-node@v4
         with:
           node-version: "14.21.3"

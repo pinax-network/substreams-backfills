@@ -21,6 +21,17 @@ jobs:
           cache-on-failure: true
       - name: Check workspace formatting
         run: cargo fmt --all --check
+      - name: Restore checksum-keyed evidence asset cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/substreams-backfills/evidence-assets
+          key: evidence-assets-${{ hashFiles('evidence-assets.lock.json') }}
+      - name: Fetch and verify externalized evidence assets
+        # The Matic target tests copy two externalized retained contracts
+        # (graft-ancestry/v2, segment-writer-matrix/v1) into their fixture tree.
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: cargo xtask evidence fetch
       - name: Test workspace
         run: cargo test --workspace --locked
       - name: Verify canonical BlockChanges v1 schema and golden wire

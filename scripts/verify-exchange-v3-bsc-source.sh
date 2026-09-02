@@ -6,7 +6,6 @@ source_url="https://github.com/pancakeswap/pancake-subgraph.git"
 source_commit="1da7ba61abb26633ff819ce8cdfe945be8770a92"
 source_tree="a2a113c9eedd7ed0e6fdcaea275153233223c95d"
 source_parent="e2019f716f4310f4ce28addc4439980804d9e413"
-python_executable="${EXCHANGE_V3_SOURCE_PYTHON:-python3}"
 
 temporary_root=$(mktemp -d)
 cleanup() {
@@ -64,20 +63,18 @@ cp "$source_work/yarn.lock" "$original_lock"
 # Replace exactly that unavailable transport artifact for installation only. The historical
 # lock is restored before source validation, and the compiler packages plus all three output
 # byte strings remain strict gates.
-"$python_executable" - "$source_work/yarn.lock" <<'PY'
-from pathlib import Path
-import sys
-
-path = Path(sys.argv[1])
-payload = path.read_text()
-old = '''"concat-stream@github:hugomrdias/concat-stream#feat/smaller":
+concat_stream_old="$temporary_root/concat-stream.old"
+concat_stream_new="$temporary_root/concat-stream.new"
+cat >"$concat_stream_old" <<'LOCK'
+"concat-stream@github:hugomrdias/concat-stream#feat/smaller":
   version "2.0.0"
   resolved "https://codeload.github.com/hugomrdias/concat-stream/tar.gz/057bc7b5d6d8df26c8cf00a3f151b6721a0a8034"
   dependencies:
     inherits "^2.0.3"
     readable-stream "^3.0.2"
-'''
-new = '''"concat-stream@github:hugomrdias/concat-stream#feat/smaller":
+LOCK
+cat >"$concat_stream_new" <<'LOCK'
+"concat-stream@github:hugomrdias/concat-stream#feat/smaller":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/concat-stream/-/concat-stream-2.0.0.tgz#414cf5af790a48c60ab9be4527d56d5e41133cb1"
   integrity sha512-MWufYdFw53ccGjCA+Ol7XJYpAlW6/prSMzuPOTRnJGcGzuhLn4Scrz7qf6o8bROZ514ltazcIFJZevcfbo0x7A==
@@ -86,11 +83,19 @@ new = '''"concat-stream@github:hugomrdias/concat-stream#feat/smaller":
     inherits "^2.0.3"
     readable-stream "^3.0.2"
     typedarray "^0.0.6"
-'''
-if payload.count(old) != 1:
-    raise SystemExit("dead concat-stream transport lock did not match exactly once")
-path.write_text(payload.replace(old, new))
-PY
+LOCK
+# Exact single-occurrence replacement of the dead transport block (no scripting runtime needed).
+old_count=$(grep -c -F -x -- '  resolved "https://codeload.github.com/hugomrdias/concat-stream/tar.gz/057bc7b5d6d8df26c8cf00a3f151b6721a0a8034"' "$source_work/yarn.lock" || true)
+if [[ "$old_count" -ne 1 ]]; then
+  echo "dead concat-stream transport lock did not match exactly once" >&2
+  exit 1
+fi
+perl -0pi -e '
+  BEGIN { local $/; open(my $o, "<", $ARGV[0]) or die; $old = <$o>; open(my $n, "<", $ARGV[1]) or die; $new = <$n>; shift @ARGV; shift @ARGV; }
+  my $count = () = $_ =~ /\Q$old\E/g;
+  die "dead concat-stream transport lock did not match exactly once\n" unless $count == 1;
+  s/\Q$old\E/$new/;
+' "$concat_stream_old" "$concat_stream_new" "$source_work/yarn.lock"
 
 (
   cd "$source_work"
@@ -108,7 +113,8 @@ cmp "$original_lock" "$source_work/yarn.lock"
   yarn workspace exchange-v3-template build
 )
 
-"$python_executable" "$repository_root/scripts/verify-exchange-v3-bsc-target.py" \
+cargo +stable run --quiet --manifest-path "$repository_root/Cargo.toml" --package xtask -- \
+  verify-target exchange-v3-bsc \
   --root "$repository_root" \
   --exact-source-root "$source_work"
 

@@ -14,7 +14,7 @@ vendored, producing a complete offline target closure; the lock pins each by CID
 and vendored byte counts, SHA-256 digests, normalization, and exported handler set. Run:
 
 ```console
-python3 scripts/verify-uniswap-v2-base-target.py
+cargo xtask verify-target uniswap-v2-base
 ```
 
 The verifier rejects duplicate keys, target address/start-block drift, component or handler

@@ -20,7 +20,7 @@ mapping WASMs. The provenance lock records the byte count, SHA-256 digest, and
 CIDv0 for every object. Run its offline verifier with:
 
 ```sh
-python3 scripts/verify-aerodrome-slipstream-base-target.py
+cargo xtask verify-target aerodrome-slipstream-base
 ```
 
 ## Protocol and source boundary

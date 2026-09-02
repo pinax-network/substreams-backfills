@@ -25,7 +25,7 @@ to the exact deployed manifest. Provenance keeps these two facts explicitly sepa
 Run the offline lock verifier with:
 
 ```sh
-python3 scripts/verify-pancakeswap-infinity-cl-bsc-target.py
+cargo xtask verify-target pancakeswap-infinity-cl-bsc
 ```
 
 Reproduce the source build and compare it with the deployed bytes with:

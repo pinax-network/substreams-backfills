@@ -6,8 +6,13 @@
 //!   evidence lock    --release-tag TAG [--repository OWNER/NAME] [--lock PATH] [--root DIR] [--write] PATH...
 //!   evidence audit-release [--lock PATH]
 
+mod eligibility;
 mod evidence;
 mod github;
+mod import_verify;
+mod v4_engine_reference;
+mod v4_q8_reference;
+mod v4_release_assets;
 mod verify_all;
 
 use std::path::{Path, PathBuf};
@@ -15,7 +20,14 @@ use std::process::ExitCode;
 
 use evidence::{DirectoryFetcher, FetchOptions, Fetcher, Lock, Outcome, Status, DEFAULT_LOCK_PATH};
 
-const USAGE: &str = "usage: cargo xtask <evidence|verify-all> ...
+const USAGE: &str = "usage: cargo xtask <evidence|verify-all|verify-targets|eligibility> ...
+  eligibility capture --binding FILE --measurements FILE --output FILE [--policy PATH] [--root DIR]
+  eligibility check --binding FILE --purpose implementation-start|compute-or-load-start [--now RFC3339] [--json] [--policy PATH] [--root DIR]
+  verify-targets [--root DIR] [--policy PATH]   validate every target binding and pinned evidence (offline)
+  verify-v4-release-assets [--root DIR] [--manifest PATH]   verify the immutable Uniswap V4 release-asset mirror
+  verify-v4-engine-reference [--root DIR]   verify the engine v0.5.0 reference capsule (offline)
+  verify-v4-q8-reference [--root DIR]   verify the q8 declared-metadata capsule (offline)
+  verify-import <uniswap-v3|uniswap-v4> [--root DIR]   verify a frozen source import against its mirror, inventory, and contracts
   evidence <check|fetch|lock|audit-release> [options]
   verify-all [--list] [--family core|targets|uniswap-v3|uniswap-v4] [--keep-going]
 
@@ -49,7 +61,7 @@ fn parse_args(raw: Vec<String>) -> Result<Args, String> {
     while let Some(arg) = iter.next() {
         if let Some(name) = arg.strip_prefix("--") {
             match name {
-                "offline" | "write" | "list" | "keep-going" => {
+                "offline" | "write" | "list" | "keep-going" | "json" => {
                     flags.insert(name.to_string(), None);
                 }
                 "track" => {
@@ -59,7 +71,8 @@ fn parse_args(raw: Vec<String>) -> Result<Args, String> {
                     tracked.push(value);
                 }
                 "lock" | "root" | "cache-dir" | "mirror" | "release-tag" | "repository"
-                | "family" => {
+                | "family" | "policy" | "binding" | "measurements" | "output" | "purpose"
+                | "now" => {
                     let value = iter
                         .next()
                         .ok_or_else(|| format!("--{name} requires a value"))?;
@@ -104,6 +117,52 @@ fn run() -> Result<(), String> {
         positional.next().map(String::as_str),
     ) {
         (Some("verify-all"), _) => verify_all_command(&args),
+        (Some("verify-targets"), _) => verify_targets_command(&args),
+        (Some("verify-import"), Some(family)) => {
+            let root = PathBuf::from(args.value("root").unwrap_or("."));
+            let contract = match family {
+                "uniswap-v3" | "v3" => &import_verify::UNISWAP_V3,
+                "uniswap-v4" | "v4" => &import_verify::UNISWAP_V4,
+                other => return Err(format!("unknown import {other}")),
+            };
+            let report = import_verify::verify_import(&root, contract)
+                .map_err(|e| format!("{} import verification failed: {e}", contract.label))?;
+            for line in report {
+                println!("{line}");
+            }
+            if contract.label == "Uniswap V4" {
+                v4_release_assets::verify(&root, &v4_release_assets::default_manifest_path())
+                    .map_err(|e| e.to_string())?;
+                println!("verified mirrored Uniswap V4 history, exact imported tree, 98 files, 13 executable modes, frozen v0.4.0 packages, and external release assets");
+            } else {
+                println!("verified mirrored Uniswap V3 history, exact imported tree and inventory, 75 files, one executable mode, and the 20-entity logical contract");
+            }
+            Ok(())
+        }
+        (Some("verify-v4-q8-reference"), _) => {
+            let root = PathBuf::from(args.value("root").unwrap_or("."));
+            v4_q8_reference::verify(&root).map_err(|e| format!("ERROR: {e}"))?;
+            println!("{}", v4_q8_reference::success_json());
+            Ok(())
+        }
+        (Some("verify-v4-engine-reference"), _) => {
+            let root = PathBuf::from(args.value("root").unwrap_or("."));
+            v4_engine_reference::verify(&root)
+                .map_err(|e| format!("Uniswap V4 engine reference verification failed: {e}"))?;
+            println!("{}", v4_engine_reference::success_line());
+            Ok(())
+        }
+        (Some("verify-v4-release-assets"), _) => {
+            let root = PathBuf::from(args.value("root").unwrap_or("."));
+            let manifest = args
+                .value("manifest")
+                .map(PathBuf::from)
+                .unwrap_or_else(v4_release_assets::default_manifest_path);
+            v4_release_assets::verify(&root, &manifest).map_err(|e| e.to_string())?;
+            println!("verified 2 immutable Uniswap V4 historical release assets");
+            Ok(())
+        }
+        (Some("eligibility"), Some(sub)) => eligibility_command(sub, &args),
         (Some("evidence"), Some(sub)) => {
             let root = PathBuf::from(args.value("root").unwrap_or("."));
             let lock_path = root.join(args.value("lock").unwrap_or(DEFAULT_LOCK_PATH));
@@ -290,5 +349,165 @@ fn verify_all_command(args: &Args) -> Result<(), String> {
         Ok(())
     } else {
         Err("verify-all failed".into())
+    }
+}
+
+fn verify_targets_command(args: &Args) -> Result<(), String> {
+    let root = PathBuf::from(args.value("root").unwrap_or("."));
+    let policy = args
+        .value("policy")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| root.join("eligibility/policy-v1.yaml"));
+    match eligibility::validate_targets(&root, &policy) {
+        Ok(lines) => {
+            for line in lines {
+                println!("{line}");
+            }
+            Ok(())
+        }
+        Err(error) => Err(format!("target validation failed: {error}")),
+    }
+}
+
+fn eligibility_command(sub: &str, args: &Args) -> Result<(), String> {
+    use serde_json::Value;
+    let root = PathBuf::from(args.value("root").unwrap_or("."));
+    let root = root
+        .canonicalize()
+        .map_err(|e| format!("cannot resolve root {}: {e}", root.display()))?;
+    let policy_path = args
+        .value("policy")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| root.join("eligibility/policy-v1.yaml"));
+    let binding_path = PathBuf::from(args.value("binding").ok_or("--binding is required")?);
+    let policy = eligibility::load_policy(&policy_path).map_err(|e| e.to_string())?;
+    let binding = eligibility::load_yaml(&binding_path).map_err(|e| e.to_string())?;
+    eligibility::validate_binding(&binding, &policy, Some(&binding_path))
+        .map_err(|e| format!("eligibility {sub} failed: {e}"))?;
+    match sub {
+        "capture" => {
+            let measurements_path = PathBuf::from(
+                args.value("measurements")
+                    .ok_or("--measurements is required")?,
+            );
+            let output_arg = PathBuf::from(args.value("output").ok_or("--output is required")?);
+            let measurements =
+                eligibility::load_json(&measurements_path).map_err(|e| e.to_string())?;
+            let evidence = eligibility::build_evidence(&measurements, &binding, &policy)
+                .map_err(|e| format!("eligibility capture failed: {e}"))?;
+            eligibility::validate_evidence(&evidence, &binding, &policy)
+                .map_err(|e| format!("eligibility capture failed: {e}"))?;
+            let output = if output_arg.is_absolute() {
+                output_arg
+            } else {
+                root.join(output_arg)
+            };
+            let relative = output
+                .strip_prefix(&root)
+                .map_err(|_| {
+                    "eligibility capture failed: output must be inside the repository".to_string()
+                })?
+                .to_string_lossy()
+                .replace('\\', "/");
+            eligibility::resolve_evidence_path(&root, &relative)
+                .map_err(|e| format!("eligibility capture failed: {e}"))?;
+            let deployment = binding
+                .get("deployment")
+                .and_then(Value::as_str)
+                .unwrap_or_default();
+            let expected_directory = root.join("evidence").join("eligibility").join(deployment);
+            let measured_at =
+                eligibility::parse_utc(evidence.get("measured_at"), "evidence.measured_at")
+                    .map_err(|e| e.to_string())?;
+            let expected_name = measured_at.format("%Y%m%dT%H%M%SZ.json").to_string();
+            if output.parent() != Some(expected_directory.as_path())
+                || output.file_name().and_then(|n| n.to_str()) != Some(expected_name.as_str())
+            {
+                return Err(format!(
+                    "eligibility capture failed: output must be evidence/eligibility/{deployment}/{expected_name}"
+                ));
+            }
+            if output.exists() {
+                return Err(format!(
+                    "eligibility capture failed: refusing to overwrite immutable evidence file {}",
+                    output.display()
+                ));
+            }
+            std::fs::create_dir_all(&expected_directory).map_err(|e| e.to_string())?;
+            std::fs::write(&output, eligibility::canonical_json(&evidence))
+                .map_err(|e| e.to_string())?;
+            let summary = evidence
+                .get("summary")
+                .and_then(Value::as_object)
+                .expect("validated");
+            println!("Captured immutable evidence. Review it, then update eligibility.latest to:");
+            println!(
+                "decision: {}",
+                summary
+                    .get("decision")
+                    .and_then(Value::as_str)
+                    .unwrap_or_default()
+            );
+            println!(
+                "reason: {}",
+                summary
+                    .get("reason")
+                    .and_then(Value::as_str)
+                    .unwrap_or_default()
+            );
+            println!(
+                "measured_at: '{}'",
+                evidence
+                    .get("measured_at")
+                    .and_then(Value::as_str)
+                    .unwrap_or_default()
+            );
+            println!("evidence: {relative}");
+            println!(
+                "sha256: {}",
+                eligibility::sha256_file(&output).map_err(|e| e.to_string())?
+            );
+            Ok(())
+        }
+        "check" => {
+            let purpose = args.value("purpose").ok_or("--purpose is required")?;
+            if !matches!(purpose, "implementation-start" | "compute-or-load-start") {
+                return Err(format!(
+                    "eligibility check failed: unsupported purpose {purpose:?}"
+                ));
+            }
+            let evidence = eligibility::validate_binding_evidence(&binding, &policy, &root)
+                .map_err(|e| format!("eligibility check failed: {e}"))?;
+            let now = match args.value("now") {
+                Some(text) => {
+                    eligibility::parse_utc(Some(&Value::String(text.to_string())), "--now")
+                        .map_err(|e| format!("eligibility check failed: {e}"))?
+                }
+                None => eligibility::now_utc(),
+            };
+            let (allowed, message) =
+                eligibility::check_fresh_gate(&binding, evidence.as_ref(), &policy, purpose, now)
+                    .map_err(|e| format!("eligibility check failed: {e}"))?;
+            if args.has("json") {
+                let mut result = serde_json::Map::new();
+                result.insert("allowed".into(), Value::Bool(allowed));
+                result.insert(
+                    "deployment".into(),
+                    binding.get("deployment").cloned().unwrap_or(Value::Null),
+                );
+                result.insert("message".into(), Value::String(message.clone()));
+                result.insert("purpose".into(), Value::String(purpose.into()));
+                println!("{}", serde_json::to_string(&result).expect("serializes"));
+            } else {
+                println!("{message}");
+            }
+            if allowed {
+                Ok(())
+            } else {
+                // Exit status 2 mirrors check-eligibility.py: a closed gate is not an error.
+                std::process::exit(2);
+            }
+        }
+        other => Err(format!("unknown eligibility subcommand {other}\n{USAGE}")),
     }
 }

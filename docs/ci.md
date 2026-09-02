@@ -9,7 +9,7 @@ a PR that touches that family cannot merge with the family job failing.
 
 | Workflow | Jobs | Runs the heavy jobs when the PR touches |
 |---|---|---|
-| `ci-core.yaml` | `core` | always: `cargo fmt`, `cargo test --workspace --locked`, the BlockChanges v1 golden test, `cargo clippy -D warnings`, `scripts/validate-targets.py`, eligibility and market-snapshot unittests |
+| `ci-core.yaml` | `core` | always: `cargo fmt`, `cargo test --workspace --locked`, the BlockChanges v1 golden test, `cargo clippy -D warnings`, `cargo xtask verify-targets` (Rust eligibility library, market-snapshot locks) |
 | `ci.yaml` (workflow name `ci`, Uniswap V3) | `changes`, `v3-evidence`, `v3-reference` | `uniswap-v3/**`, `common/**`, `xtask/**`, `Cargo.toml`, `Cargo.lock`, `.cargo/**`, `evidence-assets.lock.json`, `docs/provenance/uniswap-v3*`, `scripts/**`, `requirements-ci.txt`, the workflow file |
 | `ci-uniswap-v4.yaml` | `changes`, `uniswap-v4-reference` | `uniswap-v4/**`, `artifacts/**`, `docs/provenance/uniswap-v4*`, `docs/provenance/uniswap-v4*/**`, `scripts/**`, `requirements-ci.txt`, the workflow file |
 | `ci-targets.yaml` | `changes`, `target-baselines`, `uniswap-v3-matic-reference`, `uniswap-v2-base-reference`, `pancakeswap-infinity-cl-bsc-reference`, `exchange-v3-bsc-reference` | the seven pinned-family directories, `docs/provenance/**`, `eligibility/**`, `schemas/**`, `scripts/**`, `requirements-ci.txt`, the workflow file |
@@ -19,7 +19,7 @@ a PR that touches that family cannot merge with the family job failing.
 - The Uniswap V3 workflow keeps the historical file name `.github/workflows/ci.yaml` and workflow name `ci`: seven retained unittests and the mainnet chain-config parity verifier read that path, and the all-handlers publication seal records that workflow identity. Renaming it would require editing pinned test and verifier files, which #109 must not do.
 
 - `scripts/**` and `requirements-ci.txt` are in every family filter, because
-  every verifier and test lives there and shared modules (`eligibility.py`,
+  every verifier and test lives there and shared modules (
   `uniswap_v3_wat_runtime.py`, the test bootstraps) are imported across families.
 - Each workflow lists its own file, so editing a workflow re-runs it.
 - Root Cargo files, `common/`, `xtask/`, and the evidence lock are in the V3

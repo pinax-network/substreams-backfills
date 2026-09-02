@@ -1,0 +1,116 @@
+name: ci-uniswap-v4
+# Uniswap V4 golden reference: isolated history mirror, engine/q8 reference
+# closures, offline parity fixtures, Store packages, and frozen release packages.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  changes:
+    # Path gate: on pull requests only the listed paths trigger the heavy jobs;
+    # every push to main runs everything. The job itself always reports, so a
+    # required status check never sits pending on an unrelated PR.
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    outputs:
+      run: ${{ steps.filter.outputs.run }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        id: filter
+        with:
+          filters: |
+            run:
+              - '.github/workflows/ci-uniswap-v4.yaml'
+              - 'scripts/**'
+              - 'requirements-ci.txt'
+              - 'uniswap-v4/**'
+              - 'artifacts/**'
+              - 'docs/provenance/uniswap-v4*'
+              - 'docs/provenance/uniswap-v4*/**'
+  uniswap-v4-reference:
+    needs: changes
+    if: ${{ !cancelled() && (github.event_name != 'pull_request' || needs.changes.outputs.run == 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Fetch pinned V4 history mirror
+        run: >-
+          git fetch --no-tags origin
+          refs/heads/upstream/uniswap-v4-v0.4.1:refs/remotes/origin/upstream/uniswap-v4-v0.4.1
+      - name: Verify isolated history mirror and exact source import
+        run: ./scripts/verify-uniswap-v4-import.sh
+      - name: Verify offline V4 engine, retained 100K reference, and q8 metadata closures
+        run: |
+          python3 scripts/verify-uniswap-v4-engine-reference.py
+          python3 -m unittest scripts.tests.test_uniswap_v4_engine_reference
+          python3 scripts/verify-uniswap-v4-q8-reference.py
+          python3 -m unittest scripts.tests.test_uniswap_v4_q8_reference
+      - uses: dtolnay/rust-toolchain@1.90.0
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@49a0bdc70d2e1b713ca9e2869b211fcce03d3c1c # v2.9.2
+        with:
+          workspaces: |
+            uniswap-v4
+            uniswap-v4/stores
+            uniswap-v4/store-state
+            uniswap-v4/store-metadata
+            uniswap-v4/store-probe
+            uniswap-v4/store-tick-shards
+            uniswap-v4/nul-audit
+          cache-on-failure: true
+      - name: Restore checksum-pinned Substreams CLI archive
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/toolchains/substreams-v1.20.3-linux_x86_64.tar.gz
+          key: substreams-v1.20.3-90c71d04a75490efdf0493254a8563c3555690e622b3c6ade5100c0c773f8675
+      - name: Install checksum-pinned Substreams CLI
+        run: |
+          mkdir -p ~/.cache/toolchains
+          archive=~/.cache/toolchains/substreams-v1.20.3-linux_x86_64.tar.gz
+          if [ ! -f "$archive" ]; then
+            curl -fsSL https://github.com/streamingfast/substreams/releases/download/v1.20.3/substreams_linux_x86_64.tar.gz -o "$archive"
+          fi
+          echo "90c71d04a75490efdf0493254a8563c3555690e622b3c6ade5100c0c773f8675  $archive" | sha256sum -c -
+          sudo tar -xzf "$archive" -C /usr/local/bin substreams
+      - name: Run offline parity fixtures
+        working-directory: uniswap-v4
+        run: ./scripts/offline-parity-ci.sh "$RUNNER_TEMP/uniswap-v4-parity"
+      - name: Check imported source formatting
+        working-directory: uniswap-v4
+        run: cargo fmt --all --check
+      - name: Run imported source strict lints
+        working-directory: uniswap-v4
+        run: cargo clippy --locked --all-targets -- -D warnings
+      - name: Validate imported Store packages and cache boundaries
+        working-directory: uniswap-v4
+        run: make stores-validate
+      - name: Verify frozen production packages
+        working-directory: uniswap-v4
+        run: make release-packages RELEASE_DIST="$RUNNER_TEMP/uniswap-v4-release"
+      - name: Build evidence-only NUL audit candidate
+        working-directory: uniswap-v4
+        run: make release-nul-audit-package RELEASE_DIST="$RUNNER_TEMP/uniswap-v4-nul-audit"
+      - name: Upload V4 parity evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: uniswap-v4-offline-parity
+          path: ${{ runner.temp }}/uniswap-v4-parity
+          if-no-files-found: warn
+      - name: Upload frozen package evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: uniswap-v4-frozen-packages
+          path: ${{ runner.temp }}/uniswap-v4-release
+          if-no-files-found: error
+      - name: Upload NUL audit candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: uniswap-v4-nul-audit-candidate
+          path: ${{ runner.temp }}/uniswap-v4-nul-audit
+          if-no-files-found: error

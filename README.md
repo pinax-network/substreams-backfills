@@ -269,6 +269,12 @@ only after this gate passes.
   `bigDecimal.fromString("0")`, not numeric semantics. Six legacy and two modern
   segments produce 16 records; mutation, persistence, history, issue
   completion, backfill, production, and readiness remain false.
+- **`evidence-assets.lock.json`** and **`xtask/`** — the 16 largest generated contract
+  blobs (94 MB) are immutable, content-addressed GitHub release assets rather than
+  tracked files. The lock binds each path to its release tag, asset name, byte
+  length, and SHA-256; `cargo xtask evidence fetch` restores them fail-closed and
+  `cargo xtask evidence check` verifies them offline. New static certificate
+  directories are under moratorium; see [`docs/evidence-assets.md`](docs/evidence-assets.md).
 - **`common/`** — shared contracts extracted only after they reproduce the V4 reference.
   A family boundary must preserve ordered mapping operations and the inputs required for
   exact PoI; a coalesced `EntityChanges` stream is not assumed sufficient.

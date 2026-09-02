@@ -10,6 +10,8 @@ mod eligibility;
 mod evidence;
 mod github;
 mod import_verify;
+mod v4_engine_reference;
+mod v4_q8_reference;
 mod v4_release_assets;
 mod verify_all;
 
@@ -23,6 +25,8 @@ const USAGE: &str = "usage: cargo xtask <evidence|verify-all|verify-targets|elig
   eligibility check --binding FILE --purpose implementation-start|compute-or-load-start [--now RFC3339] [--json] [--policy PATH] [--root DIR]
   verify-targets [--root DIR] [--policy PATH]   validate every target binding and pinned evidence (offline)
   verify-v4-release-assets [--root DIR] [--manifest PATH]   verify the immutable Uniswap V4 release-asset mirror
+  verify-v4-engine-reference [--root DIR]   verify the engine v0.5.0 reference capsule (offline)
+  verify-v4-q8-reference [--root DIR]   verify the q8 declared-metadata capsule (offline)
   verify-import <uniswap-v3|uniswap-v4> [--root DIR]   verify a frozen source import against its mirror, inventory, and contracts
   evidence <check|fetch|lock|audit-release> [options]
   verify-all [--list] [--family core|targets|uniswap-v3|uniswap-v4] [--keep-going]
@@ -133,6 +137,19 @@ fn run() -> Result<(), String> {
             } else {
                 println!("verified mirrored Uniswap V3 history, exact imported tree and inventory, 75 files, one executable mode, and the 20-entity logical contract");
             }
+            Ok(())
+        }
+        (Some("verify-v4-q8-reference"), _) => {
+            let root = PathBuf::from(args.value("root").unwrap_or("."));
+            v4_q8_reference::verify(&root).map_err(|e| format!("ERROR: {e}"))?;
+            println!("{}", v4_q8_reference::success_json());
+            Ok(())
+        }
+        (Some("verify-v4-engine-reference"), _) => {
+            let root = PathBuf::from(args.value("root").unwrap_or("."));
+            v4_engine_reference::verify(&root)
+                .map_err(|e| format!("Uniswap V4 engine reference verification failed: {e}"))?;
+            println!("{}", v4_engine_reference::success_line());
             Ok(())
         }
         (Some("verify-v4-release-assets"), _) => {

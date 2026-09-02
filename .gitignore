@@ -22,3 +22,6 @@ uniswap-v3/pool-mint/v2/contract.json
 uniswap-v3/pool-swap/v2/contract.json
 uniswap-v3/segment-field-semantics/v2/contract.json
 uniswap-v3/segment-writer-matrix/v1/contract.json
+
+# Block fixtures (see uniswap-v3/fixtures/README.md); hydrated by `cargo xtask evidence fetch --lock uniswap-v3/fixtures/blocks.lock.json`
+uniswap-v3/fixtures/blocks/**/*.pb

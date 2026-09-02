@@ -92,8 +92,16 @@ pub struct Asset {
 }
 
 impl Asset {
-    pub fn expected_asset_name(sha256: &str) -> String {
-        format!("sha256-{sha256}.json")
+    /// Content-addressed asset name: `sha256-<digest><extension of path>`.
+    /// The extension is kept so a release listing stays readable and viewers
+    /// pick a sensible content type; identity is the digest alone.
+    pub fn expected_asset_name_for(path: &str, sha256: &str) -> String {
+        let extension = Path::new(path)
+            .extension()
+            .and_then(|e| e.to_str())
+            .map(|e| format!(".{e}"))
+            .unwrap_or_default();
+        format!("sha256-{sha256}{extension}")
     }
 }
 
@@ -170,7 +178,7 @@ impl Lock {
                     asset.path
                 )));
             }
-            let expected = Asset::expected_asset_name(&asset.sha256);
+            let expected = Asset::expected_asset_name_for(&asset.path, &asset.sha256);
             if asset.asset != expected {
                 return Err(EvidenceError::Lock(format!(
                     "{}: asset name must be content-addressed {expected}, got {}",
@@ -510,7 +518,7 @@ pub fn lock_from_tree(
     for path in paths {
         validate_relative_path(&path)?;
         let (bytes, sha256) = digest_file(&root.join(&path))?;
-        let asset = Asset::expected_asset_name(&sha256);
+        let asset = Asset::expected_asset_name_for(&path, &sha256);
         assets.push(Asset {
             path,
             asset,
@@ -634,7 +642,7 @@ mod tests {
         let mut second = bad.assets[0].clone();
         second.path = "0-earlier/contract.json".into();
         second.sha256 = "0".repeat(64);
-        second.asset = Asset::expected_asset_name(&second.sha256);
+        second.asset = Asset::expected_asset_name_for(&second.path, &second.sha256);
         bad.assets.push(second);
         assert!(bad.validate().unwrap_err().to_string().contains("sorted"));
         let mut bad = good.clone();
@@ -740,6 +748,32 @@ mod tests {
             1,
             "no temp files linger"
         );
+    }
+
+    #[test]
+    fn asset_names_keep_the_path_extension() {
+        let dir = tempfile::tempdir().unwrap();
+        let lock = lock_for(
+            dir.path(),
+            &[
+                ("blocks/mainnet/12369621.pb", b"\x08\x03"),
+                ("a/contract.json", b"{}"),
+            ],
+        );
+        assert!(
+            lock.assets[1].asset.ends_with(".pb"),
+            "{}",
+            lock.assets[1].asset
+        );
+        assert!(lock.assets[0].asset.ends_with(".json"));
+        assert_eq!(Asset::expected_asset_name_for("x/y", "ab"), "sha256-ab");
+        let mut bad = lock.clone();
+        bad.assets[1].asset = format!("sha256-{}.json", bad.assets[1].sha256);
+        assert!(bad
+            .validate()
+            .unwrap_err()
+            .to_string()
+            .contains("content-addressed"));
     }
 
     #[test]

@@ -13,6 +13,34 @@ retained QoS payload timestamp. They are context only: neither target binding
 contains a current `market_snapshot`. Current prioritization must use a new
 provenance-bound QoS capture rather than relabeling these values.
 
+## Execution model
+
+Both exact targets use **full ancestry replay**. As of 2026-09-02, no
+authenticated 9274F `pg_dump` exists in retained repository, issue, pull
+request, release, or appliance-teardown evidence for either target. The Kan
+landing zones document only a future seed plan, and the retired appliance was
+recorded as holding no subgraph data. An undiscovered off-repository archive
+cannot be ruled out, but it is not an eligible production input.
+
+Mainnet therefore replays all six mapping segments from graft-free root
+`Qme66ZNMxSdCQKzaDuvS381whCVYCQjf637sGZCqJHAWHB`, starting at block
+12,369,621. Base replays both mapping segments from graft-free root
+`QmPWDTWRfS8XewMJhxXoQiZX6RkrUMYH7BFnnB846v6wzR`, starting at block
+1,371,679. Each segment must use its own digest-bound writer contract; current
+mapping code must not be projected backward over inherited history.
+
+The cost proxy at the retained 2026-08-28 oracle heads is 13,483,976 mainnet
+blocks and 49,192,833 Base blocks across eight segments. No wall-clock estimate
+is certified because there is not yet an endpoint-bound throughput run. This
+decision keeps the unfinished execution, representative-sample, continuity,
+and consumption work in issue #38 in scope. It may be reopened before compute
+only if operations supplies an immutable archive location, byte digest,
+deployment/schema identity, head block and hash, Graph Node/runtime identity,
+capture time, and successful restore-verification receipt.
+
+The evidence and reopening rule are recorded in
+[`docs/uniswap-v3-execution-model.md`](../docs/uniswap-v3-execution-model.md).
+
 ## Imported source
 
 `source/` is an exact import of

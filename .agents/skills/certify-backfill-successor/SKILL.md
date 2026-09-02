@@ -60,6 +60,10 @@ in the PR description when a repair changes the candidate.
 ## Merge and prove canonical publication
 
 - Require hosted CI success at the exact reviewed head.
+- Do not use `gh pr merge --auto` as a check queue unless branch protection has
+  been verified to require those checks. Without that gate GitHub may merge
+  immediately. Poll the exact candidate to terminal success before invoking a
+  merge command.
 - Re-read the remote head immediately before merging and use the GitHub
   exact-head merge guard; abort if it changed.
 - After squash merge, compare the canonical commit's tree to the tested

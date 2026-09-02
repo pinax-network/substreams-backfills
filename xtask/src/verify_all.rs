@@ -63,19 +63,13 @@ pub const CHECKS: &[Check] = &[
         name: "validate-targets",
         family: Family::Core,
         requires: &[Requires::Nothing],
-        argv: &["python3", "scripts/validate-targets.py"],
+        argv: &["cargo", "xtask", "verify-targets"],
     },
     Check {
-        name: "eligibility-tests",
+        name: "xtask-tests",
         family: Family::Core,
         requires: &[Requires::Nothing],
-        argv: &[
-            "python3",
-            "-m",
-            "unittest",
-            "scripts.tests.test_eligibility",
-            "scripts.tests.test_target_market_snapshots",
-        ],
+        argv: &["cargo", "test", "-p", "xtask", "--locked"],
     },
     Check {
         name: "uniswap-v3-matic-target",

@@ -51,14 +51,12 @@ jobs:
       - name: Install checksum-pinned validation dependencies
         run: python3 -m pip install --require-hashes -r requirements-ci.txt
       - uses: dtolnay/rust-toolchain@stable
-      - name: Restore checksum-keyed evidence asset cache (#108 lock)
-        if: hashFiles('evidence-assets.lock.json') != ''
+      - name: Restore checksum-keyed evidence asset cache
         uses: actions/cache@v4
         with:
           path: ~/.cache/substreams-backfills/evidence-assets
           key: evidence-assets-${{ hashFiles('evidence-assets.lock.json') }}
-      - name: Fetch and verify externalized evidence assets (#108 lock)
-        if: hashFiles('evidence-assets.lock.json') != ''
+      - name: Fetch and verify externalized evidence assets
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: cargo xtask evidence fetch
@@ -112,14 +110,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - name: Restore checksum-keyed evidence asset cache (#108 lock)
-        if: hashFiles('evidence-assets.lock.json') != ''
+      - name: Restore checksum-keyed evidence asset cache
         uses: actions/cache@v4
         with:
           path: ~/.cache/substreams-backfills/evidence-assets
           key: evidence-assets-${{ hashFiles('evidence-assets.lock.json') }}
-      - name: Fetch and verify externalized evidence assets (#108 lock)
-        if: hashFiles('evidence-assets.lock.json') != ''
+      - name: Fetch and verify externalized evidence assets
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: cargo xtask evidence fetch

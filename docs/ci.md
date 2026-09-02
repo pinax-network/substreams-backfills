@@ -46,7 +46,7 @@ restore, so a stale or poisoned cache can only fail, never bypass a check:
 | Substreams CLI v1.20.3 archive | `substreams-v1.20.3-<sha256>` | `sha256sum -c` on the archive |
 | Cargo registry, git db, and `target/` (root workspace, V4 crates) | `Swatinem/rust-cache` keyed on lockfiles and toolchain | `cargo … --locked` |
 | Cargo registry for the frozen Rust 1.79 imports | `hashFiles` of the V3 lockfiles | `cargo … --locked` |
-| Evidence assets (`cargo xtask evidence fetch`) | `evidence-assets-<sha256 of the lock>` | every blob re-hashed before promotion (`docs/evidence-assets.md`) |
+| Evidence assets (`cargo xtask evidence fetch`, unconditional in every job that reads externalized contracts: `v3-evidence`, `v3-reference`, `target-baselines`, `uniswap-v3-matic-reference`) | `evidence-assets-<sha256 of the lock>` | every blob re-hashed before promotion (`docs/evidence-assets.md`) |
 | pip | `requirements-ci.txt` via `actions/setup-python` | `pip install --require-hashes` |
 
 Toolchain pins are unchanged: WABT 1.0.35, Substreams v1.20.3, Rust 1.79 for

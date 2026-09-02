@@ -6,11 +6,13 @@
 //!   evidence lock    --release-tag TAG [--repository OWNER/NAME] [--lock PATH] [--root DIR] [--write] PATH...
 //!   evidence audit-release [--lock PATH]
 
+mod diagnostic_package;
 mod eligibility;
 mod evidence;
 mod fixtures;
 mod github;
 mod import_verify;
+mod logical_oracle;
 mod target_common;
 mod targets;
 mod v4_engine_reference;
@@ -30,6 +32,8 @@ const USAGE: &str = "usage: cargo xtask <evidence|verify-all|verify-targets|elig
   verify-v4-release-assets [--root DIR] [--manifest PATH]   verify the immutable Uniswap V4 release-asset mirror
   verify-v4-engine-reference [--root DIR]   verify the engine v0.5.0 reference capsule (offline)
   verify-v4-q8-reference [--root DIR]   verify the q8 declared-metadata capsule (offline)
+  verify-diagnostic-package PATH   verify the evidence-only Uniswap V3 package structure (needs the substreams CLI)
+  verify-logical-oracle [--root DIR]   verify the retained Uniswap V3 logical-oracle snapshot (offline)
   verify-import <uniswap-v3|uniswap-v4> [--root DIR]   verify a frozen source import against its mirror, inventory, and contracts
   fixtures check [--root DIR]   verify hydrated Uniswap V3 block fixtures and module goldens (offline)
   verify-target <family> [--root DIR] [--lock PATH] [--exact-source-root DIR] [--write-contract]   verify a pinned target baseline (offline)
@@ -168,10 +172,26 @@ fn run() -> Result<(), String> {
             Ok(())
         }
         (Some("verify-target"), Some(family)) => verify_target_command(family, &args),
+        (Some("verify-diagnostic-package"), Some(package)) => {
+            let package = PathBuf::from(package);
+            let inspected = diagnostic_package::inspect(&package)
+                .map_err(|e| format!("Uniswap V3 diagnostic package verification failed: {e}"))?;
+            diagnostic_package::verify(&inspected)
+                .map_err(|e| format!("Uniswap V3 diagnostic package verification failed: {e}"))?;
+            println!("{}", diagnostic_package::SUCCESS_LINE);
+            Ok(())
+        }
         (Some("verify-v4-q8-reference"), _) => {
             let root = PathBuf::from(args.value("root").unwrap_or("."));
             v4_q8_reference::verify(&root).map_err(|e| format!("ERROR: {e}"))?;
             println!("{}", v4_q8_reference::success_json());
+            Ok(())
+        }
+        (Some("verify-logical-oracle"), _) => {
+            let root = PathBuf::from(args.value("root").unwrap_or("."));
+            let line = logical_oracle::verify(&root)
+                .map_err(|e| format!("Uniswap V3 logical-oracle verification failed: {e}"))?;
+            println!("{line}");
             Ok(())
         }
         (Some("verify-v4-engine-reference"), _) => {

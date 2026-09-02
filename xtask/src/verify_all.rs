@@ -137,6 +137,35 @@ pub const CHECKS: &[Check] = &[
         requires: &[Requires::Nothing],
         argv: &["python3", "scripts/verify-uniswap-v4-release-assets.py"],
     },
+    Check {
+        name: "target-baseline-tests",
+        family: Family::Targets,
+        requires: &[Requires::EvidenceAssets],
+        argv: &[
+            "python3",
+            "-m",
+            "unittest",
+            "scripts.tests.test_uniswap_v3_matic_target",
+            "scripts.tests.test_uniswap_v2_base_target",
+            "scripts.tests.test_pancakeswap_infinity_cl_bsc_target",
+            "scripts.tests.test_exchange_v3_bsc_target",
+            "scripts.tests.test_aerodrome_slipstream_base_target",
+            "scripts.tests.test_messari_v3_targets",
+        ],
+    },
+    Check {
+        name: "uniswap-v4-reference-tests",
+        family: Family::UniswapV4,
+        requires: &[Requires::Nothing],
+        argv: &[
+            "python3",
+            "-m",
+            "unittest",
+            "scripts.tests.test_uniswap_v4_engine_reference",
+            "scripts.tests.test_uniswap_v4_q8_reference",
+            "scripts.tests.test_uniswap_v4_release_assets",
+        ],
+    },
 ];
 
 pub struct Outcome {

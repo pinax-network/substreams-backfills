@@ -53,3 +53,27 @@ implementation, and BSC certification precedes Base certification. The accompany
 [`messari-v3-source.md`](messari-v3-source.md) records the nearest pinned source
 anchors, matching malformed manifest metadata, unreproducible deleted gluegun
 dependency, and the strict source-to-WASM refusal boundary.
+
+## Retired static-certificate verifiers (2026-09-02, #110)
+
+Twenty-nine Uniswap V3 retained-WAT / schema-API certificate verifiers, their
+twenty-nine adversarial unittest modules, the shared `uniswap_v3_wat_runtime.py`
+analyzer, and its test (60 files, 73,549 lines) were removed from `scripts/`
+under the Rust-only policy (#110). Their outputs, the `contract.json` files
+under `uniswap-v3/*/v1|v2/`, remain the retained evidence: the sixteen large
+ones as immutable release assets and the twelve smaller ones as tracked
+in-tree pins, all bound by length and SHA-256 in `evidence-assets.lock.json`
+and checked by `cargo xtask evidence check` in every family workflow.
+
+The retired verifier and test sources are preserved verbatim at tag
+`static-verifiers-retired-v1`, which points at the last `main` commit that
+contained them. Nothing about the certificates' claims changed: every
+readiness, parity, backfill, and production gate they recorded as false is
+still false, and no #37/#38 checkbox moved. What is gone is only the CI
+recomputation of artifact identity that the digest lock now performs at a
+fraction of the cost.
+
+Kept because live tooling still imports or runs them: `verify-uniswap-v3-segment-field-semantics.py`
+(imported by the NPM provider-executor verifier) and every overlay runtime
+verifier (`writer-runtime`, `position-reducer`, `flash-reducer`,
+`transaction-reducer`, `npm-*`); those move with #111.

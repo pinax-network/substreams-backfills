@@ -130,6 +130,12 @@ pub const CHECKS: &[Check] = &[
         argv: &["cargo", "xtask", "fixtures", "check"],
     },
     Check {
+        name: "uniswap-v3-logical-oracle",
+        family: Family::UniswapV3,
+        requires: &[Requires::Nothing],
+        argv: &["cargo", "xtask", "verify-logical-oracle"],
+    },
+    Check {
         name: "uniswap-v4-import",
         family: Family::UniswapV4,
         requires: &[Requires::Nothing],

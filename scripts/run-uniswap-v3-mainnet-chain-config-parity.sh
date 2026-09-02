@@ -169,7 +169,8 @@ python3 "$repo_dir/scripts/verify-uniswap-v3-chain-config.py" --root "$repo_dir"
 )
 git -C "$repo_dir" diff --quiet -- uniswap-v3/source || fail "baseline build changed the frozen import"
 substreams pack -o "$baseline_spkg" "$repo_dir/uniswap-v3/source/substreams.yaml"
-python3 "$repo_dir/scripts/verify-uniswap-v3-diagnostic-package.py" "$baseline_spkg"
+cargo +stable run --quiet --manifest-path "$repo_dir/Cargo.toml" --package xtask -- \
+  verify-diagnostic-package "$baseline_spkg"
 
 "$repo_dir/scripts/materialize-uniswap-v3-chain-config.sh" "$runtime_dir/configured"
 (

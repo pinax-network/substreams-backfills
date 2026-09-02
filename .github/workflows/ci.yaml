@@ -226,7 +226,7 @@ jobs:
       - name: Pack and inspect evidence-only package
         run: |
           substreams pack -o "$RUNNER_TEMP/uniswap-v3-diagnostic.spkg" uniswap-v3/source/substreams.yaml
-          python3 scripts/verify-uniswap-v3-diagnostic-package.py "$RUNNER_TEMP/uniswap-v3-diagnostic.spkg"
+          cargo +stable run --quiet --package xtask -- verify-diagnostic-package "$RUNNER_TEMP/uniswap-v3-diagnostic.spkg"
       - name: Materialize configured runtime without changing the frozen import
         run: ./scripts/materialize-uniswap-v3-chain-config.sh "$RUNNER_TEMP/uniswap-v3-configured"
       - name: Test configured runtime on the host target

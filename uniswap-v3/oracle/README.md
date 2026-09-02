@@ -50,8 +50,8 @@ Every production-relevant promotion gate remains false, including:
 Run the hermetic verifier and its negative tests with:
 
 ```bash
-python3 scripts/verify-uniswap-v3-logical-oracle.py
-python3 -m unittest scripts/tests/test_uniswap_v3_logical_oracle.py
+cargo xtask verify-logical-oracle
+cargo test -p xtask logical_oracle
 ```
 
 The verifier checks every retained byte against a hard-pinned digest, validates

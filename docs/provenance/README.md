@@ -77,3 +77,18 @@ Kept because live tooling still imports or runs them: `verify-uniswap-v3-segment
 (imported by the NPM provider-executor verifier) and every overlay runtime
 verifier (`writer-runtime`, `position-reducer`, `flash-reducer`,
 `transaction-reducer`, `npm-*`); those move with #111.
+
+## Ported pinned-target baseline verifiers (2026-09-02, #110)
+
+The six pinned-target verifiers (`verify-uniswap-v3-matic-target.py`,
+`verify-uniswap-v2-base-target.py`, `verify-pancakeswap-infinity-cl-bsc-target.py`,
+`verify-exchange-v3-bsc-target.py`, `verify-aerodrome-slipstream-base-target.py`,
+`verify-messari-v3-targets.py`) and their six unittest modules were replaced by
+`cargo xtask verify-target <family>` (`xtask/src/targets/`). Every lock
+constant, failure message, and success line was carried over unchanged, and the
+135 Python tests were ported one-for-one with each negative case asserting the
+exact message the Python oracle produced. The provenance locks under this
+directory, the layout profiles, and the target bindings are untouched; no
+readiness or eligibility value changed. The Python sources remain readable at
+the last `main` commit that contained them (the parent of the merge that
+introduced this section).

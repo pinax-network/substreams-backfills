@@ -63,6 +63,8 @@ jobs:
             uniswap-v4/store-tick-shards
             uniswap-v4/nul-audit
           cache-on-failure: true
+      - name: Verify immutable Uniswap V4 historical release assets
+        run: cargo xtask verify-v4-release-assets
       - name: Restore checksum-pinned Substreams CLI archive
         uses: actions/cache@v4
         with:

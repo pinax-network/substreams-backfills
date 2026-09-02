@@ -9,6 +9,7 @@
 mod eligibility;
 mod evidence;
 mod github;
+mod v4_release_assets;
 mod verify_all;
 
 use std::path::{Path, PathBuf};
@@ -20,6 +21,7 @@ const USAGE: &str = "usage: cargo xtask <evidence|verify-all|verify-targets|elig
   eligibility capture --binding FILE --measurements FILE --output FILE [--policy PATH] [--root DIR]
   eligibility check --binding FILE --purpose implementation-start|compute-or-load-start [--now RFC3339] [--json] [--policy PATH] [--root DIR]
   verify-targets [--root DIR] [--policy PATH]   validate every target binding and pinned evidence (offline)
+  verify-v4-release-assets [--root DIR] [--manifest PATH]   verify the immutable Uniswap V4 release-asset mirror
   evidence <check|fetch|lock|audit-release> [options]
   verify-all [--list] [--family core|targets|uniswap-v3|uniswap-v4] [--keep-going]
 
@@ -110,6 +112,16 @@ fn run() -> Result<(), String> {
     ) {
         (Some("verify-all"), _) => verify_all_command(&args),
         (Some("verify-targets"), _) => verify_targets_command(&args),
+        (Some("verify-v4-release-assets"), _) => {
+            let root = PathBuf::from(args.value("root").unwrap_or("."));
+            let manifest = args
+                .value("manifest")
+                .map(PathBuf::from)
+                .unwrap_or_else(v4_release_assets::default_manifest_path);
+            v4_release_assets::verify(&root, &manifest).map_err(|e| e.to_string())?;
+            println!("verified 2 immutable Uniswap V4 historical release assets");
+            Ok(())
+        }
         (Some("eligibility"), Some(sub)) => eligibility_command(sub, &args),
         (Some("evidence"), Some(sub)) => {
             let root = PathBuf::from(args.value("root").unwrap_or("."));

@@ -129,7 +129,7 @@ pub const CHECKS: &[Check] = &[
         name: "uniswap-v4-release-assets",
         family: Family::UniswapV4,
         requires: &[Requires::Nothing],
-        argv: &["python3", "scripts/verify-uniswap-v4-release-assets.py"],
+        argv: &["cargo", "xtask", "verify-v4-release-assets"],
     },
     Check {
         name: "target-baseline-tests",

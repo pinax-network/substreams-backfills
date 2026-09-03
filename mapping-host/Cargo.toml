@@ -1,0 +1,38 @@
+[workspace]
+members = ["."]
+resolver = "2"
+
+[package]
+name = "graph-mapping-host"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+repository = "https://github.com/pinax-network/substreams-backfills"
+description = "Hermetic host that runs deployed subgraph mapping WASM under Graph Node's own runtime crates"
+publish = false
+
+[lib]
+name = "graph_mapping_host"
+path = "src/lib.rs"
+
+[[bin]]
+name = "graph-mapping-host"
+path = "src/main.rs"
+
+[dependencies]
+graph = { git = "https://github.com/graphprotocol/graph-node", rev = "77823b5a7adc4eac4abf03202c8dd7cb00dea31d" }
+graph-runtime-wasm = { git = "https://github.com/graphprotocol/graph-node", rev = "77823b5a7adc4eac4abf03202c8dd7cb00dea31d" }
+graph-chain-ethereum = { git = "https://github.com/graphprotocol/graph-node", rev = "77823b5a7adc4eac4abf03202c8dd7cb00dea31d" }
+anyhow = "1"
+async-trait = "0.1"
+clap = { version = "4", features = ["derive"] }
+hex = "0.4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+sha2 = "0.10"
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+ureq = { version = "2", default-features = false, features = ["tls", "json"] }
+
+[dev-dependencies]
+tempfile = "3"

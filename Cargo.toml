@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 members = ["common", "crates/uniswap-v3-overlay-pb", "crates/uniswap-v3-reducers", "xtask"]
-exclude = ["uniswap-v3/contract-tests", "uniswap-v3/source", "uniswap-v4"]
+exclude = ["mapping-host", "uniswap-v3/contract-tests", "uniswap-v3/source", "uniswap-v4"]
 
 [workspace.package]
 edition = "2021"

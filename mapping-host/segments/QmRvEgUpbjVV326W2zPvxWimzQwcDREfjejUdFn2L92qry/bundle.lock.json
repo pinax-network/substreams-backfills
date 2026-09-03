@@ -1,0 +1,75 @@
+{
+  "schema": "pinax.substreams-backfills.mapping-host.bundle/v1",
+  "deployment": "QmRvEgUpbjVV326W2zPvxWimzQwcDREfjejUdFn2L92qry",
+  "network": "mainnet",
+  "spec_version": "0.0.2",
+  "features": [],
+  "files": [
+    {
+      "path": "abis/ERC20.json",
+      "cid": "QmXuTbDkNrN27VydxbS2huvKRk62PMgUTdPDWkxcr2w7j2",
+      "bytes": 3684,
+      "sha256": "4b83c6645aed2df5e4e9a1d11f372453fc052ac8575348c8c04a33ceacd0ae90"
+    },
+    {
+      "path": "abis/ERC20NameBytes.json",
+      "cid": "QmQCP6Pdp1MqpwRv2qoPHuUTwZGy7Q3eDHg4w5kzwE9mBj",
+      "bytes": 268,
+      "sha256": "b874c853ffa5309e4b7fbf4934c1efdb4fe31e1a65f7041e67f4a7f2258ffb77"
+    },
+    {
+      "path": "abis/ERC20SymbolBytes.json",
+      "cid": "QmbHnhUFZa6qqqRyubUYhXntox1TCBxqryaBM1iNGqVJzT",
+      "bytes": 270,
+      "sha256": "9ccb9b5d95394b2ffb4ced54cffa0c5ea282917f4eec36c121ce28c257965193"
+    },
+    {
+      "path": "abis/Factory.json",
+      "cid": "QmTU8eKx6pCgtff6Uvc7srAwR8BPiM3jTMBw9ahrXBjRzY",
+      "bytes": 3703,
+      "sha256": "daa769db333fa28d331cc0d866a666ebb98c995a915cb44828a801608ab0d1c1"
+    },
+    {
+      "path": "abis/NonfungiblePositionManager.json",
+      "cid": "QmaxxqQ7xzbGDPWu184uoq2g5sofazB9B9tEDrpPjmRZ8q",
+      "bytes": 23334,
+      "sha256": "456c1726a11497a2b12e719111381203a1e96178ea4547af63e8947dc19490cd"
+    },
+    {
+      "path": "abis/Pool.json",
+      "cid": "QmULRc8Ac1J6YFy11z7JRpyThb6f7nmL5mMTQvN7LKj2Vy",
+      "bytes": 19634,
+      "sha256": "df8064cbe381e7a929aa4e1a658ce3617daed0e871883bf29ced54112fdfdbfd"
+    },
+    {
+      "path": "manifest.yaml",
+      "cid": "QmRvEgUpbjVV326W2zPvxWimzQwcDREfjejUdFn2L92qry",
+      "bytes": 4226,
+      "sha256": "5d39dce087a8e76d564972718cd95136a523cc8c06ea7fc58f8fa603afe18198"
+    },
+    {
+      "path": "mappings/QmT8CKmLDFFCgwYnubFhKXUsuer5rfJKPT4PrCsv9tTwjV.wasm",
+      "cid": "QmT8CKmLDFFCgwYnubFhKXUsuer5rfJKPT4PrCsv9tTwjV",
+      "bytes": 23945,
+      "sha256": "c90c4b86b184d8ffed606f3264d6f3b921421ef7dce2cb35484dd7faaf452cd4"
+    },
+    {
+      "path": "mappings/QmYQRHstsSS7mntgKNSot74qN2dpuyFEtd1DddPmnqWC65.wasm",
+      "cid": "QmYQRHstsSS7mntgKNSot74qN2dpuyFEtd1DddPmnqWC65",
+      "bytes": 40954,
+      "sha256": "ee35ffc861d04313370845e12d27de3a16d4f1f2d7137b81407c797d189fe94f"
+    },
+    {
+      "path": "mappings/Qmebr2EyxV7v1wLt9DSFKA7g8EhcVr9k1x7pwZr5eWEHT6.wasm",
+      "cid": "Qmebr2EyxV7v1wLt9DSFKA7g8EhcVr9k1x7pwZr5eWEHT6",
+      "bytes": 20794,
+      "sha256": "bdb35f971e9a03b4bdc92b140d42285e27fdff6efb4edf14fe0f3eaad0c80537"
+    },
+    {
+      "path": "schema.graphql",
+      "cid": "QmSGd2GREu8QzGgqXA626cyYbF65TGXj3gmk96CDBNQ9zG",
+      "bytes": 18381,
+      "sha256": "35d07db24c66668ffd15f4d415cacdeaf0432c8c6149937cbc9644ae81e47964"
+    }
+  ]
+}

@@ -29,8 +29,9 @@ IPFS objects stay in the tree: they are inputs, not outputs.
 
 The same format and commands serve other content-addressed sets through
 `--lock PATH`: `uniswap-v3/fixtures/blocks.lock.json` (release
-`block-fixtures-v1`, Firehose block protobufs for #113, asset names keep the
-`.pb` extension). Each lock maps to exactly one immutable release tag.
+`block-fixtures-v2`, one Firehose block protobuf per asset for #113, asset
+names keep the `.pb` extension). Each lock maps to exactly one immutable
+release tag.
 
 ## Tracked in-tree pins
 

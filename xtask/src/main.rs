@@ -36,6 +36,7 @@ const USAGE: &str = "usage: cargo xtask <evidence|verify-all|verify-targets|elig
   verify-logical-oracle [--root DIR]   verify the retained Uniswap V3 logical-oracle snapshot (offline)
   verify-import <uniswap-v3|uniswap-v4> [--root DIR]   verify a frozen source import against its mirror, inventory, and contracts
   fixtures check [--root DIR]   verify hydrated Uniswap V3 block fixtures and module goldens (offline)
+  fixtures normalize [--root DIR] [--lock PATH] [--write]   re-cut locked block fixtures to their first Block message (offline)
   verify-target <family> [--root DIR] [--lock PATH] [--exact-source-root DIR] [--write-contract]   verify a pinned target baseline (offline)
                  uniswap-v2-base source mode: --source-root DIR --generic-source-root DIR; messari-v3: --write-contract
                  families: uniswap-v3-matic uniswap-v2-base pancakeswap-infinity-cl-bsc exchange-v3-bsc aerodrome-slipstream-base messari-v3
@@ -142,9 +143,15 @@ fn run() -> Result<(), String> {
     ) {
         (Some("verify-all"), _) => verify_all_command(&args),
         (Some("verify-targets"), _) => verify_targets_command(&args),
-        (Some("fixtures"), Some("check")) => {
+        (Some("fixtures"), Some(sub @ ("check" | "normalize"))) => {
             let root = PathBuf::from(args.value("root").unwrap_or("."));
-            let report = fixtures::check(&root).map_err(|e| e.to_string())?;
+            let report = if sub == "check" {
+                fixtures::check(&root)
+            } else {
+                let lock_path = root.join(args.value("lock").unwrap_or(fixtures::BLOCKS_LOCK));
+                fixtures::normalize(&root, &lock_path, args.has("write"))
+            }
+            .map_err(|e| e.to_string())?;
             for line in report.lines {
                 println!("{line}");
             }

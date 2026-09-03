@@ -1,55 +1,55 @@
 {
   "schema": "pinax.substreams-backfills.evidence-assets/v1",
   "repository": "pinax-network/substreams-backfills",
-  "release_tag": "block-fixtures-v1",
+  "release_tag": "block-fixtures-v2",
   "assets": [
     {
       "path": "uniswap-v3/fixtures/blocks/mainnet/12369621.pb",
-      "asset": "sha256-8d464a7ad7e8b2f8d7d81f8a68a44432417f58e4e63950552e2e52225b8a5d1b.pb",
-      "bytes": 1133655,
-      "sha256": "8d464a7ad7e8b2f8d7d81f8a68a44432417f58e4e63950552e2e52225b8a5d1b"
+      "asset": "sha256-d5ce9ea6fb47622e7d73be171d0fbf8ae8fccf9088600e3d223be789ce84978d.pb",
+      "bytes": 500916,
+      "sha256": "d5ce9ea6fb47622e7d73be171d0fbf8ae8fccf9088600e3d223be789ce84978d"
     },
     {
       "path": "uniswap-v3/fixtures/blocks/mainnet/12369739.pb",
-      "asset": "sha256-b2763cae79316c149ef6e8a0fc93aa0df1b4b0796da1d481815cedefb89d7b23.pb",
-      "bytes": 1597522,
-      "sha256": "b2763cae79316c149ef6e8a0fc93aa0df1b4b0796da1d481815cedefb89d7b23"
+      "asset": "sha256-b7ec7a2748d2974000d1d69574478720e4baa321f8c82c65df3372e5e9decbbd.pb",
+      "bytes": 567133,
+      "sha256": "b7ec7a2748d2974000d1d69574478720e4baa321f8c82c65df3372e5e9decbbd"
     },
     {
       "path": "uniswap-v3/fixtures/blocks/mainnet/12369879.pb",
-      "asset": "sha256-a440ea0df0b9731dabeb73bbe05611a1400e6e04eb3622499b2709505527038d.pb",
-      "bytes": 1481115,
-      "sha256": "a440ea0df0b9731dabeb73bbe05611a1400e6e04eb3622499b2709505527038d"
+      "asset": "sha256-110d39156dfde0b558c9aca9fff1bd86753a1cd485f5b0135dcac93f05ab2210.pb",
+      "bytes": 627205,
+      "sha256": "110d39156dfde0b558c9aca9fff1bd86753a1cd485f5b0135dcac93f05ab2210"
     },
     {
       "path": "uniswap-v3/fixtures/blocks/mainnet/12370523.pb",
-      "asset": "sha256-760f55e52db30c9691a681295ce5bcd5bc83726e2cba7c41d709775fdc8bdb22.pb",
-      "bytes": 2180070,
-      "sha256": "760f55e52db30c9691a681295ce5bcd5bc83726e2cba7c41d709775fdc8bdb22"
+      "asset": "sha256-88e0817d30fc95388bd17294b7a03c15129082b27de0937a39ee3f7eb3488dea.pb",
+      "bytes": 993546,
+      "sha256": "88e0817d30fc95388bd17294b7a03c15129082b27de0937a39ee3f7eb3488dea"
     },
     {
       "path": "uniswap-v3/fixtures/blocks/mainnet/13605860.pb",
-      "asset": "sha256-ed61993411042c359e4b4b6431b196fb31fd70ec7ae5c34eef539699cb683961.pb",
-      "bytes": 1486461,
-      "sha256": "ed61993411042c359e4b4b6431b196fb31fd70ec7ae5c34eef539699cb683961"
+      "asset": "sha256-16f89e2229d7ec28714ee57e502d4760e80d92499e4ef0736dc68a36f9b93ad9.pb",
+      "bytes": 1208197,
+      "sha256": "16f89e2229d7ec28714ee57e502d4760e80d92499e4ef0736dc68a36f9b93ad9"
     },
     {
       "path": "uniswap-v3/fixtures/blocks/mainnet/13605861.pb",
-      "asset": "sha256-fe7ea717a4bdeeb1afac35ea66867e6a17e2943afce1bec8028b27091972f2f5.pb",
-      "bytes": 2044607,
-      "sha256": "fe7ea717a4bdeeb1afac35ea66867e6a17e2943afce1bec8028b27091972f2f5"
+      "asset": "sha256-a36712b3a2bed4ad3954493e2e1ca2bd2c4c23f189c4dfc494bf6e02dc82f3ad.pb",
+      "bytes": 278264,
+      "sha256": "a36712b3a2bed4ad3954493e2e1ca2bd2c4c23f189c4dfc494bf6e02dc82f3ad"
     },
     {
       "path": "uniswap-v3/fixtures/blocks/mainnet/19470000.pb",
-      "asset": "sha256-3a8d3457015096f7fa4e8cbf107b4c76c7619c08726f1ef40c6573dc432d97e6.pb",
-      "bytes": 2041903,
-      "sha256": "3a8d3457015096f7fa4e8cbf107b4c76c7619c08726f1ef40c6573dc432d97e6"
+      "asset": "sha256-0e83887649c7b70319db31cc4c468d32418bf49423ff4ecfd592ea19a6d3bcc5.pb",
+      "bytes": 1031733,
+      "sha256": "0e83887649c7b70319db31cc4c468d32418bf49423ff4ecfd592ea19a6d3bcc5"
     },
     {
       "path": "uniswap-v3/fixtures/blocks/mainnet/19470001.pb",
-      "asset": "sha256-e907c552d450ab0bd47f1b9fc55e1c391901aa19cf7b89a485797c6f14c806a0.pb",
-      "bytes": 1672567,
-      "sha256": "e907c552d450ab0bd47f1b9fc55e1c391901aa19cf7b89a485797c6f14c806a0"
+      "asset": "sha256-cc6855ced914940c4455cdbadc83191aaba60504636c41333955fa2be9ea4832.pb",
+      "bytes": 1010170,
+      "sha256": "cc6855ced914940c4455cdbadc83191aaba60504636c41333955fa2be9ea4832"
     }
   ]
 }

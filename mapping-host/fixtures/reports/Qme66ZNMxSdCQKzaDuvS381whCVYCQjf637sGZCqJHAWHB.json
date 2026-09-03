@@ -1,0 +1,4546 @@
+{
+  "schema": "pinax.substreams-backfills.mapping-host.report/v1",
+  "deployment": "Qme66ZNMxSdCQKzaDuvS381whCVYCQjf637sGZCqJHAWHB",
+  "network": "mainnet",
+  "spec_version": "0.0.2",
+  "api_versions": [
+    "0.0.4"
+  ],
+  "features": [],
+  "graph_node_rev": "77823b5a7adc4eac4abf03202c8dd7cb00dea31d",
+  "blocks": [
+    {
+      "number": 12369621,
+      "hash": "0xf1156cb7e1a2acaa348c66fdc45b02f2547024ded63350a96a46ed12c62b4ff4",
+      "parent_hash": "0x6a3bb2ef0a20f5503495238e54fef236659f56f1c57e1602b0de2b3d799fe154",
+      "timestamp": 1620156420,
+      "mapping_triggered": false,
+      "triggers_per_stage": [
+        152
+      ],
+      "hosts_per_stage": [
+        2
+      ],
+      "handler_groups": [],
+      "created_data_sources": [],
+      "deterministic_errors": [],
+      "deterministic_error_policy": "fatal",
+      "block_discarded": false,
+      "modification_count": 0,
+      "store_counts": {}
+    },
+    {
+      "number": 12369739,
+      "hash": "0xe8228e3e736a42c7357d2ce6882a1662c588ce608897dd53c3053bcbefb4309a",
+      "parent_hash": "0xf68764a9ce0ce74bfaab8a5a5b6e638ebf715bad564f6bf4b353c37961b00767",
+      "timestamp": 1620157956,
+      "mapping_triggered": true,
+      "triggers_per_stage": [
+        199,
+        199
+      ],
+      "hosts_per_stage": [
+        2,
+        1
+      ],
+      "handler_groups": [
+        {
+          "handler_group_order": 0,
+          "stage": 0,
+          "source_trigger_order": 24,
+          "causality_region": "ethereum/mainnet",
+          "trigger": {
+            "transaction_hash": "0x37d8f4b1b371fde9e4b1942588d16a1cbf424b7c66e731ec915aca785ca2efcf",
+            "log_index": 24,
+            "address": "0x1f98431c8ad98523631ae4a59f267346ea31f984"
+          },
+          "handlers": [
+            {
+              "handler_order": 0,
+              "data_source": "Factory",
+              "data_source_address": "0x1f98431c8ad98523631ae4a59f267346ea31f984",
+              "handler": "handlePoolCreated",
+              "outcome": "ok",
+              "modifications": [
+                {
+                  "op": "insert",
+                  "entity": "Bundle",
+                  "id": "1",
+                  "vid": 53127624465055844,
+                  "data": {
+                    "ethPriceUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "1",
+                      "type": "String"
+                    }
+                  }
+                },
+                {
+                  "op": "insert",
+                  "entity": "Factory",
+                  "id": "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+                  "vid": 53127624465055848,
+                  "data": {
+                    "id": {
+                      "data": "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+                      "type": "String"
+                    },
+                    "owner": {
+                      "data": "0x0000000000000000000000000000000000000000",
+                      "type": "String"
+                    },
+                    "poolCount": {
+                      "data": "1",
+                      "type": "BigInt"
+                    },
+                    "totalFeesETH": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalFeesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedETH": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedETHUntracked": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSDUntracked": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalVolumeETH": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalVolumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "txCount": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "untrackedVolumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "insert",
+                  "entity": "Pool",
+                  "id": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801",
+                  "vid": 53127624465055845,
+                  "data": {
+                    "collectedFeesToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "collectedFeesToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "collectedFeesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "createdAtBlockNumber": {
+                      "data": "12369739",
+                      "type": "BigInt"
+                    },
+                    "createdAtTimestamp": {
+                      "data": "1620157956",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthGlobal0X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthGlobal1X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feeTier": {
+                      "data": "3000",
+                      "type": "BigInt"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801",
+                      "type": "String"
+                    },
+                    "liquidity": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "liquidityProviderCount": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "observationIndex": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "sqrtPrice": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "token0": {
+                      "data": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+                      "type": "String"
+                    },
+                    "token0Price": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "token1": {
+                      "data": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                      "type": "String"
+                    },
+                    "token1Price": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedETH": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSDUntracked": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "txCount": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "untrackedVolumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "insert",
+                  "entity": "Token",
+                  "id": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+                  "vid": 53127624465055846,
+                  "data": {
+                    "decimals": {
+                      "data": "18",
+                      "type": "BigInt"
+                    },
+                    "derivedETH": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+                      "type": "String"
+                    },
+                    "name": {
+                      "data": "Uniswap",
+                      "type": "String"
+                    },
+                    "poolCount": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "symbol": {
+                      "data": "UNI",
+                      "type": "String"
+                    },
+                    "totalSupply": {
+                      "data": "18776",
+                      "type": "BigInt"
+                    },
+                    "totalValueLocked": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSDUntracked": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "txCount": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "untrackedVolumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volume": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "whitelistPools": {
+                      "data": [
+                        {
+                          "data": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801",
+                          "type": "String"
+                        }
+                      ],
+                      "type": "List"
+                    }
+                  }
+                },
+                {
+                  "op": "insert",
+                  "entity": "Token",
+                  "id": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                  "vid": 53127624465055847,
+                  "data": {
+                    "decimals": {
+                      "data": "18",
+                      "type": "BigInt"
+                    },
+                    "derivedETH": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                      "type": "String"
+                    },
+                    "name": {
+                      "data": "Wrapped Ether",
+                      "type": "String"
+                    },
+                    "poolCount": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "symbol": {
+                      "data": "WETH",
+                      "type": "String"
+                    },
+                    "totalSupply": {
+                      "data": "19848",
+                      "type": "BigInt"
+                    },
+                    "totalValueLocked": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSDUntracked": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "txCount": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "untrackedVolumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volume": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "whitelistPools": {
+                      "data": [],
+                      "type": "List"
+                    }
+                  }
+                }
+              ],
+              "created_data_sources": [
+                {
+                  "template": "Pool",
+                  "params": [
+                    "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801"
+                  ],
+                  "creation_block": 12369739
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "handler_group_order": 1,
+          "stage": 0,
+          "source_trigger_order": 30,
+          "causality_region": "ethereum/mainnet",
+          "trigger": {
+            "transaction_hash": "0x37d8f4b1b371fde9e4b1942588d16a1cbf424b7c66e731ec915aca785ca2efcf",
+            "log_index": 30,
+            "address": "0xc36442b4a4522e871399cd717abdd847ab11fe88"
+          },
+          "handlers": [
+            {
+              "handler_order": 0,
+              "data_source": "NonfungiblePositionManager",
+              "data_source_address": "0xc36442b4a4522e871399cd717abdd847ab11fe88",
+              "handler": "handleTransfer",
+              "outcome": "ok",
+              "modifications": [
+                {
+                  "op": "insert",
+                  "entity": "Position",
+                  "id": "1",
+                  "vid": 53127624465055850,
+                  "data": {
+                    "collectedFeesToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "collectedFeesToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "depositedToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "depositedToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "feeGrowthInside0LastX128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthInside1LastX128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "id": {
+                      "data": "1",
+                      "type": "String"
+                    },
+                    "liquidity": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "owner": {
+                      "data": "0x11e4857bb9993a50c685a79afad4e6f65d518dda",
+                      "type": "Bytes"
+                    },
+                    "pool": {
+                      "data": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801",
+                      "type": "String"
+                    },
+                    "tickLower": {
+                      "data": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801#-50580",
+                      "type": "String"
+                    },
+                    "tickUpper": {
+                      "data": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801#-36720",
+                      "type": "String"
+                    },
+                    "token0": {
+                      "data": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+                      "type": "String"
+                    },
+                    "token1": {
+                      "data": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                      "type": "String"
+                    },
+                    "transaction": {
+                      "data": "0x37d8f4b1b371fde9e4b1942588d16a1cbf424b7c66e731ec915aca785ca2efcf",
+                      "type": "String"
+                    },
+                    "withdrawnToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "withdrawnToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "insert",
+                  "entity": "PositionSnapshot",
+                  "id": "1#12369739",
+                  "vid": 53127624465055852,
+                  "data": {
+                    "blockNumber": {
+                      "data": "12369739",
+                      "type": "BigInt"
+                    },
+                    "collectedFeesToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "collectedFeesToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "depositedToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "depositedToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "feeGrowthInside0LastX128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthInside1LastX128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "id": {
+                      "data": "1#12369739",
+                      "type": "String"
+                    },
+                    "liquidity": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "owner": {
+                      "data": "0x11e4857bb9993a50c685a79afad4e6f65d518dda",
+                      "type": "Bytes"
+                    },
+                    "pool": {
+                      "data": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801",
+                      "type": "String"
+                    },
+                    "position": {
+                      "data": "1",
+                      "type": "String"
+                    },
+                    "timestamp": {
+                      "data": "1620157956",
+                      "type": "BigInt"
+                    },
+                    "transaction": {
+                      "data": "0x37d8f4b1b371fde9e4b1942588d16a1cbf424b7c66e731ec915aca785ca2efcf",
+                      "type": "String"
+                    },
+                    "withdrawnToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "withdrawnToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "insert",
+                  "entity": "Transaction",
+                  "id": "0x37d8f4b1b371fde9e4b1942588d16a1cbf424b7c66e731ec915aca785ca2efcf",
+                  "vid": 53127624465055851,
+                  "data": {
+                    "blockNumber": {
+                      "data": "12369739",
+                      "type": "BigInt"
+                    },
+                    "gasPrice": {
+                      "data": "100000000000",
+                      "type": "BigInt"
+                    },
+                    "gasUsed": {
+                      "data": "5819584",
+                      "type": "BigInt"
+                    },
+                    "id": {
+                      "data": "0x37d8f4b1b371fde9e4b1942588d16a1cbf424b7c66e731ec915aca785ca2efcf",
+                      "type": "String"
+                    },
+                    "timestamp": {
+                      "data": "1620157956",
+                      "type": "BigInt"
+                    }
+                  }
+                }
+              ],
+              "created_data_sources": []
+            }
+          ]
+        },
+        {
+          "handler_group_order": 2,
+          "stage": 0,
+          "source_trigger_order": 31,
+          "causality_region": "ethereum/mainnet",
+          "trigger": {
+            "transaction_hash": "0x37d8f4b1b371fde9e4b1942588d16a1cbf424b7c66e731ec915aca785ca2efcf",
+            "log_index": 31,
+            "address": "0xc36442b4a4522e871399cd717abdd847ab11fe88"
+          },
+          "handlers": [
+            {
+              "handler_order": 0,
+              "data_source": "NonfungiblePositionManager",
+              "data_source_address": "0xc36442b4a4522e871399cd717abdd847ab11fe88",
+              "handler": "handleIncreaseLiquidity",
+              "outcome": "ok",
+              "modifications": [
+                {
+                  "op": "overwrite",
+                  "entity": "Position",
+                  "id": "1",
+                  "vid": 53127624465055853,
+                  "data": {
+                    "collectedFeesToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "collectedFeesToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "depositedToken0": {
+                      "data": "0.999999999999999924",
+                      "type": "BigDecimal"
+                    },
+                    "depositedToken1": {
+                      "data": "0.01264381746197226",
+                      "type": "BigDecimal"
+                    },
+                    "feeGrowthInside0LastX128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthInside1LastX128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "id": {
+                      "data": "1",
+                      "type": "String"
+                    },
+                    "liquidity": {
+                      "data": "383995753785830744",
+                      "type": "BigInt"
+                    },
+                    "owner": {
+                      "data": "0x11e4857bb9993a50c685a79afad4e6f65d518dda",
+                      "type": "Bytes"
+                    },
+                    "pool": {
+                      "data": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801",
+                      "type": "String"
+                    },
+                    "tickLower": {
+                      "data": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801#-50580",
+                      "type": "String"
+                    },
+                    "tickUpper": {
+                      "data": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801#-36720",
+                      "type": "String"
+                    },
+                    "token0": {
+                      "data": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+                      "type": "String"
+                    },
+                    "token1": {
+                      "data": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                      "type": "String"
+                    },
+                    "transaction": {
+                      "data": "0x37d8f4b1b371fde9e4b1942588d16a1cbf424b7c66e731ec915aca785ca2efcf",
+                      "type": "String"
+                    },
+                    "withdrawnToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "withdrawnToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "overwrite",
+                  "entity": "PositionSnapshot",
+                  "id": "1#12369739",
+                  "vid": 53127624465055855,
+                  "data": {
+                    "blockNumber": {
+                      "data": "12369739",
+                      "type": "BigInt"
+                    },
+                    "collectedFeesToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "collectedFeesToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "depositedToken0": {
+                      "data": "0.999999999999999924",
+                      "type": "BigDecimal"
+                    },
+                    "depositedToken1": {
+                      "data": "0.01264381746197226",
+                      "type": "BigDecimal"
+                    },
+                    "feeGrowthInside0LastX128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthInside1LastX128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "id": {
+                      "data": "1#12369739",
+                      "type": "String"
+                    },
+                    "liquidity": {
+                      "data": "383995753785830744",
+                      "type": "BigInt"
+                    },
+                    "owner": {
+                      "data": "0x11e4857bb9993a50c685a79afad4e6f65d518dda",
+                      "type": "Bytes"
+                    },
+                    "pool": {
+                      "data": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801",
+                      "type": "String"
+                    },
+                    "position": {
+                      "data": "1",
+                      "type": "String"
+                    },
+                    "timestamp": {
+                      "data": "1620157956",
+                      "type": "BigInt"
+                    },
+                    "transaction": {
+                      "data": "0x37d8f4b1b371fde9e4b1942588d16a1cbf424b7c66e731ec915aca785ca2efcf",
+                      "type": "String"
+                    },
+                    "withdrawnToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "withdrawnToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                }
+              ],
+              "created_data_sources": []
+            }
+          ]
+        },
+        {
+          "handler_group_order": 3,
+          "stage": 1,
+          "source_trigger_order": 25,
+          "causality_region": "ethereum/mainnet",
+          "trigger": {
+            "transaction_hash": "0x37d8f4b1b371fde9e4b1942588d16a1cbf424b7c66e731ec915aca785ca2efcf",
+            "log_index": 25,
+            "address": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801"
+          },
+          "handlers": [
+            {
+              "handler_order": 0,
+              "data_source": "Pool",
+              "data_source_address": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801",
+              "handler": "handleInitialize",
+              "outcome": "ok",
+              "modifications": [
+                {
+                  "op": "insert",
+                  "entity": "PoolDayData",
+                  "id": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801-18751",
+                  "vid": 53127624465055857,
+                  "data": {
+                    "close": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "date": {
+                      "data": 1620086400,
+                      "type": "Int"
+                    },
+                    "feeGrowthGlobal0X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthGlobal1X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "high": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801-18751",
+                      "type": "String"
+                    },
+                    "liquidity": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "low": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "open": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "pool": {
+                      "data": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801",
+                      "type": "String"
+                    },
+                    "sqrtPrice": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "token0Price": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "token1Price": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "tvlUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "txCount": {
+                      "data": "1",
+                      "type": "BigInt"
+                    },
+                    "volumeToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "insert",
+                  "entity": "PoolHourData",
+                  "id": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801-450043",
+                  "vid": 53127624465055858,
+                  "data": {
+                    "close": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "feeGrowthGlobal0X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthGlobal1X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "high": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801-450043",
+                      "type": "String"
+                    },
+                    "liquidity": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "low": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "open": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "periodStartUnix": {
+                      "data": 1620154800,
+                      "type": "Int"
+                    },
+                    "pool": {
+                      "data": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801",
+                      "type": "String"
+                    },
+                    "sqrtPrice": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "token0Price": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "token1Price": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "tvlUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "txCount": {
+                      "data": "1",
+                      "type": "BigInt"
+                    },
+                    "volumeToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "overwrite",
+                  "entity": "Token",
+                  "id": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                  "vid": 53127624465055860,
+                  "data": {
+                    "decimals": {
+                      "data": "18",
+                      "type": "BigInt"
+                    },
+                    "derivedETH": {
+                      "data": "1",
+                      "type": "BigDecimal"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                      "type": "String"
+                    },
+                    "name": {
+                      "data": "Wrapped Ether",
+                      "type": "String"
+                    },
+                    "poolCount": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "symbol": {
+                      "data": "WETH",
+                      "type": "String"
+                    },
+                    "totalSupply": {
+                      "data": "19848",
+                      "type": "BigInt"
+                    },
+                    "totalValueLocked": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSDUntracked": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "txCount": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "untrackedVolumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volume": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "whitelistPools": {
+                      "data": [],
+                      "type": "List"
+                    }
+                  }
+                }
+              ],
+              "created_data_sources": []
+            }
+          ]
+        },
+        {
+          "handler_group_order": 4,
+          "stage": 1,
+          "source_trigger_order": 29,
+          "causality_region": "ethereum/mainnet",
+          "trigger": {
+            "transaction_hash": "0x37d8f4b1b371fde9e4b1942588d16a1cbf424b7c66e731ec915aca785ca2efcf",
+            "log_index": 29,
+            "address": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801"
+          },
+          "handlers": [
+            {
+              "handler_order": 0,
+              "data_source": "Pool",
+              "data_source_address": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801",
+              "handler": "handleMint",
+              "outcome": "ok",
+              "modifications": [
+                {
+                  "op": "overwrite",
+                  "entity": "Factory",
+                  "id": "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+                  "vid": 53127624465055872,
+                  "data": {
+                    "id": {
+                      "data": "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+                      "type": "String"
+                    },
+                    "owner": {
+                      "data": "0x0000000000000000000000000000000000000000",
+                      "type": "String"
+                    },
+                    "poolCount": {
+                      "data": "1",
+                      "type": "BigInt"
+                    },
+                    "totalFeesETH": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalFeesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedETH": {
+                      "data": "0.01264381746197226",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedETHUntracked": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSDUntracked": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalVolumeETH": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalVolumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "txCount": {
+                      "data": "1",
+                      "type": "BigInt"
+                    },
+                    "untrackedVolumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "insert",
+                  "entity": "Mint",
+                  "id": "0x37d8f4b1b371fde9e4b1942588d16a1cbf424b7c66e731ec915aca785ca2efcf#1",
+                  "vid": 53127624465055873,
+                  "data": {
+                    "amount": {
+                      "data": "383995753785830744",
+                      "type": "BigInt"
+                    },
+                    "amount0": {
+                      "data": "0.999999999999999924",
+                      "type": "BigDecimal"
+                    },
+                    "amount1": {
+                      "data": "0.01264381746197226",
+                      "type": "BigDecimal"
+                    },
+                    "amountUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0x37d8f4b1b371fde9e4b1942588d16a1cbf424b7c66e731ec915aca785ca2efcf#1",
+                      "type": "String"
+                    },
+                    "logIndex": {
+                      "data": "29",
+                      "type": "BigInt"
+                    },
+                    "origin": {
+                      "data": "0x11e4857bb9993a50c685a79afad4e6f65d518dda",
+                      "type": "Bytes"
+                    },
+                    "owner": {
+                      "data": "0xc36442b4a4522e871399cd717abdd847ab11fe88",
+                      "type": "Bytes"
+                    },
+                    "pool": {
+                      "data": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801",
+                      "type": "String"
+                    },
+                    "sender": {
+                      "data": "0xc36442b4a4522e871399cd717abdd847ab11fe88",
+                      "type": "Bytes"
+                    },
+                    "tickLower": {
+                      "data": "-50580",
+                      "type": "BigInt"
+                    },
+                    "tickUpper": {
+                      "data": "-36720",
+                      "type": "BigInt"
+                    },
+                    "timestamp": {
+                      "data": "1620157956",
+                      "type": "BigInt"
+                    },
+                    "token0": {
+                      "data": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+                      "type": "String"
+                    },
+                    "token1": {
+                      "data": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                      "type": "String"
+                    },
+                    "transaction": {
+                      "data": "0x37d8f4b1b371fde9e4b1942588d16a1cbf424b7c66e731ec915aca785ca2efcf",
+                      "type": "String"
+                    }
+                  }
+                },
+                {
+                  "op": "overwrite",
+                  "entity": "Pool",
+                  "id": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801",
+                  "vid": 53127624465055871,
+                  "data": {
+                    "collectedFeesToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "collectedFeesToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "collectedFeesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "createdAtBlockNumber": {
+                      "data": "12369739",
+                      "type": "BigInt"
+                    },
+                    "createdAtTimestamp": {
+                      "data": "1620157956",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthGlobal0X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthGlobal1X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feeTier": {
+                      "data": "3000",
+                      "type": "BigInt"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801",
+                      "type": "String"
+                    },
+                    "liquidity": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "liquidityProviderCount": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "observationIndex": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "sqrtPrice": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "token0": {
+                      "data": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+                      "type": "String"
+                    },
+                    "token0Price": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "token1": {
+                      "data": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                      "type": "String"
+                    },
+                    "token1Price": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedETH": {
+                      "data": "0.01264381746197226",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedToken0": {
+                      "data": "0.999999999999999924",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedToken1": {
+                      "data": "0.01264381746197226",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSDUntracked": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "txCount": {
+                      "data": "1",
+                      "type": "BigInt"
+                    },
+                    "untrackedVolumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "overwrite",
+                  "entity": "PoolDayData",
+                  "id": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801-18751",
+                  "vid": 53127624465055863,
+                  "data": {
+                    "close": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "date": {
+                      "data": 1620086400,
+                      "type": "Int"
+                    },
+                    "feeGrowthGlobal0X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthGlobal1X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "high": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801-18751",
+                      "type": "String"
+                    },
+                    "liquidity": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "low": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "open": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "pool": {
+                      "data": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801",
+                      "type": "String"
+                    },
+                    "sqrtPrice": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "token0Price": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "token1Price": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "tvlUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "txCount": {
+                      "data": "2",
+                      "type": "BigInt"
+                    },
+                    "volumeToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "overwrite",
+                  "entity": "PoolHourData",
+                  "id": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801-450043",
+                  "vid": 53127624465055864,
+                  "data": {
+                    "close": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "feeGrowthGlobal0X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthGlobal1X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "high": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801-450043",
+                      "type": "String"
+                    },
+                    "liquidity": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "low": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "open": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "periodStartUnix": {
+                      "data": 1620154800,
+                      "type": "Int"
+                    },
+                    "pool": {
+                      "data": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801",
+                      "type": "String"
+                    },
+                    "sqrtPrice": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "token0Price": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "token1Price": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "tvlUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "txCount": {
+                      "data": "2",
+                      "type": "BigInt"
+                    },
+                    "volumeToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "insert",
+                  "entity": "Tick",
+                  "id": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801#-36720",
+                  "vid": 53127624465055876,
+                  "data": {
+                    "collectedFeesToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "collectedFeesToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "collectedFeesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "createdAtBlockNumber": {
+                      "data": "12369739",
+                      "type": "BigInt"
+                    },
+                    "createdAtTimestamp": {
+                      "data": "1620157956",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthOutside0X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthOutside1X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801#-36720",
+                      "type": "String"
+                    },
+                    "liquidityGross": {
+                      "data": "383995753785830744",
+                      "type": "BigInt"
+                    },
+                    "liquidityNet": {
+                      "data": "-383995753785830744",
+                      "type": "BigInt"
+                    },
+                    "liquidityProviderCount": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "pool": {
+                      "data": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801",
+                      "type": "String"
+                    },
+                    "poolAddress": {
+                      "data": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801",
+                      "type": "String"
+                    },
+                    "price0": {
+                      "data": "0.02543023617736527364259752727272287",
+                      "type": "BigDecimal"
+                    },
+                    "price1": {
+                      "data": "39.32326829469525011054154361318115",
+                      "type": "BigDecimal"
+                    },
+                    "tickIdx": {
+                      "data": "-36720",
+                      "type": "BigInt"
+                    },
+                    "untrackedVolumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "insert",
+                  "entity": "Tick",
+                  "id": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801#-50580",
+                  "vid": 53127624465055874,
+                  "data": {
+                    "collectedFeesToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "collectedFeesToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "collectedFeesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "createdAtBlockNumber": {
+                      "data": "12369739",
+                      "type": "BigInt"
+                    },
+                    "createdAtTimestamp": {
+                      "data": "1620157956",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthOutside0X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthOutside1X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801#-50580",
+                      "type": "String"
+                    },
+                    "liquidityGross": {
+                      "data": "383995753785830744",
+                      "type": "BigInt"
+                    },
+                    "liquidityNet": {
+                      "data": "383995753785830744",
+                      "type": "BigInt"
+                    },
+                    "liquidityProviderCount": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "pool": {
+                      "data": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801",
+                      "type": "String"
+                    },
+                    "poolAddress": {
+                      "data": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801",
+                      "type": "String"
+                    },
+                    "price0": {
+                      "data": "0.006359871432445433123489224364640825",
+                      "type": "BigDecimal"
+                    },
+                    "price1": {
+                      "data": "157.2358829297104459991594782332771",
+                      "type": "BigDecimal"
+                    },
+                    "tickIdx": {
+                      "data": "-50580",
+                      "type": "BigInt"
+                    },
+                    "untrackedVolumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "insert",
+                  "entity": "TickDayData",
+                  "id": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801#-36720-18751",
+                  "vid": 53127624465055877,
+                  "data": {
+                    "date": {
+                      "data": 1620086400,
+                      "type": "Int"
+                    },
+                    "feeGrowthOutside0X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthOutside1X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801#-36720-18751",
+                      "type": "String"
+                    },
+                    "liquidityGross": {
+                      "data": "383995753785830744",
+                      "type": "BigInt"
+                    },
+                    "liquidityNet": {
+                      "data": "-383995753785830744",
+                      "type": "BigInt"
+                    },
+                    "pool": {
+                      "data": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801",
+                      "type": "String"
+                    },
+                    "tick": {
+                      "data": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801#-36720",
+                      "type": "String"
+                    },
+                    "volumeToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "insert",
+                  "entity": "TickDayData",
+                  "id": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801#-50580-18751",
+                  "vid": 53127624465055875,
+                  "data": {
+                    "date": {
+                      "data": 1620086400,
+                      "type": "Int"
+                    },
+                    "feeGrowthOutside0X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthOutside1X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801#-50580-18751",
+                      "type": "String"
+                    },
+                    "liquidityGross": {
+                      "data": "383995753785830744",
+                      "type": "BigInt"
+                    },
+                    "liquidityNet": {
+                      "data": "383995753785830744",
+                      "type": "BigInt"
+                    },
+                    "pool": {
+                      "data": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801",
+                      "type": "String"
+                    },
+                    "tick": {
+                      "data": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801#-50580",
+                      "type": "String"
+                    },
+                    "volumeToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "overwrite",
+                  "entity": "Token",
+                  "id": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+                  "vid": 53127624465055869,
+                  "data": {
+                    "decimals": {
+                      "data": "18",
+                      "type": "BigInt"
+                    },
+                    "derivedETH": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+                      "type": "String"
+                    },
+                    "name": {
+                      "data": "Uniswap",
+                      "type": "String"
+                    },
+                    "poolCount": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "symbol": {
+                      "data": "UNI",
+                      "type": "String"
+                    },
+                    "totalSupply": {
+                      "data": "18776",
+                      "type": "BigInt"
+                    },
+                    "totalValueLocked": {
+                      "data": "0.999999999999999924",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSDUntracked": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "txCount": {
+                      "data": "1",
+                      "type": "BigInt"
+                    },
+                    "untrackedVolumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volume": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "whitelistPools": {
+                      "data": [
+                        {
+                          "data": "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801",
+                          "type": "String"
+                        }
+                      ],
+                      "type": "List"
+                    }
+                  }
+                },
+                {
+                  "op": "overwrite",
+                  "entity": "Token",
+                  "id": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                  "vid": 53127624465055870,
+                  "data": {
+                    "decimals": {
+                      "data": "18",
+                      "type": "BigInt"
+                    },
+                    "derivedETH": {
+                      "data": "1",
+                      "type": "BigDecimal"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                      "type": "String"
+                    },
+                    "name": {
+                      "data": "Wrapped Ether",
+                      "type": "String"
+                    },
+                    "poolCount": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "symbol": {
+                      "data": "WETH",
+                      "type": "String"
+                    },
+                    "totalSupply": {
+                      "data": "19848",
+                      "type": "BigInt"
+                    },
+                    "totalValueLocked": {
+                      "data": "0.01264381746197226",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSDUntracked": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "txCount": {
+                      "data": "1",
+                      "type": "BigInt"
+                    },
+                    "untrackedVolumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volume": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "whitelistPools": {
+                      "data": [],
+                      "type": "List"
+                    }
+                  }
+                },
+                {
+                  "op": "insert",
+                  "entity": "TokenDayData",
+                  "id": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984-18751",
+                  "vid": 53127624465055865,
+                  "data": {
+                    "close": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "date": {
+                      "data": 1620086400,
+                      "type": "Int"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "high": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984-18751",
+                      "type": "String"
+                    },
+                    "low": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "open": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "priceUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "token": {
+                      "data": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+                      "type": "String"
+                    },
+                    "totalValueLocked": {
+                      "data": "0.999999999999999924",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "untrackedVolumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volume": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "insert",
+                  "entity": "TokenDayData",
+                  "id": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2-18751",
+                  "vid": 53127624465055866,
+                  "data": {
+                    "close": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "date": {
+                      "data": 1620086400,
+                      "type": "Int"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "high": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2-18751",
+                      "type": "String"
+                    },
+                    "low": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "open": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "priceUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "token": {
+                      "data": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                      "type": "String"
+                    },
+                    "totalValueLocked": {
+                      "data": "0.01264381746197226",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "untrackedVolumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volume": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "insert",
+                  "entity": "TokenHourData",
+                  "id": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984-450043",
+                  "vid": 53127624465055867,
+                  "data": {
+                    "close": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "high": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984-450043",
+                      "type": "String"
+                    },
+                    "low": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "open": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "periodStartUnix": {
+                      "data": 1620154800,
+                      "type": "Int"
+                    },
+                    "priceUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "token": {
+                      "data": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+                      "type": "String"
+                    },
+                    "totalValueLocked": {
+                      "data": "0.999999999999999924",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "untrackedVolumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volume": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "insert",
+                  "entity": "TokenHourData",
+                  "id": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2-450043",
+                  "vid": 53127624465055868,
+                  "data": {
+                    "close": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "high": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2-450043",
+                      "type": "String"
+                    },
+                    "low": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "open": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "periodStartUnix": {
+                      "data": 1620154800,
+                      "type": "Int"
+                    },
+                    "priceUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "token": {
+                      "data": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                      "type": "String"
+                    },
+                    "totalValueLocked": {
+                      "data": "0.01264381746197226",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "untrackedVolumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volume": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "insert",
+                  "entity": "UniswapDayData",
+                  "id": "18751",
+                  "vid": 53127624465055862,
+                  "data": {
+                    "date": {
+                      "data": 1620086400,
+                      "type": "Int"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "18751",
+                      "type": "String"
+                    },
+                    "tvlUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "txCount": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "volumeETH": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSDUntracked": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                }
+              ],
+              "created_data_sources": []
+            }
+          ]
+        }
+      ],
+      "created_data_sources": [
+        {
+          "template": "Pool",
+          "params": [
+            "0x1d42064fc4beb5f8aaf85f4617ae8b3b5b8bd801"
+          ],
+          "creation_block": 12369739
+        }
+      ],
+      "deterministic_errors": [],
+      "deterministic_error_policy": "fatal",
+      "block_discarded": false,
+      "modification_count": 29,
+      "poi": {
+        "version": "legacy",
+        "causality_regions": {
+          "ethereum/mainnet": "faa5887a0990880b344df8e3d48962d525bf98072a61a76047c813bde4f133cf4e4e515aae96209dddd4d89441cfa5f3e98e90d4e0205075e93b9f70ca1065dbd8844b18b81aea9bb769a1f023e07b0a74e871480a7dd5421d24f054ff5b9818aff10122251e31a2dc0fa6c2c558fff8fad3ff6b9f34fd60ef4600dc017ed901e18febcf87af59e4f75d6bbd9d1f0023d897736d5af91bd37018a20d5e015189b5d5c434888897692e1302c21284a90d07842b65149f01f866302453d75935266504df25a0a35878c8cea1621eb68ee1a608fc7fc849c4756e9b8ce23174c7d6c15a2808bf0bc963db08f676b1b7d3aa365650ac5f0c296986c960dc0607494901"
+        },
+        "public_digest": "020f30092686bd73a0ccb9fb078a560d624585723e154a4724ec26b01cd012cc"
+      },
+      "store_counts": {
+        "Bundle": 1,
+        "Factory": 1,
+        "Mint": 1,
+        "Poi$": 1,
+        "Pool": 1,
+        "PoolDayData": 1,
+        "PoolHourData": 1,
+        "Position": 1,
+        "PositionSnapshot": 1,
+        "Tick": 2,
+        "TickDayData": 2,
+        "Token": 2,
+        "TokenDayData": 2,
+        "TokenHourData": 2,
+        "Transaction": 1,
+        "UniswapDayData": 1
+      }
+    },
+    {
+      "number": 12369879,
+      "hash": "0x7d81e60e5a2296dc38f36e343a7f3e416b1fc2f766568b2d81a63159752b8885",
+      "parent_hash": "0x6c768e2debe6d3cb09e078387c20ea90b41e3899ecd0f65e523be9f9bb0033b7",
+      "timestamp": 1620159675,
+      "mapping_triggered": true,
+      "triggers_per_stage": [
+        242,
+        242
+      ],
+      "hosts_per_stage": [
+        3,
+        1
+      ],
+      "handler_groups": [
+        {
+          "handler_group_order": 0,
+          "stage": 0,
+          "source_trigger_order": 39,
+          "causality_region": "ethereum/mainnet",
+          "trigger": {
+            "transaction_hash": "0x9878bb2d3511c1e73beb2ce8a3c46f14f0ef0f8b3289f165789bd323b5f49957",
+            "log_index": 39,
+            "address": "0x1f98431c8ad98523631ae4a59f267346ea31f984"
+          },
+          "handlers": [
+            {
+              "handler_order": 0,
+              "data_source": "Factory",
+              "data_source_address": "0x1f98431c8ad98523631ae4a59f267346ea31f984",
+              "handler": "handlePoolCreated",
+              "outcome": "ok",
+              "modifications": [
+                {
+                  "op": "overwrite",
+                  "entity": "Factory",
+                  "id": "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+                  "vid": 53128225760477287,
+                  "data": {
+                    "id": {
+                      "data": "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+                      "type": "String"
+                    },
+                    "owner": {
+                      "data": "0x0000000000000000000000000000000000000000",
+                      "type": "String"
+                    },
+                    "poolCount": {
+                      "data": "2",
+                      "type": "BigInt"
+                    },
+                    "totalFeesETH": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalFeesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedETH": {
+                      "data": "0.01264381746197226",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedETHUntracked": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSDUntracked": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalVolumeETH": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalVolumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "txCount": {
+                      "data": "1",
+                      "type": "BigInt"
+                    },
+                    "untrackedVolumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "insert",
+                  "entity": "Pool",
+                  "id": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6",
+                  "vid": 53128225760477284,
+                  "data": {
+                    "collectedFeesToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "collectedFeesToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "collectedFeesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "createdAtBlockNumber": {
+                      "data": "12369879",
+                      "type": "BigInt"
+                    },
+                    "createdAtTimestamp": {
+                      "data": "1620159675",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthGlobal0X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthGlobal1X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feeTier": {
+                      "data": "500",
+                      "type": "BigInt"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6",
+                      "type": "String"
+                    },
+                    "liquidity": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "liquidityProviderCount": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "observationIndex": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "sqrtPrice": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "token0": {
+                      "data": "0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2",
+                      "type": "String"
+                    },
+                    "token0Price": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "token1": {
+                      "data": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                      "type": "String"
+                    },
+                    "token1Price": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedETH": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSDUntracked": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "txCount": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "untrackedVolumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "insert",
+                  "entity": "Token",
+                  "id": "0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2",
+                  "vid": 53128225760477285,
+                  "data": {
+                    "decimals": {
+                      "data": "18",
+                      "type": "BigInt"
+                    },
+                    "derivedETH": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2",
+                      "type": "String"
+                    },
+                    "name": {
+                      "data": "Maker",
+                      "type": "String"
+                    },
+                    "poolCount": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "symbol": {
+                      "data": "MKR",
+                      "type": "String"
+                    },
+                    "totalSupply": {
+                      "data": "18320",
+                      "type": "BigInt"
+                    },
+                    "totalValueLocked": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSDUntracked": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "txCount": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "untrackedVolumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volume": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "whitelistPools": {
+                      "data": [
+                        {
+                          "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6",
+                          "type": "String"
+                        }
+                      ],
+                      "type": "List"
+                    }
+                  }
+                },
+                {
+                  "op": "overwrite",
+                  "entity": "Token",
+                  "id": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                  "vid": 53128225760477286,
+                  "data": {
+                    "decimals": {
+                      "data": "18",
+                      "type": "BigInt"
+                    },
+                    "derivedETH": {
+                      "data": "1",
+                      "type": "BigDecimal"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                      "type": "String"
+                    },
+                    "name": {
+                      "data": "Wrapped Ether",
+                      "type": "String"
+                    },
+                    "poolCount": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "symbol": {
+                      "data": "WETH",
+                      "type": "String"
+                    },
+                    "totalSupply": {
+                      "data": "19848",
+                      "type": "BigInt"
+                    },
+                    "totalValueLocked": {
+                      "data": "0.01264381746197226",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSDUntracked": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "txCount": {
+                      "data": "1",
+                      "type": "BigInt"
+                    },
+                    "untrackedVolumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volume": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "whitelistPools": {
+                      "data": [
+                        {
+                          "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6",
+                          "type": "String"
+                        }
+                      ],
+                      "type": "List"
+                    }
+                  }
+                }
+              ],
+              "created_data_sources": [
+                {
+                  "template": "Pool",
+                  "params": [
+                    "0x886072a44bdd944495eff38ace8ce75c1eacdaf6"
+                  ],
+                  "creation_block": 12369879
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "handler_group_order": 1,
+          "stage": 0,
+          "source_trigger_order": 45,
+          "causality_region": "ethereum/mainnet",
+          "trigger": {
+            "transaction_hash": "0x9878bb2d3511c1e73beb2ce8a3c46f14f0ef0f8b3289f165789bd323b5f49957",
+            "log_index": 45,
+            "address": "0xc36442b4a4522e871399cd717abdd847ab11fe88"
+          },
+          "handlers": [
+            {
+              "handler_order": 0,
+              "data_source": "NonfungiblePositionManager",
+              "data_source_address": "0xc36442b4a4522e871399cd717abdd847ab11fe88",
+              "handler": "handleTransfer",
+              "outcome": "ok",
+              "modifications": [
+                {
+                  "op": "insert",
+                  "entity": "Position",
+                  "id": "9",
+                  "vid": 53128225760477289,
+                  "data": {
+                    "collectedFeesToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "collectedFeesToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "depositedToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "depositedToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "feeGrowthInside0LastX128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthInside1LastX128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "id": {
+                      "data": "9",
+                      "type": "String"
+                    },
+                    "liquidity": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "owner": {
+                      "data": "0x4bd047ca72fa05f0b89ad08fe5ba5ccdc07dffbf",
+                      "type": "Bytes"
+                    },
+                    "pool": {
+                      "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6",
+                      "type": "String"
+                    },
+                    "tickLower": {
+                      "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6#-16080",
+                      "type": "String"
+                    },
+                    "tickUpper": {
+                      "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6#7990",
+                      "type": "String"
+                    },
+                    "token0": {
+                      "data": "0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2",
+                      "type": "String"
+                    },
+                    "token1": {
+                      "data": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                      "type": "String"
+                    },
+                    "transaction": {
+                      "data": "0x9878bb2d3511c1e73beb2ce8a3c46f14f0ef0f8b3289f165789bd323b5f49957",
+                      "type": "String"
+                    },
+                    "withdrawnToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "withdrawnToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "insert",
+                  "entity": "PositionSnapshot",
+                  "id": "9#12369879",
+                  "vid": 53128225760477291,
+                  "data": {
+                    "blockNumber": {
+                      "data": "12369879",
+                      "type": "BigInt"
+                    },
+                    "collectedFeesToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "collectedFeesToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "depositedToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "depositedToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "feeGrowthInside0LastX128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthInside1LastX128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "id": {
+                      "data": "9#12369879",
+                      "type": "String"
+                    },
+                    "liquidity": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "owner": {
+                      "data": "0x4bd047ca72fa05f0b89ad08fe5ba5ccdc07dffbf",
+                      "type": "Bytes"
+                    },
+                    "pool": {
+                      "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6",
+                      "type": "String"
+                    },
+                    "position": {
+                      "data": "9",
+                      "type": "String"
+                    },
+                    "timestamp": {
+                      "data": "1620159675",
+                      "type": "BigInt"
+                    },
+                    "transaction": {
+                      "data": "0x9878bb2d3511c1e73beb2ce8a3c46f14f0ef0f8b3289f165789bd323b5f49957",
+                      "type": "String"
+                    },
+                    "withdrawnToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "withdrawnToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "insert",
+                  "entity": "Transaction",
+                  "id": "0x9878bb2d3511c1e73beb2ce8a3c46f14f0ef0f8b3289f165789bd323b5f49957",
+                  "vid": 53128225760477290,
+                  "data": {
+                    "blockNumber": {
+                      "data": "12369879",
+                      "type": "BigInt"
+                    },
+                    "gasPrice": {
+                      "data": "50000000000",
+                      "type": "BigInt"
+                    },
+                    "gasUsed": {
+                      "data": "5777138",
+                      "type": "BigInt"
+                    },
+                    "id": {
+                      "data": "0x9878bb2d3511c1e73beb2ce8a3c46f14f0ef0f8b3289f165789bd323b5f49957",
+                      "type": "String"
+                    },
+                    "timestamp": {
+                      "data": "1620159675",
+                      "type": "BigInt"
+                    }
+                  }
+                }
+              ],
+              "created_data_sources": []
+            }
+          ]
+        },
+        {
+          "handler_group_order": 2,
+          "stage": 0,
+          "source_trigger_order": 46,
+          "causality_region": "ethereum/mainnet",
+          "trigger": {
+            "transaction_hash": "0x9878bb2d3511c1e73beb2ce8a3c46f14f0ef0f8b3289f165789bd323b5f49957",
+            "log_index": 46,
+            "address": "0xc36442b4a4522e871399cd717abdd847ab11fe88"
+          },
+          "handlers": [
+            {
+              "handler_order": 0,
+              "data_source": "NonfungiblePositionManager",
+              "data_source_address": "0xc36442b4a4522e871399cd717abdd847ab11fe88",
+              "handler": "handleIncreaseLiquidity",
+              "outcome": "ok",
+              "modifications": [
+                {
+                  "op": "overwrite",
+                  "entity": "Position",
+                  "id": "9",
+                  "vid": 53128225760477292,
+                  "data": {
+                    "collectedFeesToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "collectedFeesToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "depositedToken0": {
+                      "data": "0.856794571828841113",
+                      "type": "BigDecimal"
+                    },
+                    "depositedToken1": {
+                      "data": "0.5",
+                      "type": "BigDecimal"
+                    },
+                    "feeGrowthInside0LastX128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthInside1LastX128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "id": {
+                      "data": "9",
+                      "type": "String"
+                    },
+                    "liquidity": {
+                      "data": "1449417745482598683",
+                      "type": "BigInt"
+                    },
+                    "owner": {
+                      "data": "0x4bd047ca72fa05f0b89ad08fe5ba5ccdc07dffbf",
+                      "type": "Bytes"
+                    },
+                    "pool": {
+                      "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6",
+                      "type": "String"
+                    },
+                    "tickLower": {
+                      "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6#-16080",
+                      "type": "String"
+                    },
+                    "tickUpper": {
+                      "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6#7990",
+                      "type": "String"
+                    },
+                    "token0": {
+                      "data": "0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2",
+                      "type": "String"
+                    },
+                    "token1": {
+                      "data": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                      "type": "String"
+                    },
+                    "transaction": {
+                      "data": "0x9878bb2d3511c1e73beb2ce8a3c46f14f0ef0f8b3289f165789bd323b5f49957",
+                      "type": "String"
+                    },
+                    "withdrawnToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "withdrawnToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "overwrite",
+                  "entity": "PositionSnapshot",
+                  "id": "9#12369879",
+                  "vid": 53128225760477294,
+                  "data": {
+                    "blockNumber": {
+                      "data": "12369879",
+                      "type": "BigInt"
+                    },
+                    "collectedFeesToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "collectedFeesToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "depositedToken0": {
+                      "data": "0.856794571828841113",
+                      "type": "BigDecimal"
+                    },
+                    "depositedToken1": {
+                      "data": "0.5",
+                      "type": "BigDecimal"
+                    },
+                    "feeGrowthInside0LastX128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthInside1LastX128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "id": {
+                      "data": "9#12369879",
+                      "type": "String"
+                    },
+                    "liquidity": {
+                      "data": "1449417745482598683",
+                      "type": "BigInt"
+                    },
+                    "owner": {
+                      "data": "0x4bd047ca72fa05f0b89ad08fe5ba5ccdc07dffbf",
+                      "type": "Bytes"
+                    },
+                    "pool": {
+                      "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6",
+                      "type": "String"
+                    },
+                    "position": {
+                      "data": "9",
+                      "type": "String"
+                    },
+                    "timestamp": {
+                      "data": "1620159675",
+                      "type": "BigInt"
+                    },
+                    "transaction": {
+                      "data": "0x9878bb2d3511c1e73beb2ce8a3c46f14f0ef0f8b3289f165789bd323b5f49957",
+                      "type": "String"
+                    },
+                    "withdrawnToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "withdrawnToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                }
+              ],
+              "created_data_sources": []
+            }
+          ]
+        },
+        {
+          "handler_group_order": 3,
+          "stage": 1,
+          "source_trigger_order": 40,
+          "causality_region": "ethereum/mainnet",
+          "trigger": {
+            "transaction_hash": "0x9878bb2d3511c1e73beb2ce8a3c46f14f0ef0f8b3289f165789bd323b5f49957",
+            "log_index": 40,
+            "address": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6"
+          },
+          "handlers": [
+            {
+              "handler_order": 0,
+              "data_source": "Pool",
+              "data_source_address": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6",
+              "handler": "handleInitialize",
+              "outcome": "ok",
+              "modifications": [
+                {
+                  "op": "insert",
+                  "entity": "PoolDayData",
+                  "id": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6-18751",
+                  "vid": 53128225760477296,
+                  "data": {
+                    "close": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "date": {
+                      "data": 1620086400,
+                      "type": "Int"
+                    },
+                    "feeGrowthGlobal0X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthGlobal1X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "high": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6-18751",
+                      "type": "String"
+                    },
+                    "liquidity": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "low": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "open": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "pool": {
+                      "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6",
+                      "type": "String"
+                    },
+                    "sqrtPrice": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "token0Price": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "token1Price": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "tvlUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "txCount": {
+                      "data": "1",
+                      "type": "BigInt"
+                    },
+                    "volumeToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "insert",
+                  "entity": "PoolHourData",
+                  "id": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6-450044",
+                  "vid": 53128225760477297,
+                  "data": {
+                    "close": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "feeGrowthGlobal0X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthGlobal1X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "high": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6-450044",
+                      "type": "String"
+                    },
+                    "liquidity": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "low": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "open": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "periodStartUnix": {
+                      "data": 1620158400,
+                      "type": "Int"
+                    },
+                    "pool": {
+                      "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6",
+                      "type": "String"
+                    },
+                    "sqrtPrice": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "token0Price": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "token1Price": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "tvlUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "txCount": {
+                      "data": "1",
+                      "type": "BigInt"
+                    },
+                    "volumeToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                }
+              ],
+              "created_data_sources": []
+            }
+          ]
+        },
+        {
+          "handler_group_order": 4,
+          "stage": 1,
+          "source_trigger_order": 44,
+          "causality_region": "ethereum/mainnet",
+          "trigger": {
+            "transaction_hash": "0x9878bb2d3511c1e73beb2ce8a3c46f14f0ef0f8b3289f165789bd323b5f49957",
+            "log_index": 44,
+            "address": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6"
+          },
+          "handlers": [
+            {
+              "handler_order": 0,
+              "data_source": "Pool",
+              "data_source_address": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6",
+              "handler": "handleMint",
+              "outcome": "ok",
+              "modifications": [
+                {
+                  "op": "overwrite",
+                  "entity": "Factory",
+                  "id": "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+                  "vid": 53128225760477311,
+                  "data": {
+                    "id": {
+                      "data": "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+                      "type": "String"
+                    },
+                    "owner": {
+                      "data": "0x0000000000000000000000000000000000000000",
+                      "type": "String"
+                    },
+                    "poolCount": {
+                      "data": "2",
+                      "type": "BigInt"
+                    },
+                    "totalFeesETH": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalFeesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedETH": {
+                      "data": "0.51264381746197226",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedETHUntracked": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSDUntracked": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalVolumeETH": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalVolumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "txCount": {
+                      "data": "2",
+                      "type": "BigInt"
+                    },
+                    "untrackedVolumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "insert",
+                  "entity": "Mint",
+                  "id": "0x9878bb2d3511c1e73beb2ce8a3c46f14f0ef0f8b3289f165789bd323b5f49957#1",
+                  "vid": 53128225760477312,
+                  "data": {
+                    "amount": {
+                      "data": "1449417745482598683",
+                      "type": "BigInt"
+                    },
+                    "amount0": {
+                      "data": "0.856794571828841113",
+                      "type": "BigDecimal"
+                    },
+                    "amount1": {
+                      "data": "0.5",
+                      "type": "BigDecimal"
+                    },
+                    "amountUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0x9878bb2d3511c1e73beb2ce8a3c46f14f0ef0f8b3289f165789bd323b5f49957#1",
+                      "type": "String"
+                    },
+                    "logIndex": {
+                      "data": "44",
+                      "type": "BigInt"
+                    },
+                    "origin": {
+                      "data": "0x4bd047ca72fa05f0b89ad08fe5ba5ccdc07dffbf",
+                      "type": "Bytes"
+                    },
+                    "owner": {
+                      "data": "0xc36442b4a4522e871399cd717abdd847ab11fe88",
+                      "type": "Bytes"
+                    },
+                    "pool": {
+                      "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6",
+                      "type": "String"
+                    },
+                    "sender": {
+                      "data": "0xc36442b4a4522e871399cd717abdd847ab11fe88",
+                      "type": "Bytes"
+                    },
+                    "tickLower": {
+                      "data": "-16080",
+                      "type": "BigInt"
+                    },
+                    "tickUpper": {
+                      "data": "7990",
+                      "type": "BigInt"
+                    },
+                    "timestamp": {
+                      "data": "1620159675",
+                      "type": "BigInt"
+                    },
+                    "token0": {
+                      "data": "0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2",
+                      "type": "String"
+                    },
+                    "token1": {
+                      "data": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                      "type": "String"
+                    },
+                    "transaction": {
+                      "data": "0x9878bb2d3511c1e73beb2ce8a3c46f14f0ef0f8b3289f165789bd323b5f49957",
+                      "type": "String"
+                    }
+                  }
+                },
+                {
+                  "op": "overwrite",
+                  "entity": "Pool",
+                  "id": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6",
+                  "vid": 53128225760477310,
+                  "data": {
+                    "collectedFeesToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "collectedFeesToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "collectedFeesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "createdAtBlockNumber": {
+                      "data": "12369879",
+                      "type": "BigInt"
+                    },
+                    "createdAtTimestamp": {
+                      "data": "1620159675",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthGlobal0X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthGlobal1X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feeTier": {
+                      "data": "500",
+                      "type": "BigInt"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6",
+                      "type": "String"
+                    },
+                    "liquidity": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "liquidityProviderCount": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "observationIndex": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "sqrtPrice": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "token0": {
+                      "data": "0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2",
+                      "type": "String"
+                    },
+                    "token0Price": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "token1": {
+                      "data": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                      "type": "String"
+                    },
+                    "token1Price": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedETH": {
+                      "data": "0.5",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedToken0": {
+                      "data": "0.856794571828841113",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedToken1": {
+                      "data": "0.5",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSDUntracked": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "txCount": {
+                      "data": "1",
+                      "type": "BigInt"
+                    },
+                    "untrackedVolumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "overwrite",
+                  "entity": "PoolDayData",
+                  "id": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6-18751",
+                  "vid": 53128225760477302,
+                  "data": {
+                    "close": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "date": {
+                      "data": 1620086400,
+                      "type": "Int"
+                    },
+                    "feeGrowthGlobal0X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthGlobal1X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "high": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6-18751",
+                      "type": "String"
+                    },
+                    "liquidity": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "low": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "open": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "pool": {
+                      "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6",
+                      "type": "String"
+                    },
+                    "sqrtPrice": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "token0Price": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "token1Price": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "tvlUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "txCount": {
+                      "data": "2",
+                      "type": "BigInt"
+                    },
+                    "volumeToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "overwrite",
+                  "entity": "PoolHourData",
+                  "id": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6-450044",
+                  "vid": 53128225760477303,
+                  "data": {
+                    "close": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "feeGrowthGlobal0X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthGlobal1X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "high": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6-450044",
+                      "type": "String"
+                    },
+                    "liquidity": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "low": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "open": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "periodStartUnix": {
+                      "data": 1620158400,
+                      "type": "Int"
+                    },
+                    "pool": {
+                      "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6",
+                      "type": "String"
+                    },
+                    "sqrtPrice": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "token0Price": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "token1Price": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "tvlUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "txCount": {
+                      "data": "2",
+                      "type": "BigInt"
+                    },
+                    "volumeToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "insert",
+                  "entity": "Tick",
+                  "id": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6#-16080",
+                  "vid": 53128225760477313,
+                  "data": {
+                    "collectedFeesToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "collectedFeesToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "collectedFeesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "createdAtBlockNumber": {
+                      "data": "12369879",
+                      "type": "BigInt"
+                    },
+                    "createdAtTimestamp": {
+                      "data": "1620159675",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthOutside0X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthOutside1X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6#-16080",
+                      "type": "String"
+                    },
+                    "liquidityGross": {
+                      "data": "1449417745482598683",
+                      "type": "BigInt"
+                    },
+                    "liquidityNet": {
+                      "data": "1449417745482598683",
+                      "type": "BigInt"
+                    },
+                    "liquidityProviderCount": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "pool": {
+                      "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6",
+                      "type": "String"
+                    },
+                    "poolAddress": {
+                      "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6",
+                      "type": "String"
+                    },
+                    "price0": {
+                      "data": "0.2003038920572515840132386670115411",
+                      "type": "BigDecimal"
+                    },
+                    "price1": {
+                      "data": "4.992414224852787072040281992146536",
+                      "type": "BigDecimal"
+                    },
+                    "tickIdx": {
+                      "data": "-16080",
+                      "type": "BigInt"
+                    },
+                    "untrackedVolumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "insert",
+                  "entity": "Tick",
+                  "id": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6#7990",
+                  "vid": 53128225760477315,
+                  "data": {
+                    "collectedFeesToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "collectedFeesToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "collectedFeesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "createdAtBlockNumber": {
+                      "data": "12369879",
+                      "type": "BigInt"
+                    },
+                    "createdAtTimestamp": {
+                      "data": "1620159675",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthOutside0X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthOutside1X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6#7990",
+                      "type": "String"
+                    },
+                    "liquidityGross": {
+                      "data": "1449417745482598683",
+                      "type": "BigInt"
+                    },
+                    "liquidityNet": {
+                      "data": "-1449417745482598683",
+                      "type": "BigInt"
+                    },
+                    "liquidityProviderCount": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "pool": {
+                      "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6",
+                      "type": "String"
+                    },
+                    "poolAddress": {
+                      "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6",
+                      "type": "String"
+                    },
+                    "price0": {
+                      "data": "2.223227686164373123150988278896085",
+                      "type": "BigDecimal"
+                    },
+                    "price1": {
+                      "data": "0.4497964856335751600000858481915469",
+                      "type": "BigDecimal"
+                    },
+                    "tickIdx": {
+                      "data": "7990",
+                      "type": "BigInt"
+                    },
+                    "untrackedVolumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "insert",
+                  "entity": "TickDayData",
+                  "id": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6#-16080-18751",
+                  "vid": 53128225760477314,
+                  "data": {
+                    "date": {
+                      "data": 1620086400,
+                      "type": "Int"
+                    },
+                    "feeGrowthOutside0X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthOutside1X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6#-16080-18751",
+                      "type": "String"
+                    },
+                    "liquidityGross": {
+                      "data": "1449417745482598683",
+                      "type": "BigInt"
+                    },
+                    "liquidityNet": {
+                      "data": "1449417745482598683",
+                      "type": "BigInt"
+                    },
+                    "pool": {
+                      "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6",
+                      "type": "String"
+                    },
+                    "tick": {
+                      "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6#-16080",
+                      "type": "String"
+                    },
+                    "volumeToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "insert",
+                  "entity": "TickDayData",
+                  "id": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6#7990-18751",
+                  "vid": 53128225760477316,
+                  "data": {
+                    "date": {
+                      "data": 1620086400,
+                      "type": "Int"
+                    },
+                    "feeGrowthOutside0X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feeGrowthOutside1X128": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6#7990-18751",
+                      "type": "String"
+                    },
+                    "liquidityGross": {
+                      "data": "1449417745482598683",
+                      "type": "BigInt"
+                    },
+                    "liquidityNet": {
+                      "data": "-1449417745482598683",
+                      "type": "BigInt"
+                    },
+                    "pool": {
+                      "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6",
+                      "type": "String"
+                    },
+                    "tick": {
+                      "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6#7990",
+                      "type": "String"
+                    },
+                    "volumeToken0": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeToken1": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "overwrite",
+                  "entity": "Token",
+                  "id": "0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2",
+                  "vid": 53128225760477308,
+                  "data": {
+                    "decimals": {
+                      "data": "18",
+                      "type": "BigInt"
+                    },
+                    "derivedETH": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2",
+                      "type": "String"
+                    },
+                    "name": {
+                      "data": "Maker",
+                      "type": "String"
+                    },
+                    "poolCount": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "symbol": {
+                      "data": "MKR",
+                      "type": "String"
+                    },
+                    "totalSupply": {
+                      "data": "18320",
+                      "type": "BigInt"
+                    },
+                    "totalValueLocked": {
+                      "data": "0.856794571828841113",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSDUntracked": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "txCount": {
+                      "data": "1",
+                      "type": "BigInt"
+                    },
+                    "untrackedVolumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volume": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "whitelistPools": {
+                      "data": [
+                        {
+                          "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6",
+                          "type": "String"
+                        }
+                      ],
+                      "type": "List"
+                    }
+                  }
+                },
+                {
+                  "op": "overwrite",
+                  "entity": "Token",
+                  "id": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                  "vid": 53128225760477309,
+                  "data": {
+                    "decimals": {
+                      "data": "18",
+                      "type": "BigInt"
+                    },
+                    "derivedETH": {
+                      "data": "1",
+                      "type": "BigDecimal"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                      "type": "String"
+                    },
+                    "name": {
+                      "data": "Wrapped Ether",
+                      "type": "String"
+                    },
+                    "poolCount": {
+                      "data": "0",
+                      "type": "BigInt"
+                    },
+                    "symbol": {
+                      "data": "WETH",
+                      "type": "String"
+                    },
+                    "totalSupply": {
+                      "data": "19848",
+                      "type": "BigInt"
+                    },
+                    "totalValueLocked": {
+                      "data": "0.51264381746197226",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSDUntracked": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "txCount": {
+                      "data": "2",
+                      "type": "BigInt"
+                    },
+                    "untrackedVolumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volume": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "whitelistPools": {
+                      "data": [
+                        {
+                          "data": "0x886072a44bdd944495eff38ace8ce75c1eacdaf6",
+                          "type": "String"
+                        }
+                      ],
+                      "type": "List"
+                    }
+                  }
+                },
+                {
+                  "op": "insert",
+                  "entity": "TokenDayData",
+                  "id": "0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2-18751",
+                  "vid": 53128225760477304,
+                  "data": {
+                    "close": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "date": {
+                      "data": 1620086400,
+                      "type": "Int"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "high": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2-18751",
+                      "type": "String"
+                    },
+                    "low": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "open": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "priceUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "token": {
+                      "data": "0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2",
+                      "type": "String"
+                    },
+                    "totalValueLocked": {
+                      "data": "0.856794571828841113",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "untrackedVolumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volume": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "overwrite",
+                  "entity": "TokenDayData",
+                  "id": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2-18751",
+                  "vid": 53128225760477305,
+                  "data": {
+                    "close": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "date": {
+                      "data": 1620086400,
+                      "type": "Int"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "high": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2-18751",
+                      "type": "String"
+                    },
+                    "low": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "open": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "priceUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "token": {
+                      "data": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                      "type": "String"
+                    },
+                    "totalValueLocked": {
+                      "data": "0.51264381746197226",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "untrackedVolumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volume": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "insert",
+                  "entity": "TokenHourData",
+                  "id": "0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2-450044",
+                  "vid": 53128225760477306,
+                  "data": {
+                    "close": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "high": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2-450044",
+                      "type": "String"
+                    },
+                    "low": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "open": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "periodStartUnix": {
+                      "data": 1620158400,
+                      "type": "Int"
+                    },
+                    "priceUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "token": {
+                      "data": "0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2",
+                      "type": "String"
+                    },
+                    "totalValueLocked": {
+                      "data": "0.856794571828841113",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "untrackedVolumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volume": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "insert",
+                  "entity": "TokenHourData",
+                  "id": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2-450044",
+                  "vid": 53128225760477307,
+                  "data": {
+                    "close": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "high": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2-450044",
+                      "type": "String"
+                    },
+                    "low": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "open": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "periodStartUnix": {
+                      "data": 1620158400,
+                      "type": "Int"
+                    },
+                    "priceUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "token": {
+                      "data": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                      "type": "String"
+                    },
+                    "totalValueLocked": {
+                      "data": "0.51264381746197226",
+                      "type": "BigDecimal"
+                    },
+                    "totalValueLockedUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "untrackedVolumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volume": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                },
+                {
+                  "op": "overwrite",
+                  "entity": "UniswapDayData",
+                  "id": "18751",
+                  "vid": 53128225760477301,
+                  "data": {
+                    "date": {
+                      "data": 1620086400,
+                      "type": "Int"
+                    },
+                    "feesUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "id": {
+                      "data": "18751",
+                      "type": "String"
+                    },
+                    "tvlUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "txCount": {
+                      "data": "1",
+                      "type": "BigInt"
+                    },
+                    "volumeETH": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSD": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    },
+                    "volumeUSDUntracked": {
+                      "data": "0",
+                      "type": "BigDecimal"
+                    }
+                  }
+                }
+              ],
+              "created_data_sources": []
+            }
+          ]
+        }
+      ],
+      "created_data_sources": [
+        {
+          "template": "Pool",
+          "params": [
+            "0x886072a44bdd944495eff38ace8ce75c1eacdaf6"
+          ],
+          "creation_block": 12369879
+        }
+      ],
+      "deterministic_errors": [],
+      "deterministic_error_policy": "fatal",
+      "block_discarded": false,
+      "modification_count": 27,
+      "poi": {
+        "version": "legacy",
+        "causality_regions": {
+          "ethereum/mainnet": "b1284456a8087634b406abc0b8db8ac1d1c896eac39ac16efdc19b7d99c667a7cba303b3e450cd4544c2d0f214c82327720d4c944a7d1aae783bc8b0563de2fcfa42fb4d430500890e032227eca9e521533b811b0022048a6d2ced9e6f8de8f2237783925c969035dde583516b2aa704510020af96a7737c64ff7c2a4a9dbbecd371b8e70ffd82536e08e9b2f2f64d93e69f28cd6566f45f45e61c3060b4b96c3eae3098675548797156c61c91a40b24746dd8ae174a836d65017216583bb538d85897458bfcf90b0f0ac88390d7b22558c1f38f8f3c75b47b31e152c0332e080f1a74dc9cb4a62a091f3ba53276de067d5766c90eac4454b278b729d34c7e83"
+        },
+        "public_digest": "aec119d666badaef64cac8a2289c7edd42766c9a513aa6cd026f63d30803bc47"
+      },
+      "store_counts": {
+        "Bundle": 1,
+        "Factory": 1,
+        "Mint": 2,
+        "Poi$": 1,
+        "Pool": 2,
+        "PoolDayData": 2,
+        "PoolHourData": 2,
+        "Position": 2,
+        "PositionSnapshot": 2,
+        "Tick": 4,
+        "TickDayData": 4,
+        "Token": 3,
+        "TokenDayData": 3,
+        "TokenHourData": 4,
+        "Transaction": 2,
+        "UniswapDayData": 1
+      }
+    },
+    {
+      "number": 12370523,
+      "hash": "0x818a47cdaadb521874a1d8dcd71ed01ef492fbc54840122344de83bef7c7fefa",
+      "parent_hash": "0x258fcc1c82130120daf53ce8270ff14cc80f9eb34f7fb25831d179600d8154f0",
+      "timestamp": 1620168128,
+      "mapping_triggered": true,
+      "triggers_per_stage": [
+        401
+      ],
+      "hosts_per_stage": [
+        4
+      ],
+      "handler_groups": [
+        {
+          "handler_group_order": 0,
+          "stage": 0,
+          "source_trigger_order": 242,
+          "causality_region": "ethereum/mainnet",
+          "trigger": {
+            "transaction_hash": "0x0b675c9d52dc833f731614307f9da65998cd1cefb8997d7601fdabc09a7bc86b",
+            "log_index": 242,
+            "address": "0xc36442b4a4522e871399cd717abdd847ab11fe88"
+          },
+          "handlers": [
+            {
+              "handler_order": 0,
+              "data_source": "NonfungiblePositionManager",
+              "data_source_address": "0xc36442b4a4522e871399cd717abdd847ab11fe88",
+              "handler": "handleDecreaseLiquidity",
+              "outcome": "deterministic_error",
+              "error": "transaction 0b675c9d52dc833f731614307f9da65998cd1cefb8997d7601fdabc09a7bc86b: error while executing at wasm backtrace:\t    0:   0x2391 - <unknown>!~lib/@graphprotocol/graph-ts/index/Value#toBigInt\t    1:   0x23aa - <unknown>!src/types/schema/Token#get:decimals\t    2:   0x2a6c - <unknown>!src/mappings/position-manager/handleDecreaseLiquidity: Mapping aborted at ~lib/@graphprotocol/graph-ts/index.ts, line 811, column 4, with message: Value is not a BigInt.",
+              "modifications": [],
+              "created_data_sources": []
+            }
+          ]
+        },
+        {
+          "handler_group_order": 1,
+          "stage": 0,
+          "source_trigger_order": 246,
+          "causality_region": "ethereum/mainnet",
+          "trigger": {
+            "transaction_hash": "0x0b675c9d52dc833f731614307f9da65998cd1cefb8997d7601fdabc09a7bc86b",
+            "log_index": 246,
+            "address": "0xc36442b4a4522e871399cd717abdd847ab11fe88"
+          },
+          "handlers": [
+            {
+              "handler_order": 0,
+              "data_source": "NonfungiblePositionManager",
+              "data_source_address": "0xc36442b4a4522e871399cd717abdd847ab11fe88",
+              "handler": "handleCollect",
+              "outcome": "deterministic_error",
+              "error": "transaction 0b675c9d52dc833f731614307f9da65998cd1cefb8997d7601fdabc09a7bc86b: error while executing at wasm backtrace:\t    0:   0x2391 - <unknown>!~lib/@graphprotocol/graph-ts/index/Value#toBigInt\t    1:   0x23aa - <unknown>!src/types/schema/Token#get:decimals\t    2:   0x2b15 - <unknown>!src/mappings/position-manager/handleCollect: Mapping aborted at ~lib/@graphprotocol/graph-ts/index.ts, line 811, column 4, with message: Value is not a BigInt.",
+              "modifications": [],
+              "created_data_sources": []
+            }
+          ]
+        }
+      ],
+      "created_data_sources": [],
+      "deterministic_errors": [
+        "transaction 0b675c9d52dc833f731614307f9da65998cd1cefb8997d7601fdabc09a7bc86b: error while executing at wasm backtrace:\t    0:   0x2391 - <unknown>!~lib/@graphprotocol/graph-ts/index/Value#toBigInt\t    1:   0x23aa - <unknown>!src/types/schema/Token#get:decimals\t    2:   0x2a6c - <unknown>!src/mappings/position-manager/handleDecreaseLiquidity: Mapping aborted at ~lib/@graphprotocol/graph-ts/index.ts, line 811, column 4, with message: Value is not a BigInt.",
+        "transaction 0b675c9d52dc833f731614307f9da65998cd1cefb8997d7601fdabc09a7bc86b: error while executing at wasm backtrace:\t    0:   0x2391 - <unknown>!~lib/@graphprotocol/graph-ts/index/Value#toBigInt\t    1:   0x23aa - <unknown>!src/types/schema/Token#get:decimals\t    2:   0x2b15 - <unknown>!src/mappings/position-manager/handleCollect: Mapping aborted at ~lib/@graphprotocol/graph-ts/index.ts, line 811, column 4, with message: Value is not a BigInt."
+      ],
+      "deterministic_error_policy": "fatal",
+      "block_discarded": true,
+      "modification_count": 0,
+      "poi": {
+        "version": "legacy",
+        "causality_regions": {
+          "ethereum/mainnet": "b20331c79b9b3cc9793588ba0ba0fbe84844668759137d50634c0798581f41e6a7f72f7c2df746d391ce3e98463728ece62fc5ba53a0db36b1c0b33e2db9223bbd3c718da4120dd21dbff904ee33680c8187e2c677f14999b9d27ebba8f6757f9afb7dda9c73027745cf07ba3f549574751d0523ac6e5bdbe9e54892a79b5e0f7b7399b25bf3df01dd84b43931c3dcf332d32664862e20679202bf398684f2d687992b288236e4e15669d65182a58f825b12b247141515b61f3793a9de24b2b76b7cf6d7c996f4196990c171d039652083f6102bcb701cd87b7859d83d4561084216ad0f6da5a4fb9a66a62d8f2d5923bbbddc8bec95a42de18804d68a9140e6"
+        },
+        "public_digest": "59996f3755b94725264f9450394e7bb6792f2450068a67f917ad796e44e39ccd"
+      },
+      "store_counts": {
+        "Bundle": 1,
+        "Factory": 1,
+        "Mint": 2,
+        "Poi$": 1,
+        "Pool": 2,
+        "PoolDayData": 2,
+        "PoolHourData": 2,
+        "Position": 2,
+        "PositionSnapshot": 2,
+        "Tick": 4,
+        "TickDayData": 4,
+        "Token": 3,
+        "TokenDayData": 3,
+        "TokenHourData": 4,
+        "Transaction": 2,
+        "UniswapDayData": 1
+      }
+    }
+  ],
+  "cassette_entries": 22
+}

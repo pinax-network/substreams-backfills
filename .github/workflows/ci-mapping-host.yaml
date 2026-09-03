@@ -1,0 +1,73 @@
+name: ci-mapping-host
+# The `mapping-host` crate: a hermetic host that runs the deployed Uniswap V3
+# mapping WASM under Graph Node's own runtime. It is its own cargo workspace,
+# excluded from the root one, because `graph` pulls diesel/libpq/tonic and would
+# otherwise slow every `ci-core` run.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  changes:
+    # Path gate: on pull requests only the listed paths trigger the heavy job;
+    # every push to main runs it. The job itself always reports, so a required
+    # status check never sits pending on an unrelated PR.
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    outputs:
+      run: ${{ steps.filter.outputs.run }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        id: filter
+        with:
+          filters: |
+            run:
+              - '.github/workflows/ci-mapping-host.yaml'
+              - 'mapping-host/**'
+              - 'uniswap-v3/fixtures/blocks.lock.json'
+              - 'Cargo.toml'
+  mapping-host:
+    needs: changes
+    if: ${{ !cancelled() && (github.event_name != 'pull_request' || needs.changes.outputs.run == 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install libpq and protoc
+        # `graph` depends on diesel with the postgres feature unconditionally, so
+        # `pq-sys` needs libpq at build time; `tonic-prost-build` needs protoc.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpq-dev protobuf-compiler
+      # Pinned to match mapping-host/rust-toolchain.toml. graph-node's own pin
+      # is 1.94.0, which is only valid against graph-node's lockfile; a fresh
+      # downstream resolution picks alloy 2.4.1, whose MSRV is 1.94.1.
+      - uses: dtolnay/rust-toolchain@1.98.0
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@49a0bdc70d2e1b713ca9e2869b211fcce03d3c1c # v2.9.2
+        with:
+          workspaces: mapping-host
+          cache-on-failure: true
+      - name: Restore checksum-keyed block fixture cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/substreams-backfills/block-fixtures
+          key: block-fixtures-${{ hashFiles('uniswap-v3/fixtures/blocks.lock.json') }}
+      - name: Fetch and verify Uniswap V3 block fixtures
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: cargo xtask evidence fetch --lock uniswap-v3/fixtures/blocks.lock.json --cache-dir ~/.cache/substreams-backfills/block-fixtures
+      - name: Check formatting
+        working-directory: mapping-host
+        run: cargo fmt --all --check
+      - name: Run strict lints
+        working-directory: mapping-host
+        run: cargo clippy --all-targets --locked -- -D warnings
+      - name: Replay the deployed mappings against the committed cassette
+        # Hermetic: no ETHEREUM_RPC_URL, so a cassette miss fails the job.
+        working-directory: mapping-host
+        run: cargo test --locked

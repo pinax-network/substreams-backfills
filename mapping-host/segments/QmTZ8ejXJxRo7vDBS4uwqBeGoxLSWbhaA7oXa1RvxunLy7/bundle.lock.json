@@ -1,0 +1,78 @@
+{
+  "schema": "pinax.substreams-backfills.mapping-host.bundle/v1",
+  "deployment": "QmTZ8ejXJxRo7vDBS4uwqBeGoxLSWbhaA7oXa1RvxunLy7",
+  "network": "mainnet",
+  "spec_version": "0.0.4",
+  "features": [
+    "nonFatalErrors",
+    "grafting"
+  ],
+  "files": [
+    {
+      "path": "abis/ERC20.json",
+      "cid": "QmPfKNZPkVATzL3EHypkcsyKhehR4jkiYEVqSzh2hxWYj1",
+      "bytes": 3685,
+      "sha256": "b3ce2325d5da94241c5ee0fac37840c017e04f8569ea56e955863b34d9b6a9b1"
+    },
+    {
+      "path": "abis/ERC20NameBytes.json",
+      "cid": "QmQCP6Pdp1MqpwRv2qoPHuUTwZGy7Q3eDHg4w5kzwE9mBj",
+      "bytes": 268,
+      "sha256": "b874c853ffa5309e4b7fbf4934c1efdb4fe31e1a65f7041e67f4a7f2258ffb77"
+    },
+    {
+      "path": "abis/ERC20SymbolBytes.json",
+      "cid": "QmbHnhUFZa6qqqRyubUYhXntox1TCBxqryaBM1iNGqVJzT",
+      "bytes": 270,
+      "sha256": "9ccb9b5d95394b2ffb4ced54cffa0c5ea282917f4eec36c121ce28c257965193"
+    },
+    {
+      "path": "abis/Factory.json",
+      "cid": "QmTU8eKx6pCgtff6Uvc7srAwR8BPiM3jTMBw9ahrXBjRzY",
+      "bytes": 3703,
+      "sha256": "daa769db333fa28d331cc0d866a666ebb98c995a915cb44828a801608ab0d1c1"
+    },
+    {
+      "path": "abis/NonfungiblePositionManager.json",
+      "cid": "QmaxxqQ7xzbGDPWu184uoq2g5sofazB9B9tEDrpPjmRZ8q",
+      "bytes": 23334,
+      "sha256": "456c1726a11497a2b12e719111381203a1e96178ea4547af63e8947dc19490cd"
+    },
+    {
+      "path": "abis/Pool.json",
+      "cid": "QmULRc8Ac1J6YFy11z7JRpyThb6f7nmL5mMTQvN7LKj2Vy",
+      "bytes": 19634,
+      "sha256": "df8064cbe381e7a929aa4e1a658ce3617daed0e871883bf29ced54112fdfdbfd"
+    },
+    {
+      "path": "manifest.yaml",
+      "cid": "QmTZ8ejXJxRo7vDBS4uwqBeGoxLSWbhaA7oXa1RvxunLy7",
+      "bytes": 4268,
+      "sha256": "691ea53201c6e3c65de3959b76be1a8fd1d9c119e1aaf55ab4a521f8e8a06e16"
+    },
+    {
+      "path": "mappings/QmSaGgPnyhStviGQSGTokQYRgVqLFNvnGWfnv8tSfuvpWD.wasm",
+      "cid": "QmSaGgPnyhStviGQSGTokQYRgVqLFNvnGWfnv8tSfuvpWD",
+      "bytes": 78047,
+      "sha256": "f9a25426839d83f84679cd0d272582f2631c57117093ffd342351bc04aff8970"
+    },
+    {
+      "path": "mappings/QmWxG1yzdQmp4pRDiqKvTZyRrrrZPRUTza6xznjR1wu1sD.wasm",
+      "cid": "QmWxG1yzdQmp4pRDiqKvTZyRrrrZPRUTza6xznjR1wu1sD",
+      "bytes": 48593,
+      "sha256": "34487685c81672436f34b79f3749f41e6b3c724b52dd8cb24b933e3cb5006124"
+    },
+    {
+      "path": "mappings/QmbJGLb6sXkN11djxLvKGb2zDk3s7ddgEsULwzC7TVyrEb.wasm",
+      "cid": "QmbJGLb6sXkN11djxLvKGb2zDk3s7ddgEsULwzC7TVyrEb",
+      "bytes": 53851,
+      "sha256": "9a33e52667ce538278f9ab88ac9818f5442021e8a2ddb22fd5994a9643148887"
+    },
+    {
+      "path": "schema.graphql",
+      "cid": "Qma8a81T9XoX5Pbkrk8J3kxMhWdXJzFSYZge1wGi3QZBru",
+      "bytes": 19034,
+      "sha256": "ae03d0c6d3c6c03f87ae8e699b1e71804266c1d4adb7acbf4f4de5d48727c39c"
+    }
+  ]
+}

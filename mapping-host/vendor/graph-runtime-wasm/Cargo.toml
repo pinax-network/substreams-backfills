@@ -1,0 +1,45 @@
+# Vendored verbatim from graph-node `runtime/wasm` at revision
+# 77823b5a7adc4eac4abf03202c8dd7cb00dea31d (tag v0.44.0), then patched. The
+# exact patch is `../graph-runtime-wasm.patch`; `src/op_recorder.rs` is the only
+# added file.
+#
+# Only this manifest differs structurally from upstream's. Upstream inherits
+# `version`, `edition`, several dependency versions and its lint table from the
+# graph-node workspace, which does not exist here, so every inherited value is
+# written out with the value that workspace supplies. `graph` and
+# `graph-runtime-derive` become git dependencies at the same revision rather
+# than path dependencies, which is what makes cargo unify this crate's `graph`
+# with the one `graph-chain-ethereum` links against — two `graph` instances
+# would not typecheck.
+#
+# Upstream's manifest is kept beside this one as `Cargo.toml.upstream` so the
+# difference is auditable.
+[package]
+name = "graph-runtime-wasm"
+version = "0.44.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+description = "Vendored graph-node WASM runtime with an entity operation recorder"
+publish = false
+
+[dependencies]
+async-trait = "0.1.74"
+hex = "0.4.3"
+graph = { git = "https://github.com/graphprotocol/graph-node", rev = "77823b5a7adc4eac4abf03202c8dd7cb00dea31d" }
+bs58 = "0.4.0"
+graph-runtime-derive = { git = "https://github.com/graphprotocol/graph-node", rev = "77823b5a7adc4eac4abf03202c8dd7cb00dea31d" }
+semver = { version = "1", features = ["serde"] }
+anyhow = "1.0"
+never = "0.1"
+
+wasmtime = { version = "38.0.4", features = ["async"] }
+wasm-instrument = { version = "0.4.0", features = ["std", "sign_ext"] }
+
+# AssemblyScript uses sign extensions
+parity-wasm = { version = "0.45", features = ["std", "sign_ext"] }
+
+serde_yaml = "0.9.21"
+
+[lints.clippy]
+too_many_arguments = "allow"
+type_complexity = "allow"

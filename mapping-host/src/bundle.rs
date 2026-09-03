@@ -32,6 +32,14 @@ use sha2::{Digest, Sha256};
 /// Schema identifier written into every `bundle.lock.json`.
 pub const BUNDLE_LOCK_SCHEMA: &str = "pinax.substreams-backfills.mapping-host.bundle/v1";
 
+/// Files in a bundle directory that this repository authors rather than fetches
+/// from IPFS, and which the deployment lock therefore does not cover.
+const REPOSITORY_AUTHORED: &[&str] = &[
+    "bundle.lock.json",
+    crate::descriptor::DESCRIPTOR_FILE,
+    crate::descriptor::DESCRIPTOR_SIDECAR,
+];
+
 /// One file in a bundle, with the provenance needed to prove it is the deployed
 /// artifact and the digest needed to detect drift on disk.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -140,7 +148,12 @@ impl SegmentBundle {
                 .expect("walk_bundle only yields paths under dir")
                 .to_string_lossy()
                 .replace('\\', "/");
-            if rel == "bundle.lock.json" {
+            // `bundle.lock.json` is the lock itself. The BlockChanges
+            // descriptor and its sidecar are repository-authored statements
+            // *about* the deployed artifacts rather than deployed artifacts, and
+            // carry their own digest pin, so the deployment lock does not cover
+            // them. Everything else in the directory must be locked.
+            if REPOSITORY_AUTHORED.contains(&rel.as_str()) {
                 continue;
             }
             if !locked_paths.contains_key(&rel) {

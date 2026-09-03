@@ -26,6 +26,7 @@ jobs:
             run:
               - '.github/workflows/ci-mapping-host.yaml'
               - 'mapping-host/**'
+              - 'common/**'
               - 'uniswap-v3/fixtures/blocks.lock.json'
               - 'Cargo.toml'
   mapping-host:
@@ -67,7 +68,8 @@ jobs:
       - name: Run strict lints
         working-directory: mapping-host
         run: cargo clippy --all-targets --locked -- -D warnings
-      - name: Replay the deployed mappings against the committed cassette
-        # Hermetic: no ETHEREUM_RPC_URL, so a cassette miss fails the job.
+      - name: Replay the deployed mappings and seal BlockChanges frames
+        # Hermetic: no ETHEREUM_RPC_URL, so a cassette miss fails the job. No
+        # UPDATE_GOLDENS either, so a golden rewrite cannot pass as a check.
         working-directory: mapping-host
         run: cargo test --locked

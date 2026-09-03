@@ -9,9 +9,10 @@ in-memory store, an `eth_call` cassette and Graph Node's wave scheduler; it know
 nothing about Uniswap. Uniswap V3 is simply the first family whose eight
 deployments are bundled under `segments/`.
 
-Phase 1, the contents of this directory, is **hermetic execution plus a
-deterministic report**. It emits no `BlockChanges` and makes no parity claim; see
-[Evidence boundary](#evidence-boundary).
+It runs the deployed mappings hermetically, records the **ordered per-save
+operation stream**, and seals one canonical
+`pinax.graph.backfill.v1.BlockChanges` frame per block. It makes no parity claim;
+see [Evidence boundary](#evidence-boundary).
 
 ## Why a separate cargo workspace
 
@@ -43,18 +44,21 @@ segments/<cid>/            deployed artifacts, digest-locked  ─┐
 uniswap-v3/fixtures/       Firehose sf.ethereum.type.v2.Block ─┤
 fixtures/cassettes/        recorded eth_call answers          ─┤
                                                                ▼
-  bundle.rs   FileLinkResolver + SubgraphManifest::resolve_from_raw
-  block.rs    codec::Block -> BlockFinality; every log -> EthereumTrigger::Log
-  runner.rs   waves, hosts, handler groups; per-handler BlockState
-  store.rs    in-memory ReadStore, persistent across blocks in a run
-  calls.rs    RuntimeAdapter -> cassette-backed ethereum.call HostFn
-  poi.rs      update_proof_of_indexing + ProofOfIndexingFinisher
-  report.rs   deterministic JSON
+  bundle.rs        FileLinkResolver + SubgraphManifest::resolve_from_raw
+  block.rs         codec::Block -> BlockFinality; log -> EthereumTrigger::Log
+  runner.rs        waves, hosts, handler groups; per-handler BlockState
+  store.rs         in-memory ReadStore, persistent across blocks in a run
+  calls.rs         RuntimeAdapter -> cassette-backed ethereum.call HostFn
+  poi.rs           update_proof_of_indexing + ProofOfIndexingFinisher
+  blockchanges.rs  the recorded save stream -> canonical frames
+  descriptor.rs    per-segment compatibility descriptors
+  report.rs        deterministic JSON
                                                                ▼
-                              fixtures/reports/<cid>.json
+      fixtures/reports/<cid>.json   fixtures/block-changes/<cid>/<block>.pb
 ```
 
-Roughly 2,600 lines of library and binary code, plus 570 lines of tests.
+Roughly 3,400 lines of library and binary code, plus 1,000 lines of tests, on
+top of the vendored runtime crate.
 
 ### Segment bundles
 
@@ -123,6 +127,48 @@ log in the block and leaves address and topic matching to
 `DataSource::match_and_decode`. The sort and dedup then come from
 `BlockWithTriggers::new`, reused verbatim, because that is where Graph Node's
 trigger determinism actually lives.
+
+### The per-save operation stream, and the vendored runtime
+
+`EntityCache` collapses writes into a `HashMap`, so the order in which a mapping
+called `store.set` is not recoverable from `as_modifications` — nor is a repeat
+upsert that changes nothing, nor a save inside a handler that later aborts. All
+three matter to `BlockChanges`.
+
+They *are* recoverable beside the proof-of-indexing writes in `HostExports`,
+which already emit one event per store call, in call order, and which the PoI
+itself hashes. `vendor/graph-runtime-wasm/` is graph-node's `runtime/wasm` copied
+verbatim from the pinned revision plus an optional recorder invoked there:
+
+  `src/op_recorder.rs`   new file, the `EntityOpRecorder` trait
+  `src/lib.rs`           export it
+  `src/host_exports.rs`  one optional field, one setter, three call sites
+  `src/host.rs`          carry it from the builder into `HostExports`
+
+The exact diff is `vendor/graph-runtime-wasm.patch`; everything else under
+`src/` is byte-identical to upstream and the two licence files are copied
+alongside. The default is `None`, so an unconfigured runtime behaves exactly as
+upstream does, which is what makes the patch upstreamable. `Cargo.toml` wires it
+with
+
+```toml
+[patch."https://github.com/graphprotocol/graph-node"]
+graph-runtime-wasm = { path = "vendor/graph-runtime-wasm" }
+```
+
+so `graph` and `graph-chain-ethereum` still come from the git source and link
+against one `graph`.
+
+Why a threaded field rather than a process-global: `HostExports` is constructed
+inside `graph_runtime_wasm::host`, a **private** module, so there is no public
+seam to inject through — but `RuntimeHostBuilder` is public, `RuntimeHost::new`
+already builds the `HostExports` it will share, and a `&mut` setter before the
+`Arc` needs no interior mutability. That keeps the recorder per host rather than
+per process, which a multi-segment run will need.
+
+The runner drains the recorder after each handler returns, before that handler's
+modifications reach the store. Exactly one handler runs at a time, so the drain
+is that handler's saves in call order.
 
 ### The store, and why writes land between handlers
 
@@ -263,6 +309,71 @@ value changes behaviour: `GRAPH_MAPPING_HANDLER_TIMEOUT` (a timeout turns a slow
 handler into a non-deterministic failure) and `GRAPH_RUNTIME_MAX_STACK_SIZE` (it
 moves where a deep AssemblyScript recursion traps).
 
+### BlockChanges v1 frames
+
+Each block produces one `pinax.graph.backfill.v1.BlockChanges` message.
+
+| Field | Source |
+|---|---|
+| `operation_index` | dense, zero-based, across the block |
+| `handler_group_order` | one per `start_handler`, monotonic |
+| `source_trigger_order` | the trigger's index within its wave |
+| `handler_order` | the host's index within one trigger |
+| `source_causality_region` | 0; Uniswap V3 is onchain-only |
+| `poi_causality_region` | `ethereum/<network>` on every operation |
+| `written_fields` | the schema-filtered entity exactly as hashed, `vid` excluded, sorted |
+| `materialized` | the get-visible entity after that save |
+| `store_disposition` | see below |
+| `redacted_events` | PoI events since that group's `start_handler` |
+| `compatibility_id` | SHA-256 of the segment descriptor |
+
+`materialized` is computed with `backfill_common::CacheOperation`, whose
+`accumulate` and `apply_to` are the canonical wrappers over
+`apply_written_fields` and `NullMergeMode` — the exact items the validator uses.
+No merge semantics are restated here, because two implementations of them is the
+failure mode the contract exists to prevent.
+
+Within a handler, saves to one key **accumulate** and the running effect is
+projected onto the entity visible before the handler ran. Re-merging incrementally
+instead would diverge: two saves where the second nulls a field the first set
+leave a *retained* Null over an absent baseline under accumulation, and a
+*removed* field if each save is merged in turn. Graph Node's `EntityCache::get`
+layers accumulated `handler_updates` over `current`, so accumulation is the
+faithful one.
+
+Dispositions follow the manifest's policy. Under `fatal` (segments 1 to 5) one
+deterministic error makes every operation in the block `BLOCK_DISCARDED`, except
+the failing handler's own, which are `DISCARDED`. Under `non_fatal` only the
+failing handler's operations are `DISCARDED`. A block may carry several errors:
+Graph Node keeps processing triggers after one and only discards effects at
+`transact_block_state`, so each failing group writes its own `DeterministicError`
+event. Two errors in *one* group is the case Graph Node itself asserts against,
+and this host refuses it too.
+
+Every frame is validated with `backfill_common::validate_block_changes` and
+round-tripped through `encode_canonical_block_changes` and
+`decode_canonical_block_changes` before it is written, so nothing leaves here
+that the engine's read side would refuse.
+
+### Segment descriptors
+
+`segments/<cid>/block-changes-descriptor.json` and its `.sha256` sidecar are
+generated, not hand-written, by `graph-mapping-host build-descriptors`. The
+descriptor's digest is the frame's `compatibility_id`, and it binds the
+deployment CID, the CID and SHA-256 of the manifest, schema, every mapping module
+and every ABI, the canonical proto and its prost binding, the Graph Node revision
+and the PoI version it selects, the manifest features and the resolved schema's
+entity types.
+
+They are **not** fixture descriptors: `fixture_only` is absent, so the engine
+replays them without `--allow-fixture-descriptor`. The sidecar is what
+`--block-changes-descriptor` requires.
+
+The bundle lock does not cover the descriptor or its sidecar: those are
+repository-authored statements *about* the deployed artifacts, with their own
+digest pin. Every other file in a bundle directory must be locked, and the loader
+refuses an unlocked one.
+
 ## Running it
 
 ```sh
@@ -281,20 +392,47 @@ Every block in every `--blocks` file is replayed, in ascending order; `--only`
 restricts that to named block numbers. `--record` plus `ETHEREUM_RPC_URL` appends
 cassette misses instead of failing.
 
+`--block-changes-out DIR` writes one canonical frame per block as `<number>.pb`
+plus an `index.json` pinning each by SHA-256 and naming the descriptor they were
+sealed against. `--bcf1-out FILE` additionally writes the whole run as one `BCF1`
+clock-v1 stream, the envelope `cmd/substreams-native` produces and the engine's
+`--input-format block-changes-v1-framed` reads:
+
+```text
+0  ..4    "BCF1"
+4         version, 1
+5  ..8    reserved, zero
+8  ..16   block number, big-endian u64
+16 ..48   block hash, 32 bytes
+48 ..52   payload length, big-endian u32
+52 ..     one canonical BlockChanges message
+```
+
+Golden frames live under `fixtures/block-changes/<cid>/`. Regenerate them with
+`UPDATE_GOLDENS=1 cargo test --test block_changes_qme66zn`, which rewrites them
+and then fails, so a regeneration is never mistaken for a passing check.
+
 ## What the run shows
 
 Segment 1 over the four committed fixture files, one block each. One host, one
 store and one PoI chain across the run, so Pool template instances accumulate:
 the hosts column climbs 2, 2, 3, 4.
 
-| Block | Triggers per wave | Hosts per wave | Handler groups | Modifications | Errors | Public PoI |
-|---:|---|---|---:|---:|---:|---|
-| 12,369,621 | 152 | 2 | 0 | 0 | 0 | none |
-| 12,369,739 | 199, 199 | 2, 1 | 5 | 29 | 0 | `020f3009…1cd012cc` |
-| 12,369,879 | 242, 242 | 3, 1 | 5 | 27 | 0 | `aec119d6…0803bc47` |
-| 12,370,523 | 401 | 4 | 2 | 0 | 2 | `59996f37…e44e39ccd` |
+| Block | Triggers per wave | Hosts per wave | Groups | Collapsed mods | Saves | Errors | Frame | Public PoI |
+|---:|---|---|---:|---:|---:|---:|---:|---|
+| 12,369,621 | 152 | 2 | 0 | 0 | 0 | 0 | 114 B | none |
+| 12,369,739 | 199, 199 | 2, 1 | 5 | 29 | **34** | 0 | 32,328 B | `020f3009…1cd012cc` |
+| 12,369,879 | 242, 242 | 3, 1 | 5 | 27 | **33** | 0 | 32,484 B | `aec119d6…0803bc47` |
+| 12,370,523 | 401 | 4 | 2 | 0 | **2** | 2 | 1,262 B | `59996f37…e44e39ccd` |
 
-Three results are worth stating plainly.
+The gap between "collapsed mods" and "saves" is what the recorder buys. At
+12,369,739 the mapping performed 34 saves that `EntityCache` reported as 29
+modifications; at 12,370,523 it performed 2 saves that `EntityCache` reported as
+**none at all**, because both handlers aborted and the cache discarded their
+work. The frames keep those two saves with `STORE_DISPOSITION_DISCARDED` beside
+the `DeterministicError` that redacted them.
+
+Four results are worth stating plainly.
 
 **The wave model is real, and a flat log ordering is wrong.** In block 12,369,739
 the Factory's `PoolCreated` (log 24) runs in wave 1 along with the position
@@ -310,6 +448,12 @@ list is matched against — two manifest hosts in wave 1, the one new Pool host 
 wave 2 — which is what `hosts_per_stage` records as `2, 1`. Because each wave
 indexes into its own list, `source_trigger_order` regresses from 31 to 25 between
 handler groups.
+
+**`Pool.save` precedes the `Mint` write in `handleMint`.** Phase 1 could not
+check this: `as_modifications` gives an arbitrary `HashMap` order, so the report
+sorted by key and said so. The recorded stream shows the real order, and a test
+asserts it. The same stream shows `handleMint` saving one entity type more than
+once, which a coalesced diff cannot represent at all.
 
 **The legacy `totalSupply` quirk reproduces.** `handlePoolCreated` writes
 `Token.totalSupply = 18776` for UNI, whose real supply is 10^27. The six legacy
@@ -356,28 +500,31 @@ already locks.
 
 | Wanted | Status | Why |
 |---|---|---|
-| Per-handler gas | reported as `null` | `RuntimeHost::process_mapping_trigger` discards the `Gas` that `WasmInstance::handle_trigger` returns (`runtime/wasm/src/host.rs:224`), and `WasmRequest` is `pub(crate)`. |
-| Per-`store.set` ordering | not observable | `EntityCache` collapses writes into a `HashMap` and `as_modifications` iterates it arbitrarily. The report sorts modifications by `(entity, id)` so it is reproducible; that is **not** save order. Claims like "`Pool.save` precedes the `Mint` write in `handleMint`" cannot be checked from it. |
-| Redundant identical upserts | invisible | `as_modifications` emits nothing when a write does not change the entity. `Transaction` is upserted by three handlers in block 12,369,739 and appears once. Shared setter authority is real in the mappings but absent from any modification stream. |
+| Per-handler gas | still `null` | `RuntimeHost::process_mapping_trigger` discards the `Gas` that `WasmInstance::handle_trigger` returns (`runtime/wasm/src/host.rs:224`), and `WasmRequest` is `pub(crate)`. The vendored crate is now the obvious place to expose it, but `BlockChanges` v1 has no field for it, so nothing here needs it yet. |
+| Per-`store.set` ordering | **resolved** by the vendored recorder | Still invisible in `fixtures/reports/`, whose per-handler `modifications` list stays sorted by `(entity, id)` because it comes from `as_modifications`. The BlockChanges frames carry the real order. |
+| Redundant identical upserts | **resolved** by the vendored recorder | `as_modifications` emits nothing when a write does not change the entity, so the report still shows `Transaction` once for block 12,369,739. The frames show each handler's own upsert. |
 | `parse_log_triggers`, `EthereumLogFilter` | reproduced | Both `pub(crate)`. |
 | `SubgraphTriggerProcessor::process_trigger` | reproduced | Lives in `graph-core`, which is not a dependency. |
 | `update_proof_of_indexing` | copied | A private free function. |
 | `RuntimeHost`, `WasmRequest` types | reached indirectly | `graph_runtime_wasm::host` is a private module; both are reachable as associated types of the public `RuntimeHostBuilder`. |
 | Stopping after a fatal error | deliberate difference | Graph Node fails the subgraph and stops. This host rolls the block back, records `block_discarded`, and continues, so one run can report every block it was given. |
 
-## What phase 2 adds
+## What is still open
 
-* A vendored graph-node with a `[patch]` and an `Option<Arc<dyn EntityOpRecorder>>`
-  on `HostExports`, called beside the existing PoI writes at
-  `host_exports.rs:326` (`SetEntity`) and `:356` (`RemoveEntity`) — about
-  twenty-five lines, exactly where ordering is already guaranteed to match the PoI
-  event stream, and upstreamable. That yields the true per-save operation stream,
-  and the same patch surface can carry per-handler gas.
-* `BlockChanges` v1 emission, using the `handler_group_order`, `stage`,
-  `source_trigger_order` and `handler_order` this report already records, and the
-  `deterministic_error_policy` already read from each manifest.
-* The other seven segments, which need their own cassettes and Base block
-  fixtures.
+* **The other seven segments.** All eight are bundled and all eight have
+  descriptors, but only segment 1 has a cassette and golden frames. The rest need
+  their own cassettes, and the Base pair needs Base block fixtures.
+* **A contiguous block range.** The fixture set is four sampled points, so five
+  handlers are unexercised and `STORE_DISPOSITION_COMMITTED` after a
+  deterministic error is untested.
+* **`RemoveEntity`.** Implemented end to end, including the pre-key remove the
+  proto models, but no Uniswap V3 module imports `store.remove`, so no fixture
+  reaches it.
+* **A live engine replay.** The frames are sealed with the same codec the engine
+  decodes with, and the `BCF1` envelope is byte-checked against the engine's own
+  frame layout, but no run of
+  `state-replay --input-format block-changes-v1-framed` over these frames has
+  happened here.
 
 ## Evidence boundary
 

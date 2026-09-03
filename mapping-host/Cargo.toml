@@ -19,7 +19,17 @@ path = "src/lib.rs"
 name = "graph-mapping-host"
 path = "src/main.rs"
 
+[patch."https://github.com/graphprotocol/graph-node"]
+# The per-save operation stream is not observable through graph-node's public
+# API: `EntityCache` collapses writes into a `HashMap`. `vendor/graph-runtime-wasm`
+# is the crate copied verbatim from the pinned revision plus the minimal patch in
+# `vendor/graph-runtime-wasm.patch`, which adds an optional recorder beside the
+# existing proof-of-indexing writes.
+graph-runtime-wasm = { path = "vendor/graph-runtime-wasm" }
+
 [dependencies]
+backfill-common = { path = "../common" }
+prost = "0.13"
 graph = { git = "https://github.com/graphprotocol/graph-node", rev = "77823b5a7adc4eac4abf03202c8dd7cb00dea31d" }
 graph-runtime-wasm = { git = "https://github.com/graphprotocol/graph-node", rev = "77823b5a7adc4eac4abf03202c8dd7cb00dea31d" }
 graph-chain-ethereum = { git = "https://github.com/graphprotocol/graph-node", rev = "77823b5a7adc4eac4abf03202c8dd7cb00dea31d" }

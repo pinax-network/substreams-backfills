@@ -27,7 +27,15 @@
       "deterministic_error_policy": "fatal",
       "block_discarded": false,
       "modification_count": 0,
-      "store_counts": {}
+      "store_counts": {},
+      "block_changes": {
+        "operations": 0,
+        "sets": 0,
+        "removes": 0,
+        "deterministic_errors": 0,
+        "frame_bytes": 114,
+        "frame_sha256": "5b38a626c51ddb492c07fa3e0cfaa44678faad72c8d280531d794059212fe365"
+      }
     },
     {
       "number": 12369739,
@@ -2275,6 +2283,14 @@
         "TokenHourData": 2,
         "Transaction": 1,
         "UniswapDayData": 1
+      },
+      "block_changes": {
+        "operations": 34,
+        "sets": 34,
+        "removes": 0,
+        "deterministic_errors": 0,
+        "frame_bytes": 32328,
+        "frame_sha256": "60f9fe243477a60891240a6a8cc6160f175154b0f9a5dffc1a5e3c6cc45ba515"
       }
     },
     {
@@ -4445,6 +4461,14 @@
         "TokenHourData": 4,
         "Transaction": 2,
         "UniswapDayData": 1
+      },
+      "block_changes": {
+        "operations": 33,
+        "sets": 33,
+        "removes": 0,
+        "deterministic_errors": 0,
+        "frame_bytes": 32484,
+        "frame_sha256": "736ce04a7ef9ff0c0feb8b9092b372928ef37f3483121a831d52e2360bf83580"
       }
     },
     {
@@ -4539,6 +4563,14 @@
         "TokenHourData": 4,
         "Transaction": 2,
         "UniswapDayData": 1
+      },
+      "block_changes": {
+        "operations": 4,
+        "sets": 2,
+        "removes": 0,
+        "deterministic_errors": 2,
+        "frame_bytes": 1262,
+        "frame_sha256": "2631ccbcfe88b3669f7d9d4a59a79d127fb7976bbb223ad41bdd8aad8b580b44"
       }
     }
   ],

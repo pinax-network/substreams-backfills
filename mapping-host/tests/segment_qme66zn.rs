@@ -80,11 +80,18 @@ async fn replay() -> RunReport {
     blocks.sort_by_key(|b| b.number());
     for b in blocks {
         let number = b.number();
-        report.blocks.push(
-            host.process_block(b)
-                .await
-                .unwrap_or_else(|e| panic!("replaying block {number}: {e:#}")),
-        );
+        let outcome = host
+            .process_block(b)
+            .await
+            .unwrap_or_else(|e| panic!("replaying block {number}: {e:#}"));
+        let bytes = graph_mapping_host::blockchanges::seal(&outcome.changes, host.compatibility())
+            .unwrap_or_else(|e| panic!("sealing block {number}: {e:#}"));
+        let mut block_report = outcome.report;
+        block_report.block_changes = Some(graph_mapping_host::blockchanges::summarize(
+            &outcome.changes,
+            &bytes,
+        ));
+        report.blocks.push(block_report);
     }
     report.cassette_entries = host.cassette().len();
     assert!(

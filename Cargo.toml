@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["common", "xtask"]
+members = ["common", "crates/uniswap-v3-overlay-pb", "crates/uniswap-v3-reducers", "xtask"]
 exclude = ["uniswap-v3/contract-tests", "uniswap-v3/source", "uniswap-v4"]
 
 [workspace.package]
@@ -13,8 +13,10 @@ substreams = "0.6"
 substreams-ethereum = "0.10"
 substreams-entity-change = "2"
 prost = "0.13"
+prost-types = "0.13"
 hex = "0.4"
 num-bigint = "0.4"
+num-traits = "0.2"
 sha2 = "0.10"
 serde_json = "1"
 chrono = "=0.4.44"
@@ -25,3 +27,6 @@ serde_yaml = "0.9"
 flate2 = "1"
 tar = "0.4"
 sha1 = "0.10"
+# Renamed so the Uniswap V3 overlay sources keep the crate name they resolve
+# to inside a materialized runtime tree.
+substreams_uniswap_v3 = { package = "uniswap-v3-overlay-pb", path = "crates/uniswap-v3-overlay-pb" }

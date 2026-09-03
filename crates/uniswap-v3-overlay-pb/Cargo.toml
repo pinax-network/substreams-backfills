@@ -1,0 +1,18 @@
+[package]
+name = "uniswap-v3-overlay-pb"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+description = "Read-only view of the Uniswap V3 overlay protobuf bindings, for workspace host tests"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+prost.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
+sha2.workspace = true

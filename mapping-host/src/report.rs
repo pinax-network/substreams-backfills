@@ -101,6 +101,22 @@ pub struct PoiReport {
     pub public_digest: String,
 }
 
+/// The canonical BlockChanges frame this block produced.
+///
+/// The counts are the per-save operation stream, which is why they exceed the
+/// modification count: `modification_count` is what `EntityCache` collapses to,
+/// `operations` is what the mapping actually did.
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct BlockChangesSummary {
+    pub operations: usize,
+    pub sets: usize,
+    pub removes: usize,
+    pub deterministic_errors: usize,
+    pub frame_bytes: usize,
+    /// SHA-256 of the canonical encoding, lowercase hex.
+    pub frame_sha256: String,
+}
+
 /// One block.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct BlockReport {
@@ -128,6 +144,9 @@ pub struct BlockReport {
     pub poi: Option<PoiReport>,
     /// Live rows per entity type after this block.
     pub store_counts: BTreeMap<String, usize>,
+    /// Absent only if a caller built a report without sealing frames.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub block_changes: Option<BlockChangesSummary>,
 }
 
 /// A whole run.

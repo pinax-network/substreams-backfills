@@ -83,6 +83,16 @@ impl MemoryStore {
         }
     }
 
+    /// Read one row without an async boundary, for the BlockChanges builder,
+    /// which needs the entity visible before the current handler ran.
+    pub fn lookup(&self, key: &EntityKey) -> Option<Entity> {
+        self.rows
+            .read()
+            .expect("store lock poisoned")
+            .get(key)
+            .cloned()
+    }
+
     /// A copy of every row, for the fatal-policy rollback in
     /// [`crate::runner::SegmentHost::process_block`].
     pub fn snapshot(&self) -> BTreeMap<EntityKey, Entity> {

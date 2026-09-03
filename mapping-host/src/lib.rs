@@ -11,14 +11,17 @@
 //! `BlockChanges` v1 frames is phase 2; see `README.md`.
 
 pub mod block;
+pub mod blockchanges;
 pub mod bundle;
 pub mod calls;
+pub mod descriptor;
 pub mod env_pin;
 pub mod poi;
 pub mod report;
 pub mod runner;
 pub mod store;
 
+pub use blockchanges::{bcf1_frame, BlockOpsBuilder, OpRecorder, RecordedOp};
 pub use bundle::{BundleFile, BundleLock, SegmentBundle};
 pub use calls::{Cassette, CassetteEntry, CassetteMode, CassetteRuntimeAdapter};
 pub use report::{BlockReport, RunReport};

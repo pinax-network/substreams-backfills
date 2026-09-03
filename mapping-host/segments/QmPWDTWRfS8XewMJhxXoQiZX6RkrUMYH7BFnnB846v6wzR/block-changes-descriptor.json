@@ -1,0 +1,127 @@
+{
+  "adapter": "pinax-network/substreams-backfills::mapping-host/segments/QmPWDTWRfS8XewMJhxXoQiZX6RkrUMYH7BFnnB846v6wzR",
+  "artifacts": {
+    "abis": [
+      {
+        "bytes": 3684,
+        "cid": "QmXuTbDkNrN27VydxbS2huvKRk62PMgUTdPDWkxcr2w7j2",
+        "path": "mapping-host/segments/QmPWDTWRfS8XewMJhxXoQiZX6RkrUMYH7BFnnB846v6wzR/abis/ERC20.json",
+        "sha256": "4b83c6645aed2df5e4e9a1d11f372453fc052ac8575348c8c04a33ceacd0ae90"
+      },
+      {
+        "bytes": 268,
+        "cid": "QmQCP6Pdp1MqpwRv2qoPHuUTwZGy7Q3eDHg4w5kzwE9mBj",
+        "path": "mapping-host/segments/QmPWDTWRfS8XewMJhxXoQiZX6RkrUMYH7BFnnB846v6wzR/abis/ERC20NameBytes.json",
+        "sha256": "b874c853ffa5309e4b7fbf4934c1efdb4fe31e1a65f7041e67f4a7f2258ffb77"
+      },
+      {
+        "bytes": 270,
+        "cid": "QmbHnhUFZa6qqqRyubUYhXntox1TCBxqryaBM1iNGqVJzT",
+        "path": "mapping-host/segments/QmPWDTWRfS8XewMJhxXoQiZX6RkrUMYH7BFnnB846v6wzR/abis/ERC20SymbolBytes.json",
+        "sha256": "9ccb9b5d95394b2ffb4ced54cffa0c5ea282917f4eec36c121ce28c257965193"
+      },
+      {
+        "bytes": 3703,
+        "cid": "QmTU8eKx6pCgtff6Uvc7srAwR8BPiM3jTMBw9ahrXBjRzY",
+        "path": "mapping-host/segments/QmPWDTWRfS8XewMJhxXoQiZX6RkrUMYH7BFnnB846v6wzR/abis/Factory.json",
+        "sha256": "daa769db333fa28d331cc0d866a666ebb98c995a915cb44828a801608ab0d1c1"
+      },
+      {
+        "bytes": 23334,
+        "cid": "QmaxxqQ7xzbGDPWu184uoq2g5sofazB9B9tEDrpPjmRZ8q",
+        "path": "mapping-host/segments/QmPWDTWRfS8XewMJhxXoQiZX6RkrUMYH7BFnnB846v6wzR/abis/NonfungiblePositionManager.json",
+        "sha256": "456c1726a11497a2b12e719111381203a1e96178ea4547af63e8947dc19490cd"
+      },
+      {
+        "bytes": 19634,
+        "cid": "QmULRc8Ac1J6YFy11z7JRpyThb6f7nmL5mMTQvN7LKj2Vy",
+        "path": "mapping-host/segments/QmPWDTWRfS8XewMJhxXoQiZX6RkrUMYH7BFnnB846v6wzR/abis/Pool.json",
+        "sha256": "df8064cbe381e7a929aa4e1a658ce3617daed0e871883bf29ced54112fdfdbfd"
+      }
+    ],
+    "block_changes_proto": {
+      "bytes": 7772,
+      "path": "common/proto/block_changes.proto",
+      "sha256": "7f9888a44138d7917d2addf332e5f04cf7980c6d3f51fa10248f6ecbab07fdee"
+    },
+    "manifest": {
+      "bytes": 4164,
+      "cid": "QmPWDTWRfS8XewMJhxXoQiZX6RkrUMYH7BFnnB846v6wzR",
+      "path": "mapping-host/segments/QmPWDTWRfS8XewMJhxXoQiZX6RkrUMYH7BFnnB846v6wzR/manifest.yaml",
+      "sha256": "ab8cd8401649ae4ff439c2ab95f54f4cfdd31d259f20e21bcbee7b1436c9b78b"
+    },
+    "mappings": [
+      {
+        "bytes": 21108,
+        "cid": "QmUN4pxwjMTfNem7rf1sKNFNHDsfzpbcTP93RxPAczgkvj",
+        "path": "mapping-host/segments/QmPWDTWRfS8XewMJhxXoQiZX6RkrUMYH7BFnnB846v6wzR/mappings/QmUN4pxwjMTfNem7rf1sKNFNHDsfzpbcTP93RxPAczgkvj.wasm",
+        "sha256": "0855ce1d5260cd8395628dfac2e18db063909168c58e7d5de118612fee9f9a4e"
+      },
+      {
+        "bytes": 20876,
+        "cid": "QmUk7jc3c8joQBrrcTz2ZEVDKcg1P12G2nFtuNqiikDQLJ",
+        "path": "mapping-host/segments/QmPWDTWRfS8XewMJhxXoQiZX6RkrUMYH7BFnnB846v6wzR/mappings/QmUk7jc3c8joQBrrcTz2ZEVDKcg1P12G2nFtuNqiikDQLJ.wasm",
+        "sha256": "e25dad1c3b6f1892eee2a8f51da62bb57268286deb9a135d6a689bdca1ad0034"
+      },
+      {
+        "bytes": 39128,
+        "cid": "QmZPiDeH1j95mozzb5AjKCHn6zgpnhMu77kNAitPbi4Vt3",
+        "path": "mapping-host/segments/QmPWDTWRfS8XewMJhxXoQiZX6RkrUMYH7BFnnB846v6wzR/mappings/QmZPiDeH1j95mozzb5AjKCHn6zgpnhMu77kNAitPbi4Vt3.wasm",
+        "sha256": "daaf355098f0d962fe772cdf858a5135cf229c03224380a83ea1e5248b746a0c"
+      }
+    ],
+    "prost_binding": {
+      "bytes": 8955,
+      "path": "common/src/pb/pinax.graph.backfill.v1.rs",
+      "sha256": "6cbb2a3b1dadb90c5898a69b3feeb886e3fc3ca31edc7716ed545892d5ce3f0e"
+    },
+    "schema": {
+      "bytes": 18381,
+      "cid": "QmSGd2GREu8QzGgqXA626cyYbF65TGXj3gmk96CDBNQ9zG",
+      "path": "mapping-host/segments/QmPWDTWRfS8XewMJhxXoQiZX6RkrUMYH7BFnnB846v6wzR/schema.graphql",
+      "sha256": "35d07db24c66668ffd15f4d415cacdeaf0432c8c6149937cbc9644ae81e47964"
+    }
+  },
+  "contract": "pinax.graph.backfill.block-changes/v1",
+  "deployment": "QmPWDTWRfS8XewMJhxXoQiZX6RkrUMYH7BFnnB846v6wzR",
+  "descriptor_version": 1,
+  "deterministic_error_policy": "non_fatal",
+  "expected_poi_causality_region": "ethereum/base",
+  "graph_node": {
+    "commit": "77823b5a7adc4eac4abf03202c8dd7cb00dea31d",
+    "poi_version": "legacy",
+    "version": "0.44.0"
+  },
+  "manifest_features": [
+    "nonFatalErrors"
+  ],
+  "network": "base",
+  "producer": "pinax-network/substreams-backfills",
+  "spec_version": "0.0.4",
+  "storage_profile": {
+    "entity_types": [
+      "Bundle",
+      "Burn",
+      "Collect",
+      "Factory",
+      "Flash",
+      "Mint",
+      "Pool",
+      "PoolDayData",
+      "PoolHourData",
+      "Position",
+      "PositionSnapshot",
+      "Swap",
+      "Tick",
+      "TickDayData",
+      "TickHourData",
+      "Token",
+      "TokenDayData",
+      "TokenHourData",
+      "Transaction",
+      "UniswapDayData"
+    ],
+    "id": "deployed-subgraph-schema/QmPWDTWRfS8XewMJhxXoQiZX6RkrUMYH7BFnnB846v6wzR",
+    "mutability": "deployed"
+  }
+}

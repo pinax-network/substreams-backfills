@@ -62,9 +62,14 @@ use graph_chain_ethereum::trigger::EthereumTrigger;
 use graph_chain_ethereum::Chain;
 use graph_runtime_wasm::RuntimeHostBuilder;
 
+use backfill_common::pb::pinax::graph::backfill::v1 as pb;
+use backfill_common::BlockChangesCompatibility;
+
 use crate::block;
+use crate::blockchanges::{self, BlockOpsBuilder, OpRecorder};
 use crate::bundle::SegmentBundle;
 use crate::calls::{Cassette, CassetteMode, CassetteRuntimeAdapter};
+use crate::descriptor;
 use crate::poi;
 use crate::report::{
     BlockReport, CreatedDataSourceReport, HandlerGroupReport, HandlerReport, ModificationReport,
@@ -90,6 +95,12 @@ pub struct SegmentHostConfig<'a> {
     pub record: bool,
 }
 
+/// One block's results: the human-readable report, and the canonical frame.
+pub struct BlockOutcome {
+    pub report: BlockReport,
+    pub changes: pb::BlockChanges,
+}
+
 /// A loaded segment, ready to replay blocks.
 pub struct SegmentHost {
     logger: Logger,
@@ -110,6 +121,9 @@ pub struct SegmentHost {
     poi_version: ProofOfIndexingVersion,
     errors_are_fatal: bool,
     causality_region: String,
+    recorder: Arc<OpRecorder>,
+    compatibility: BlockChangesCompatibility,
+    descriptor_sha256: String,
 }
 
 impl SegmentHost {
@@ -158,11 +172,40 @@ impl SegmentHost {
         let schema = manifest.schema.cheap_clone();
         let store = Arc::new(MemoryStore::new(schema));
 
+        // The recorder is the whole point of the vendored graph-runtime-wasm: it
+        // observes every store effect beside the PoI write that hashes it, in
+        // call order, which `EntityCache` cannot report.
+        let recorder = Arc::new(OpRecorder::new());
         let builder = RuntimeHostBuilder::<Chain>::new(
             Arc::new(CassetteRuntimeAdapter::new(cassette.cheap_clone())),
             bundle.link_resolver(),
             Arc::new(NoEnsLookup),
-        );
+        )
+        .with_op_recorder(Some(recorder.clone()));
+
+        let (compatibility, descriptor_sha256) = descriptor::load(config.bundle_dir)?;
+        let expected_policy = if errors_are_fatal {
+            pb::DeterministicErrorPolicy::Fatal
+        } else {
+            pb::DeterministicErrorPolicy::NonFatal
+        };
+        if compatibility.deterministic_error_policy() != expected_policy {
+            bail!(
+                "descriptor declares a {:?} deterministic-error policy, but the manifest's \
+                 features say {:?}",
+                compatibility.deterministic_error_policy(),
+                expected_policy
+            );
+        }
+        if compatibility.expected_poi_causality_region()
+            != PoICausalityRegion::from_network(&network)
+        {
+            bail!(
+                "descriptor expects PoI causality region `{}`, but this segment's network is `{}`",
+                compatibility.expected_poi_causality_region(),
+                network
+            );
+        }
 
         let templates = Arc::new(manifest.templates.clone());
         let mut api_versions: Vec<String> = manifest
@@ -195,6 +238,9 @@ impl SegmentHost {
             poi_version,
             errors_are_fatal,
             causality_region,
+            recorder,
+            compatibility,
+            descriptor_sha256,
         };
 
         // Manifest data sources first, in manifest order. That order feeds host
@@ -216,6 +262,22 @@ impl SegmentHost {
 
     pub fn cassette(&self) -> &Arc<Cassette> {
         &self.cassette
+    }
+
+    pub fn compatibility(&self) -> &BlockChangesCompatibility {
+        &self.compatibility
+    }
+
+    pub fn descriptor_sha256(&self) -> &str {
+        &self.descriptor_sha256
+    }
+
+    fn error_policy(&self) -> pb::DeterministicErrorPolicy {
+        if self.errors_are_fatal {
+            pb::DeterministicErrorPolicy::Fatal
+        } else {
+            pb::DeterministicErrorPolicy::NonFatal
+        }
     }
 
     /// Start a report for a run over this segment.
@@ -311,7 +373,7 @@ impl SegmentHost {
     }
 
     /// Replay one block.
-    pub async fn process_block(&mut self, raw_block: BlockFinality) -> Result<BlockReport> {
+    pub async fn process_block(&mut self, raw_block: BlockFinality) -> Result<BlockOutcome> {
         let identity = block::identify(&raw_block);
         let shared_block = Arc::new(raw_block);
         let block_ptr: BlockPtr = shared_block.ptr();
@@ -340,6 +402,7 @@ impl SegmentHost {
             modification_count: 0,
             poi: None,
             store_counts: BTreeMap::new(),
+            block_changes: None,
         };
 
         // Snapshot for the fatal-policy rollback below. Under a manifest without
@@ -348,6 +411,17 @@ impl SegmentHost {
         // (`runner/mod.rs:731`, `mods.retain(is_poi_entity)`), so the store must
         // not carry forward writes earlier handlers in the block made.
         let pre_block = self.store.snapshot();
+
+        // Anything the previous block left behind would be attributed to this
+        // one; a non-empty drain here is a bug, not a recoverable state.
+        let stale = self.recorder.drain();
+        if !stale.is_empty() {
+            bail!(
+                "{} recorded operations leaked across a block boundary",
+                stale.len()
+            );
+        }
+        let mut ops = BlockOpsBuilder::new();
 
         let mut handler_group_order: u32 = 0;
         let mut stage: usize = 0;
@@ -378,6 +452,7 @@ impl SegmentHost {
                         handler_group_order,
                         &mut pending,
                         &mut report,
+                        &mut ops,
                     )
                     .await?;
                 if let Some(group) = group {
@@ -444,7 +519,24 @@ impl SegmentHost {
         }
 
         report.store_counts = self.store.counts_by_type();
-        Ok(report)
+
+        let triggered_regions = if report.mapping_triggered {
+            vec![self.causality_region.clone()]
+        } else {
+            Vec::new()
+        };
+        let changes = ops
+            .finish(
+                &self.compatibility,
+                block_ptr.number as u64,
+                block_ptr.hash_slice().to_vec(),
+                report.mapping_triggered,
+                triggered_regions,
+                self.error_policy(),
+            )
+            .with_context(|| format!("building BlockChanges for block {}", block_ptr.number))?;
+
+        Ok(BlockOutcome { report, changes })
     }
 
     /// `SubgraphTriggerProcessor::process_trigger`
@@ -469,6 +561,7 @@ impl SegmentHost {
         handler_group_order: u32,
         pending: &mut Vec<InstanceDSTemplateInfo>,
         report: &mut BlockReport,
+        ops: &mut BlockOpsBuilder,
     ) -> Result<Option<HandlerGroupReport>> {
         let trigger_data = TriggerData::Onchain(trigger.clone());
 
@@ -501,7 +594,7 @@ impl SegmentHost {
             handlers: Vec::new(),
         };
 
-        let mut group_errored = false;
+        let mut group_errored: Option<u64> = None;
         for (handler_order, (host, mapping_trigger)) in hosted.into_iter().enumerate() {
             let handler = mapping_trigger.handler_name().to_string();
             let state = BlockState::new(
@@ -530,6 +623,19 @@ impl SegmentHost {
                         anyhow!("non-deterministic failure in {handler}: {e:#}")
                     }
                 })?;
+
+            // Drain and project the recorded saves *before* this handler's
+            // modifications reach the store: `visible_before` must read the
+            // entity as it stood when the handler started.
+            let recorded = self.recorder.drain();
+            let store = self.store.cheap_clone();
+            ops.push_handler(
+                u64::from(handler_group_order),
+                source_trigger_order as u64,
+                handler_order as u64,
+                recorded,
+                |key| store.lookup(key).map(|e| blockchanges::convert_entity(&e)),
+            )?;
 
             let created = state.drain_created_data_sources();
             let errors = std::mem::take(&mut state.deterministic_errors);
@@ -560,7 +666,7 @@ impl SegmentHost {
             let outcome = if errors.is_empty() {
                 "ok".to_string()
             } else {
-                group_errored = true;
+                group_errored = Some(handler_order as u64);
                 "deterministic_error".to_string()
             };
             let error = errors.first().map(|e| e.message.clone());
@@ -601,8 +707,14 @@ impl SegmentHost {
             });
         }
 
-        if group_errored {
+        if let Some(failed_handler_order) = group_errored {
             proof_of_indexing.write_deterministic_error(&self.logger, &self.causality_region);
+            ops.push_deterministic_error(
+                u64::from(handler_group_order),
+                source_trigger_order as u64,
+                failed_handler_order,
+                self.causality_region.clone(),
+            )?;
         }
 
         Ok(Some(group))

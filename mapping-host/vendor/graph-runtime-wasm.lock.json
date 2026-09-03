@@ -1,0 +1,129 @@
+{
+  "crate": "graph-runtime-wasm",
+  "files": [
+    {
+      "bytes": 23625,
+      "patched": false,
+      "path": "src/asc_abi/class.rs",
+      "sha256": "4998b0cf2c6e04609cf2558b4603d5bd39d2fe03e3ddf2c9d58a985ec6b514fc",
+      "upstream_sha256": "4998b0cf2c6e04609cf2558b4603d5bd39d2fe03e3ddf2c9d58a985ec6b514fc"
+    },
+    {
+      "bytes": 131,
+      "patched": false,
+      "path": "src/asc_abi/mod.rs",
+      "sha256": "ab7f2b939a5898437c6973581a224801a414ee63fb51c55b909c648837ba572b",
+      "upstream_sha256": "ab7f2b939a5898437c6973581a224801a414ee63fb51c55b909c648837ba572b"
+    },
+    {
+      "bytes": 12050,
+      "patched": false,
+      "path": "src/asc_abi/v0_0_4.rs",
+      "sha256": "97c478294c51569019f2f6a6c5a5bec06406fdd44c1a0732e162bb64d16d2f55",
+      "upstream_sha256": "97c478294c51569019f2f6a6c5a5bec06406fdd44c1a0732e162bb64d16d2f55"
+    },
+    {
+      "bytes": 11079,
+      "patched": false,
+      "path": "src/asc_abi/v0_0_5.rs",
+      "sha256": "eae679fde8148a63566d62699b66383eaca28f438f4e6c9e886648989a7b8871",
+      "upstream_sha256": "eae679fde8148a63566d62699b66383eaca28f438f4e6c9e886648989a7b8871"
+    },
+    {
+      "bytes": 1018,
+      "patched": false,
+      "path": "src/error.rs",
+      "sha256": "21fb26a206f2d9d248fe439590edd6b71fd0f362c36547dbc5a9c9be0500f106",
+      "upstream_sha256": "21fb26a206f2d9d248fe439590edd6b71fd0f362c36547dbc5a9c9be0500f106"
+    },
+    {
+      "bytes": 5990,
+      "patched": false,
+      "path": "src/gas_rules.rs",
+      "sha256": "86f1d2d42caaf8a03c8a81f74f504d30be04c5f3c76d87db414464fee21576d5",
+      "upstream_sha256": "86f1d2d42caaf8a03c8a81f74f504d30be04c5f3c76d87db414464fee21576d5"
+    },
+    {
+      "bytes": 10128,
+      "patched": true,
+      "path": "src/host.rs",
+      "sha256": "d052f0fbe2d7393ffa0ea5129fe6b59e21946c08379463885a0891e2433bd425",
+      "upstream_sha256": "6999b02d49a72b0c2a29b1e5a7b2263522a07ba6a5e927afe0cc8497134baa4e"
+    },
+    {
+      "bytes": 44240,
+      "patched": true,
+      "path": "src/host_exports.rs",
+      "sha256": "16809504b1737059db48d263d0da68098ef79e6ec97f6d0a66b5e08c4de7f994",
+      "upstream_sha256": "7ec1c25389a3d8a173963175afc036b2dbbc442ee41a3ed4295e4991198bec98"
+    },
+    {
+      "bytes": 649,
+      "patched": true,
+      "path": "src/lib.rs",
+      "sha256": "fd9e3f2b69c01b53da194ccb8c34690faf0b0138027340ad1a90cba1878938fe",
+      "upstream_sha256": "cbcc45b22dd523b818e5d00838f19b1b320ae3765c5ee5812454cdaff70f967a"
+    },
+    {
+      "bytes": 15517,
+      "patched": false,
+      "path": "src/mapping.rs",
+      "sha256": "3efb7bfa50f86596809a99c70e9b05c56b98578012a2455257499ce641e98be6",
+      "upstream_sha256": "3efb7bfa50f86596809a99c70e9b05c56b98578012a2455257499ce641e98be6"
+    },
+    {
+      "bytes": 45140,
+      "patched": false,
+      "path": "src/module/context.rs",
+      "sha256": "f3bb98699b3c3b20a3627df8c96f2eb633629c5dad8426490850226c2cfea800",
+      "upstream_sha256": "f3bb98699b3c3b20a3627df8c96f2eb633629c5dad8426490850226c2cfea800"
+    },
+    {
+      "bytes": 27457,
+      "patched": false,
+      "path": "src/module/instance.rs",
+      "sha256": "5d259076417e59ef217d888b5bb8e711faa31e7431165ac8f5c2bbeac9accc86",
+      "upstream_sha256": "5d259076417e59ef217d888b5bb8e711faa31e7431165ac8f5c2bbeac9accc86"
+    },
+    {
+      "bytes": 1328,
+      "patched": false,
+      "path": "src/module/into_wasm_ret.rs",
+      "sha256": "ddf1f8b8aafb2270cd9aafb72c6708c2f7313e02fc11ac25ff81608312540fe0",
+      "upstream_sha256": "ddf1f8b8aafb2270cd9aafb72c6708c2f7313e02fc11ac25ff81608312540fe0"
+    },
+    {
+      "bytes": 12640,
+      "patched": false,
+      "path": "src/module/mod.rs",
+      "sha256": "a9a9d27da892a569837cbfc828e2be2eb93f730699ee126323570d89c640fe84",
+      "upstream_sha256": "a9a9d27da892a569837cbfc828e2be2eb93f730699ee126323570d89c640fe84"
+    },
+    {
+      "bytes": 2286,
+      "patched": true,
+      "path": "src/op_recorder.rs",
+      "sha256": "f7a214ecda60be8f6e61cf785f4ba1db7a1b51b5b8ca4e5569d3d21ce30681db",
+      "upstream_sha256": null
+    },
+    {
+      "bytes": 18905,
+      "patched": false,
+      "path": "src/to_from/external.rs",
+      "sha256": "2aabc9961484d1f66fb0c65596b5cc98e403deec0a2844872e9eb84d5a5015dd",
+      "upstream_sha256": "2aabc9961484d1f66fb0c65596b5cc98e403deec0a2844872e9eb84d5a5015dd"
+    },
+    {
+      "bytes": 6305,
+      "patched": false,
+      "path": "src/to_from/mod.rs",
+      "sha256": "c8de8e0ac9a79be56aee00159dba651c3113c9940deeee0b28e5d50529e7c94f",
+      "upstream_sha256": "c8de8e0ac9a79be56aee00159dba651c3113c9940deeee0b28e5d50529e7c94f"
+    }
+  ],
+  "patch": "mapping-host/vendor/graph-runtime-wasm.patch",
+  "schema": "pinax.substreams-backfills.mapping-host.vendor/v1",
+  "upstream": "https://github.com/graphprotocol/graph-node",
+  "upstream_path": "runtime/wasm",
+  "upstream_revision": "77823b5a7adc4eac4abf03202c8dd7cb00dea31d"
+}

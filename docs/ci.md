@@ -12,7 +12,7 @@ a PR that touches that family cannot merge with the family job failing.
 | `ci-core.yaml` | `core` | always: `cargo fmt`, `cargo test --workspace --locked`, the BlockChanges v1 golden test, `cargo clippy -D warnings`, `cargo xtask verify-targets` (Rust eligibility library, market-snapshot locks) |
 | `ci.yaml` (workflow name `ci`, Uniswap V3) | `changes`, `v3-evidence`, `v3-reference` | `uniswap-v3/**`, `common/**`, `xtask/**`, `Cargo.toml`, `Cargo.lock`, `.cargo/**`, `evidence-assets.lock.json`, `docs/provenance/uniswap-v3*`, `scripts/**`, `requirements-ci.txt`, the workflow file |
 | `ci-uniswap-v4.yaml` | `changes`, `uniswap-v4-reference` | `uniswap-v4/**`, `artifacts/**`, `docs/provenance/uniswap-v4*`, `docs/provenance/uniswap-v4*/**`, `scripts/**`, `requirements-ci.txt`, the workflow file |
-| `ci-mapping-host.yaml` | `changes`, `mapping-host` | `mapping-host/**`, `uniswap-v3/fixtures/blocks.lock.json`, root `Cargo.toml`, the workflow file |
+| `ci-mapping-host.yaml` | `changes`, `mapping-host` | `mapping-host/**`, `common/**`, `uniswap-v3/fixtures/blocks.lock.json`, root `Cargo.toml`, the workflow file |
 | `ci-targets.yaml` | `changes`, `target-baselines`, `uniswap-v3-matic-reference`, `uniswap-v2-base-reference`, `pancakeswap-infinity-cl-bsc-reference`, `exchange-v3-bsc-reference` | the seven pinned-family directories, `docs/provenance/**`, `eligibility/**`, `schemas/**`, `scripts/**`, the workflow file |
 
 ## Why nothing can evade its checks
@@ -30,7 +30,9 @@ a PR that touches that family cannot merge with the family job failing.
   `cargo test --workspace` in `ci-core`. Its workflow therefore pins its own
   toolchain (1.98.0), installs `libpq-dev` and `protobuf-compiler`, and runs
   `cargo` with `working-directory: mapping-host`. Root `Cargo.toml` is in its
-  filter because that is where the exclusion lives.
+  filter because that is where the exclusion lives, and `common/**` because the
+  crate depends on `backfill-common` by path for the BlockChanges v1 contract:
+  the canonical validator, codec and merge algebra its frames are sealed with.
 - Each workflow lists its own file, so editing a workflow re-runs it.
 - Root Cargo files, `common/`, `xtask/`, and the evidence lock are in the V3
   filter because the V3 evidence job builds the workspace and fetches assets

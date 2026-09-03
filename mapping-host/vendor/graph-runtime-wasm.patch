@@ -1,0 +1,258 @@
+Vendored graph-runtime-wasm patch
+=================================
+
+Upstream: https://github.com/graphprotocol/graph-node
+Revision: 77823b5a7adc4eac4abf03202c8dd7cb00dea31d (tag v0.44.0)
+Path:     runtime/wasm
+Licence:  MIT OR Apache-2.0 (LICENSE-MIT and LICENSE-APACHE copied verbatim)
+
+Why this exists
+---------------
+
+The order in which a mapping called `store.set` is not observable through
+graph-node's public API: `EntityCache` collapses writes into a `HashMap` and
+`as_modifications` iterates it arbitrarily. It *is* observable beside the
+proof-of-indexing writes in `HostExports`, which already emit one event per
+store call, in call order, and which the PoI itself hashes. This patch adds an
+optional recorder there and nothing else.
+
+The default is `None`, so an unconfigured runtime behaves exactly as upstream
+does. The patch is additive and intended to be upstreamable.
+
+What changed
+------------
+
+  src/op_recorder.rs   new file: the `EntityOpRecorder` trait
+  src/lib.rs           export the module and the two public names
+  src/host_exports.rs  one optional field, one setter, three call sites
+  src/host.rs          carry the recorder from the builder into `HostExports`
+
+Everything else under src/ is byte-identical to upstream. Cargo.toml differs
+structurally because upstream inherits version, edition, several dependency
+versions and its lint table from the graph-node workspace, which does not exist
+here; upstream's manifest is kept beside it as Cargo.toml.upstream.
+
+Regenerate with:
+
+  diff -ruN <graph-node-checkout>/runtime/wasm/src \
+            mapping-host/vendor/graph-runtime-wasm/src
+
+-----------------------------------------------------------------------
+
+diff -ruN a/src/host.rs b/src/host.rs
+--- a/src/host.rs	2026-09-03 22:45:44
++++ b/src/host.rs	2026-09-03 22:45:44
+@@ -28,6 +28,7 @@
+     runtime_adapter: Arc<dyn RuntimeAdapter<C>>,
+     link_resolver: Arc<dyn LinkResolver>,
+     ens_lookup: Arc<dyn EnsLookup>,
++    op_recorder: crate::op_recorder::SharedEntityOpRecorder,
+ }
+ 
+ impl<C: Blockchain> Clone for RuntimeHostBuilder<C> {
+@@ -36,6 +37,7 @@
+             runtime_adapter: self.runtime_adapter.cheap_clone(),
+             link_resolver: self.link_resolver.cheap_clone(),
+             ens_lookup: self.ens_lookup.cheap_clone(),
++            op_recorder: self.op_recorder.clone(),
+         }
+     }
+ }
+@@ -50,8 +52,19 @@
+             runtime_adapter,
+             link_resolver,
+             ens_lookup,
++            op_recorder: None,
+         }
+     }
++
++    /// Install an observer of the ordered store-effect stream on every host this
++    /// builder goes on to build. See `crate::op_recorder`.
++    pub fn with_op_recorder(
++        mut self,
++        recorder: crate::op_recorder::SharedEntityOpRecorder,
++    ) -> Self {
++        self.op_recorder = recorder;
++        self
++    }
+ }
+ 
+ impl<C: Blockchain> RuntimeHostBuilderTrait<C> for RuntimeHostBuilder<C>
+@@ -100,10 +113,20 @@
+             mapping_request_sender,
+             metrics,
+             self.ens_lookup.cheap_clone(),
++            self.op_recorder.clone(),
+         )
+     }
+ }
+ 
++/// Install a recorder on a freshly built `HostExports`, before it is shared.
++fn with_op_recorder(
++    recorder: crate::op_recorder::SharedEntityOpRecorder,
++    mut host_exports: HostExports,
++) -> HostExports {
++    host_exports.set_op_recorder(recorder);
++    host_exports
++}
++
+ pub struct RuntimeHost<C: Blockchain> {
+     host_fns: Arc<Vec<HostFn>>,
+     data_source: DataSource<C>,
+@@ -126,6 +149,7 @@
+         mapping_request_sender: Sender<WasmRequest<C>>,
+         metrics: Arc<HostMetrics>,
+         ens_lookup: Arc<dyn EnsLookup>,
++        op_recorder: crate::op_recorder::SharedEntityOpRecorder,
+     ) -> Result<Self, Error> {
+         let ds_details = DataSourceDetails::from_data_source(
+             &data_source,
+@@ -134,12 +158,15 @@
+ 
+         // Create new instance of externally hosted functions invoker. The `Arc` is simply to avoid
+         // implementing `Clone` for `HostExports`.
+-        let host_exports = Arc::new(HostExports::new(
+-            subgraph_id,
+-            network_name,
+-            ds_details,
+-            link_resolver,
+-            ens_lookup,
++        let host_exports = Arc::new(with_op_recorder(
++            op_recorder,
++            HostExports::new(
++                subgraph_id,
++                network_name,
++                ds_details,
++                link_resolver,
++                ens_lookup,
++            ),
+         ));
+ 
+         let host_fns = runtime_adapter.host_fns(&data_source).unwrap_or_default();
+diff -ruN a/src/host_exports.rs b/src/host_exports.rs
+--- a/src/host_exports.rs	2026-09-03 22:45:44
++++ b/src/host_exports.rs	2026-09-03 22:45:44
+@@ -54,6 +54,10 @@
+     poi_causality_region: String,
+     pub(crate) link_resolver: Arc<dyn LinkResolver>,
+     ens_lookup: Arc<dyn EnsLookup>,
++
++    /// Optional observer of the ordered store-effect stream. `None` by default,
++    /// in which case nothing below changes behaviour. See `op_recorder`.
++    op_recorder: crate::op_recorder::SharedEntityOpRecorder,
+ }
+ 
+ pub struct DataSourceDetails {
+@@ -98,9 +102,18 @@
+             subgraph_network,
+             link_resolver,
+             ens_lookup,
++            op_recorder: None,
+         }
+     }
+ 
++    /// Install an observer of the ordered store-effect stream.
++    ///
++    /// Called once, before this `HostExports` is shared, so the hook needs no
++    /// interior mutability of its own.
++    pub fn set_op_recorder(&mut self, recorder: crate::op_recorder::SharedEntityOpRecorder) {
++        self.op_recorder = recorder;
++    }
++
+     pub fn track_gas_and_ops(
+         gas: &GasCounter,
+         state: &mut BlockState,
+@@ -331,6 +344,9 @@
+             &self.poi_causality_region,
+             logger,
+         );
++        if let Some(recorder) = &self.op_recorder {
++            recorder.record_set(&key, &entity, &self.poi_causality_region);
++        }
+         poi_section.end();
+ 
+         state.metrics.track_entity_write(&entity_type, &entity);
+@@ -360,10 +376,16 @@
+             &self.poi_causality_region,
+             logger,
+         );
++        if let Some(recorder) = &self.op_recorder {
++            recorder.record_remove(&entity_type, &entity_id, &self.poi_causality_region);
++        }
+         let entity_type = state.entity_cache.schema.entity_type(&entity_type)?;
+         Self::expect_object_type(&entity_type, "remove")?;
+ 
+         let key = entity_type.parse_key_in(entity_id, self.data_source.causality_region)?;
++        if let Some(recorder) = &self.op_recorder {
++            recorder.record_remove_key(&key);
++        }
+         self.check_entity_type_access(&key.entity_type)?;
+ 
+         Self::track_gas_and_ops(
+diff -ruN a/src/lib.rs b/src/lib.rs
+--- a/src/lib.rs	2026-09-03 22:45:44
++++ b/src/lib.rs	2026-09-03 22:45:44
+@@ -13,6 +13,7 @@
+ 
+ /// Runtime-agnostic implementation of exports to WASM.
+ pub mod host_exports;
++pub mod op_recorder;
+ 
+ pub mod error;
+ mod gas_rules;
+@@ -21,3 +22,4 @@
+ pub use host_exports::HostExports;
+ pub use mapping::{MappingContext, ValidModule};
+ pub use module::{ExperimentalFeatures, WasmInstance};
++pub use op_recorder::{EntityOpRecorder, SharedEntityOpRecorder};
+diff -ruN a/src/op_recorder.rs b/src/op_recorder.rs
+--- a/src/op_recorder.rs	1970-01-01 01:00:00
++++ b/src/op_recorder.rs	2026-09-03 22:45:44
+@@ -0,0 +1,47 @@
++//! Observation hook for the ordered entity-operation stream.
++//!
++//! `EntityCache` collapses writes into a `HashMap`, so the order in which a
++//! mapping called `store.set` is not recoverable from `as_modifications`. It is
++//! recoverable here: `HostExports::store_set` and `store_remove` already write
++//! one `ProofOfIndexingEvent` per call, in call order, and that event stream is
++//! what the proof of indexing hashes. A recorder invoked beside those writes
++//! therefore observes exactly the sequence the PoI commits to, with no new
++//! ordering guarantee to reason about.
++//!
++//! The recorder sees the entity *as hashed*: schema-filtered, with the id and
++//! any timeseries timestamp already injected, and before `EntityCache::set`
++//! merges it into a predecessor or stamps a VID. That is the `written_fields`
++//! boundary a downstream operation stream needs.
++//!
++//! Nothing calls a recorder unless one is installed, and the default is `None`,
++//! so an unconfigured runtime behaves exactly as it did before.
++
++use std::sync::Arc;
++
++use graph::data::store::Entity;
++use graph::schema::EntityKey;
++
++/// Receives every store effect a mapping requests, in call order.
++///
++/// Implementations must be cheap: they run inside the handler, between the PoI
++/// write and the cache write, on the mapping's own thread.
++pub trait EntityOpRecorder: Send + Sync {
++    /// A `store.set` that has passed schema filtering and id resolution, about
++    /// to be handed to `EntityCache::set`.
++    ///
++    /// `entity` is the exact value hashed into the PoI `SetEntity` event.
++    fn record_set(&self, key: &EntityKey, entity: &Entity, poi_causality_region: &str);
++
++    /// A `store.remove`, recorded where the PoI event is written — before the
++    /// schema is resolved and the typed key parsed, which is why only the
++    /// caller's strings are available.
++    fn record_remove(&self, entity_type: &str, entity_id: &str, poi_causality_region: &str);
++
++    /// The typed key for the `store.remove` just recorded, once it parses.
++    /// A remove whose key fails to parse is discarded by the handler and this
++    /// is never called for it.
++    fn record_remove_key(&self, _key: &EntityKey) {}
++}
++
++/// A shared recorder, or none.
++pub type SharedEntityOpRecorder = Option<Arc<dyn EntityOpRecorder>>;

@@ -10,7 +10,8 @@ pub mod block_changes;
 pub mod pb;
 
 pub use block_changes::{
-    decode_canonical_block_changes, encode_canonical_block_changes, validate_block_changes,
-    BlockChangesCompatibility, CompatibilityDescriptorError, ValidationError,
-    BLOCK_CHANGES_V1_CONTRACT,
+    apply_written_fields, decode_canonical_block_changes, encode_canonical_block_changes,
+    field_is_null, materialized_key, validate_block_changes, BlockChangesCompatibility,
+    CacheOperation, CompatibilityDescriptorError, MaterializedId, MaterializedKey, NullMergeMode,
+    ValidationError, BLOCK_CHANGES_V1_CONTRACT,
 };

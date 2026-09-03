@@ -146,28 +146,40 @@ impl fmt::Display for CompatibilityDescriptorError {
 
 impl Error for CompatibilityDescriptorError {}
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-struct MaterializedKey {
-    entity_type: String,
-    id: MaterializedId,
-    storage_causality_region: i32,
+/// Storage identity of one entity as Graph Node's `EntityCache` keys it.
+///
+/// Exported so consumers replay the same merge algebra the validator uses
+/// instead of restating it; two independent implementations of these
+/// semantics is the failure mode this contract exists to prevent.
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct MaterializedKey {
+    pub entity_type: String,
+    pub id: MaterializedId,
+    pub storage_causality_region: i32,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-enum MaterializedId {
+/// Typed entity id as stored, preserving the wire representation exactly.
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum MaterializedId {
     String(String),
     Bytes(Vec<u8>),
     Int8(i64),
 }
 
+/// How a written top-level `Null` merges into a predecessor entity.
+///
+/// `Remove` is Graph Node's partial-update behaviour against an existing
+/// entity; `Preserve` keeps the explicit Null get-visible when an absent or
+/// removed entity is overwritten.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum NullMergeMode {
+pub enum NullMergeMode {
     Remove,
     Preserve,
 }
 
-#[derive(Clone, Debug)]
-enum CacheOperation {
+/// One entity's accumulated `EntityCache` effect within a handler.
+#[derive(Clone, Debug, PartialEq)]
+pub enum CacheOperation {
     Remove,
     Update(Vec<EntityField>),
     Overwrite(Vec<EntityField>),
@@ -1202,7 +1214,8 @@ fn record_remove_history(
 }
 
 impl CacheOperation {
-    fn accumulate(&mut self, next: Self) {
+    /// Fold a later save or remove for the same entity into this effect.
+    pub fn accumulate(&mut self, next: Self) {
         let update = match next {
             Self::Remove | Self::Overwrite(_) => {
                 *self = next;
@@ -1219,7 +1232,8 @@ impl CacheOperation {
         }
     }
 
-    fn apply_to(&self, entity: &Option<Vec<EntityField>>) -> Option<Vec<EntityField>> {
+    /// Project this effect onto the entity visible before it ran.
+    pub fn apply_to(&self, entity: &Option<Vec<EntityField>>) -> Option<Vec<EntityField>> {
         match (self, entity) {
             (Self::Remove, _) => None,
             (Self::Overwrite(fields), _) | (Self::Update(fields), None) => Some(fields.clone()),
@@ -1529,7 +1543,8 @@ fn filter_replay_candidates(
     }
 }
 
-fn apply_written_fields(
+/// Merge `written` into the name-sorted `materialized` field list in place.
+pub fn apply_written_fields(
     materialized: &mut Vec<EntityField>,
     written: &[EntityField],
     null_mode: NullMergeMode,
@@ -1546,14 +1561,19 @@ fn apply_written_fields(
     }
 }
 
-fn field_is_null(field: &EntityField) -> bool {
+/// True when the field carries an explicit top-level `NullValue`.
+pub fn field_is_null(field: &EntityField) -> bool {
     matches!(
         field.value.as_ref().and_then(|value| value.kind.as_ref()),
         Some(graph_value::Kind::Null(_))
     )
 }
 
-fn materialized_key(key: &EntityKey) -> MaterializedKey {
+/// Storage identity of a validated `EntityKey`.
+///
+/// The key must already have passed [`validate_block_changes`]; an absent or
+/// empty id is a validator refusal, not a caller input.
+pub fn materialized_key(key: &EntityKey) -> MaterializedKey {
     let id = match key
         .id
         .as_ref()

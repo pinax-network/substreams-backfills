@@ -81,16 +81,100 @@ fn a_live_run_needs_an_endpoint() {
     assert!(error.contains("no endpoint is compiled in"), "{error}");
 }
 
+/// `--resume` is gone. It still parses, so a command line written against the
+/// old flag gets a pointer at the two that replaced it rather than clap's
+/// "unexpected argument".
 #[test]
-fn resume_is_refused_with_an_explanation() {
+fn resume_points_at_the_checkpoint_flags() {
     let error = failure(
         Some(DEAD_ENDPOINT),
         &["--from", "12369739", "--to", "12369741", "--resume"],
     );
-    assert!(error.contains("--resume is refused"), "{error}");
-    assert!(error.contains("in-memory store"), "{error}");
-    assert!(error.contains("PoI chain"), "{error}");
-    assert!(error.contains("host set"), "{error}");
+    assert!(error.contains("--resume is gone"), "{error}");
+    assert!(error.contains("--checkpoint-out"), "{error}");
+    assert!(error.contains("--checkpoint-in"), "{error}");
+}
+
+/// A continuation must start exactly where the checkpoint stopped, and that is
+/// decided from the checkpoint's own header before the endpoint is dialled.
+#[test]
+fn a_live_range_that_does_not_continue_the_checkpoint_is_refused() {
+    let temp = tempfile::tempdir().expect("temp dir");
+    let path = temp.path().join("chunk-1.jsonl");
+    write_boundary_checkpoint(&path, 12_369_739);
+
+    // One block short: 12,369,739 is already in the checkpoint.
+    let error = failure(
+        Some(DEAD_ENDPOINT),
+        &[
+            "--from",
+            "12369739",
+            "--to",
+            "12369741",
+            "--checkpoint-in",
+            path.to_str().expect("utf-8"),
+        ],
+    );
+    assert!(
+        error.contains("does not continue this checkpoint"),
+        "{error}"
+    );
+    assert!(error.contains("stops after block 12369739"), "{error}");
+    assert!(!error.to_lowercase().contains("connect"), "{error}");
+
+    // One block past: 12,369,741 would skip 12,369,740.
+    let error = failure(
+        Some(DEAD_ENDPOINT),
+        &[
+            "--from",
+            "12369741",
+            "--to",
+            "12369743",
+            "--checkpoint-in",
+            path.to_str().expect("utf-8"),
+        ],
+    );
+    assert!(error.contains("skip the blocks between"), "{error}");
+    assert!(!error.to_lowercase().contains("connect"), "{error}");
+}
+
+/// A checkpoint whose header names a boundary and nothing else. Enough for the
+/// range check, which happens before the bundle is loaded, and deliberately not
+/// a real one: this file never replays a block.
+fn write_boundary_checkpoint(path: &std::path::Path, block: i32) {
+    let header = serde_json::json!({
+        "schema": "pinax.substreams-backfills.mapping-host.checkpoint/v1",
+        "identity": {
+            "deployment": SEGMENT,
+            "network": "mainnet",
+            "spec_version": "0.0.4",
+            "poi_version": "legacy",
+            "poi_causality_region": "ethereum/mainnet",
+            "deterministic_error_policy": "fatal",
+            "graph_node_rev": "unset",
+            "bundle_lock_sha256": "unset",
+            "descriptor_sha256": "unset",
+            "cassette_sha256": "unset",
+        },
+        "boundary": {
+            "block": block,
+            "block_hash": "0x00",
+            "source": "test",
+            "blocks_in_chunk": 1,
+            "blocks_total": 1,
+            "chunk_index": 0,
+        },
+        "totals": {
+            "dynamic_data_sources": 0,
+            "rows": 0,
+            "poi_rows": 0,
+            "fields": 0,
+            "cached_present": 0,
+            "cached_absent": 0,
+        },
+        "counts_by_type": {},
+    });
+    std::fs::write(path, format!("{header}\n")).expect("writing a checkpoint header");
 }
 
 #[test]

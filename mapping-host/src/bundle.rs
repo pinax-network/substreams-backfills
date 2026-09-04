@@ -78,6 +78,7 @@ impl BundleLock {
 pub struct SegmentBundle {
     dir: PathBuf,
     lock: BundleLock,
+    lock_sha256: String,
     deployment: DeploymentHash,
 }
 
@@ -168,9 +169,12 @@ impl SegmentBundle {
         let deployment = DeploymentHash::new(lock.deployment.clone())
             .map_err(|s| anyhow!("invalid deployment hash `{}`", s))?;
 
+        let lock_sha256 = sha256_hex(&lock_bytes);
+
         Ok(SegmentBundle {
             dir,
             lock,
+            lock_sha256,
             deployment,
         })
     }
@@ -181,6 +185,15 @@ impl SegmentBundle {
 
     pub fn lock(&self) -> &BundleLock {
         &self.lock
+    }
+
+    /// SHA-256 of `bundle.lock.json` itself.
+    ///
+    /// The lock pins every deployed file by digest, so one hash over the lock
+    /// identifies the whole bundle. A checkpoint records it and refuses to load
+    /// against a bundle that hashes differently.
+    pub fn lock_sha256(&self) -> &str {
+        &self.lock_sha256
     }
 
     pub fn deployment(&self) -> &DeploymentHash {

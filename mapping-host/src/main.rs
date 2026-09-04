@@ -13,6 +13,8 @@ use std::time::Duration;
 use anyhow::{bail, Context, Result};
 use clap::{Parser, Subcommand};
 use graph::blockchain::Block as _;
+use graph_mapping_host::block::BlockIdentity;
+use graph_mapping_host::checkpoint::{CheckpointBoundary, HostCheckpoint};
 use graph_mapping_host::live::{Bcf1Writer, FrameWriter, Progress, ReportWriter};
 use graph_mapping_host::report::RunHeader;
 use graph_mapping_host::runner::{SegmentHost, SegmentHostConfig};
@@ -21,7 +23,7 @@ use graph_mapping_host::source::{
     Ordering,
 };
 use graph_mapping_host::store_state::{StorePoi, StoreRange};
-use graph_mapping_host::{blockchanges, bundle, descriptor, evidence};
+use graph_mapping_host::{block, blockchanges, bundle, descriptor, evidence};
 
 #[derive(Parser)]
 #[command(
@@ -136,10 +138,25 @@ struct RunArgs {
     /// Seconds between live progress lines on stderr; `0` silences them.
     #[arg(long, default_value_t = 10)]
     progress_secs: u64,
-    /// Continue a live range from the last fully written block.
+    /// Write a host checkpoint after the last block of this run, so a later run
+    /// can continue from exactly here. Captures the entity store, the
+    /// proof-of-indexing rows that chain the digest, the entity cache's key set
+    /// and the ordered dynamic data sources; see `src/checkpoint.rs`.
     ///
-    /// This is refused, with an explanation; see `README.md`.
-    #[arg(long, requires = "from")]
+    /// Written atomically, so passing the same path as `--checkpoint-in` is safe
+    /// and is how a chain of chunks advances.
+    #[arg(long)]
+    checkpoint_out: Option<PathBuf>,
+    /// Continue from a checkpoint an earlier run wrote.
+    ///
+    /// A live range must start at exactly the checkpoint's boundary block plus
+    /// one; a fixture run must replay only blocks above it. Either way the first
+    /// block's parent hash is checked against the boundary when the two are
+    /// adjacent.
+    #[arg(long)]
+    checkpoint_in: Option<PathBuf>,
+    /// Superseded by `--checkpoint-in`; always refused, with a pointer.
+    #[arg(long)]
     resume: bool,
 }
 
@@ -185,25 +202,79 @@ fn main() -> Result<()> {
     }
 }
 
-/// Why `--resume` cannot be honoured. Written once here so the CLI refusal and
+/// Why `--resume` no longer exists. Written once here so the CLI refusal and
 /// `README.md` say exactly the same thing.
 const RESUME_REFUSAL: &str = "\
---resume is refused, deliberately, because this host cannot rebuild a partial \
-run's state faithfully. Three things carry across a block boundary and none of \
-them survives the process:\n\
-  * the in-memory store. Nothing is persisted between blocks; there is no \
-    snapshot format, and the written BlockChanges frames are a per-save \
-    operation stream, not a store image.\n\
-  * the Legacy PoI chain. Each block's causality-region digest mixes in the \
-    previous block's, and it lives in a `Poi$` entity that no mapping handler \
-    writes, so the recorder never sees it and no frame carries it.\n\
-  * the host set. Dynamic data sources accumulate across blocks; only a replay \
-    from the segment's first block puts the same hosts in the same order.\n\
-Resuming from partial state would silently produce a different PoI and a \
-different store, which is the one failure this crate exists to prevent. Re-run \
-the whole range from --from instead.";
+--resume is gone; use --checkpoint-out and --checkpoint-in instead.\n\
+\n\
+--resume never worked, because a partial run's state cannot be rebuilt from the \
+artifacts a run writes: the BlockChanges frames are a per-save operation stream \
+rather than a store image, and neither the proof-of-indexing rows nor the \
+accumulated dynamic data sources appear in them at all. The host holds all three \
+in memory, so it now writes them itself.\n\
+\n\
+  graph-mapping-host run ... --from A --to B --checkpoint-out chunk-1.jsonl\n\
+  graph-mapping-host run ... --from B --to C --checkpoint-in chunk-1.jsonl \\\n\
+                             --checkpoint-out chunk-2.jsonl\n\
+\n\
+A continuation must start at exactly the checkpoint's boundary block plus one, \
+and is refused on a gap, an overlap, a different segment, a different bundle or \
+a cassette that changed underneath it.";
+
+/// The SHA-256 of a file, or the empty string when there is no file.
+///
+/// The cassette is the only input a run may legitimately rewrite, so its digest
+/// is taken twice: once before the run, to check a checkpoint being loaded, and
+/// once after, to record in the checkpoint being written.
+fn file_sha256(path: &std::path::Path) -> Result<String> {
+    if !path.exists() {
+        return Ok(String::new());
+    }
+    let bytes = std::fs::read(path).with_context(|| format!("reading {}", path.display()))?;
+    Ok(bundle::sha256_hex(&bytes))
+}
+
+/// Refuse a first block that does not continue the checkpoint.
+///
+/// Two checks, and they catch different things. The block number catches a
+/// replay of ground the checkpoint already covers, whose effects would be
+/// applied twice. The parent hash catches a *different chain* at the same
+/// height, which no block number can see; it is only available when the first
+/// block is the boundary's immediate successor, which a live range always is and
+/// a sampled fixture run generally is not.
+fn check_continuation(boundary: &CheckpointBoundary, first: &BlockIdentity) -> Result<()> {
+    if first.number <= boundary.block {
+        bail!(
+            "the checkpoint already covers block {}, and this run starts at block {}: replaying \
+             a block the checkpoint has already applied would apply its effects twice",
+            boundary.block,
+            first.number
+        );
+    }
+    if first.number != boundary.block + 1 {
+        return Ok(());
+    }
+    match first.parent_hash.as_deref() {
+        Some(parent) if parent.eq_ignore_ascii_case(&boundary.block_hash) => Ok(()),
+        Some(parent) => bail!(
+            "block {} names parent {parent}, but the checkpoint stopped at block {} with hash {}: \
+             this is a different chain, and continuing would fold two histories into one store",
+            first.number,
+            boundary.block,
+            boundary.block_hash
+        ),
+        // A block with no parent pointer is the genesis block, which no segment
+        // in this repository starts at; nothing to check.
+        None => Ok(()),
+    }
+}
 
 async fn run(args: RunArgs) -> Result<()> {
+    // Before anything else, so an old command line gets the pointer rather than
+    // whichever of the checks below happens to fire first.
+    if args.resume {
+        bail!("{RESUME_REFUSAL}");
+    }
     let live_range = match (args.from, args.to) {
         (Some(from), Some(to)) => Some((from, to)),
         (None, None) => None,
@@ -216,9 +287,6 @@ async fn run(args: RunArgs) -> Result<()> {
              --from <N> --to <N> for a live Firehose range"
         );
     }
-    if args.resume {
-        bail!("{RESUME_REFUSAL}");
-    }
 
     // The endpoint and the token are validated before anything expensive
     // happens, so a bad endpoint fails in milliseconds rather than after a
@@ -228,12 +296,61 @@ async fn run(args: RunArgs) -> Result<()> {
         None => None,
     };
 
+    // Read the checkpoint before the bundle: a checkpoint that does not parse is
+    // a mistake worth catching in milliseconds, and its boundary decides whether
+    // the requested range is even legal.
+    let resumed = match &args.checkpoint_in {
+        Some(path) => Some(HostCheckpoint::read(path)?),
+        None => None,
+    };
+    if let (Some((checkpoint, _)), Some((from, _))) = (resumed.as_ref(), live_range) {
+        let boundary = checkpoint.header.boundary.block;
+        if from != boundary + 1 {
+            bail!(
+                "--from {from} does not continue this checkpoint, which stops after block \
+                 {boundary}. A contiguous replay has to resume at exactly {}: a lower --from \
+                 would replay blocks the checkpoint has already applied, and a higher one would \
+                 skip the blocks between, leaving the store and the proof-of-indexing chain \
+                 short of everything those blocks wrote.",
+                boundary + 1
+            );
+        }
+    }
+
+    // The cassette as it stands before the run. A recording run rewrites it, so
+    // this is the digest a checkpoint being *loaded* must name, and the digest a
+    // checkpoint being written names is taken again at the end.
+    let cassette_before = file_sha256(&args.cassette)?;
+
     let mut host = SegmentHost::load(SegmentHostConfig {
         bundle_dir: &args.segment,
         cassette_path: &args.cassette,
         record: args.record,
     })
     .await?;
+
+    if let Some((checkpoint, digest)) = resumed.as_ref() {
+        host.restore_checkpoint(checkpoint, cassette_before)
+            .with_context(|| {
+                format!(
+                    "restoring {}",
+                    args.checkpoint_in
+                        .as_ref()
+                        .expect("a restored checkpoint has a path")
+                        .display()
+                )
+            })?;
+        eprintln!(
+            "{}: restored {} rows and {} dynamic data sources after block {} ({digest})",
+            args.checkpoint_in
+                .as_ref()
+                .expect("a restored checkpoint has a path")
+                .display(),
+            checkpoint.rows.len(),
+            checkpoint.data_sources.len(),
+            checkpoint.header.boundary.block
+        );
+    }
 
     // Replay in ascending order. Out of order would make both the store and the
     // PoI chain meaningless, so either source is wrapped in a `CheckedSource`.
@@ -282,11 +399,25 @@ async fn run(args: RunArgs) -> Result<()> {
         live_range.map(|range| Progress::new(range, Duration::from_secs(args.progress_secs)));
     // The closing proof of indexing is the last block that opened the causality
     // region, not the last block replayed: a block in which no handler ran does
-    // not advance the digest.
-    let mut closing_poi: Option<StorePoi> = None;
+    // not advance the digest. A continuation starts from the checkpoint's, so a
+    // chunk whose blocks open no region still reports the chain's closing value.
+    let mut closing_poi: Option<StorePoi> = resumed
+        .as_ref()
+        .and_then(|(checkpoint, _)| checkpoint.header.poi.clone());
+
+    let source_description = source.describe();
+    // Checked against the first block that arrives, then dropped.
+    let mut continues_from = resumed
+        .as_ref()
+        .map(|(checkpoint, _)| checkpoint.header.boundary.clone());
+    // The last block applied, which is where a checkpoint written here stops.
+    let mut last_applied: Option<(i32, String)> = None;
 
     while let Some(block) = source.next_block().await? {
         let number = block.number();
+        if let Some(boundary) = continues_from.take() {
+            check_continuation(&boundary, &block::identify(&block))?;
+        }
         let outcome = host
             .process_block(block)
             .await
@@ -314,6 +445,7 @@ async fn run(args: RunArgs) -> Result<()> {
         if let Some(bcf1) = bcf1.as_mut() {
             bcf1.push(block_number, block_hash, &bytes)?;
         }
+        last_applied = Some((number, block_report.hash.clone()));
         if let Some(progress) = progress.as_mut() {
             progress.record(number, block_report.handler_groups.len());
             // A long recording run should not lose its rows to a crash at block
@@ -335,7 +467,7 @@ async fn run(args: RunArgs) -> Result<()> {
     if let Some(path) = &args.store_out {
         let blocks = writer.blocks();
         let range = live_range.map(|(from, to)| StoreRange { from, to, blocks });
-        let state = host.store_state(range, closing_poi)?;
+        let state = host.store_state(range, closing_poi.clone())?;
         if let Some(parent) = path.parent() {
             if !parent.as_os_str().is_empty() {
                 std::fs::create_dir_all(parent)
@@ -353,6 +485,50 @@ async fn run(args: RunArgs) -> Result<()> {
     }
     if host.cassette().is_dirty() {
         host.cassette().save(&args.cassette)?;
+    }
+
+    // After the cassette, so the digest recorded here is the file the next chunk
+    // will load. A recording run appends rows; the next chunk must see the same
+    // bytes or refuse.
+    if let Some(path) = &args.checkpoint_out {
+        let Some((block, block_hash)) = last_applied else {
+            bail!(
+                "--checkpoint-out {} was asked for but this run replayed no block, so there is no \
+                 boundary to continue from",
+                path.display()
+            );
+        };
+        let previous = resumed
+            .as_ref()
+            .map(|(checkpoint, digest)| (checkpoint.header.boundary.clone(), digest.clone()));
+        let blocks_in_chunk = writer.blocks();
+        let boundary = CheckpointBoundary {
+            block,
+            block_hash,
+            source: source_description,
+            chunk_from: live_range.map(|(from, _)| from),
+            chunk_to: live_range.map(|(_, to)| to),
+            blocks_in_chunk,
+            blocks_total: previous
+                .as_ref()
+                .map(|(boundary, _)| boundary.blocks_total)
+                .unwrap_or_default()
+                + blocks_in_chunk,
+            chunk_index: previous
+                .as_ref()
+                .map(|(boundary, _)| boundary.chunk_index + 1)
+                .unwrap_or_default(),
+            previous_checkpoint_sha256: previous.map(|(_, digest)| digest),
+        };
+        let checkpoint = host.checkpoint(file_sha256(&args.cassette)?, boundary, closing_poi)?;
+        let digest = checkpoint.write(path)?;
+        eprintln!(
+            "{}: {} rows, {} dynamic data sources, after block {} ({digest})",
+            path.display(),
+            checkpoint.rows.len(),
+            checkpoint.data_sources.len(),
+            checkpoint.header.boundary.block
+        );
     }
 
     let blocks = writer.blocks();

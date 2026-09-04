@@ -40,7 +40,7 @@ use backfill_common::{
     CacheOperation,
 };
 use graph::data::store::{Entity, Id, Value};
-use graph::schema::EntityKey;
+use graph::schema::{EntityKey, InputSchema};
 use graph_runtime_wasm::op_recorder::EntityOpRecorder;
 
 /// The `BCF1` clock-v1 frame header is fixed width; see `header` below.
@@ -224,6 +224,119 @@ pub fn convert_value(value: &Value) -> pb::GraphValue {
         }),
     };
     pb::GraphValue { kind: Some(kind) }
+}
+
+/// The inverse of [`convert_value`].
+///
+/// A checkpoint restores the store from the wire encoding, so the way back has
+/// to be the exact mirror of the way out; otherwise a resumed run would hold
+/// values that merely *look* like the ones an uninterrupted run held. Every
+/// variant round-trips. `BigInt` and the `BigDecimal` coefficient are minimal
+/// two's-complement big-endian with the empty slice for zero, which
+/// `num_bigint` reads back unchanged, and `BigDecimal::new(digits, exp)` negates
+/// its argument to reach `bigdecimal`'s scale, so the recorded `scale` goes back
+/// in as `-scale`.
+pub fn value_from_wire(value: &pb::GraphValue) -> Result<Value> {
+    use graph::data::store::scalar::{BigDecimal, BigInt, Bytes, Timestamp};
+    use pb::graph_value::Kind;
+    let kind = value
+        .kind
+        .as_ref()
+        .ok_or_else(|| anyhow!("a stored value has no kind"))?;
+    Ok(match kind {
+        Kind::String(value) => Value::String(value.clone()),
+        Kind::Int(value) => Value::Int(*value),
+        Kind::Int8(value) => Value::Int8(*value),
+        Kind::TimestampMicros(value) => Value::Timestamp(
+            Timestamp::from_microseconds_since_epoch(*value)
+                .map_err(|error| anyhow!("a stored timestamp is out of range: {error}"))?,
+        ),
+        Kind::BigDecimal(value) => Value::BigDecimal(BigDecimal::new(
+            BigInt::from_signed_bytes_be(&value.coefficient_signed_be)
+                .context("a stored BigDecimal coefficient")?,
+            -value.scale,
+        )),
+        Kind::Bool(value) => Value::Bool(*value),
+        Kind::List(value) => Value::List(
+            value
+                .values
+                .iter()
+                .map(value_from_wire)
+                .collect::<Result<Vec<_>>>()?,
+        ),
+        Kind::Null(_) => Value::Null,
+        Kind::Bytes(value) => Value::Bytes(Bytes::from(value.as_slice())),
+        Kind::BigInt(value) => Value::BigInt(
+            BigInt::from_signed_bytes_be(&value.signed_be).context("a stored BigInt")?,
+        ),
+    })
+}
+
+/// The inverse of [`convert_key`], resolved against the deployed schema.
+///
+/// The typename is looked up rather than trusted, so a checkpoint naming a type
+/// this schema does not declare is refused instead of silently dropped. The id
+/// kind is checked against the type's declared id type for the same reason: a
+/// `String` id restored into a `Bytes`-keyed type would order differently from
+/// the row the run actually held.
+pub fn key_from_wire(schema: &InputSchema, key: &pb::EntityKey) -> Result<EntityKey> {
+    use graph::data::store::scalar::Bytes;
+    use graph::data::value::Word;
+    use graph::data_source::CausalityRegion;
+
+    let poi_type = schema.poi_type();
+    let entity_type = if key.entity_type == poi_type.typename() {
+        poi_type
+    } else {
+        schema
+            .entity_type(key.entity_type.as_str())
+            .with_context(|| {
+                format!(
+                    "the deployed schema declares no entity type `{}`",
+                    key.entity_type
+                )
+            })?
+    };
+
+    let id = match key.id.as_ref().and_then(|id| id.value.as_ref()) {
+        Some(pb::entity_id::Value::String(value)) => Id::String(Word::from(value.as_str())),
+        Some(pb::entity_id::Value::Bytes(value)) => Id::Bytes(Bytes::from(value.as_slice())),
+        Some(pb::entity_id::Value::Int8(value)) => Id::Int8(*value),
+        None => bail!("an entity key for `{}` has no id", key.entity_type),
+    };
+    // `id_type()` errors for a type that stores no data of its own; only check
+    // where the schema has an answer.
+    if let Ok(declared) = entity_type.id_type() {
+        if id.id_type() != declared {
+            bail!(
+                "`{}` is keyed by {declared:?} in the deployed schema, but the checkpoint's id \
+                 is {:?}",
+                key.entity_type,
+                id.id_type()
+            );
+        }
+    }
+
+    Ok(entity_type.key_in(id, CausalityRegion::from(key.storage_causality_region)))
+}
+
+/// The inverse of [`convert_entity`], resolved against the deployed schema.
+///
+/// `vid` is not part of the wire form — `Entity::sorted_ref` excludes it — so a
+/// caller restoring a store row sets it afterwards with `Entity::set_vid`.
+pub fn entity_from_wire(schema: &InputSchema, fields: &[pb::EntityField]) -> Result<Entity> {
+    use graph::data::value::Word;
+    let mut pairs: Vec<(Word, Value)> = Vec::with_capacity(fields.len());
+    for field in fields {
+        let value = field
+            .value
+            .as_ref()
+            .ok_or_else(|| anyhow!("field `{}` has no value", field.name))?;
+        pairs.push((Word::from(field.name.as_str()), value_from_wire(value)?));
+    }
+    schema
+        .make_entity(pairs)
+        .map_err(|error| anyhow!("rebuilding a stored entity: {error}"))
 }
 
 /// Storage identity, matching `backfill_common::materialized_key` without
@@ -553,4 +666,72 @@ pub fn bcf1_frame(block_number: u64, block_hash: &[u8], payload: &[u8]) -> Resul
     frame.extend_from_slice(&length.to_be_bytes());
     frame.extend_from_slice(payload);
     Ok(frame)
+}
+
+#[cfg(test)]
+mod value_round_trip_tests {
+    use super::*;
+    use graph::data::store::scalar::{BigDecimal, BigInt, Bytes, Timestamp};
+
+    /// Every variant, and for the numeric ones every sign and the zero, because
+    /// zero is the value the canonical encoding spells differently from
+    /// `num_bigint` and is therefore the one a naive inverse loses.
+    fn cases() -> Vec<Value> {
+        vec![
+            Value::String("pool-1".to_owned()),
+            Value::String(String::new()),
+            Value::Int(0),
+            Value::Int(-7),
+            Value::Int(i32::MIN),
+            Value::Int8(0),
+            Value::Int8(i64::MIN),
+            Value::Int8(i64::MAX),
+            Value::Timestamp(
+                Timestamp::from_microseconds_since_epoch(1_725_000_000_123_456).expect("in range"),
+            ),
+            Value::Timestamp(Timestamp::from_microseconds_since_epoch(0).expect("in range")),
+            Value::BigDecimal(BigDecimal::zero()),
+            Value::BigDecimal(
+                BigDecimal::new(BigInt::from(123_456_789_i64), -18) / BigDecimal::from(7),
+            ),
+            Value::BigDecimal(BigDecimal::new(BigInt::from(-1_i64), 6)),
+            Value::Bool(true),
+            Value::Bool(false),
+            Value::Null,
+            Value::Bytes(Bytes::from(Vec::new())),
+            Value::Bytes(Bytes::from(vec![0x00, 0xde, 0xad, 0xff])),
+            Value::BigInt(BigInt::from(0_i64)),
+            Value::BigInt(BigInt::from(-1_i64)),
+            Value::BigInt(BigInt::from(i64::MIN)),
+            Value::BigInt(
+                BigInt::from_signed_bytes_be(&[0x7f; 32]).expect("32 bytes is within the limit"),
+            ),
+            Value::List(vec![
+                Value::String("nested".to_owned()),
+                Value::Null,
+                Value::BigInt(BigInt::from(0_i64)),
+                Value::List(vec![Value::Int(1)]),
+            ]),
+            Value::List(Vec::new()),
+        ]
+    }
+
+    #[test]
+    fn every_value_survives_the_round_trip_through_the_wire_form() {
+        for value in cases() {
+            let wire = convert_value(&value);
+            let back = value_from_wire(&wire).unwrap_or_else(|e| panic!("{value:?}: {e:#}"));
+            assert_eq!(back, value, "{value:?}");
+            // And the way out from the restored value is byte-identical, which
+            // is what a checkpointed run's frames depend on.
+            assert_eq!(convert_value(&back), wire, "{value:?}");
+        }
+    }
+
+    #[test]
+    fn a_wire_value_without_a_kind_is_refused() {
+        let error = value_from_wire(&pb::GraphValue { kind: None })
+            .expect_err("a kindless value is not a value");
+        assert!(error.to_string().contains("no kind"), "{error}");
+    }
 }

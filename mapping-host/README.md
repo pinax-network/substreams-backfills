@@ -418,6 +418,10 @@ Every block in every `--blocks` file is replayed, in ascending order; `--only`
 restricts that to named block numbers. `--record` plus `ETHEREUM_RPC_URL` appends
 cassette misses instead of failing.
 
+`--checkpoint-out PATH` writes a host checkpoint after the last block and
+`--checkpoint-in PATH` continues from one, in fixture mode as well as live mode;
+see [Checkpoints](#checkpoints---checkpoint-out-and---checkpoint-in).
+
 `--block-changes-out DIR` writes one canonical frame per block as `<number>.pb`
 plus an `index.json` pinning each by SHA-256 and naming the descriptor they were
 sealed against. `--bcf1-out FILE` additionally writes the whole run as one `BCF1`
@@ -593,6 +597,7 @@ A contiguous range cannot be held in memory, so every writer flushes per block.
 | `--block-changes-out` | `<number>.pb` per block, `index.json` at the end | `<number>.pb` per block, `index.jsonl` appended per frame |
 | `--bcf1-out` | one `BCF1` stream | the same bytes, flushed per frame |
 | `--store-out` | the final store, written once at the end | the same file, written once at the end |
+| `--checkpoint-out` | the host checkpoint, written once at the end | the same file, written once at the end |
 
 The fixture report keeps its single-document form deliberately: it is what
 `fixtures/reports/<cid>.json` pins, and a golden that is one parseable document
@@ -604,25 +609,173 @@ and cumulative handler groups to **stderr**, so it never contaminates a report
 streamed to stdout. Progress is constructed only on the live path, so the
 hermetic tests emit nothing.
 
-### `--resume` is refused, and why
+### Checkpoints: `--checkpoint-out` and `--checkpoint-in`
 
-`--resume` exists and always fails, with the reason. Three things carry across a
-block boundary and none of them survives the process:
+A long replay does not have to be one process any more. `--checkpoint-out PATH`
+writes everything a faithful continuation needs after the last block of a run,
+and `--checkpoint-in PATH` restores it into a fresh host. `--resume`, which
+always failed, is gone; passing it now prints a pointer at these two.
 
-* **the in-memory store.** Nothing is persisted between blocks. There is no
-  snapshot format, and the written `BlockChanges` frames are a per-save
-  *operation stream*, not a store image.
-* **the Legacy PoI chain.** Each block's causality-region digest mixes in the
-  previous block's, and it lives in a `Poi$` entity that no mapping handler
-  writes — the recorder never sees it, so no frame carries it.
-* **the host set.** Dynamic data sources accumulate across blocks; only a replay
-  from the segment's first block puts the same hosts in the same order.
+#### The case that forced it
 
-Resuming from partial state would produce a different PoI and a different store
-while looking like a success, which is the one failure this crate exists to
-prevent. Re-run the whole range instead. Making `--resume` real means persisting
-a store snapshot *and* the per-region PoI digests *and* the ordered host set, and
-proving the reconstruction round-trips; that is a piece of work, not a flag.
+The first `Flash` event on mainnet is block **12,764,397**, established by
+scanning every 1,000-block range from the factory forward with no sampling: every
+chunk from 12,369,621 to 12,763,620 is empty. That is 394,776 blocks past
+segment 1's graft-free root, and a faithful replay has to start at the root,
+because `handleFlash` reads pool and token rows that exist only if the blocks
+that created them were replayed. At the 4.2 blocks/second measured over the
+parity window that is about twenty-six hours in one unbroken process; at the ~9
+blocks/second a longer recording run has been observed to sustain, about twelve.
+One `ethereum.call` timeout twelve hours in used to mean starting again.
+
+#### What a checkpoint holds
+
+Three things in `SegmentHost` change as blocks are replayed and are still needed
+by the next block. The checkpoint captures all three, and the proof-of-indexing
+chain, which lives inside the first of them, is called out separately because it
+is the one people expect to be a fourth:
+
+| Captured | What it is | Why it has to be |
+|---|---|---|
+| the entity store | every live row, with its VID | nothing else persists between blocks |
+| the `Poi$` rows | the proof-of-indexing chain | `update_proof_of_indexing` reads the previous block's per-region digest back **out of the store**, so restoring the rows restores the chain. It is not a separate variable |
+| the dynamic data sources | template, manifest index, params, `dataSource.context`, creation block, in creation order | replayed through the same `create_dynamic_data_sources` a live wave uses, so the host set ends up in the same order — which is what `handler_order` indexes |
+| the entity cache's **key set** | which keys the `EntityLfuCache` held | `as_modifications` skips the store lookup for an *immutable* entity type whose key is absent from the cache, which would turn an `Overwrite` into an `Insert`. Each entry is rehydrated from the restored store, never from the file |
+
+Plus the closing proof of indexing, the segment identity, and the boundary.
+
+Nothing else crosses a block, and each of those is worth stating because each was
+checked rather than assumed. The `SeqGenerator` that mints VIDs is constructed
+per block from the block number. The op recorder is drained per handler and
+`process_block` refuses a block that starts with anything in it. The WASM module
+is **re-instantiated per trigger** — `vendor/graph-runtime-wasm/src/mapping.rs`
+calls `instantiate_module` inside the request loop — so no AssemblyScript global
+outlives a handler, let alone a block. The cassette is a file.
+
+`dataSource.context` is captured and restored, but no deployed Uniswap V3 module
+imports `dataSource.createWithContext` — all twenty use plain `dataSource.create`
+— so every context in these segments is `None` and no fixture exercises that
+path. The values in it go through the same round trip every store value does,
+which `blockchanges::value_round_trip_tests` covers variant by variant.
+
+Two things are deliberately not captured, and neither can change a replay:
+
+* **the LFU frecency counters.** Only `LfuCache::evict` reads them, and this
+  crate never calls it.
+* **a stale VID inside a cached entity.** A write that changes nothing leaves the
+  cache one VID ahead of the store; VIDs are overwritten on every `set` and
+  excluded from `Entity`'s own equality, so the store's VID is the one restored.
+
+The store and the cache are checked against each other on the way out. They are
+kept in agreement by `process_block`, and graph-node's own `debug_assert!` in
+`EntityCache::get` asserts it on every read (live in this crate's test builds), so
+a disagreement means the invariant broke — and that is a refusal, not a warning.
+
+#### The encoding
+
+JSON Lines: a header line, then one line per dynamic data source, then one row
+per line, then one line per cache key the store has no row for. Values use
+`StoreValue`, the same encoding `--store-out` writes, and rows are ordered by
+`backfill_common::MaterializedKey`, so the file is byte-stable for a given host
+state. One document would have to be built whole in memory before the first byte
+went out; for a store with a million rows that is not a checkpoint, it is an
+outage.
+
+The header's `totals` are recomputed on load and compared, so a truncated file is
+refused rather than resumed from. The four-fixture store — 36 rows, 543 fields,
+2 dynamic data sources — is 55 kB, or roughly 1.5 kB per row; a million-row store
+is therefore about 1.5 GB, and compresses well if it needs to be moved.
+
+#### What is refused
+
+| Refusal | Why |
+|---|---|
+| a different deployment, network, spec version, PoI version or causality region | the store and the PoI chain would be one segment's folded into another's |
+| a different `bundle.lock.json` digest | the lock pins every mapping, ABI and schema file, so a different lock is a different deployment |
+| a different descriptor digest, or a different graph-node revision | the frames would not be comparable with the ones already written |
+| a cassette that hashes differently from the one recorded | a row that changed underneath a resumed run would change a handler's answer |
+| `--from` that is not the boundary block plus one | a lower `--from` replays blocks the checkpoint already applied; a higher one skips the store writes in between |
+| a first block at or below the boundary | the same effects would be applied twice |
+| a first block whose parent hash is not the boundary's hash | a different chain at the same height, which no block number can see |
+| a checkpoint restored into a host that has already replayed a block | the restore replaces the store outright |
+| a truncated, reordered or duplicated-row checkpoint | the totals and the storage-identity ordering are both checked |
+| a checkpoint whose dynamic data sources do not re-instantiate one for one | the host set would differ from the run that wrote it |
+
+Each mismatch is named individually, so an operator learns whether they pointed
+at the wrong segment or whether the cassette grew underneath them.
+
+The range check happens **before** the bundle is loaded and before the endpoint is
+dialled, so a mistyped `--from` costs milliseconds and no network.
+
+#### Chunking a long range
+
+```bash
+S=Qme66ZNMxSdCQKzaDuvS381whCVYCQjf637sGZCqJHAWHB
+export FIREHOSE_ENDPOINT=eth.firehose.pinax.network:443
+export FIREHOSE_API_TOKEN=...
+
+# Chunk 1: from the graft-free root.
+graph-mapping-host run --segment segments/$S --cassette fixtures/cassettes/$S.json \
+  --from 12369621 --to 12469621 \
+  --record --bcf1-out out/chunk-1.bcf1 --out out/chunk-1.jsonl \
+  --checkpoint-out out/state.jsonl
+
+# Chunk 2 onwards: --from is the previous --to, and the checkpoint rolls in
+# place. The write is atomic, so reading and writing the same path is safe.
+graph-mapping-host run --segment segments/$S --cassette fixtures/cassettes/$S.json \
+  --from 12469621 --to 12569621 \
+  --record --bcf1-out out/chunk-2.bcf1 --out out/chunk-2.jsonl \
+  --checkpoint-in out/state.jsonl --checkpoint-out out/state.jsonl
+
+# ... until --to passes 12764398, the block after the first Flash.
+```
+
+Concatenating the chunks' `BCF1` files in order gives the byte stream a single
+unbroken run would have written, and concatenating their JSON Lines reports
+(dropping each chunk's header line after the first) gives its per-block reports.
+Each checkpoint records its predecessor's SHA-256, the chunk index and the running
+block total, so a chain is auditable end to end without re-running it.
+
+Keep every chunk's checkpoint rather than only the latest if the range is
+expensive: a chunk that fails can then be retried from its own start rather than
+from the beginning.
+
+#### Proving a chunked run equals an uninterrupted one
+
+`tests/mapping_host/checkpoint_resume.rs`, hermetic, on the committed cassette and
+the four hydrated block fixtures. It replays the window whole, replays it as two
+chunks through a checkpoint, and asserts that the concatenated **per-block
+reports**, every **BlockChanges frame digest**, the **`BCF1` stream bytes**, the
+**final store dump** and the **closing proof of indexing** are all identical. Not
+just the final state: a divergence in a block the final state happens to agree
+about would still fail.
+
+The split point is chosen so the test bites. Block 12,369,621 creates pools, so
+the second chunk starts with dynamic data sources that exist only because the
+checkpoint restored them, and block 12,370,523 fails deterministically under this
+manifest's fatal policy, so the second chunk also exercises the rollback path
+against a restored store. Deliberately breaking the restore confirms it: dropping
+the dynamic data sources, or dropping the `Poi$` rows, each makes the very next
+block differ.
+
+The same round trip is also driven through the binary's own flags, so the CLI
+wiring is covered and not only the library.
+
+Two mutations that *do not* fail are worth recording, because they bound what the
+proof shows. Restoring every VID as `-1`, and restoring an empty entity cache,
+both leave this window byte-identical — which is exactly what the reasoning above
+predicts for a schema with no immutable entity types, as none of the eight
+Uniswap V3 schemas has. Both are captured anyway, because this crate is
+family-neutral and the next family may not be so lucky.
+
+#### One hole checkpoints do not close
+
+`--from N` above the segment's first block is still accepted **without** a
+checkpoint, and starts from an empty store. That is right for the smoke run
+below, which only checks that a live block produces the committed frame, and
+wrong for anything that claims to be evidence. A run whose output is meant to
+stand as evidence starts at the segment's first block or continues a checkpoint
+that does; there is nothing in a report that says which, so it is on the operator.
 
 ### What CI runs, and what a real range costs
 
@@ -630,7 +783,9 @@ CI runs the **fixtures only**. Every test in this crate is hermetic:
 `tests/mapping_host/block_source.rs` drives a fake source and hand-built Firehose responses,
 `tests/mapping_host/live_cli.rs` asserts the CLI refusals with `FIREHOSE_ENDPOINT=127.0.0.1:1`
 so a refusal that stopped short of the network would fail rather than pass
-quietly, the two segment tests are unchanged, and
+quietly, the two segment tests are unchanged,
+`tests/mapping_host/checkpoint_resume.rs` replays the fixtures whole and in two
+chunks through a checkpoint and compares them, and
 `tests/mapping_host/parity_window_evidence.rs` checks the committed evidence for the live
 parity-window run without re-running it. No test opens a socket.
 
@@ -935,11 +1090,14 @@ contiguous replay that separates the two.
   their own cassettes, and the Base pair needs Base block fixtures.
 * **The rest of segment 1.** The parity window is 1,053 of its 1,081,260 blocks.
   At the ~4 blocks/second the run measured, the whole segment is roughly three
-  days of wall clock and a much larger cassette; it is not a single-run
-  proposition.
-* **`handleFlash`.** Still never invoked. No `Flash` event occurs in the parity
-  window, so exercising it needs a different range, chosen from where a `Flash`
-  actually is.
+  days of wall clock and a much larger cassette. It is no longer a *single-run*
+  proposition either way — `--checkpoint-out` and `--checkpoint-in` split it into
+  chunks — but it is still days of machine time and nobody has spent them.
+* **`handleFlash`.** Still never invoked, but no longer unreachable. The first
+  `Flash` on mainnet is block **12,764,397**, found by scanning every 1,000-block
+  range from the factory forward with no sampling. Reaching it means replaying
+  394,776 blocks from the graft-free root, which is what checkpoints are for; the
+  run has not been done.
 * **`STORE_DISPOSITION_COMMITTED` after a deterministic error.** Untested, and
   now for a better reason: the contiguous run produced no deterministic error at
   all, so nothing in it reaches the non-fatal disposition. Reaching it needs one

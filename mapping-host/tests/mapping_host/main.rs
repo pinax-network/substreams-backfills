@@ -17,6 +17,8 @@
 //!
 //! * `block_changes_qme66zn` — canonical `BlockChanges` frames and their goldens
 //! * `block_source` — ordering, gap and fork refusals over a fake block source
+//! * `checkpoint_resume` — `--checkpoint-out`/`--checkpoint-in`, and the proof
+//!   that a chunked replay equals an uninterrupted one
 //! * `live_cli` — the CLI's live-mode refusals, all of which stop before a socket
 //! * `parity_window_evidence` — the committed 1,053-block run summary
 //! * `segment_qme66zn` — the segment bundle, wave scheduling and handler groups
@@ -28,6 +30,7 @@
 
 mod block_changes_qme66zn;
 mod block_source;
+mod checkpoint_resume;
 mod live_cli;
 mod parity_window_evidence;
 mod segment_qme66zn;

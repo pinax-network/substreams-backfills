@@ -36,7 +36,7 @@
 //! * **`SubgraphTriggerProcessor`.** Lives in `graph-core`, which we do not
 //!   depend on; its twenty-line body is reproduced in [`SegmentHost::run_group`].
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::Path;
 use std::sync::Arc;
 
@@ -48,27 +48,34 @@ use graph::components::metrics::MetricsRegistry;
 use graph::components::store::write::EntityModification;
 use graph::components::store::{EntityLfuCache, ModificationsAndCache, SeqGenerator};
 use graph::components::subgraph::{
-    BlockState, HostMetrics, MappingError, PoICausalityRegion, ProofOfIndexingVersion,
-    SharedProofOfIndexing,
+    BlockState, HostMetrics, InstanceDSTemplate, MappingError, PoICausalityRegion,
+    ProofOfIndexingVersion, SharedProofOfIndexing,
 };
-use graph::data::subgraph::{DeploymentHash, SubgraphFeature};
+use graph::data::store::{Entity, Value};
+use graph::data::subgraph::{DataSourceContext, DeploymentHash, SubgraphFeature};
+use graph::data::value::Word;
 use graph::data_source::{DataSource, DataSourceTemplate, TriggerData};
 use graph::prelude::{
     o, slog, InstanceDSTemplateInfo, Logger, RuntimeHost as RuntimeHostTrait,
     RuntimeHostBuilder as RuntimeHostBuilderTrait, StopwatchMetrics,
 };
+use graph::schema::EntityKey;
 use graph_chain_ethereum::chain::BlockFinality;
 use graph_chain_ethereum::trigger::EthereumTrigger;
 use graph_chain_ethereum::Chain;
 use graph_runtime_wasm::RuntimeHostBuilder;
 
 use backfill_common::pb::pinax::graph::backfill::v1 as pb;
-use backfill_common::BlockChangesCompatibility;
+use backfill_common::{materialized_key, BlockChangesCompatibility};
 
 use crate::block;
-use crate::blockchanges::{self, BlockOpsBuilder, OpRecorder};
+use crate::blockchanges::{self, convert_entity, convert_key, BlockOpsBuilder, OpRecorder};
 use crate::bundle::SegmentBundle;
 use crate::calls::{Cassette, CassetteMode, CassetteRuntimeAdapter};
+use crate::checkpoint::{
+    CheckpointBoundary, CheckpointDataSource, CheckpointIdentity, CheckpointKey, CheckpointRow,
+    HostCheckpoint,
+};
 use crate::descriptor;
 use crate::poi;
 use crate::report::{
@@ -76,7 +83,7 @@ use crate::report::{
     PoiReport, RunReport, TriggerReport,
 };
 use crate::store::{MemoryStore, NoEnsLookup};
-use crate::store_state;
+use crate::store_state::{self, StoreEntityId, StorePoi, StoreValue};
 
 /// The graph-node revision every artifact in this crate is bound to.
 pub const GRAPH_NODE_REV: &str = "77823b5a7adc4eac4abf03202c8dd7cb00dea31d";
@@ -125,7 +132,15 @@ pub struct SegmentHost {
     recorder: Arc<OpRecorder>,
     compatibility: BlockChangesCompatibility,
     descriptor_sha256: String,
+    bundle_lock_sha256: String,
     bounds: SegmentBounds,
+    /// Every dynamic data source this host has instantiated, in creation order,
+    /// as the checkpoint records them. Duplicates that `create_dynamic_data_sources`
+    /// skipped are not here, because they are not hosts.
+    dynamic: Vec<CheckpointDataSource>,
+    /// Blocks replayed since this host was loaded or restored. A checkpoint may
+    /// only be restored into a host that has replayed none.
+    blocks_processed: usize,
 }
 
 /// The block range this segment's own manifest claims.
@@ -308,7 +323,10 @@ impl SegmentHost {
             recorder,
             compatibility,
             descriptor_sha256,
+            bundle_lock_sha256: bundle.lock_sha256().to_string(),
             bounds,
+            dynamic: Vec::new(),
+            blocks_processed: 0,
         };
 
         // Manifest data sources first, in manifest order. That order feeds host
@@ -343,6 +361,274 @@ impl SegmentHost {
     /// The block range this segment's manifest claims.
     pub fn bounds(&self) -> SegmentBounds {
         self.bounds
+    }
+
+    /// Blocks replayed since this host was loaded or restored.
+    pub fn blocks_processed(&self) -> usize {
+        self.blocks_processed
+    }
+
+    /// The dynamic data sources this host holds, in creation order.
+    pub fn dynamic_data_sources(&self) -> &[CheckpointDataSource] {
+        &self.dynamic
+    }
+
+    fn poi_version_name(&self) -> &'static str {
+        match self.poi_version {
+            ProofOfIndexingVersion::Fast => "fast",
+            ProofOfIndexingVersion::Legacy => "legacy",
+        }
+    }
+
+    fn error_policy_name(&self) -> &'static str {
+        if self.errors_are_fatal {
+            "fatal"
+        } else {
+            "non_fatal"
+        }
+    }
+
+    /// Everything a checkpoint has to agree on before it may be loaded.
+    ///
+    /// `cassette_sha256` is the caller's, because the cassette is a file this
+    /// host does not own the path to: a recording run rewrites it, so the digest
+    /// that belongs in a checkpoint is the one on disk at the moment the
+    /// checkpoint is written.
+    pub fn checkpoint_identity(&self, cassette_sha256: String) -> CheckpointIdentity {
+        CheckpointIdentity {
+            deployment: self.deployment.to_string(),
+            network: self.network.clone(),
+            spec_version: self.spec_version.clone(),
+            poi_version: self.poi_version_name().to_string(),
+            poi_causality_region: self.causality_region.clone(),
+            deterministic_error_policy: self.error_policy_name().to_string(),
+            graph_node_rev: GRAPH_NODE_REV.to_string(),
+            bundle_lock_sha256: self.bundle_lock_sha256.clone(),
+            descriptor_sha256: self.descriptor_sha256.clone(),
+            cassette_sha256,
+        }
+    }
+
+    /// Capture everything a faithful continuation needs; see [`crate::checkpoint`].
+    ///
+    /// The entity cache is checked against the store row by row on the way out.
+    /// The two are kept in agreement by `process_block`, and graph-node's own
+    /// `debug_assert!` in `EntityCache::get` asserts it on every read, so a
+    /// disagreement here means the invariant broke and the checkpoint would
+    /// record a state no run produced. That is a refusal, not a warning.
+    pub fn checkpoint(
+        &self,
+        cassette_sha256: String,
+        boundary: CheckpointBoundary,
+        poi: Option<StorePoi>,
+    ) -> Result<HostCheckpoint> {
+        let stored = self.store.snapshot();
+        let poi_type = self.store.poi_typename();
+
+        let mut cached: BTreeSet<EntityKey> = BTreeSet::new();
+        let mut cached_absent: Vec<CheckpointKey> = Vec::new();
+        for (key, value) in self.lfu_cache.iter() {
+            let named = key.entity_type.typename();
+            match (value.as_deref(), stored.get(key)) {
+                (Some(cached_row), Some(stored_row)) => {
+                    // `Entity`'s equality ignores the VID, which is what makes
+                    // this comparison the right one: a write that changed
+                    // nothing leaves the cache one VID ahead of the store.
+                    if cached_row != stored_row {
+                        bail!(
+                            "the entity cache and the store disagree about a `{named}` row; the \
+                             host cannot checkpoint a state it did not reach"
+                        );
+                    }
+                    cached.insert(key.clone());
+                }
+                (None, None) => cached_absent.push(checkpoint_key(key)),
+                (Some(_), None) => bail!(
+                    "the entity cache holds a `{named}` row the store does not; the host cannot \
+                     checkpoint a state it did not reach"
+                ),
+                (None, Some(_)) => bail!(
+                    "the entity cache records a `{named}` row as absent while the store holds it; \
+                     the host cannot checkpoint a state it did not reach"
+                ),
+            }
+        }
+
+        let mut rows: Vec<CheckpointRow> = Vec::with_capacity(stored.len());
+        for (key, entity) in &stored {
+            let identity = checkpoint_key(key);
+            let fields = convert_entity(entity)
+                .iter()
+                .map(|field| {
+                    let value = field
+                        .value
+                        .as_ref()
+                        .ok_or_else(|| anyhow!("field `{}` has no value", field.name))?;
+                    Ok((field.name.clone(), StoreValue::from_wire(value)?))
+                })
+                .collect::<Result<Vec<_>>>()?;
+            rows.push(CheckpointRow {
+                cached: cached.contains(key),
+                entity_type: identity.entity_type,
+                id: identity.id,
+                storage_causality_region: identity.storage_causality_region,
+                // Every row here came from an `EntityModification` whose data
+                // went through `EntityCache::set`, which sets the VID.
+                vid: entity.vid(),
+                fields,
+            });
+        }
+
+        Ok(HostCheckpoint::new(
+            self.checkpoint_identity(cassette_sha256),
+            boundary,
+            poi,
+            &poi_type,
+            self.dynamic.clone(),
+            rows,
+            cached_absent,
+        ))
+    }
+
+    /// Load a checkpoint into a freshly loaded host.
+    ///
+    /// Order matters and is the order `load` itself uses: the store first, then
+    /// the entity cache rehydrated *from* that store, then the dynamic data
+    /// sources replayed through the same `create_dynamic_data_sources` a live
+    /// wave uses, so the host set ends up in the same order with the same
+    /// duplicate handling.
+    pub fn restore_checkpoint(
+        &mut self,
+        checkpoint: &HostCheckpoint,
+        cassette_sha256: String,
+    ) -> Result<()> {
+        checkpoint
+            .header
+            .identity
+            .check_loadable_into(&self.checkpoint_identity(cassette_sha256))?;
+        if self.blocks_processed > 0 {
+            bail!(
+                "this host has already replayed {} blocks; a checkpoint may only be restored into \
+                 a host that has replayed none, because the restore replaces the store outright",
+                self.blocks_processed
+            );
+        }
+        if !self.dynamic.is_empty() || !self.store.is_empty() {
+            bail!("a checkpoint may only be restored into a freshly loaded host");
+        }
+
+        let schema = self.store.schema().clone();
+
+        let mut rows: BTreeMap<EntityKey, Entity> = BTreeMap::new();
+        let mut cached_keys: Vec<EntityKey> = Vec::new();
+        for row in &checkpoint.rows {
+            let key = blockchanges::key_from_wire(&schema, &row.key().to_wire())
+                .context("restoring a checkpoint row's key")?;
+            let mut entity = blockchanges::entity_from_wire(&schema, &row.wire_fields())
+                .with_context(|| format!("restoring a `{}` row", row.entity_type))?;
+            entity.set_vid(row.vid).map_err(|error| {
+                anyhow!("restoring a `{}` row's vid: {error:?}", row.entity_type)
+            })?;
+            if rows.insert(key.clone(), entity).is_some() {
+                bail!(
+                    "the checkpoint carries two `{}` rows with the same storage identity",
+                    row.entity_type
+                );
+            }
+            if row.cached {
+                cached_keys.push(key);
+            }
+        }
+        self.store.restore(rows);
+
+        // The cache is rehydrated from the store rather than from the file: the
+        // store is the authority, and an entry that disagreed with it would be
+        // a state no run produced. Only the key set comes from the checkpoint.
+        let mut lfu = EntityLfuCache::default();
+        for key in cached_keys {
+            let entity = self
+                .store
+                .lookup(&key)
+                .ok_or_else(|| anyhow!("a cached checkpoint row vanished from the store"))?;
+            lfu.insert(key, Some(Arc::new(entity)));
+        }
+        for identity in &checkpoint.cached_absent {
+            let key = blockchanges::key_from_wire(&schema, &identity.to_wire())
+                .context("restoring a cached absence")?;
+            if self.store.lookup(&key).is_some() {
+                bail!(
+                    "the checkpoint records a `{}` row as a cached absence but also carries it as \
+                     a live row",
+                    identity.entity_type
+                );
+            }
+            lfu.insert(key, None);
+        }
+        self.lfu_cache = lfu;
+
+        // One at a time, so a data source that turns out to be a duplicate of an
+        // earlier one is caught here rather than silently shortening the host
+        // set. A recorded data source was added when it was recorded, so
+        // replaying the list in order must add every one of them.
+        let recorded = checkpoint.data_sources.clone();
+        for data_source in &recorded {
+            let template = self
+                .templates
+                .iter()
+                .find(|template| template.manifest_idx() == data_source.manifest_idx)
+                .ok_or_else(|| {
+                    anyhow!(
+                        "the checkpoint names a data source from template `{}` (manifest index \
+                         {}), which this segment's manifest does not declare",
+                        data_source.template,
+                        data_source.manifest_idx
+                    )
+                })?
+                .clone();
+            let context = match &data_source.context {
+                Some(entries) => {
+                    let mut map: HashMap<Word, Value> = HashMap::new();
+                    for (name, value) in entries {
+                        map.insert(
+                            Word::from(name.as_str()),
+                            blockchanges::value_from_wire(&value.to_wire())
+                                .context("restoring a data source context")?,
+                        );
+                    }
+                    Some(DataSourceContext::from(map))
+                }
+                None => None,
+            };
+            let info = InstanceDSTemplateInfo {
+                template: InstanceDSTemplate::from(&template),
+                params: data_source.params.clone(),
+                context,
+                creation_block: data_source.creation_block,
+            };
+            let added = self.create_dynamic_data_sources(vec![info])?;
+            if added.len() != 1 {
+                bail!(
+                    "restoring the checkpoint's `{}` data source created at block {} added no \
+                     host: it is a duplicate of one already present, so the checkpoint's host set \
+                     is not one this host could have produced",
+                    data_source.template,
+                    data_source.creation_block
+                );
+            }
+        }
+
+        // The records the restore produced must be the records it was given.
+        // Anything else means the round trip through the template lost
+        // something, which would show up later as a different host set.
+        if self.dynamic != recorded {
+            bail!(
+                "restoring the checkpoint's {} dynamic data sources did not reproduce them; the \
+                 host set would differ from the run that wrote the checkpoint",
+                recorded.len()
+            );
+        }
+
+        Ok(())
     }
 
     /// Dump the final in-memory store in the consumer's generic-state encoding.
@@ -457,6 +743,16 @@ impl SegmentHost {
                 })?
                 .clone();
 
+            // Everything a checkpoint needs to re-instantiate this data source,
+            // taken before `from_template_info` consumes the info.
+            let record = CheckpointDataSource {
+                template: template.name().to_string(),
+                manifest_idx,
+                params: info.params.clone(),
+                context: info.context.as_ref().map(context_record).transpose()?,
+                creation_block: info.creation_block,
+            };
+
             let onchain = <graph_chain_ethereum::DataSource as graph::blockchain::DataSource<
                 Chain,
             >>::from_template_info(info, &template)
@@ -472,6 +768,7 @@ impl SegmentHost {
                 continue;
             }
             self.hosts.push(host.cheap_clone());
+            self.dynamic.push(record);
             added.push(host);
         }
         Ok(added)
@@ -641,6 +938,7 @@ impl SegmentHost {
             )
             .with_context(|| format!("building BlockChanges for block {}", block_ptr.number))?;
 
+        self.blocks_processed += 1;
         Ok(BlockOutcome { report, changes })
     }
 
@@ -823,6 +1121,38 @@ impl SegmentHost {
         }
 
         Ok(Some(group))
+    }
+}
+
+/// A `dataSource.context`, in the checkpoint's value encoding.
+///
+/// `DataSourceContext::sorted` is graph-node's own deterministic ordering for
+/// the map, which is what makes the record byte-stable.
+fn context_record(context: &DataSourceContext) -> Result<Vec<(String, StoreValue)>> {
+    context
+        .clone()
+        .sorted()
+        .into_iter()
+        .map(|(name, value)| {
+            Ok((
+                name.to_string(),
+                StoreValue::from_wire(&blockchanges::convert_value(&value))?,
+            ))
+        })
+        .collect()
+}
+
+/// The storage identity a checkpoint keys a row by.
+///
+/// Routed through `convert_key` and `backfill_common::materialized_key`, the
+/// same two functions a frame's keys go through, so a checkpoint row and a frame
+/// operation name an entity identically.
+fn checkpoint_key(key: &EntityKey) -> CheckpointKey {
+    let materialized = materialized_key(&convert_key(key));
+    CheckpointKey {
+        entity_type: materialized.entity_type,
+        id: StoreEntityId::from(&materialized.id),
+        storage_causality_region: materialized.storage_causality_region,
     }
 }
 

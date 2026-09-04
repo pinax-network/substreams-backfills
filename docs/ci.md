@@ -78,6 +78,41 @@ job counts as success for the workflow but a required job that never ran blocks
 the merge. Changing branch protection is an operator action outside this
 repository's pull requests.
 
+## Materializing the Uniswap V3 runtime trees
+
+The `v3-reference` job builds ten temporary trees under `$RUNNER_TEMP`: the
+configured chain-config runtime, the diagnostic writer runtime on top of it, and
+eight overlays on top of that. Each one used to be staged by
+`./scripts/materialize-uniswap-v3-<target>.sh`. Every one of those ten steps now
+runs
+
+```
+cargo +stable run --quiet --package xtask -- materialize-uniswap-v3 <target> "$RUNNER_TEMP/<dir>"
+```
+
+`+stable` is required because the pinned Rust 1.79 toolchain is the default by
+that point in the job and `xtask` needs a current compiler, the same reason
+`verify-diagnostic-package` already carries it. No workflow file invokes a
+`materialize-uniswap-v3-*.sh` script any more. Nothing else about the ten
+target steps changed: the host tests, the wasm32 builds, the `substreams pack`
+runs, the repeat-pack determinism `cmp`s, the shared-WASM `cmp`s, the rustfmt
+and Clippy checks, and every Python verifier invocation are the commands they
+were.
+
+Two checks the shell scripts performed internally are covered by steps the job
+already had, so they are not lost: each verifier's repository-only mode runs in
+`v3-evidence`, and `cargo xtask verify-import uniswap-v3` runs at the top of
+`v3-reference`. That step now also runs `./scripts/verify-uniswap-v3-import.sh`,
+the wrapper `scripts/run-uniswap-v3-mainnet-chain-config-parity.sh` calls, which
+would otherwise have lost its only continuous-integration coverage.
+
+The materialize scripts themselves stay on disk. Five Python verifiers pin their
+bytes, mode, or text, and six unittests under `scripts/tests/` still drive them
+through `bash`; those unittests run in `v3-evidence` under
+`python3 -m unittest discover`, so the scripts remain exercised even though no
+workflow step calls one. `crates/README.md` records the byte-identity
+measurement that justified the switch.
+
 ## Verifier driver
 
 `cargo xtask verify-all [--list] [--family core|targets|uniswap-v3|uniswap-v4] [--keep-going]`

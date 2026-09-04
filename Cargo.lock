@@ -1729,6 +1729,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "uniswap-v3-runtime"
+version = "0.1.0"
+dependencies = [
+ "hex",
+ "serde_json",
+ "sha2",
+ "tar",
+ "tempfile",
+]
+
+[[package]]
 name = "unsafe-libyaml"
 version = "0.2.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2051,6 +2062,7 @@ dependencies = [
  "sha2",
  "tar",
  "tempfile",
+ "uniswap-v3-runtime",
  "ureq",
 ]
 

@@ -23,5 +23,6 @@ flate2.workspace = true
 tar.workspace = true
 sha1.workspace = true
 chrono.workspace = true
+uniswap-v3-runtime = { path = "../crates/uniswap-v3-runtime" }
 
 [dev-dependencies]

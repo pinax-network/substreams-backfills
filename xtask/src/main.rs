@@ -33,6 +33,10 @@ const USAGE: &str = "usage: cargo xtask <evidence|verify-all|verify-targets|elig
   verify-v4-engine-reference [--root DIR]   verify the engine v0.5.0 reference capsule (offline)
   verify-v4-q8-reference [--root DIR]   verify the q8 declared-metadata capsule (offline)
   verify-diagnostic-package PATH   verify the evidence-only Uniswap V3 package structure (needs the substreams CLI)
+  materialize-uniswap-v3 <target> DIR [--root DIR]   stage a configured Uniswap V3 runtime tree
+                 targets: chain-config writer-runtime npm-source-block position-reducer flash-reducer
+                          transaction-reducer npm-handler-reducer npm-resolved-inputs npm-observation-plan
+                          npm-provider-executor
   verify-logical-oracle [--root DIR]   verify the retained Uniswap V3 logical-oracle snapshot (offline)
   verify-import <uniswap-v3|uniswap-v4> [--root DIR]   verify a frozen source import against its mirror, inventory, and contracts
   fixtures check [--root DIR]   verify hydrated Uniswap V3 block fixtures and module goldens (offline)
@@ -176,6 +180,18 @@ fn run() -> Result<(), String> {
             } else {
                 println!("verified mirrored Uniswap V3 history, exact imported tree and inventory, 75 files, one executable mode, and the 20-entity logical contract");
             }
+            Ok(())
+        }
+        (Some("materialize-uniswap-v3"), Some(target)) => {
+            let root = PathBuf::from(args.value("root").unwrap_or("."));
+            let Some(destination) = positional.next() else {
+                return Err("materialize-uniswap-v3 needs a destination directory".to_string());
+            };
+            let destination = PathBuf::from(destination);
+            uniswap_v3_runtime::materialize(&root, target, &destination)
+                .map_err(|e| format!("Uniswap V3 {target} materialization failed: {e}"))?;
+            let summary = uniswap_v3_runtime::summary(target).unwrap_or(target);
+            println!("materialized {summary} at {}", destination.display());
             Ok(())
         }
         (Some("verify-target"), Some(family)) => verify_target_command(family, &args),

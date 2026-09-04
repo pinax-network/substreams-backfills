@@ -1,0 +1,20 @@
+[package]
+name = "uniswap-v3-runtime"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+description = "Rust materializer for the configured Uniswap V3 runtime trees and their overlays"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+tar.workspace = true
+
+[dev-dependencies]
+sha2.workspace = true
+hex.workspace = true
+serde_json.workspace = true
+tempfile.workspace = true

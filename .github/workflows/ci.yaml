@@ -122,7 +122,11 @@ jobs:
           git fetch --no-tags origin
           refs/heads/upstream/uniswap-v3-qma8a81t-parity:refs/remotes/origin/upstream/uniswap-v3-qma8a81t-parity
       - name: Verify isolated history mirror, exact source import, and logical contract
-        run: cargo xtask verify-import uniswap-v3
+        # The wrapper is what `scripts/run-uniswap-v3-mainnet-chain-config-parity.sh`
+        # calls, so it keeps its own coverage now that no materialization runs it.
+        run: |
+          cargo xtask verify-import uniswap-v3
+          ./scripts/verify-uniswap-v3-import.sh
       - name: Verify versioned mainnet/Base ChainConfig contract
         run: |
           python3 scripts/build-uniswap-v3-chain-manifests.py --check
@@ -228,7 +232,9 @@ jobs:
           substreams pack -o "$RUNNER_TEMP/uniswap-v3-diagnostic.spkg" uniswap-v3/source/substreams.yaml
           cargo +stable run --quiet --package xtask -- verify-diagnostic-package "$RUNNER_TEMP/uniswap-v3-diagnostic.spkg"
       - name: Materialize configured runtime without changing the frozen import
-        run: ./scripts/materialize-uniswap-v3-chain-config.sh "$RUNNER_TEMP/uniswap-v3-configured"
+        run: >-
+          cargo +stable run --quiet --package xtask --
+          materialize-uniswap-v3 chain-config "$RUNNER_TEMP/uniswap-v3-configured"
       - name: Test configured runtime on the host target
         working-directory: ${{ runner.temp }}/uniswap-v3-configured
         run: cargo test --locked --target x86_64-unknown-linux-gnu
@@ -247,7 +253,9 @@ jobs:
             --base-spkg "$RUNNER_TEMP/uniswap-v3-base-configured-diagnostic.spkg" \
             --evidence-out "$RUNNER_TEMP/uniswap-v3-configured-diagnostic-evidence.json"
       - name: Materialize the isolated diagnostic writer runtime
-        run: ./scripts/materialize-uniswap-v3-writer-runtime.sh "$RUNNER_TEMP/uniswap-v3-writer-runtime"
+        run: >-
+          cargo +stable run --quiet --package xtask --
+          materialize-uniswap-v3 writer-runtime "$RUNNER_TEMP/uniswap-v3-writer-runtime"
       - name: Test the writer runtime and format-check its standalone Rust files
         working-directory: ${{ runner.temp }}/uniswap-v3-writer-runtime
         run: |
@@ -281,7 +289,9 @@ jobs:
             --mainnet-spkg "$RUNNER_TEMP/uniswap-v3-mainnet-writer-diagnostic.spkg" \
             --base-spkg "$RUNNER_TEMP/uniswap-v3-base-writer-diagnostic.spkg"
       - name: Materialize the provider-free NPM source-block package
-        run: ./scripts/materialize-uniswap-v3-npm-source-block.sh "$RUNNER_TEMP/uniswap-v3-npm-source-block"
+        run: >-
+          cargo +stable run --quiet --package xtask --
+          materialize-uniswap-v3 npm-source-block "$RUNNER_TEMP/uniswap-v3-npm-source-block"
       - name: Test, lint, and format-check the standalone NPM source runtime
         working-directory: ${{ runner.temp }}/uniswap-v3-npm-source-block/npm-source-block-runtime
         run: |
@@ -336,7 +346,9 @@ jobs:
           test ! -e "$source_root/target"
           test ! -e "$source_root/npm-source-block-runtime/target"
       - name: Materialize the host-only Position reducer after the writer
-        run: ./scripts/materialize-uniswap-v3-position-reducer.sh "$RUNNER_TEMP/uniswap-v3-position-reducer"
+        run: >-
+          cargo +stable run --quiet --package xtask --
+          materialize-uniswap-v3 position-reducer "$RUNNER_TEMP/uniswap-v3-position-reducer"
       - name: Test and format-check the Position reducer
         working-directory: ${{ runner.temp }}/uniswap-v3-position-reducer
         run: |
@@ -371,7 +383,9 @@ jobs:
             --mainnet-spkg "$RUNNER_TEMP/uniswap-v3-mainnet-position-reducer-diagnostic.spkg" \
             --base-spkg "$RUNNER_TEMP/uniswap-v3-base-position-reducer-diagnostic.spkg"
       - name: Materialize the host-only Pool Flash reducer after the writer
-        run: ./scripts/materialize-uniswap-v3-flash-reducer.sh "$RUNNER_TEMP/uniswap-v3-flash-reducer"
+        run: >-
+          cargo +stable run --quiet --package xtask --
+          materialize-uniswap-v3 flash-reducer "$RUNNER_TEMP/uniswap-v3-flash-reducer"
       - name: Test and format-check the Pool Flash reducer
         working-directory: ${{ runner.temp }}/uniswap-v3-flash-reducer
         run: |
@@ -414,7 +428,9 @@ jobs:
           test ! -e "$RUNNER_TEMP/uniswap-v3-position-reducer/target"
           test ! -e "$RUNNER_TEMP/uniswap-v3-flash-reducer/target"
       - name: Materialize the host-only NPM Transaction reducer
-        run: ./scripts/materialize-uniswap-v3-transaction-reducer.sh "$RUNNER_TEMP/uniswap-v3-transaction-reducer"
+        run: >-
+          cargo +stable run --quiet --package xtask --
+          materialize-uniswap-v3 transaction-reducer "$RUNNER_TEMP/uniswap-v3-transaction-reducer"
       - name: Test and format-check the host-only NPM Transaction reducer
         working-directory: ${{ runner.temp }}/uniswap-v3-transaction-reducer
         run: |
@@ -448,7 +464,9 @@ jobs:
           cargo +1.79.0 clean --manifest-path "$RUNNER_TEMP/uniswap-v3-transaction-reducer/Cargo.toml"
           test ! -e "$RUNNER_TEMP/uniswap-v3-transaction-reducer/target"
       - name: Materialize the host-only joint NPM reducer
-        run: ./scripts/materialize-uniswap-v3-npm-handler-reducer.sh "$RUNNER_TEMP/uniswap-v3-npm-handler-reducer"
+        run: >-
+          cargo +stable run --quiet --package xtask --
+          materialize-uniswap-v3 npm-handler-reducer "$RUNNER_TEMP/uniswap-v3-npm-handler-reducer"
       - name: Test and format-check the host-only joint NPM reducer
         working-directory: ${{ runner.temp }}/uniswap-v3-npm-handler-reducer
         run: |
@@ -484,7 +502,9 @@ jobs:
           cargo +1.79.0 clean --manifest-path "$RUNNER_TEMP/uniswap-v3-npm-handler-reducer/Cargo.toml"
           test ! -e "$RUNNER_TEMP/uniswap-v3-npm-handler-reducer/target"
       - name: Materialize the host-only resolved NPM input adapter
-        run: ./scripts/materialize-uniswap-v3-npm-resolved-inputs.sh "$RUNNER_TEMP/uniswap-v3-npm-resolved-inputs"
+        run: >-
+          cargo +stable run --quiet --package xtask --
+          materialize-uniswap-v3 npm-resolved-inputs "$RUNNER_TEMP/uniswap-v3-npm-resolved-inputs"
       - name: Test and format-check the combined source, adapter, and joint reducer
         working-directory: ${{ runner.temp }}/uniswap-v3-npm-resolved-inputs
         run: |
@@ -522,7 +542,9 @@ jobs:
           cargo +1.79.0 clean --manifest-path "$RUNNER_TEMP/uniswap-v3-npm-resolved-inputs/Cargo.toml"
           test ! -e "$RUNNER_TEMP/uniswap-v3-npm-resolved-inputs/target"
       - name: Materialize the host-only NPM observation plan
-        run: ./scripts/materialize-uniswap-v3-npm-observation-plan.sh "$RUNNER_TEMP/uniswap-v3-npm-observation-plan"
+        run: >-
+          cargo +stable run --quiet --package xtask --
+          materialize-uniswap-v3 npm-observation-plan "$RUNNER_TEMP/uniswap-v3-npm-observation-plan"
       - name: Test and format-check staged planning, preflight, and joint reduction
         working-directory: ${{ runner.temp }}/uniswap-v3-npm-observation-plan
         run: |
@@ -560,7 +582,9 @@ jobs:
           cargo +1.79.0 clean --manifest-path "$RUNNER_TEMP/uniswap-v3-npm-observation-plan/Cargo.toml"
           test ! -e "$RUNNER_TEMP/uniswap-v3-npm-observation-plan/target"
       - name: Materialize the hermetic NPM provider executor
-        run: ./scripts/materialize-uniswap-v3-npm-provider-executor.sh "$RUNNER_TEMP/uniswap-v3-npm-provider-executor"
+        run: >-
+          cargo +stable run --quiet --package xtask --
+          materialize-uniswap-v3 npm-provider-executor "$RUNNER_TEMP/uniswap-v3-npm-provider-executor"
       - name: Test and format-check phased provider execution
         working-directory: ${{ runner.temp }}/uniswap-v3-npm-provider-executor
         run: |

@@ -7,8 +7,9 @@
 //! Nothing in it is Uniswap-specific; Uniswap V3 is simply the first family whose
 //! bundles live under `segments/`.
 //!
-//! Phase 1 scope is hermetic execution plus a deterministic JSON report. Emitting
-//! `BlockChanges` v1 frames is phase 2; see `README.md`.
+//! Blocks reach it through [`source::BlockSource`]: either the committed `.pb`
+//! fixtures, or a live `sf.firehose.v2.Stream/Blocks` range. CI only ever uses
+//! the fixtures; see `README.md`.
 
 pub mod block;
 pub mod blockchanges;
@@ -16,9 +17,11 @@ pub mod bundle;
 pub mod calls;
 pub mod descriptor;
 pub mod env_pin;
+pub mod live;
 pub mod poi;
 pub mod report;
 pub mod runner;
+pub mod source;
 pub mod store;
 
 pub use blockchanges::{bcf1_frame, BlockOpsBuilder, OpRecorder, RecordedOp};
@@ -26,4 +29,7 @@ pub use bundle::{BundleFile, BundleLock, SegmentBundle};
 pub use calls::{Cassette, CassetteEntry, CassetteMode, CassetteRuntimeAdapter};
 pub use report::{BlockReport, RunReport};
 pub use runner::{SegmentHost, SegmentHostConfig};
+pub use source::{
+    BlockSource, CheckedSource, FirehoseSource, FirehoseTarget, FixtureSource, Ordering,
+};
 pub use store::MemoryStore;

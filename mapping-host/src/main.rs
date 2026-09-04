@@ -1,12 +1,26 @@
 //! `graph-mapping-host` — replay a deployed subgraph's mapping WASM over
-//! Firehose block fixtures and write a deterministic report.
+//! Firehose blocks and write a deterministic report.
+//!
+//! Blocks come from one of two places. `--blocks <pb>...` replays the committed
+//! fixtures, which is what CI runs and what the goldens pin. `--from N --to M`
+//! streams the half-open range live from `sf.firehose.v2.Stream/Blocks`, which
+//! is the only way to exercise handlers whose data source was created in a block
+//! the four sampled fixtures skip.
 
 use std::path::PathBuf;
+use std::time::Duration;
 
 use anyhow::{bail, Context, Result};
 use clap::{Parser, Subcommand};
+use graph::blockchain::Block as _;
+use graph_mapping_host::live::{Bcf1Writer, FrameWriter, Progress, ReportWriter};
+use graph_mapping_host::report::RunHeader;
 use graph_mapping_host::runner::{SegmentHost, SegmentHostConfig};
-use graph_mapping_host::{block, blockchanges, bundle, descriptor};
+use graph_mapping_host::source::{
+    token_from_env, BlockSource, CheckedSource, FirehoseSource, FirehoseTarget, FixtureSource,
+    Ordering,
+};
+use graph_mapping_host::{blockchanges, bundle, descriptor};
 
 #[derive(Parser)]
 #[command(
@@ -50,28 +64,45 @@ struct RunArgs {
     segment: PathBuf,
     /// Firehose `sf.ethereum.type.v2.Block` files, one block each. They are
     /// replayed in ascending block order regardless of the order given.
-    #[arg(long, num_args = 1.., required = true)]
+    #[arg(long, num_args = 1.., conflicts_with_all = ["from", "to"])]
     blocks: Vec<PathBuf>,
     /// Replay only these block numbers, out of everything `--blocks` holds.
-    #[arg(long, num_args = 1..)]
+    #[arg(long, num_args = 1.., requires = "blocks")]
     only: Vec<i32>,
+    /// First block of a live Firehose range, inclusive. Needs `--to`, and
+    /// `$FIREHOSE_ENDPOINT` naming a `host:port`.
+    #[arg(long, requires = "to")]
+    from: Option<i32>,
+    /// One past the last block of a live Firehose range.
+    #[arg(long, requires = "from")]
+    to: Option<i32>,
     /// The `eth_call` cassette.
     #[arg(long)]
     cassette: PathBuf,
     /// Record cassette misses against `ETHEREUM_RPC_URL` instead of failing.
-    #[arg(long)]
+    #[arg(long = "record", alias = "record-calls")]
     record: bool,
-    /// Where to write the report. Defaults to stdout.
+    /// Where to write the report. Defaults to stdout. A fixture run writes one
+    /// pretty-printed JSON document; a live run writes JSON Lines.
     #[arg(long)]
     out: Option<PathBuf>,
     /// Directory to write one canonical `<number>.pb` BlockChanges frame per
-    /// block into, plus `index.json` with each frame's SHA-256.
+    /// block into, plus an index pinning each frame's SHA-256 (`index.json` for
+    /// a fixture run, `index.jsonl` for a live one).
     #[arg(long)]
     block_changes_out: Option<PathBuf>,
     /// Additionally write every frame as one `BCF1` clock-v1 stream, which the
     /// engine's `--input-format block-changes-v1-framed` reads directly.
     #[arg(long)]
     bcf1_out: Option<PathBuf>,
+    /// Seconds between live progress lines on stderr; `0` silences them.
+    #[arg(long, default_value_t = 10)]
+    progress_secs: u64,
+    /// Continue a live range from the last fully written block.
+    ///
+    /// This is refused, with an explanation; see `README.md`.
+    #[arg(long, requires = "from")]
+    resume: bool,
 }
 
 #[derive(clap::Args)]
@@ -115,7 +146,49 @@ fn main() -> Result<()> {
     }
 }
 
+/// Why `--resume` cannot be honoured. Written once here so the CLI refusal and
+/// `README.md` say exactly the same thing.
+const RESUME_REFUSAL: &str = "\
+--resume is refused, deliberately, because this host cannot rebuild a partial \
+run's state faithfully. Three things carry across a block boundary and none of \
+them survives the process:\n\
+  * the in-memory store. Nothing is persisted between blocks; there is no \
+    snapshot format, and the written BlockChanges frames are a per-save \
+    operation stream, not a store image.\n\
+  * the Legacy PoI chain. Each block's causality-region digest mixes in the \
+    previous block's, and it lives in a `Poi$` entity that no mapping handler \
+    writes, so the recorder never sees it and no frame carries it.\n\
+  * the host set. Dynamic data sources accumulate across blocks; only a replay \
+    from the segment's first block puts the same hosts in the same order.\n\
+Resuming from partial state would silently produce a different PoI and a \
+different store, which is the one failure this crate exists to prevent. Re-run \
+the whole range from --from instead.";
+
 async fn run(args: RunArgs) -> Result<()> {
+    let live_range = match (args.from, args.to) {
+        (Some(from), Some(to)) => Some((from, to)),
+        (None, None) => None,
+        // clap's `requires` already rules this out; keep the arm total.
+        _ => bail!("--from and --to must be given together"),
+    };
+    if live_range.is_none() && args.blocks.is_empty() {
+        bail!(
+            "nothing to replay: pass either --blocks <pb>... for the committed fixtures, or \
+             --from <N> --to <N> for a live Firehose range"
+        );
+    }
+    if args.resume {
+        bail!("{RESUME_REFUSAL}");
+    }
+
+    // The endpoint and the token are validated before anything expensive
+    // happens, so a bad endpoint fails in milliseconds rather than after a
+    // bundle load. Neither is ever echoed.
+    let firehose = match live_range {
+        Some(_) => Some((FirehoseTarget::from_env()?, token_from_env()?)),
+        None => None,
+    };
+
     let mut host = SegmentHost::load(SegmentHostConfig {
         bundle_dir: &args.segment,
         cassette_path: &args.cassette,
@@ -123,115 +196,104 @@ async fn run(args: RunArgs) -> Result<()> {
     })
     .await?;
 
-    let mut report = host.new_report();
-
     // Replay in ascending order. Out of order would make both the store and the
-    // PoI chain meaningless.
-    use graph::blockchain::Block as _;
-    let mut blocks: Vec<(i32, PathBuf, _)> = Vec::new();
-    for path in &args.blocks {
-        let b = block::load_block(path)?;
-        blocks.push((b.number(), path.clone(), b));
-    }
-    if !args.only.is_empty() {
-        blocks.retain(|(number, _, _)| args.only.contains(number));
-        for wanted in &args.only {
-            if !blocks.iter().any(|(number, _, _)| number == wanted) {
-                bail!("block {wanted} was requested with --only but is not in --blocks");
-            }
+    // PoI chain meaningless, so either source is wrapped in a `CheckedSource`.
+    let mut source: Box<dyn BlockSource> = match live_range {
+        Some((from, to)) => {
+            let (target, token) = firehose.expect("a live range always resolves an endpoint");
+            // The range is checked against the segment *before* the stream is
+            // opened, so an out-of-bounds request costs no network at all.
+            host.bounds().check_range(from, to)?;
+            let live = FirehoseSource::connect(&target, token, from, to).await?;
+            Box::new(CheckedSource::new(
+                live,
+                Ordering::Contiguous {
+                    start: from,
+                    stop: to,
+                },
+            ))
         }
-    }
-    blocks.sort_by_key(|(number, _, _)| *number);
-    for pair in blocks.windows(2) {
-        if pair[0].0 == pair[1].0 {
-            bail!("block {} appears in more than one fixture", pair[0].0);
-        }
-    }
+        None => Box::new(CheckedSource::new(
+            FixtureSource::load(&args.blocks, &args.only)?,
+            // The four committed fixtures are four sampled points, not a range,
+            // so only strict ascent is enforced here.
+            Ordering::Sampled,
+        )),
+    };
 
-    let mut frames: Vec<(u64, Vec<u8>, Vec<u8>)> = Vec::new();
-    for (number, path, b) in blocks {
+    let base_report = host.new_report();
+    let mut writer = match live_range {
+        Some((from, to)) => ReportWriter::lines(
+            &RunHeader::new(&base_report, source.describe(), Some((from, to))),
+            args.out.clone(),
+        )?,
+        None => ReportWriter::whole(base_report, args.out.clone()),
+    };
+
+    let mut frames = match (&args.block_changes_out, live_range) {
+        (Some(dir), Some(_)) => Some(FrameWriter::streaming(dir, host.descriptor_sha256())?),
+        (Some(dir), None) => Some(FrameWriter::buffered(dir)?),
+        (None, _) => None,
+    };
+    let mut bcf1 = match &args.bcf1_out {
+        Some(path) => Some(Bcf1Writer::create(path, live_range.is_some())?),
+        None => None,
+    };
+    let mut progress =
+        live_range.map(|range| Progress::new(range, Duration::from_secs(args.progress_secs)));
+
+    while let Some(block) = source.next_block().await? {
+        let number = block.number();
         let outcome = host
-            .process_block(b)
+            .process_block(block)
             .await
-            .with_context(|| format!("replaying block {number} from {}", path.display()))?;
+            .with_context(|| format!("replaying block {number}"))?;
         // Validate and round-trip every frame, whether or not it is written, so
         // a run cannot report success on a frame the engine would refuse.
         let bytes = blockchanges::seal(&outcome.changes, host.compatibility())
             .with_context(|| format!("sealing the BlockChanges frame for block {number}"))?;
         let mut block_report = outcome.report;
         block_report.block_changes = Some(blockchanges::summarize(&outcome.changes, &bytes));
-        frames.push((
-            outcome.changes.block_number,
-            outcome.changes.block_hash.clone(),
-            bytes,
-        ));
-        report.blocks.push(block_report);
+
+        let block_number = outcome.changes.block_number;
+        let block_hash = outcome.changes.block_hash.as_slice();
+        if let Some(frames) = frames.as_mut() {
+            frames.push(block_number, block_hash, &bytes)?;
+        }
+        if let Some(bcf1) = bcf1.as_mut() {
+            bcf1.push(block_number, block_hash, &bytes)?;
+        }
+        if let Some(progress) = progress.as_mut() {
+            progress.record(number, block_report.handler_groups.len());
+            // A long recording run should not lose its rows to a crash at block
+            // 900,000. The cassette is a sorted `BTreeMap`, so each rewrite is
+            // the same bytes plus the new rows.
+            if host.cassette().is_dirty() {
+                host.cassette().save(&args.cassette)?;
+            }
+        }
+        writer.push(block_report)?;
     }
 
-    if let Some(dir) = &args.block_changes_out {
-        write_frames(dir, &frames, host.descriptor_sha256())?;
+    if let Some(frames) = frames {
+        frames.finish(host.descriptor_sha256())?;
     }
-    if let Some(path) = &args.bcf1_out {
-        write_bcf1(path, &frames)?;
+    if let Some(bcf1) = bcf1 {
+        bcf1.finish()?;
     }
-
     if host.cassette().is_dirty() {
         host.cassette().save(&args.cassette)?;
     }
-    report.cassette_entries = host.cassette().len();
 
-    let json = report.to_json()?;
-    match args.out {
-        Some(path) => {
-            if let Some(parent) = path.parent() {
-                std::fs::create_dir_all(parent)?;
-            }
-            std::fs::write(&path, json).with_context(|| format!("writing {}", path.display()))?;
-        }
-        None => print!("{json}"),
+    let blocks = writer.blocks();
+    writer.finish(host.cassette().len())?;
+    if let Some(progress) = progress {
+        progress.finish();
+        eprintln!(
+            "{blocks} blocks replayed; {} cassette rows",
+            host.cassette().len()
+        );
     }
-    Ok(())
-}
-
-/// One canonical frame per block, plus an index that pins each by SHA-256 and
-/// records which descriptor they were sealed against.
-fn write_frames(dir: &PathBuf, frames: &[(u64, Vec<u8>, Vec<u8>)], descriptor: &str) -> Result<()> {
-    std::fs::create_dir_all(dir).with_context(|| format!("creating {}", dir.display()))?;
-    let mut entries = Vec::new();
-    for (number, hash, bytes) in frames {
-        let name = format!("{number}.pb");
-        std::fs::write(dir.join(&name), bytes)
-            .with_context(|| format!("writing {}", dir.join(&name).display()))?;
-        entries.push(serde_json::json!({
-            "block_number": number,
-            "block_hash": format!("0x{}", hex::encode(hash)),
-            "bytes": bytes.len(),
-            "file": name,
-            "sha256": bundle::sha256_hex(bytes),
-        }));
-    }
-    let index = serde_json::json!({
-        "contract": "pinax.graph.backfill.block-changes/v1",
-        "descriptor_sha256": descriptor,
-        "frames": entries,
-        "schema": "pinax.substreams-backfills.mapping-host.block-changes-index/v1",
-    });
-    let mut json = serde_json::to_string_pretty(&index)?;
-    json.push('\n');
-    std::fs::write(dir.join("index.json"), json)?;
-    Ok(())
-}
-
-/// The `BCF1` clock-v1 stream the engine consumes on stdin.
-fn write_bcf1(path: &PathBuf, frames: &[(u64, Vec<u8>, Vec<u8>)]) -> Result<()> {
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)?;
-    }
-    let mut stream = Vec::new();
-    for (number, hash, bytes) in frames {
-        stream.extend_from_slice(&blockchanges::bcf1_frame(*number, hash, bytes)?);
-    }
-    std::fs::write(path, stream).with_context(|| format!("writing {}", path.display()))?;
     Ok(())
 }
 

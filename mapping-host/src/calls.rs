@@ -178,7 +178,13 @@ impl Cassette {
         *self.dirty.read().expect("cassette lock poisoned")
     }
 
-    /// Write the cassette back, sorted by key so the file is byte-stable.
+    /// Write the cassette back, sorted by key so the file is byte-stable, and
+    /// atomically so a run that dies mid-write cannot leave a truncated one.
+    ///
+    /// The entries live in a `BTreeMap` keyed by `(block hash, address,
+    /// calldata)`, so appending rows during a long live run rewrites the same
+    /// bytes in the same order every time: a recording is a pure addition to the
+    /// file, never a reshuffle.
     pub fn save(&self, path: &std::path::Path) -> Result<()> {
         let entries = self.entries.read().expect("cassette lock poisoned");
         let file = CassetteFile {
@@ -190,8 +196,17 @@ impl Cassette {
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent)?;
         }
-        std::fs::write(path, json)
-            .with_context(|| format!("writing cassette {}", path.display()))?;
+        let temp = path.with_extension(format!("tmp{}", std::process::id()));
+        std::fs::write(&temp, json)
+            .with_context(|| format!("writing cassette {}", temp.display()))?;
+        std::fs::rename(&temp, path).with_context(|| {
+            format!(
+                "renaming {} over cassette {}",
+                temp.display(),
+                path.display()
+            )
+        })?;
+        *self.dirty.write().expect("cassette lock poisoned") = false;
         Ok(())
     }
 

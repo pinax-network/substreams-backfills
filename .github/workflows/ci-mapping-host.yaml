@@ -70,6 +70,9 @@ jobs:
         run: cargo clippy --all-targets --locked -- -D warnings
       - name: Replay the deployed mappings and seal BlockChanges frames
         # Hermetic: no ETHEREUM_RPC_URL, so a cassette miss fails the job. No
-        # UPDATE_GOLDENS either, so a golden rewrite cannot pass as a check.
+        # UPDATE_GOLDENS either, so a golden rewrite cannot pass as a check. No
+        # FIREHOSE_ENDPOINT and no token, so the live block source is never
+        # reachable; the tests that cover it use a fake source, hand-built
+        # Firehose responses, and CLI refusals that stop before any socket.
         working-directory: mapping-host
         run: cargo test --locked

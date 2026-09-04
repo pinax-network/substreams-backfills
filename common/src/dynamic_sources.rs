@@ -16,8 +16,8 @@ pub struct DataSource {
     pub causality_region: i32,
     /// Lowercase hex without a prefix; onchain Ethereum address bytes.
     pub param: String,
-    /// Exact Graph Node `DataSourceContext` serde representation, not a
-    /// GraphQL/entity-value projection.
+    /// Reserved exact Graph Node serde representation. Bounded v1 requires
+    /// NULL: non-null context needs a separately versioned value validator.
     pub context: Option<serde_json::Value>,
     pub done_at: Option<i32>,
 }
@@ -94,10 +94,10 @@ impl Sidecar {
                     || source.causality_region != 0
                     || source.done_at.is_some()
                     || !digest(&source.param, 20)
-                    || source.context.as_ref().is_some_and(|v| !v.is_object())
+                    || source.context.is_some()
                 {
                     return Err(
-                        "data-source sidecar requires committed onchain Ethereum creations".into(),
+                        "data-source sidecar requires committed onchain Ethereum creations with NULL context".into(),
                     );
                 }
                 let identity = (
@@ -171,7 +171,7 @@ mod tests {
                     manifest_idx: 2,
                     causality_region: 0,
                     param: "ab".repeat(20),
-                    context: Some(serde_json::json!({"label":{"type":"String","data":"a\tb"}})),
+                    context: None,
                     done_at: None,
                 }],
             }],
@@ -208,6 +208,11 @@ mod tests {
             |s| s.blocks[0].sources[0].done_at = Some(10),
             |s| s.blocks[0].sources[0].param = "AB".repeat(20),
             |s| s.blocks[0].sources[0].context = Some(serde_json::json!([])),
+            |s| s.blocks[0].sources[0].context = Some(serde_json::json!({"x":123})),
+            |s| {
+                s.blocks[0].sources[0].context =
+                    Some(serde_json::json!({"x":{"type":"String","data":"valid-but-unsupported"}}))
+            },
         ];
         for change in changes {
             let mut s = fixture();

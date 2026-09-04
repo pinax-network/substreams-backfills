@@ -20,18 +20,22 @@
 //! * `checkpoint_resume` — `--checkpoint-out`/`--checkpoint-in`, and the proof
 //!   that a chunked replay equals an uninterrupted one
 //! * `live_cli` — the CLI's live-mode refusals, all of which stop before a socket
+//! * `long_run` — `--checkpoint-every`, `--continue-outputs` and the
+//!   reconnecting source: what a replay too long for one process or one
+//!   connection recovers from, and what it refuses
 //! * `parity_window_evidence` — the committed 1,053-block run summary
 //! * `segment_qme66zn` — the segment bundle, wave scheduling and handler groups
 //! * `store_state_qme66zn` — `--store-out`, the final store a consumer is
 //!   compared against
 //!
-//! Adding a seventh file here costs nothing; adding a seventh file to `tests/`
+//! Adding another file here costs nothing; adding another file to `tests/`
 //! costs another full link, so put new suites in `tests/mapping_host/`.
 
 mod block_changes_qme66zn;
 mod block_source;
 mod checkpoint_resume;
 mod live_cli;
+mod long_run;
 mod parity_window_evidence;
 mod segment_qme66zn;
 mod store_state_qme66zn;

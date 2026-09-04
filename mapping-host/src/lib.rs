@@ -20,7 +20,9 @@ pub mod descriptor;
 pub mod env_pin;
 pub mod evidence;
 pub mod live;
+pub mod outputs;
 pub mod poi;
+pub mod replay;
 pub mod report;
 pub mod runner;
 pub mod source;
@@ -32,10 +34,13 @@ pub use bundle::{BundleFile, BundleLock, SegmentBundle};
 pub use calls::{Cassette, CassetteEntry, CassetteMode, CassetteRuntimeAdapter};
 pub use checkpoint::{HostCheckpoint, CHECKPOINT_SCHEMA};
 pub use evidence::{RunEvidence, EVIDENCE_SCHEMA};
+pub use outputs::ResumePolicy;
+pub use replay::{replay_range, CheckpointPolicy, ReplayOutputs, ReplayResult};
 pub use report::{BlockReport, RunReport};
 pub use runner::{SegmentHost, SegmentHostConfig};
 pub use source::{
-    BlockSource, CheckedSource, FirehoseSource, FirehoseTarget, FixtureSource, Ordering,
+    BlockSource, CheckedSource, FirehoseConnector, FirehoseSource, FirehoseTarget, FixtureSource,
+    Ordering, ReconnectingSource, RetryPolicy, StreamConnector, TransportFailure,
 };
 pub use store::MemoryStore;
 pub use store_state::{StoreEntity, StoreState, StoreValue, STORE_STATE_SCHEMA};

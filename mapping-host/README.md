@@ -591,22 +591,37 @@ long recording run also saves on each progress tick rather than only at the end.
 
 A contiguous range cannot be held in memory, so every writer flushes per block.
 
-| Artifact | Fixture run | Live run |
+| Artifact | Fixture run | Live run, or any run with `--checkpoint-every` |
 |---|---|---|
 | `--out` | one pretty-printed `RunReport`, exactly as before | JSON Lines: one `report-stream/v1` header line, then one `BlockReport` per line |
 | `--block-changes-out` | `<number>.pb` per block, `index.json` at the end | `<number>.pb` per block, `index.jsonl` appended per frame |
 | `--bcf1-out` | one `BCF1` stream | the same bytes, flushed per frame |
 | `--store-out` | the final store, written once at the end | the same file, written once at the end |
-| `--checkpoint-out` | the host checkpoint, written once at the end | the same file, written once at the end |
+| `--checkpoint-out` | the host checkpoint, written once at the end | the same file, plus one every `--checkpoint-every` blocks |
 
 The fixture report keeps its single-document form deliberately: it is what
 `fixtures/reports/<cid>.json` pins, and a golden that is one parseable document
 is worth more than uniformity between two modes with very different sizes. The
 frames and the `BCF1` stream are byte-identical either way.
 
-`--progress-secs` (default 10, `0` to silence) prints block number, blocks/second
-and cumulative handler groups to **stderr**, so it never contaminates a report
-streamed to stdout. Progress is constructed only on the live path, so the
+`--checkpoint-every` is the one thing that moves a *fixture* run into the
+streamed column, and for an invariant rather than a convenience: a mid-run
+checkpoint may never describe a block that no output file records, and a
+whole-document report records nothing until the run ends. See
+[Surviving twenty hours](#surviving-twenty-hours-periodic-checkpoints-and-reconnection).
+
+`--progress-secs` (default 10, `0` to silence) prints block number,
+blocks/second, cumulative handler groups, **the last checkpointed block** and,
+once there has been one, the reconnection count, to **stderr**, so it never
+contaminates a report streamed to stdout:
+
+```
+block 12376103  6317/394776 blocks  5.3 blocks/s  18422 handler groups  checkpoint 12376000  2 reconnects  1193s
+```
+
+The checkpoint field is the number an operator actually needs: it is where a
+`^C`, an OOM kill or a dead stream would resume from. `-` means there is no
+recovery point yet. Progress is constructed only on the live path, so the
 hermetic tests emit nothing.
 
 ### Checkpoints: `--checkpoint-out` and `--checkpoint-in`
@@ -615,6 +630,10 @@ A long replay does not have to be one process any more. `--checkpoint-out PATH`
 writes everything a faithful continuation needs after the last block of a run,
 and `--checkpoint-in PATH` restores it into a fresh host. `--resume`, which
 always failed, is gone; passing it now prints a pointer at these two.
+
+A chunk that does not reach its end is covered separately, by
+`--checkpoint-every` and by a stream that reconnects itself: see
+[Surviving twenty hours](#surviving-twenty-hours-periodic-checkpoints-and-reconnection).
 
 #### The case that forced it
 
@@ -738,7 +757,8 @@ block total, so a chain is auditable end to end without re-running it.
 
 Keep every chunk's checkpoint rather than only the latest if the range is
 expensive: a chunk that fails can then be retried from its own start rather than
-from the beginning.
+from the beginning. Better still, add `--checkpoint-every` so a chunk that fails
+is retried from within itself; the next section is about that.
 
 #### Proving a chunked run equals an uninterrupted one
 
@@ -777,6 +797,199 @@ wrong for anything that claims to be evidence. A run whose output is meant to
 stand as evidence starts at the segment's first block or continues a checkpoint
 that does; there is nothing in a report that says which, so it is on the operator.
 
+## Surviving twenty hours: periodic checkpoints and reconnection
+
+Chunking above assumes each chunk finishes. Measured against a production
+endpoint, they do not.
+
+| Measurement | Value |
+|---|---|
+| blocks replayed before the stream died | 6,317 |
+| wall clock | 19m53s |
+| rate | 5.3 blocks/s |
+| how it died | `error reading a body from connection: stream error received: unspecific protocol error detected` |
+| blocks from the graft-free root to the first `Flash` (12,764,397) | 394,776 |
+| that range at the measured rate | ≈ 20.7 h, ≈ 43 MB of cassette |
+
+Nothing survived that run, because a checkpoint was only written at the end of a
+chunk. Two things are needed, and they are independent: a checkpoint that
+advances *during* a chunk, and a stream that outlives its connection.
+
+### `--checkpoint-every N`: a recovery point that keeps moving
+
+`--checkpoint-every N` writes the checkpoint every `N` blocks as well as at the
+end of the run, atomically over the same path (`--checkpoint-out` is required).
+The invariant is:
+
+> **A checkpoint on disk always describes a block boundary that was fully
+> applied, and the per-block outputs on disk always cover at least that
+> boundary.**
+
+Both halves come from the order the loop writes in, and nothing else:
+
+1. `process_block` applies the block or fails, leaving the host untouched by it.
+2. The frame is sealed and written to `<number>.pb`, then `index.jsonl`, then the
+   `BCF1` stream, then the report line — each flushed as it goes.
+3. *Only then*, and only on a `--checkpoint-every` boundary, is the cassette
+   saved and the checkpoint written through a temporary file and a rename.
+
+So a process killed in step 2 leaves the outputs *ahead* of the checkpoint, never
+behind it, and one killed in step 3 has either the old checkpoint or the new one,
+never half of either. This is durable against a process dying — a broken stream,
+an OOM kill, a `^C` — which is the failure that actually happens. It is not
+claimed against power loss: per-block writers are flushed to the operating
+system, not `fsync`ed; the checkpoint write and the trimmer below do `fsync`.
+
+Cost: each checkpoint is the whole store, so `N` trades recovery granularity
+against write volume. At the parity window's ~10 KB store, `--checkpoint-every
+1000` is free. Sizing it in *minutes* of lost work is the right instinct — at 5.3
+blocks/s, `N = 10000` is about half an hour.
+
+### The output-consistency rule
+
+A killed run's outputs cover more blocks than its checkpoint. That is safe, but
+it means the two disagree, and a resume has to reconcile them before writing
+another byte. The rule, enforced in `src/outputs.rs`:
+
+> **A resumed run never appends to an output it has not first cut back to the
+> checkpoint's boundary, and never cuts one back without being told to.**
+
+| The output destination | Without `--continue-outputs` | With `--continue-outputs` |
+|---|---|---|
+| does not exist | written fresh | written fresh |
+| exists | **refused**, naming the file | **trimmed to the boundary, then appended to** |
+
+Refusing is the default because the run cannot tell a dead sibling of its own
+checkpoint from a finished chunk somebody still needs; the operator either points
+the resumed chunk at fresh paths and concatenates afterwards, exactly as the
+chunking recipe above does, or says explicitly that these files are the ones to
+continue.
+
+Trimming is well defined because every streamed output is a sequence of records
+that names its own block: report lines carry `number`, `index.jsonl` carries
+`block_number`, a `BCF1` frame carries the block number in its 52-byte header,
+and a frame file *is* `<number>.pb`. So the trim is a truncation at a record
+boundary. A torn last record — the one a killed process can leave — is dropped by
+the same walk. What is *not* tolerated is a file that stops **before** the
+boundary: that means the checkpoint is ahead of the output, continuing would
+leave the blocks between missing, and the trim refuses without touching the file.
+
+A whole-document report cannot be trimmed and is refused with a pointer at
+`--checkpoint-every`, which is why that flag streams the report. `--store-out` is
+out of scope: it is written once at the end, so it is either absent or complete,
+and a resumed run overwrites it with the state it actually reached.
+
+### Reconnection
+
+A live range now streams through a `ReconnectingSource`. When the transport
+fails it re-opens `sf.firehose.v2.Stream/Blocks` for `[next, to)` — the block it
+still needs, not the block it started from — and carries on.
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--stream-retries` | 10 | consecutive attempts allowed **with no block delivered**; the counter resets on every block that arrives |
+| `--stream-backoff-ms` | 1000 | the first delay; each further consecutive attempt doubles it |
+| `--stream-backoff-max-ms` | 60000 | the ceiling the doubling stops at |
+
+The budget counts *consecutive* failures rather than total ones on purpose. A
+twenty-hour run may legitimately reconnect dozens of times; what the cap is for
+is a stream that has stopped working, and progress is the only honest signal of
+the difference.
+
+What is retried, and what is not:
+
+| Outcome | Retried? | Why |
+|---|---|---|
+| `Unavailable`, `Internal`, `Unknown`, `Aborted`, `Cancelled`, `DeadlineExceeded`, `ResourceExhausted`, `DataLoss` | yes | a broken connection wearing a status code — including the h2 body error the measured run died of |
+| a stream that closes before `to - 1` | yes | it is a truncated stream, judged by the range rather than by the socket |
+| `Unauthenticated`, `PermissionDenied`, `InvalidArgument`, `NotFound`, `FailedPrecondition`, `Unimplemented` | no | the server is refusing this request; retrying turns a clear refusal into a slow one |
+| not `STEP_FINAL`, wrong payload type, two concatenated messages, wrong block number | no | statements about the data, not the connection |
+
+**Reconnection never relaxes a single contiguity guarantee**, because it sits
+*inside* the `CheckedSource` rather than around it. The first block after a
+reconnect goes through exactly the checks an unbroken stream's blocks go through,
+so a reconnect that skipped a block is a gap, one that came back on a block
+already delivered is a duplicate, one that came back lower is a regression, and
+one outside `[from, to)` is a block that was not asked for. All four are hard
+failures, and none of them is something the reconnecting source is allowed to
+paper over.
+
+The parent-hash chain is checked across the seam too. A contiguous range now
+checks each block's parent against its predecessor's hash link by link, which the
+block numbers alone can never do: two chains share every height. A reconnect that
+lands on a different fork at the right height is refused by that check and by
+nothing else.
+
+### Recovering a killed run, end to end
+
+```bash
+S=Qme66ZNMxSdCQKzaDuvS381whCVYCQjf637sGZCqJHAWHB
+export FIREHOSE_ENDPOINT=eth.firehose.pinax.network:443
+export FIREHOSE_API_TOKEN=...
+
+# The whole run to the first Flash, in one process: 394,776 blocks, ~20.7 h at
+# the measured rate. A checkpoint every 5,000 blocks is ~16 minutes of exposure;
+# the stream reconnects itself under it.
+graph-mapping-host run --segment segments/$S --cassette fixtures/cassettes/$S.json \
+  --from 12369621 --to 12764398 \
+  --record \
+  --out out/flash.jsonl --bcf1-out out/flash.bcf1 --block-changes-out out/flash-frames \
+  --checkpoint-out out/flash.ckpt --checkpoint-every 5000 \
+  --stream-retries 10 --stream-backoff-ms 1000 --stream-backoff-max-ms 60000
+
+# If it dies anyway: the same command line, plus the two resume flags, with
+# --from moved to the checkpoint's boundary + 1 (the refusal names it).
+graph-mapping-host run --segment segments/$S --cassette fixtures/cassettes/$S.json \
+  --from <boundary+1> --to 12764398 \
+  --record \
+  --out out/flash.jsonl --bcf1-out out/flash.bcf1 --block-changes-out out/flash-frames \
+  --checkpoint-in out/flash.ckpt --continue-outputs \
+  --checkpoint-out out/flash.ckpt --checkpoint-every 5000
+```
+
+The second command cuts the report, the frame index, the frame files and the
+`BCF1` stream back to the checkpoint's block, prints what it dropped from each,
+and then continues. The result is the file an uninterrupted run would have
+written. Drop `--continue-outputs` and point the outputs somewhere new instead if
+you would rather keep the dead chunk's files and concatenate.
+
+### Proving it, hermetically
+
+`tests/mapping_host/long_run.rs`, 19 tests, no socket.
+
+The checkpoint half replays the four committed fixtures through the real host and
+the real writers, with a source that stops serving mid-run to stand in for a
+killed process:
+
+* a periodic checkpoint taken after block `K` is **equal to the checkpoint an
+  ordinary run over exactly blocks 1..=`K` writes** — same rows, same
+  proof-of-indexing, same dynamic data sources, same cache key set. That is what
+  "a boundary that was fully applied" means, tested rather than argued;
+* a run cut short mid-chunk, recovered through `--continue-outputs`, produces
+  output **byte-identical** to an uninterrupted run — every frame file, the
+  `index.jsonl`, the `BCF1` bytes and the report. With the negative control that
+  the crashed run's output is *not* already identical, so the recovery has
+  something to prove, and the assertion that the crashed run really did write a
+  frame past its checkpoint, so the trim is not a no-op;
+* a resume refuses each of the three existing outputs when it was not told to
+  continue them.
+
+The reconnection half drives a scripted connector that fails where the script
+says to, under a zero backoff:
+
+* a stream broken three times delivers **exactly the blocks an unbroken stream
+  delivers**, and an unbroken stream is never re-opened;
+* a reconnect that skips, repeats, regresses, or comes back on another chain is
+  refused, one test each;
+* a stream that closes before the range is satisfied is reconnected; a refusal
+  about the data and a server refusing the connection are not;
+* the retry cap is honoured to the exact number of connect attempts, and the
+  budget resets on progress — nine reconnections complete a range under
+  `--stream-retries 1`.
+
+`RetryPolicy::delay` is unit-tested for the doubling, the cap, and a `retries`
+large enough that a naive shift would overflow back to a short delay.
+
 ### What CI runs, and what a real range costs
 
 CI runs the **fixtures only**. Every test in this crate is hermetic:
@@ -785,7 +998,9 @@ CI runs the **fixtures only**. Every test in this crate is hermetic:
 so a refusal that stopped short of the network would fail rather than pass
 quietly, the two segment tests are unchanged,
 `tests/mapping_host/checkpoint_resume.rs` replays the fixtures whole and in two
-chunks through a checkpoint and compares them, and
+chunks through a checkpoint and compares them,
+`tests/mapping_host/long_run.rs` proves periodic checkpointing and reconnection
+against a source that fails on command, and
 `tests/mapping_host/parity_window_evidence.rs` checks the committed evidence for the live
 parity-window run without re-running it. No test opens a socket.
 

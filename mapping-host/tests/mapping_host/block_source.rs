@@ -18,6 +18,34 @@ use graph_mapping_host::source::{
     self, BlockSource, CheckedSource, FirehoseTarget, Ordering, ETHEREUM_BLOCK_TYPE,
 };
 
+/// A hash for block `number` on chain `chain`.
+///
+/// Deterministic and distinct per chain, so a fake stream carries a real
+/// parent-hash chain — which it needs, because a contiguous [`CheckedSource`]
+/// now checks that chain link by link and would refuse a stream of constant
+/// hashes.
+pub fn fake_hash(chain: u8, number: i32) -> BlockHash {
+    let mut bytes = [0u8; 32];
+    bytes[0] = chain;
+    bytes[28..].copy_from_slice(&number.to_be_bytes());
+    BlockHash::from(bytes.to_vec())
+}
+
+/// A block pointer on chain `chain`, whose parent is its predecessor there.
+pub fn fake_block(chain: u8, number: i32) -> BlockFinality {
+    fake_block_with_parent(chain, number, chain)
+}
+
+/// The same, but naming a parent on `parent_chain`: a fork at this height.
+pub fn fake_block_with_parent(chain: u8, number: i32, parent_chain: u8) -> BlockFinality {
+    BlockFinality::Ptr(std::sync::Arc::new(ExtendedBlockPtr {
+        hash: fake_hash(chain, number),
+        number,
+        parent_hash: fake_hash(parent_chain, number - 1),
+        timestamp: BlockTime::since_epoch(0, 0),
+    }))
+}
+
 /// A source that yields exactly the block numbers it was handed, in order,
 /// however wrong that order is.
 struct FakeSource(VecDeque<i32>);
@@ -31,20 +59,35 @@ impl FakeSource {
 #[async_trait]
 impl BlockSource for FakeSource {
     async fn next_block(&mut self) -> Result<Option<BlockFinality>> {
-        Ok(self.0.pop_front().map(|number| {
-            let hash = BlockHash::from(vec![0u8; 32]);
-            let parent = BlockHash::from(vec![1u8; 32]);
-            BlockFinality::Ptr(std::sync::Arc::new(ExtendedBlockPtr {
-                hash,
-                number,
-                parent_hash: parent,
-                timestamp: BlockTime::since_epoch(0, 0),
-            }))
-        }))
+        Ok(self.0.pop_front().map(|number| fake_block(0, number)))
     }
 
     fn describe(&self) -> String {
         "fake".to_string()
+    }
+}
+
+/// A source whose block at `fork_at` claims a parent on a different chain.
+struct ForkedSource {
+    numbers: VecDeque<i32>,
+    fork_at: i32,
+}
+
+#[async_trait]
+impl BlockSource for ForkedSource {
+    async fn next_block(&mut self) -> Result<Option<BlockFinality>> {
+        let fork_at = self.fork_at;
+        Ok(self.numbers.pop_front().map(|number| {
+            if number == fork_at {
+                fake_block_with_parent(0, number, 9)
+            } else {
+                fake_block(0, number)
+            }
+        }))
+    }
+
+    fn describe(&self) -> String {
+        "forked".to_string()
     }
 }
 
@@ -116,6 +159,43 @@ fn a_stream_that_ends_early_is_refused() {
 
     let error = drain(&[], contiguous(100, 104)).unwrap_err();
     assert!(error.contains("produced no blocks at all"), "{error}");
+}
+
+/// The block numbers alone cannot see a fork, because two chains share every
+/// height. A contiguous range therefore checks each block against its
+/// predecessor's hash, which is the check a reconnect leans on at the seam.
+#[test]
+fn a_block_whose_parent_is_not_the_previous_block_is_refused() {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .build()
+        .expect("tokio runtime");
+    let error = runtime.block_on(async {
+        let mut source = CheckedSource::new(
+            ForkedSource {
+                numbers: [100, 101, 102].into_iter().collect(),
+                fork_at: 102,
+            },
+            contiguous(100, 103),
+        );
+        loop {
+            match source.next_block().await {
+                Ok(Some(_)) => continue,
+                Ok(None) => panic!("a forked stream drained without a refusal"),
+                Err(error) => return format!("{error:#}"),
+            }
+        }
+    });
+    assert!(error.contains("block 102 names parent"), "{error}");
+    assert!(error.contains("changed chains mid-range"), "{error}");
+}
+
+/// And an unbroken chain is accepted, so the check above is not vacuous.
+#[test]
+fn an_unbroken_parent_chain_is_accepted() {
+    assert_eq!(
+        drain(&[100, 101, 102], contiguous(100, 103)),
+        Ok(vec![100, 101, 102])
+    );
 }
 
 #[test]

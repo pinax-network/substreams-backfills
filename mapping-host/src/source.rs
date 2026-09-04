@@ -16,8 +16,9 @@
 //! with a bearer-token interceptor, and `stream_blocks` opens
 //! `sf.firehose.v2.Stream/Blocks`. So there is no build script here, no second
 //! copy of the Firehose protos, and nothing added to `Cargo.lock`. The tonic
-//! stream is mapped to `anyhow::Error` and boxed at construction, so this module
-//! never has to name a tonic type either.
+//! stream is mapped to `anyhow::Error` and boxed at construction; the one tonic
+//! type this module names is `Status`, and only to read its code when deciding
+//! whether a failure is worth reconnecting after.
 //!
 //! ## Fail closed
 //!
@@ -33,9 +34,25 @@
 //! that guards the committed fixtures: prost merges concatenated messages rather
 //! than rejecting them, which is how release `block-fixtures-v1` shipped blocks
 //! that claimed to be `N+1` while carrying `N`'s logs.
+//!
+//! ## Surviving a stream that dies
+//!
+//! A twenty-hour range does not arrive over one TCP connection. Measured against
+//! a production endpoint, `mapping-host` managed 6,317 blocks in 19m53s before
+//! the stream failed with `error reading a body from connection` / `stream error
+//! received: unspecific protocol error detected`. That is a transport failure,
+//! not a statement about the blocks, so [`ReconnectingSource`] re-opens the
+//! stream from the next block it still needs and carries on.
+//!
+//! Reconnection is deliberately *inside* [`CheckedSource`], not outside it: a
+//! reconnect that came back one block short, one block ahead, or on a different
+//! fork is refused by exactly the same checks that guard an unbroken stream, and
+//! the parent-hash chain is checked straight across the seam. There is no code
+//! path in which a reconnect is trusted.
 
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::time::Duration;
 
 use anyhow::{anyhow, bail, Context, Result};
 use async_trait::async_trait;
@@ -45,7 +62,7 @@ use graph::endpoint::EndpointMetrics;
 use graph::firehose::{self, ConnectionHeaders, FirehoseEndpoint, ForkStep, SubgraphLimit};
 use graph::futures03::stream::{BoxStream, StreamExt as _, TryStreamExt as _};
 use graph::prelude::prost::Message as _;
-use graph::prelude::{o, slog, Logger};
+use graph::prelude::{o, slog, tonic, Logger};
 use graph_chain_ethereum::chain::BlockFinality;
 use graph_chain_ethereum::codec;
 
@@ -92,6 +109,9 @@ pub struct CheckedSource<S> {
     inner: S,
     ordering: Ordering,
     previous: Option<i32>,
+    /// The previous block's own hash, `0x`-prefixed. Only meaningful in
+    /// contiguous mode, where the next block must name it as its parent.
+    previous_hash: Option<String>,
     finished: bool,
 }
 
@@ -101,11 +121,14 @@ impl<S: BlockSource> CheckedSource<S> {
             inner,
             ordering,
             previous: None,
+            previous_hash: None,
             finished: false,
         }
     }
 
-    fn check(&mut self, number: i32) -> Result<()> {
+    fn check(&mut self, block: &BlockFinality) -> Result<()> {
+        let identity = crate::block::identify(block);
+        let number = identity.number;
         if let Some(previous) = self.previous {
             if number == previous {
                 bail!("block {number} was produced twice; a source must not repeat a block");
@@ -133,9 +156,28 @@ impl<S: BlockSource> CheckedSource<S> {
                      would silently diverge"
                 );
             }
+            // The block numbers alone cannot see a fork: two chains have the
+            // same heights. In a contiguous range every block is its
+            // predecessor's child, so the chain is checked link by link — which
+            // is what makes a reconnect safe, because the first block after a
+            // reconnect is checked by exactly this line.
+            if let (Some(previous_hash), Some(parent)) = (
+                self.previous_hash.as_deref(),
+                identity.parent_hash.as_deref(),
+            ) {
+                if !parent.eq_ignore_ascii_case(previous_hash) {
+                    bail!(
+                        "block {number} names parent {parent}, but block {} in this same stream \
+                         has hash {previous_hash}: the stream changed chains mid-range, and \
+                         folding two histories into one store would corrupt it silently",
+                        number - 1
+                    );
+                }
+            }
         }
 
         self.previous = Some(number);
+        self.previous_hash = Some(identity.hash);
         Ok(())
     }
 
@@ -166,7 +208,7 @@ impl<S: BlockSource> BlockSource for CheckedSource<S> {
         }
         match self.inner.next_block().await? {
             Some(block) => {
-                self.check(block.number())?;
+                self.check(&block)?;
                 Ok(Some(block))
             }
             None => {
@@ -431,6 +473,7 @@ impl FirehoseSource {
             .clone()
             .stream_blocks(request, &ConnectionHeaders::new())
             .await
+            .map_err(classify)
             .with_context(|| {
                 format!(
                     "opening sf.firehose.v2.Stream/Blocks on {} for [{start}, {stop})",
@@ -438,7 +481,13 @@ impl FirehoseSource {
                 )
             })?;
 
-        let stream = stream.map_err(anyhow::Error::from).boxed();
+        // Classified here rather than at the call site, because this is the only
+        // place the raw `tonic::Status` still exists: a status that means "the
+        // connection broke" is marked retryable, and one that means "the server
+        // will not serve this request" is not.
+        let stream = stream
+            .map_err(|status| classify(anyhow::Error::new(status)))
+            .boxed();
 
         Ok(FirehoseSource {
             stream,
@@ -547,4 +596,467 @@ pub fn decode_block_payload(
     (&block)
         .try_into()
         .map_err(|e| anyhow!("converting block {expected_number} to BlockFinality: {e}"))
+}
+
+// ---------------------------------------------------------------------------
+// Surviving a stream that dies
+// ---------------------------------------------------------------------------
+
+/// Marks an error as a failure of the *transport*, not of the blocks.
+///
+/// Attached with [`anyhow::Context::context`], so the original error and its
+/// whole chain survive and `downcast_ref` still finds this marker underneath
+/// however many layers of context were added on the way out.
+///
+/// The distinction is the whole point of the type. A connection that resets, an
+/// HTTP/2 protocol error, a stream that stops mid-range: those say nothing about
+/// the data, so re-opening the stream and asking again is correct. A response
+/// that is not `STEP_FINAL`, a payload that is not an Ethereum block, a block
+/// with the wrong number, a server answering `PermissionDenied`: those are
+/// statements about *this request*, and retrying one would only turn a clear
+/// refusal into a slow one.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct TransportFailure;
+
+impl std::fmt::Display for TransportFailure {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("the Firehose stream failed at the transport level")
+    }
+}
+
+/// Whether an error is a transport failure, and so worth reconnecting after.
+pub fn is_transport_failure(error: &anyhow::Error) -> bool {
+    error.downcast_ref::<TransportFailure>().is_some()
+}
+
+/// gRPC status codes that mean "the connection did not work", as opposed to
+/// "the server declines to serve this".
+///
+/// `Internal` and `Unknown` are on the list because that is where tonic puts a
+/// hyper/h2 body error: the failure observed in a twenty-hour replay arrives as
+/// `error reading a body from connection: stream error received: unspecific
+/// protocol error detected`, which is a broken connection wearing a status code.
+fn is_retryable_code(code: tonic::Code) -> bool {
+    matches!(
+        code,
+        tonic::Code::Unavailable
+            | tonic::Code::Internal
+            | tonic::Code::Unknown
+            | tonic::Code::Aborted
+            | tonic::Code::Cancelled
+            | tonic::Code::DeadlineExceeded
+            | tonic::Code::ResourceExhausted
+            | tonic::Code::DataLoss
+    )
+}
+
+/// Substrings that identify a transport failure arriving as something other
+/// than a `tonic::Status` — a TLS or connect error on the way to the first
+/// response, which tonic surfaces as its own transport error type.
+///
+/// Only consulted when the error is not a status. Every refusal this module
+/// raises itself is a plain `anyhow` message and matches none of these.
+const TRANSPORT_MESSAGES: &[&str] = &[
+    "error reading a body from connection",
+    "connection reset",
+    "connection closed",
+    "connection refused",
+    "broken pipe",
+    "unexpected end of file",
+    "transport error",
+    "protocol error",
+    "h2 protocol error",
+    "tls handshake",
+    "operation timed out",
+];
+
+/// Mark `error` retryable when it describes a broken connection.
+fn classify(error: anyhow::Error) -> anyhow::Error {
+    if let Some(status) = error.downcast_ref::<tonic::Status>() {
+        return if is_retryable_code(status.code()) {
+            error.context(TransportFailure)
+        } else {
+            error
+        };
+    }
+    if let Some(io) = error.downcast_ref::<std::io::Error>() {
+        use std::io::ErrorKind::*;
+        return if matches!(
+            io.kind(),
+            ConnectionReset
+                | ConnectionAborted
+                | BrokenPipe
+                | UnexpectedEof
+                | TimedOut
+                | NotConnected
+        ) {
+            error.context(TransportFailure)
+        } else {
+            error
+        };
+    }
+    let rendered = format!("{error:#}").to_ascii_lowercase();
+    if TRANSPORT_MESSAGES
+        .iter()
+        .any(|needle| rendered.contains(needle))
+    {
+        return error.context(TransportFailure);
+    }
+    error
+}
+
+/// How hard a broken stream is retried.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct RetryPolicy {
+    /// Consecutive failed attempts allowed *without a block arriving*. The
+    /// counter resets on every delivered block, so a twenty-hour run may
+    /// reconnect any number of times as long as it keeps making progress; what
+    /// this bounds is a stream that is simply not working.
+    pub retries: u32,
+    /// The first delay. Each further consecutive attempt doubles it.
+    pub backoff: Duration,
+    /// The ceiling the doubling stops at.
+    pub backoff_max: Duration,
+}
+
+impl Default for RetryPolicy {
+    fn default() -> Self {
+        RetryPolicy {
+            retries: 10,
+            backoff: Duration::from_secs(1),
+            backoff_max: Duration::from_secs(60),
+        }
+    }
+}
+
+impl RetryPolicy {
+    /// The delay before consecutive attempt `attempt`, counting from 1.
+    ///
+    /// Doubling is done on the millisecond count with a saturating shift, so a
+    /// large `retries` cannot overflow its way back down to a short delay.
+    pub fn delay(&self, attempt: u32) -> Duration {
+        if attempt <= 1 {
+            return self.backoff.min(self.backoff_max);
+        }
+        let shift = (attempt - 1).min(32);
+        let millis = (self.backoff.as_millis() as u64).saturating_mul(1u64 << shift);
+        Duration::from_millis(millis).min(self.backoff_max)
+    }
+}
+
+/// Opens one stream over a sub-range, so a broken stream can be replaced.
+///
+/// Separate from [`BlockSource`] because reconnecting needs the ability to ask
+/// for `[next, stop)` again, which a source that is already draining cannot do.
+#[async_trait]
+pub trait StreamConnector: Send {
+    /// Open a stream for the half-open range `[from, stop)`.
+    async fn connect(&mut self, from: i32, stop: i32) -> Result<Box<dyn BlockSource>>;
+
+    /// A description of the *whole* run, stable across reconnects, because it is
+    /// recorded in the run header and in every checkpoint boundary.
+    fn describe(&self, from: i32, stop: i32) -> String;
+}
+
+/// Opens `sf.firehose.v2.Stream/Blocks` on demand.
+pub struct FirehoseConnector {
+    target: FirehoseTarget,
+    token: Option<String>,
+}
+
+impl FirehoseConnector {
+    pub fn new(target: FirehoseTarget, token: Option<String>) -> Self {
+        FirehoseConnector { target, token }
+    }
+}
+
+#[async_trait]
+impl StreamConnector for FirehoseConnector {
+    async fn connect(&mut self, from: i32, stop: i32) -> Result<Box<dyn BlockSource>> {
+        let source = FirehoseSource::connect(&self.target, self.token.clone(), from, stop).await?;
+        Ok(Box::new(source))
+    }
+
+    fn describe(&self, from: i32, stop: i32) -> String {
+        format!(
+            "Firehose {} blocks [{from}, {stop})",
+            self.target.authority()
+        )
+    }
+}
+
+/// A live count of how often a [`ReconnectingSource`] re-opened its stream.
+///
+/// Handed out before the source is boxed, so an operator's progress line can
+/// report reconnections without the loop having to know what kind of source it
+/// is draining.
+#[derive(Clone, Debug)]
+pub struct ReconnectCounter(Arc<std::sync::atomic::AtomicU64>);
+
+impl ReconnectCounter {
+    pub fn get(&self) -> u64 {
+        self.0
+            .load(std::sync::atomic::Ordering::Relaxed)
+            .saturating_sub(1)
+    }
+}
+
+/// A `[start, stop)` range that outlives the connections it is delivered over.
+///
+/// It tracks one number: the block the range still needs next. A reconnect asks
+/// for `[next, stop)`, so nothing is skipped and nothing is replayed — and
+/// because this sits *inside* a [`CheckedSource`], that claim is not taken on
+/// trust: a reconnect that came back at the wrong height, repeated a block, or
+/// landed on a different fork is refused by the same checks an unbroken stream
+/// passes, the parent-hash link across the seam included.
+pub struct ReconnectingSource<C> {
+    connector: C,
+    stop: i32,
+    /// The number the next block must carry.
+    next: i32,
+    current: Option<Box<dyn BlockSource>>,
+    policy: RetryPolicy,
+    /// Consecutive failures since the last delivered block.
+    attempts: u32,
+    /// Streams opened, the first one included. Shared so a progress line can
+    /// still read it once the source is boxed behind `dyn BlockSource`.
+    connects: Arc<std::sync::atomic::AtomicU64>,
+    /// Whether a reconnection prints a line to stderr.
+    notify: bool,
+    described: String,
+}
+
+impl<C: StreamConnector> ReconnectingSource<C> {
+    /// Open the first stream. A failure here is retried on the same policy, so
+    /// an endpoint that is briefly unreachable does not lose a whole run.
+    pub async fn connect(connector: C, start: i32, stop: i32, policy: RetryPolicy) -> Result<Self> {
+        if stop <= start {
+            bail!("the requested range [{start}, {stop}) is empty");
+        }
+        let described = connector.describe(start, stop);
+        let mut source = ReconnectingSource {
+            connector,
+            stop,
+            next: start,
+            current: None,
+            policy,
+            attempts: 0,
+            connects: Arc::new(std::sync::atomic::AtomicU64::new(0)),
+            notify: true,
+            described,
+        };
+        source.open().await?;
+        Ok(source)
+    }
+
+    /// Silence the reconnection notices. Used by the tests, which drive many
+    /// simulated failures.
+    pub fn quiet(mut self) -> Self {
+        self.notify = false;
+        self
+    }
+
+    /// How many times the stream was re-opened after a failure.
+    pub fn reconnects(&self) -> u64 {
+        self.connects
+            .load(std::sync::atomic::Ordering::Relaxed)
+            .saturating_sub(1)
+    }
+
+    /// A handle on the reconnect count that outlives boxing this source behind
+    /// `dyn BlockSource`, so a progress line can report it.
+    pub fn reconnect_counter(&self) -> ReconnectCounter {
+        ReconnectCounter(Arc::clone(&self.connects))
+    }
+
+    /// The block the range still needs next.
+    pub fn next_expected(&self) -> i32 {
+        self.next
+    }
+
+    /// Open a stream for `[next, stop)`, retrying a transport failure.
+    async fn open(&mut self) -> Result<()> {
+        loop {
+            match self.connector.connect(self.next, self.stop).await {
+                Ok(source) => {
+                    self.current = Some(source);
+                    self.connects
+                        .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                    return Ok(());
+                }
+                Err(error) => self.wait_or_give_up(error, "opening").await?,
+            }
+        }
+    }
+
+    /// Decide whether `error` may be retried, and if so sleep for the backoff.
+    ///
+    /// Returning `Ok(())` means "try again"; every other outcome is the error,
+    /// with the reason it was not retried spelled out.
+    async fn wait_or_give_up(&mut self, error: anyhow::Error, what: &str) -> Result<()> {
+        let at = self.next;
+        if !is_transport_failure(&error) {
+            return Err(error.context(format!(
+                "{what} the Firehose stream at block {at}: this is not a transport failure, so \
+                 reconnecting could not fix it and would only hide it"
+            )));
+        }
+        self.attempts += 1;
+        if self.attempts > self.policy.retries {
+            return Err(error.context(format!(
+                "{what} the Firehose stream at block {at}: giving up after {} consecutive \
+                 transport failures with no block delivered (--stream-retries {})",
+                self.attempts - 1,
+                self.policy.retries
+            )));
+        }
+        let delay = self.policy.delay(self.attempts);
+        if self.notify {
+            eprintln!(
+                "firehose: {what} the stream failed at block {at} ({}); reconnecting in {:.1}s \
+                 (attempt {}/{})",
+                error,
+                delay.as_secs_f64(),
+                self.attempts,
+                self.policy.retries
+            );
+        }
+        self.current = None;
+        tokio::time::sleep(delay).await;
+        Ok(())
+    }
+}
+
+#[async_trait]
+impl<C: StreamConnector> BlockSource for ReconnectingSource<C> {
+    async fn next_block(&mut self) -> Result<Option<BlockFinality>> {
+        loop {
+            if self.next >= self.stop {
+                return Ok(None);
+            }
+            if self.current.is_none() {
+                self.open().await?;
+            }
+            let outcome = self
+                .current
+                .as_mut()
+                .expect("a stream was just opened")
+                .next_block()
+                .await;
+            match outcome {
+                Ok(Some(block)) => {
+                    // Progress: the retry budget is about a stream that is not
+                    // working, and this one just did.
+                    self.attempts = 0;
+                    self.next = block.number().saturating_add(1);
+                    return Ok(Some(block));
+                }
+                // The range was satisfied. This is the only clean end.
+                Ok(None) if self.next >= self.stop => return Ok(None),
+                // A stream that closes before the range it was asked for is a
+                // truncated stream, which is the EOF-mid-range case: retried,
+                // and then caught by the contiguity checks if the retry lies.
+                Ok(None) => {
+                    let error = anyhow!(
+                        "the Firehose stream closed after block {} without reaching block {}, \
+                         which the requested range needs",
+                        self.next - 1,
+                        self.stop - 1
+                    )
+                    .context(TransportFailure);
+                    self.wait_or_give_up(error, "reading").await?;
+                }
+                Err(error) => self.wait_or_give_up(error, "reading").await?,
+            }
+        }
+    }
+
+    fn describe(&self) -> String {
+        self.described.clone()
+    }
+}
+
+#[cfg(test)]
+mod retry_tests {
+    use super::*;
+
+    fn policy() -> RetryPolicy {
+        RetryPolicy {
+            retries: 10,
+            backoff: Duration::from_millis(500),
+            backoff_max: Duration::from_secs(8),
+        }
+    }
+
+    #[test]
+    fn the_backoff_doubles_and_then_stops_at_the_cap() {
+        let policy = policy();
+        assert_eq!(policy.delay(1), Duration::from_millis(500));
+        assert_eq!(policy.delay(2), Duration::from_secs(1));
+        assert_eq!(policy.delay(3), Duration::from_secs(2));
+        assert_eq!(policy.delay(4), Duration::from_secs(4));
+        assert_eq!(policy.delay(5), Duration::from_secs(8));
+        // Capped, and still capped far past the point where doubling would
+        // otherwise overflow.
+        assert_eq!(policy.delay(6), Duration::from_secs(8));
+        assert_eq!(policy.delay(64), Duration::from_secs(8));
+        assert_eq!(policy.delay(u32::MAX), Duration::from_secs(8));
+    }
+
+    #[test]
+    fn a_backoff_larger_than_the_cap_is_the_cap() {
+        let policy = RetryPolicy {
+            retries: 3,
+            backoff: Duration::from_secs(30),
+            backoff_max: Duration::from_secs(5),
+        };
+        assert_eq!(policy.delay(1), Duration::from_secs(5));
+        assert_eq!(policy.delay(2), Duration::from_secs(5));
+    }
+
+    #[test]
+    fn a_broken_connection_is_a_transport_failure_and_a_refusal_is_not() {
+        let broken = classify(anyhow!(
+            "error reading a body from connection: stream error received: unspecific protocol \
+             error detected"
+        ));
+        assert!(is_transport_failure(&broken), "{broken:#}");
+        // Still a transport failure under however much context the call stack
+        // wraps it in, which is what the reconnecting source actually sees.
+        let wrapped = broken.context("reading block 12764397 from the Firehose stream");
+        assert!(is_transport_failure(&wrapped), "{wrapped:#}");
+
+        let refusal = classify(anyhow!(
+            "the Firehose stream produced block 42 where block 41 was expected"
+        ));
+        assert!(!is_transport_failure(&refusal), "{refusal:#}");
+    }
+
+    #[test]
+    fn a_status_is_classified_by_its_code() {
+        let unavailable = classify(anyhow::Error::new(tonic::Status::unavailable("no route")));
+        assert!(is_transport_failure(&unavailable));
+
+        let internal = classify(anyhow::Error::new(tonic::Status::internal(
+            "stream error received",
+        )));
+        assert!(is_transport_failure(&internal));
+
+        // A server refusing the request is not retried, however long the run is.
+        for status in [
+            tonic::Status::unauthenticated("bad token"),
+            tonic::Status::permission_denied("not your chain"),
+            tonic::Status::invalid_argument("no such range"),
+            tonic::Status::not_found("no such chain"),
+            tonic::Status::failed_precondition("blocks pruned"),
+            tonic::Status::unimplemented("no firehose here"),
+        ] {
+            let code = status.code();
+            let error = classify(anyhow::Error::new(status));
+            assert!(
+                !is_transport_failure(&error),
+                "{code:?} must not be retried: {error:#}"
+            );
+        }
+    }
 }

@@ -6,24 +6,31 @@
 //! streams the half-open range live from `sf.firehose.v2.Stream/Blocks`, which
 //! is the only way to exercise handlers whose data source was created in a block
 //! the four sampled fixtures skip.
+//!
+//! A live range long enough to matter outlives both the process and the
+//! connection, so `--checkpoint-every` writes a resumable boundary as the run
+//! goes and the stream reconnects itself when the transport fails. The per-block
+//! loop and the rules about what a checkpoint may describe live in
+//! [`graph_mapping_host::replay`]; what a resumed run may do to output files
+//! that already exist lives in [`graph_mapping_host::outputs`].
 
 use std::path::PathBuf;
 use std::time::Duration;
 
 use anyhow::{bail, Context, Result};
 use clap::{Parser, Subcommand};
-use graph::blockchain::Block as _;
-use graph_mapping_host::block::BlockIdentity;
-use graph_mapping_host::checkpoint::{CheckpointBoundary, HostCheckpoint};
+use graph_mapping_host::checkpoint::HostCheckpoint;
 use graph_mapping_host::live::{Bcf1Writer, FrameWriter, Progress, ReportWriter};
+use graph_mapping_host::outputs::{self, ResumePolicy};
+use graph_mapping_host::replay::{self, CheckpointPolicy, ReplayOutputs};
 use graph_mapping_host::report::RunHeader;
 use graph_mapping_host::runner::{SegmentHost, SegmentHostConfig};
 use graph_mapping_host::source::{
-    token_from_env, BlockSource, CheckedSource, FirehoseSource, FirehoseTarget, FixtureSource,
-    Ordering,
+    token_from_env, BlockSource, CheckedSource, FirehoseConnector, FirehoseTarget, FixtureSource,
+    Ordering, ReconnectCounter, ReconnectingSource, RetryPolicy,
 };
 use graph_mapping_host::store_state::{StorePoi, StoreRange};
-use graph_mapping_host::{block, blockchanges, bundle, descriptor, evidence};
+use graph_mapping_host::{bundle, descriptor, evidence};
 
 #[derive(Parser)]
 #[command(
@@ -147,6 +154,45 @@ struct RunArgs {
     /// and is how a chain of chunks advances.
     #[arg(long)]
     checkpoint_out: Option<PathBuf>,
+    /// Also write the checkpoint every N blocks, not only at the end of the run.
+    ///
+    /// A twenty-hour replay that checkpoints only at the end is all-or-nothing,
+    /// and a stream that dies at hour nineteen loses everything. Each mid-run
+    /// checkpoint is written atomically over the same path, after every artifact
+    /// for that block is on disk, so what is on disk is always a boundary that
+    /// was fully applied.
+    ///
+    /// Because a checkpoint may never be ahead of the outputs it belongs with,
+    /// this also switches the report to JSON Lines and the frame index to
+    /// `index.jsonl`, which a live run already uses.
+    #[arg(long, requires = "checkpoint_out", value_name = "N")]
+    checkpoint_every: Option<usize>,
+    /// Continue the output files this run's checkpoint belongs with, instead of
+    /// refusing them.
+    ///
+    /// A killed run leaves its report, frames and `BCF1` stream covering blocks
+    /// past the last checkpoint. This cuts each of them back to exactly the
+    /// checkpoint's boundary and then appends, so re-running the same command
+    /// line recovers. Without it, a resumed run refuses an output file that
+    /// already exists rather than duplicating the blocks in between.
+    #[arg(long, requires = "checkpoint_in")]
+    continue_outputs: bool,
+    /// Consecutive reconnection attempts allowed without a block arriving.
+    ///
+    /// A live range does not survive twenty hours on one connection. A transport
+    /// failure — a reset, an HTTP/2 protocol error, a stream that stops early —
+    /// re-opens the stream from the next block needed; the counter resets every
+    /// time a block arrives, so this bounds a stream that is not working rather
+    /// than a long run. A server refusing the request is never retried.
+    #[arg(long, default_value_t = 10, value_name = "N")]
+    stream_retries: u32,
+    /// The first reconnection delay, in milliseconds. Each further consecutive
+    /// attempt doubles it.
+    #[arg(long, default_value_t = 1_000, value_name = "MS")]
+    stream_backoff_ms: u64,
+    /// The ceiling the reconnection delay stops doubling at, in milliseconds.
+    #[arg(long, default_value_t = 60_000, value_name = "MS")]
+    stream_backoff_max_ms: u64,
     /// Continue from a checkpoint an earlier run wrote.
     ///
     /// A live range must start at exactly the checkpoint's boundary block plus
@@ -221,54 +267,6 @@ A continuation must start at exactly the checkpoint's boundary block plus one, \
 and is refused on a gap, an overlap, a different segment, a different bundle or \
 a cassette that changed underneath it.";
 
-/// The SHA-256 of a file, or the empty string when there is no file.
-///
-/// The cassette is the only input a run may legitimately rewrite, so its digest
-/// is taken twice: once before the run, to check a checkpoint being loaded, and
-/// once after, to record in the checkpoint being written.
-fn file_sha256(path: &std::path::Path) -> Result<String> {
-    if !path.exists() {
-        return Ok(String::new());
-    }
-    let bytes = std::fs::read(path).with_context(|| format!("reading {}", path.display()))?;
-    Ok(bundle::sha256_hex(&bytes))
-}
-
-/// Refuse a first block that does not continue the checkpoint.
-///
-/// Two checks, and they catch different things. The block number catches a
-/// replay of ground the checkpoint already covers, whose effects would be
-/// applied twice. The parent hash catches a *different chain* at the same
-/// height, which no block number can see; it is only available when the first
-/// block is the boundary's immediate successor, which a live range always is and
-/// a sampled fixture run generally is not.
-fn check_continuation(boundary: &CheckpointBoundary, first: &BlockIdentity) -> Result<()> {
-    if first.number <= boundary.block {
-        bail!(
-            "the checkpoint already covers block {}, and this run starts at block {}: replaying \
-             a block the checkpoint has already applied would apply its effects twice",
-            boundary.block,
-            first.number
-        );
-    }
-    if first.number != boundary.block + 1 {
-        return Ok(());
-    }
-    match first.parent_hash.as_deref() {
-        Some(parent) if parent.eq_ignore_ascii_case(&boundary.block_hash) => Ok(()),
-        Some(parent) => bail!(
-            "block {} names parent {parent}, but the checkpoint stopped at block {} with hash {}: \
-             this is a different chain, and continuing would fold two histories into one store",
-            first.number,
-            boundary.block,
-            boundary.block_hash
-        ),
-        // A block with no parent pointer is the genesis block, which no segment
-        // in this repository starts at; nothing to check.
-        None => Ok(()),
-    }
-}
-
 async fn run(args: RunArgs) -> Result<()> {
     // Before anything else, so an old command line gets the pointer rather than
     // whichever of the checks below happens to fire first.
@@ -285,6 +283,12 @@ async fn run(args: RunArgs) -> Result<()> {
         bail!(
             "nothing to replay: pass either --blocks <pb>... for the committed fixtures, or \
              --from <N> --to <N> for a live Firehose range"
+        );
+    }
+    if args.checkpoint_every == Some(0) {
+        bail!(
+            "--checkpoint-every 0 would ask for a checkpoint after no blocks. Give it a block \
+             count, or drop it to checkpoint only at the end of the run."
         );
     }
 
@@ -317,10 +321,25 @@ async fn run(args: RunArgs) -> Result<()> {
         }
     }
 
+    // What this run may do to output files that already exist. Decided before
+    // anything is opened, because refusing is the default and a refusal must
+    // cost no work.
+    let resume_policy = ResumePolicy::new(
+        resumed
+            .as_ref()
+            .map(|(checkpoint, _)| checkpoint.header.boundary.block),
+        args.continue_outputs,
+    )?;
+
+    // A mid-run checkpoint may never be ahead of the outputs it belongs with, so
+    // asking for one puts the report and the frame index into their streamed
+    // forms even for a fixture replay. Without it nothing about either changes.
+    let streaming = live_range.is_some() || args.checkpoint_every.is_some();
+
     // The cassette as it stands before the run. A recording run rewrites it, so
     // this is the digest a checkpoint being *loaded* must name, and the digest a
-    // checkpoint being written names is taken again at the end.
-    let cassette_before = file_sha256(&args.cassette)?;
+    // checkpoint being written names is taken again at each checkpoint.
+    let cassette_before = replay::file_sha256(&args.cassette)?;
 
     let mut host = SegmentHost::load(SegmentHostConfig {
         bundle_dir: &args.segment,
@@ -354,13 +373,27 @@ async fn run(args: RunArgs) -> Result<()> {
 
     // Replay in ascending order. Out of order would make both the store and the
     // PoI chain meaningless, so either source is wrapped in a `CheckedSource`.
+    // Handed out by a reconnecting source before it is boxed, so the progress
+    // line can still report how often the stream was re-opened.
+    let mut reconnects: Option<ReconnectCounter> = None;
     let mut source: Box<dyn BlockSource> = match live_range {
         Some((from, to)) => {
             let (target, token) = firehose.expect("a live range always resolves an endpoint");
             // The range is checked against the segment *before* the stream is
             // opened, so an out-of-bounds request costs no network at all.
             host.bounds().check_range(from, to)?;
-            let live = FirehoseSource::connect(&target, token, from, to).await?;
+            let retry = RetryPolicy {
+                retries: args.stream_retries,
+                backoff: Duration::from_millis(args.stream_backoff_ms),
+                backoff_max: Duration::from_millis(args.stream_backoff_max_ms),
+            };
+            // Reconnection is *inside* the contiguity checks, never outside
+            // them: a reconnect that skipped, repeated or forked is refused by
+            // the same `CheckedSource` an unbroken stream passes.
+            let live =
+                ReconnectingSource::connect(FirehoseConnector::new(target, token), from, to, retry)
+                    .await?;
+            reconnects = Some(live.reconnect_counter());
             Box::new(CheckedSource::new(
                 live,
                 Ordering::Contiguous {
@@ -377,86 +410,90 @@ async fn run(args: RunArgs) -> Result<()> {
         )),
     };
 
+    let source_description = source.describe();
     let base_report = host.new_report();
-    let mut writer = match live_range {
-        Some((from, to)) => ReportWriter::lines(
-            &RunHeader::new(&base_report, source.describe(), Some((from, to))),
+    // Every output destination is inspected before any of them is opened, so a
+    // resumed run that would have to refuse one refuses before it truncates
+    // another.
+    let report_disposition =
+        outputs::prepare_report(args.out.as_deref(), streaming, resume_policy)?;
+    let frames_disposition =
+        outputs::prepare_frames(args.block_changes_out.as_deref(), streaming, resume_policy)?;
+    let bcf1_disposition = outputs::prepare_bcf1(args.bcf1_out.as_deref(), resume_policy)?;
+
+    let writer = if streaming {
+        ReportWriter::lines(
+            &RunHeader::new(&base_report, source_description.clone(), live_range),
             args.out.clone(),
-        )?,
-        None => ReportWriter::whole(base_report, args.out.clone()),
+            report_disposition,
+        )?
+    } else {
+        ReportWriter::whole(base_report, args.out.clone())
     };
 
-    let mut frames = match (&args.block_changes_out, live_range) {
-        (Some(dir), Some(_)) => Some(FrameWriter::streaming(dir, host.descriptor_sha256())?),
-        (Some(dir), None) => Some(FrameWriter::buffered(dir)?),
+    let frames = match (&args.block_changes_out, streaming) {
+        (Some(dir), true) => Some(FrameWriter::streaming(
+            dir,
+            host.descriptor_sha256(),
+            frames_disposition,
+        )?),
+        (Some(dir), false) => Some(FrameWriter::buffered(dir)?),
         (None, _) => None,
     };
-    let mut bcf1 = match &args.bcf1_out {
-        Some(path) => Some(Bcf1Writer::create(path, live_range.is_some())?),
+    let bcf1 = match &args.bcf1_out {
+        Some(path) => Some(Bcf1Writer::create(path, streaming, bcf1_disposition)?),
         None => None,
     };
-    let mut progress =
+    let progress =
         live_range.map(|range| Progress::new(range, Duration::from_secs(args.progress_secs)));
+    let mut outputs = ReplayOutputs {
+        report: writer,
+        frames,
+        bcf1,
+        progress,
+        reconnects,
+    };
+
     // The closing proof of indexing is the last block that opened the causality
     // region, not the last block replayed: a block in which no handler ran does
     // not advance the digest. A continuation starts from the checkpoint's, so a
     // chunk whose blocks open no region still reports the chain's closing value.
-    let mut closing_poi: Option<StorePoi> = resumed
+    let seed_poi: Option<StorePoi> = resumed
         .as_ref()
         .and_then(|(checkpoint, _)| checkpoint.header.poi.clone());
-
-    let source_description = source.describe();
     // Checked against the first block that arrives, then dropped.
-    let mut continues_from = resumed
+    let continues_from = resumed
         .as_ref()
         .map(|(checkpoint, _)| checkpoint.header.boundary.clone());
-    // The last block applied, which is where a checkpoint written here stops.
-    let mut last_applied: Option<(i32, String)> = None;
 
-    while let Some(block) = source.next_block().await? {
-        let number = block.number();
-        if let Some(boundary) = continues_from.take() {
-            check_continuation(&boundary, &block::identify(&block))?;
-        }
-        let outcome = host
-            .process_block(block)
-            .await
-            .with_context(|| format!("replaying block {number}"))?;
-        // Validate and round-trip every frame, whether or not it is written, so
-        // a run cannot report success on a frame the engine would refuse.
-        let bytes = blockchanges::seal(&outcome.changes, host.compatibility())
-            .with_context(|| format!("sealing the BlockChanges frame for block {number}"))?;
-        let mut block_report = outcome.report;
-        block_report.block_changes = Some(blockchanges::summarize(&outcome.changes, &bytes));
-        if let Some(poi) = block_report.poi.as_ref() {
-            closing_poi = Some(StorePoi {
-                block: number,
-                version: poi.version.clone(),
-                causality_regions: poi.causality_regions.clone(),
-                public_digest: poi.public_digest.clone(),
-            });
-        }
+    let policy = CheckpointPolicy {
+        out: args.checkpoint_out.clone(),
+        every: args.checkpoint_every,
+        cassette: args.cassette.clone(),
+        source: source_description,
+        range: live_range,
+        previous: resumed
+            .as_ref()
+            .map(|(checkpoint, digest)| (checkpoint.header.boundary.clone(), digest.clone())),
+    };
 
-        let block_number = outcome.changes.block_number;
-        let block_hash = outcome.changes.block_hash.as_slice();
-        if let Some(frames) = frames.as_mut() {
-            frames.push(block_number, block_hash, &bytes)?;
-        }
-        if let Some(bcf1) = bcf1.as_mut() {
-            bcf1.push(block_number, block_hash, &bytes)?;
-        }
-        last_applied = Some((number, block_report.hash.clone()));
-        if let Some(progress) = progress.as_mut() {
-            progress.record(number, block_report.handler_groups.len());
-            // A long recording run should not lose its rows to a crash at block
-            // 900,000. The cassette is a sorted `BTreeMap`, so each rewrite is
-            // the same bytes plus the new rows.
-            if host.cassette().is_dirty() {
-                host.cassette().save(&args.cassette)?;
-            }
-        }
-        writer.push(block_report)?;
-    }
+    let result = replay::replay_range(
+        &mut host,
+        source.as_mut(),
+        &mut outputs,
+        &policy,
+        continues_from,
+        seed_poi,
+    )
+    .await?;
+    let ReplayOutputs {
+        report: writer,
+        frames,
+        bcf1,
+        progress,
+        ..
+    } = outputs;
+    let closing_poi = result.closing_poi;
 
     if let Some(frames) = frames {
         frames.finish(host.descriptor_sha256())?;
@@ -487,53 +524,32 @@ async fn run(args: RunArgs) -> Result<()> {
         host.cassette().save(&args.cassette)?;
     }
 
-    // After the cassette, so the digest recorded here is the file the next chunk
-    // will load. A recording run appends rows; the next chunk must see the same
-    // bytes or refuse.
+    // The closing checkpoint. `CheckpointPolicy::write` saves the cassette
+    // first, so the digest recorded here is the file the next chunk will load: a
+    // recording run appends rows, and the next chunk must see the same bytes or
+    // refuse.
     if let Some(path) = &args.checkpoint_out {
-        let Some((block, block_hash)) = last_applied else {
+        let Some(last_applied) = result.last_applied.as_ref() else {
             bail!(
                 "--checkpoint-out {} was asked for but this run replayed no block, so there is no \
                  boundary to continue from",
                 path.display()
             );
         };
-        let previous = resumed
-            .as_ref()
-            .map(|(checkpoint, digest)| (checkpoint.header.boundary.clone(), digest.clone()));
-        let blocks_in_chunk = writer.blocks();
-        let boundary = CheckpointBoundary {
-            block,
-            block_hash,
-            source: source_description,
-            chunk_from: live_range.map(|(from, _)| from),
-            chunk_to: live_range.map(|(_, to)| to),
-            blocks_in_chunk,
-            blocks_total: previous
-                .as_ref()
-                .map(|(boundary, _)| boundary.blocks_total)
-                .unwrap_or_default()
-                + blocks_in_chunk,
-            chunk_index: previous
-                .as_ref()
-                .map(|(boundary, _)| boundary.chunk_index + 1)
-                .unwrap_or_default(),
-            previous_checkpoint_sha256: previous.map(|(_, digest)| digest),
-        };
-        let checkpoint = host.checkpoint(file_sha256(&args.cassette)?, boundary, closing_poi)?;
-        let digest = checkpoint.write(path)?;
-        eprintln!(
-            "{}: {} rows, {} dynamic data sources, after block {} ({digest})",
-            path.display(),
-            checkpoint.rows.len(),
-            checkpoint.data_sources.len(),
-            checkpoint.header.boundary.block
-        );
+        policy.write(&host, writer.blocks(), last_applied, closing_poi.clone())?;
     }
 
     let blocks = writer.blocks();
     writer.finish(host.cassette().len())?;
-    if let Some(progress) = progress {
+    if let Some(mut progress) = progress {
+        if let Some((block, _)) = result.last_checkpoint.as_ref() {
+            progress.record_checkpoint(*block);
+        }
+        if let Some(last_applied) = result.last_applied.as_ref() {
+            if args.checkpoint_out.is_some() {
+                progress.record_checkpoint(last_applied.0);
+            }
+        }
         progress.finish();
         eprintln!(
             "{blocks} blocks replayed; {} cassette rows",

@@ -11,6 +11,17 @@
 //! frames into the same directory and the same `BCF1` byte stream, so a live run
 //! over a fixture's block produces byte-identical artifacts.
 //!
+//! A fixture run joins the streamed column in one case: `--checkpoint-every`. A
+//! mid-run checkpoint may never describe a block that no output file records,
+//! and a whole-document report records nothing until the run ends, so asking for
+//! periodic checkpoints necessarily asks for a streamed report and a streamed
+//! index. See [`crate::outputs`].
+//!
+//! Each writer can also be opened to *append*, which happens only after
+//! [`crate::outputs`] has cut the file back to a checkpoint boundary: an
+//! appending report and an appending index skip their header line, because the
+//! file already carries it.
+//!
 //! Nothing here prints unless it is asked to: [`Progress`] is constructed only
 //! by the live path in `main`, so the hermetic tests, which drive
 //! [`crate::runner::SegmentHost`] directly, emit nothing at all.
@@ -22,6 +33,7 @@ use std::time::{Duration, Instant};
 use anyhow::{Context, Result};
 
 use crate::bundle;
+use crate::outputs::Disposition;
 use crate::report::{json_line, BlockReport, RunHeader, RunReport};
 
 /// Schema identifier for the first line of a streamed frame index.
@@ -44,6 +56,33 @@ fn create(path: &Path) -> Result<std::fs::File> {
         }
     }
     std::fs::File::create(path).with_context(|| format!("creating {}", path.display()))
+}
+
+/// Open a file for appending, creating its parent directory.
+///
+/// Only ever reached after [`crate::outputs`] has cut the file back to a
+/// checkpoint boundary, so what is appended to is a prefix of a run rather than
+/// a whole one.
+fn append(path: &Path) -> Result<std::fs::File> {
+    if let Some(parent) = path.parent() {
+        if !parent.as_os_str().is_empty() {
+            std::fs::create_dir_all(parent)
+                .with_context(|| format!("creating {}", parent.display()))?;
+        }
+    }
+    std::fs::OpenOptions::new()
+        .append(true)
+        .create(true)
+        .open(path)
+        .with_context(|| format!("opening {} to append", path.display()))
+}
+
+/// Open a file fresh or for appending, as [`Disposition`] decided.
+fn open_for(path: &Path, disposition: Disposition) -> Result<std::fs::File> {
+    match disposition {
+        Disposition::Fresh => create(path),
+        Disposition::Append => append(path),
+    }
 }
 
 /// Where the per-block report goes.
@@ -72,13 +111,23 @@ impl ReportWriter {
     }
 
     /// JSON Lines: the header now, one object per block as they arrive.
-    pub fn lines(header: &RunHeader, out: Option<PathBuf>) -> Result<Self> {
+    ///
+    /// With [`Disposition::Append`] the file already carries the header and the
+    /// blocks up to a checkpoint boundary, so only the block lines are added;
+    /// writing a second header would make the stream unreadable.
+    pub fn lines(
+        header: &RunHeader,
+        out: Option<PathBuf>,
+        disposition: Disposition,
+    ) -> Result<Self> {
         let mut sink: Box<dyn Write> = match &out {
-            Some(path) => Box::new(BufWriter::new(create(path)?)),
+            Some(path) => Box::new(BufWriter::new(open_for(path, disposition)?)),
             None => Box::new(std::io::stdout()),
         };
-        sink.write_all(json_line(header)?.as_bytes())?;
-        sink.flush()?;
+        if disposition == Disposition::Fresh {
+            sink.write_all(json_line(header)?.as_bytes())?;
+            sink.flush()?;
+        }
         Ok(ReportWriter(ReportMode::Lines {
             sink,
             blocks: 0,
@@ -168,16 +217,22 @@ impl FrameWriter {
     }
 
     /// Append to `index.jsonl` as each frame lands.
-    pub fn streaming(dir: &Path, descriptor_sha256: &str) -> Result<Self> {
+    pub fn streaming(
+        dir: &Path,
+        descriptor_sha256: &str,
+        disposition: Disposition,
+    ) -> Result<Self> {
         std::fs::create_dir_all(dir).with_context(|| format!("creating {}", dir.display()))?;
-        let mut sink = BufWriter::new(create(&dir.join("index.jsonl"))?);
-        let header = serde_json::json!({
-            "contract": BLOCK_CHANGES_CONTRACT,
-            "descriptor_sha256": descriptor_sha256,
-            "schema": FRAME_INDEX_STREAM_SCHEMA,
-        });
-        sink.write_all(json_line(&header)?.as_bytes())?;
-        sink.flush()?;
+        let mut sink = BufWriter::new(open_for(&dir.join("index.jsonl"), disposition)?);
+        if disposition == Disposition::Fresh {
+            let header = serde_json::json!({
+                "contract": BLOCK_CHANGES_CONTRACT,
+                "descriptor_sha256": descriptor_sha256,
+                "schema": FRAME_INDEX_STREAM_SCHEMA,
+            });
+            sink.write_all(json_line(&header)?.as_bytes())?;
+            sink.flush()?;
+        }
         Ok(FrameWriter {
             dir: dir.to_path_buf(),
             index: IndexMode::Lines(sink),
@@ -239,9 +294,9 @@ pub struct Bcf1Writer {
 }
 
 impl Bcf1Writer {
-    pub fn create(path: &Path, flush_each: bool) -> Result<Self> {
+    pub fn create(path: &Path, flush_each: bool, disposition: Disposition) -> Result<Self> {
         Ok(Bcf1Writer {
-            sink: BufWriter::new(create(path)?),
+            sink: BufWriter::new(open_for(path, disposition)?),
             flush_each,
         })
     }
@@ -270,6 +325,11 @@ pub struct Progress {
     blocks: u64,
     handler_groups: u64,
     last_block: Option<i32>,
+    /// The last block a checkpoint on disk describes, which is where a killed
+    /// run would resume from. An operator watching a twenty-hour replay needs
+    /// this more than any other number on the line.
+    last_checkpoint: Option<i32>,
+    reconnects: u64,
 }
 
 impl Progress {
@@ -284,7 +344,19 @@ impl Progress {
             blocks: 0,
             handler_groups: 0,
             last_block: None,
+            last_checkpoint: None,
+            reconnects: 0,
         }
+    }
+
+    /// Record that a checkpoint now on disk covers everything through `block`.
+    pub fn record_checkpoint(&mut self, block: i32) {
+        self.last_checkpoint = Some(block);
+    }
+
+    /// Record how many times the stream has been re-opened so far.
+    pub fn record_reconnects(&mut self, reconnects: u64) {
+        self.reconnects = reconnects;
     }
 
     /// Record one block and print a line if the interval has elapsed.
@@ -309,6 +381,12 @@ impl Progress {
     }
 
     fn emit(&self, suffix: &str) {
+        eprintln!("{}", self.line(suffix));
+    }
+
+    /// The line `emit` prints. Split out so its shape is testable without
+    /// capturing stderr.
+    pub fn line(&self, suffix: &str) -> String {
         let elapsed = self.started.elapsed().as_secs_f64();
         let rate = if elapsed > 0.0 {
             self.blocks as f64 / elapsed
@@ -321,9 +399,54 @@ impl Progress {
             .last_block
             .map(|n| n.to_string())
             .unwrap_or_else(|| "-".to_string());
-        eprintln!(
-            "block {at}  {}/{total} blocks  {rate:.1} blocks/s  {} handler groups  {:.0}s{suffix}",
+        let checkpoint = self
+            .last_checkpoint
+            .map(|n| n.to_string())
+            .unwrap_or_else(|| "-".to_string());
+        let reconnects = if self.reconnects == 0 {
+            String::new()
+        } else {
+            format!("  {} reconnects", self.reconnects)
+        };
+        format!(
+            "block {at}  {}/{total} blocks  {rate:.1} blocks/s  {} handler groups  \
+             checkpoint {checkpoint}{reconnects}  {:.0}s{suffix}",
             self.blocks, self.handler_groups, elapsed
+        )
+    }
+}
+
+#[cfg(test)]
+mod progress_tests {
+    use super::*;
+
+    #[test]
+    fn the_progress_line_names_the_last_checkpoint() {
+        let mut progress = Progress::new((100, 200), Duration::from_secs(3600));
+        progress.record(100, 2);
+        progress.record(101, 0);
+        // Nothing checkpointed yet: an operator must be able to tell the
+        // difference between "no recovery point" and "a recovery point at 0".
+        assert!(
+            progress.line("").contains("checkpoint -"),
+            "{}",
+            progress.line("")
+        );
+
+        progress.record_checkpoint(101);
+        progress.record(102, 1);
+        let line = progress.line("");
+        assert!(line.contains("checkpoint 101"), "{line}");
+        assert!(line.contains("3/100 blocks"), "{line}");
+        assert!(line.contains("3 handler groups"), "{line}");
+        // No reconnect yet, so the line stays quiet about them.
+        assert!(!line.contains("reconnects"), "{line}");
+
+        progress.record_reconnects(2);
+        assert!(
+            progress.line("").contains("2 reconnects"),
+            "{}",
+            progress.line("")
         );
     }
 }

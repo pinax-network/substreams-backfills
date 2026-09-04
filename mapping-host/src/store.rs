@@ -113,6 +113,15 @@ impl MemoryStore {
         self.len() == 0
     }
 
+    /// The deployed schema's own proof-of-indexing typename.
+    ///
+    /// Read from the schema rather than spelled as a literal, so a deployment
+    /// that names it differently still splits correctly in
+    /// [`crate::store_state`].
+    pub fn poi_typename(&self) -> String {
+        self.schema.poi_type().typename().to_string()
+    }
+
     /// Live rows grouped by entity type, for reporting.
     pub fn counts_by_type(&self) -> BTreeMap<String, usize> {
         let rows = self.rows.read().expect("store lock poisoned");

@@ -142,7 +142,8 @@ impl EntityOpRecorder for OpRecorder {
     }
 }
 
-fn convert_key(key: &EntityKey) -> pb::EntityKey {
+/// The wire key for a graph-native key, as every recorded operation uses it.
+pub fn convert_key(key: &EntityKey) -> pb::EntityKey {
     pb::EntityKey {
         entity_type: key.entity_type.typename().to_string(),
         id: Some(convert_id(&key.entity_id)),

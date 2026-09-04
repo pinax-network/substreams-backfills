@@ -661,7 +661,9 @@ is the one people expect to be a fourth:
 | the dynamic data sources | template, manifest index, params, `dataSource.context`, creation block, in creation order | replayed through the same `create_dynamic_data_sources` a live wave uses, so the host set ends up in the same order — which is what `handler_order` indexes |
 | the entity cache's **key set** | which keys the `EntityLfuCache` held | `as_modifications` skips the store lookup for an *immutable* entity type whose key is absent from the cache, which would turn an `Overwrite` into an `Insert`. Each entry is rehydrated from the restored store, never from the file |
 
-Plus the closing proof of indexing, the segment identity, and the boundary.
+Plus the closing proof of indexing, the segment identity, the boundary, and — for
+a `--record` run — the cassette's rows, reduced to digests; see
+[The cassette is an output too](#the-cassette-is-an-output-too).
 
 Nothing else crosses a block, and each of those is worth stating because each was
 checked rather than assumed. The `SeqGenerator` that mints VIDs is constructed
@@ -693,7 +695,8 @@ a disagreement means the invariant broke — and that is a refusal, not a warnin
 #### The encoding
 
 JSON Lines: a header line, then one line per dynamic data source, then one row
-per line, then one line per cache key the store has no row for. Values use
+per line, then one line per cache key the store has no row for, then one line per
+cassette row when the run was recording. Values use
 `StoreValue`, the same encoding `--store-out` writes, and rows are ordered by
 `backfill_common::MaterializedKey`, so the file is byte-stable for a given host
 state. One document would have to be built whole in memory before the first byte
@@ -712,16 +715,73 @@ is therefore about 1.5 GB, and compresses well if it needs to be moved.
 | a different deployment, network, spec version, PoI version or causality region | the store and the PoI chain would be one segment's folded into another's |
 | a different `bundle.lock.json` digest | the lock pins every mapping, ABI and schema file, so a different lock is a different deployment |
 | a different descriptor digest, or a different graph-node revision | the frames would not be comparable with the ones already written |
-| a cassette that hashes differently from the one recorded | a row that changed underneath a resumed run would change a handler's answer |
+| a cassette that lost a row, or answers one differently | the store the checkpoint carries was built from that answer; see [The cassette is an output too](#the-cassette-is-an-output-too) |
 | `--from` that is not the boundary block plus one | a lower `--from` replays blocks the checkpoint already applied; a higher one skips the store writes in between |
 | a first block at or below the boundary | the same effects would be applied twice |
 | a first block whose parent hash is not the boundary's hash | a different chain at the same height, which no block number can see |
 | a checkpoint restored into a host that has already replayed a block | the restore replaces the store outright |
 | a truncated, reordered or duplicated-row checkpoint | the totals and the storage-identity ordering are both checked |
 | a checkpoint whose dynamic data sources do not re-instantiate one for one | the host set would differ from the run that wrote it |
+| a `checkpoint/v1` checkpoint | v1 pinned the cassette by its exact bytes, a rule no recording run can satisfy; there is nothing to migrate to, so it is refused with the reason |
 
 Each mismatch is named individually, so an operator learns whether they pointed
-at the wrong segment or whether the cassette grew underneath them.
+at the wrong segment or whether the bundle moved underneath them.
+
+#### The cassette is an output too
+
+Every other input a checkpoint pins is immutable for the life of a run. The
+manifest fields come from the bundle, `graph_node_rev` is a compile-time
+constant, and the bundle lock and the descriptor are written only by
+`build-bundles` and `build-descriptors`. The cassette is the exception: a
+`--record` run appends a row whenever a handler makes a call the file has not
+seen, and saves after every block, so **the file a recording run wrote is never
+the file it read**.
+
+Pinning its exact bytes therefore made every recording run unresumable, which is
+the one workflow periodic checkpointing exists to serve. A twenty-hour recording
+replay stopped at a checkpoint boundary refused to continue with:
+
+```
+cassette_sha256: checkpoint has `214e318e…`, this run has `5f8772b9…`
+```
+
+So the cassette is pinned by its own rule, recorded in the checkpoint rather than
+chosen by the run that resumes:
+
+| The run that wrote the checkpoint | The rule | What the checkpoint carries |
+|---|---|---|
+| was **not** recording | the file must be **byte-identical** | one digest |
+| **was** recording (`--record`) | the file may have **grown**; every row it held then must still be held now, unchanged | one digest, plus two digests and a block number per row |
+
+The property enforced in the second case is the one that matters: every call the
+restored store already reflects would still be answered the same way. Additions
+are fine — they are what a recording run produces. A row that is **gone**, or
+whose digest has **moved**, is a hard refusal that names the call:
+
+```
+a cassette row this checkpoint was built on has changed: `0x1f98… 0x0dfe1681` at block 12371004.
+  checkpoint recorded row digest 7c1a…
+  the cassette now holds 9e04…
+The store this checkpoint carries was built from the old answer, so replaying on
+top of the new one would fold two different chains of `eth_call` results into one
+store.
+```
+
+The row digest covers the whole row, not only `retval`, so editing a recorded
+call's provenance by hand is caught as well. The whole-file digest is still
+recorded and still short-circuits: a cassette that has not moved at all needs no
+row walk, and the extension check only runs when the file actually differs.
+
+Cost: two 64-character digests and a block number per row, about 130 bytes.
+The committed cassette is 240 rows; a full 394,776-block recording run projects
+to roughly 56,000 rows and so about 9 MB of checkpoint, against a store that by
+then is far larger. A replay run's checkpoint carries none of it.
+
+This is why the schema is `checkpoint/v2`. A `v1` checkpoint is refused rather
+than migrated, because migration is impossible in the case that matters: a v1
+checkpoint from a recording run names a cassette that no longer exists anywhere,
+having been overwritten in place by the run itself, and the rows that would let a
+resume verify the file were never written down. The refusal says exactly that.
 
 The range check happens **before** the bundle is loaded and before the endpoint is
 dialled, so a mistyped `--from` costs milliseconds and no network.
@@ -953,9 +1013,16 @@ and then continues. The result is the file an uninterrupted run would have
 written. Drop `--continue-outputs` and point the outputs somewhere new instead if
 you would rather keep the dead chunk's files and concatenate.
 
+The cassette needs no flag and no attention. The first command grew it while
+recording, so its digest no longer matches what the checkpoint saw; the second
+walks the rows the checkpoint pinned, confirms every one is still there and
+unchanged, and says so on stderr before it replays a block. That is
+[the cassette rule](#the-cassette-is-an-output-too), and it is the reason a
+`--record` run is resumable at all.
+
 ### Proving it, hermetically
 
-`tests/mapping_host/long_run.rs`, 19 tests, no socket.
+`tests/mapping_host/long_run.rs`, 26 tests, no socket.
 
 The checkpoint half replays the four committed fixtures through the real host and
 the real writers, with a source that stops serving mid-run to stand in for a
@@ -987,8 +1054,26 @@ says to, under a zero backoff:
   budget resets on progress — nine reconnections complete a range under
   `--stream-retries 1`.
 
+The cassette half runs the binary with `--record` against a private copy of the
+committed cassette, pointed at an RPC endpoint on a port nothing listens on — the
+four fixtures replay entirely out of the cassette, so no call ever misses, and a
+miss would fail loudly rather than reach the network:
+
+* a recording chunk pins the cassette by its rows, and a resume across a cassette
+  that **grew** is accepted, with the digest asserted to have actually moved so
+  the case is not vacuous;
+* a resume across a row whose **answer changed** is refused, and the refusal is
+  asserted to name the address and the calldata rather than a digest;
+* so is a resume across a row that was **hand-edited** in its provenance, and one
+  across a row that is **gone**, which is asserted to name the block;
+* a chunk that was **not** recording still pins the exact bytes: the untouched
+  cassette resumes, and a grown one is refused;
+* a recording checkpoint stays resumable by a run that is not recording.
+
 `RetryPolicy::delay` is unit-tested for the doubling, the cap, and a `retries`
-large enough that a naive shift would overflow back to a short delay.
+large enough that a naive shift would overflow back to a short delay, and the
+cassette rule has its own unit tests over synthetic fingerprints in
+`src/checkpoint.rs`.
 
 ### What CI runs, and what a real range costs
 

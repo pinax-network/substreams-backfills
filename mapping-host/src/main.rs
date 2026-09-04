@@ -336,9 +336,10 @@ async fn run(args: RunArgs) -> Result<()> {
     // forms even for a fixture replay. Without it nothing about either changes.
     let streaming = live_range.is_some() || args.checkpoint_every.is_some();
 
-    // The cassette as it stands before the run. A recording run rewrites it, so
-    // this is the digest a checkpoint being *loaded* must name, and the digest a
-    // checkpoint being written names is taken again at each checkpoint.
+    // The cassette as it stands before the run: its digest, and every row
+    // reduced to a pair of digests. A recording run appends rows as it goes, so
+    // this is the only moment at which the in-memory cassette and the file agree
+    // and a checkpoint being *loaded* can be checked against either.
     let cassette_before = replay::file_sha256(&args.cassette)?;
 
     let mut host = SegmentHost::load(SegmentHostConfig {
@@ -349,7 +350,11 @@ async fn run(args: RunArgs) -> Result<()> {
     .await?;
 
     if let Some((checkpoint, digest)) = resumed.as_ref() {
-        host.restore_checkpoint(checkpoint, cassette_before)
+        let cassette = host
+            .cassette()
+            .fingerprint(cassette_before)
+            .context("fingerprinting the cassette this run loaded")?;
+        host.restore_checkpoint(checkpoint, &cassette)
             .with_context(|| {
                 format!(
                     "restoring {}",

@@ -71,7 +71,7 @@ use backfill_common::{materialized_key, BlockChangesCompatibility};
 use crate::block;
 use crate::blockchanges::{self, convert_entity, convert_key, BlockOpsBuilder, OpRecorder};
 use crate::bundle::SegmentBundle;
-use crate::calls::{Cassette, CassetteMode, CassetteRuntimeAdapter};
+use crate::calls::{Cassette, CassetteFingerprint, CassetteMode, CassetteRuntimeAdapter};
 use crate::checkpoint::{
     CheckpointBoundary, CheckpointDataSource, CheckpointIdentity, CheckpointKey, CheckpointRow,
     HostCheckpoint,
@@ -388,13 +388,15 @@ impl SegmentHost {
         }
     }
 
-    /// Everything a checkpoint has to agree on before it may be loaded.
+    /// The immutable inputs a checkpoint has to agree on before it may be
+    /// loaded.
     ///
-    /// `cassette_sha256` is the caller's, because the cassette is a file this
-    /// host does not own the path to: a recording run rewrites it, so the digest
-    /// that belongs in a checkpoint is the one on disk at the moment the
-    /// checkpoint is written.
-    pub fn checkpoint_identity(&self, cassette_sha256: String) -> CheckpointIdentity {
+    /// The cassette is deliberately not among them, and cannot be: it is the one
+    /// input a run rewrites. It is pinned separately by
+    /// [`crate::checkpoint::CassettePin`], which a caller supplies as a
+    /// [`CassetteFingerprint`] because this host does not own the cassette's
+    /// path and so cannot digest the file itself.
+    pub fn checkpoint_identity(&self) -> CheckpointIdentity {
         CheckpointIdentity {
             deployment: self.deployment.to_string(),
             network: self.network.clone(),
@@ -405,7 +407,6 @@ impl SegmentHost {
             graph_node_rev: GRAPH_NODE_REV.to_string(),
             bundle_lock_sha256: self.bundle_lock_sha256.clone(),
             descriptor_sha256: self.descriptor_sha256.clone(),
-            cassette_sha256,
         }
     }
 
@@ -418,7 +419,7 @@ impl SegmentHost {
     /// record a state no run produced. That is a refusal, not a warning.
     pub fn checkpoint(
         &self,
-        cassette_sha256: String,
+        cassette: &CassetteFingerprint,
         boundary: CheckpointBoundary,
         poi: Option<StorePoi>,
     ) -> Result<HostCheckpoint> {
@@ -480,7 +481,8 @@ impl SegmentHost {
         }
 
         Ok(HostCheckpoint::new(
-            self.checkpoint_identity(cassette_sha256),
+            self.checkpoint_identity(),
+            cassette,
             boundary,
             poi,
             &poi_type,
@@ -500,12 +502,15 @@ impl SegmentHost {
     pub fn restore_checkpoint(
         &mut self,
         checkpoint: &HostCheckpoint,
-        cassette_sha256: String,
+        cassette: &CassetteFingerprint,
     ) -> Result<()> {
         checkpoint
             .header
             .identity
-            .check_loadable_into(&self.checkpoint_identity(cassette_sha256))?;
+            .check_loadable_into(&self.checkpoint_identity())?;
+        // Separate from the identity, and a separate rule: the cassette is the
+        // one input this run may have rewritten.
+        checkpoint.check_cassette(cassette)?;
         if self.blocks_processed > 0 {
             bail!(
                 "this host has already replayed {} blocks; a checkpoint may only be restored into \

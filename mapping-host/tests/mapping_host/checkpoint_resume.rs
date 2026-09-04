@@ -26,6 +26,7 @@ use std::process::Command;
 
 use graph::blockchain::Block as _;
 use graph_mapping_host::bundle::sha256_hex;
+use graph_mapping_host::calls::CassetteFingerprint;
 use graph_mapping_host::checkpoint::{CheckpointBoundary, HostCheckpoint};
 use graph_mapping_host::report::{BlockReport, RunReport};
 use graph_mapping_host::runner::{SegmentHost, SegmentHostConfig};
@@ -59,6 +60,17 @@ fn block_fixture(name: &str) -> PathBuf {
 
 fn cassette_sha256() -> String {
     sha256_hex(&std::fs::read(cassette_path()).expect("reading the committed cassette"))
+}
+
+/// The committed cassette as a checkpoint sees it.
+///
+/// Every run in this suite replays rather than records, so the pin is
+/// `Exact` and the rule stays byte-for-byte. The recording rule, where the
+/// cassette may grow, is exercised in `long_run`.
+fn cassette_fingerprint(host: &SegmentHost) -> CassetteFingerprint {
+    host.cassette()
+        .fingerprint(cassette_sha256())
+        .expect("fingerprinting the committed cassette")
 }
 
 fn require_fixtures() {
@@ -150,7 +162,7 @@ async fn replay(
     let checkpoint = checkpoint_after.then(|| {
         let (block, block_hash) = last.clone().expect("a chunk replayed at least one block");
         host.checkpoint(
-            cassette_sha256(),
+            &cassette_fingerprint(host),
             CheckpointBoundary {
                 block,
                 block_hash,
@@ -205,8 +217,9 @@ async fn chunked() -> (Replay, Replay, HostCheckpoint, String) {
     let parsed = HostCheckpoint::parse(text.as_bytes()).expect("parsing the checkpoint");
 
     let mut second_host = load_host().await;
+    let fingerprint = cassette_fingerprint(&second_host);
     second_host
-        .restore_checkpoint(&parsed, cassette_sha256())
+        .restore_checkpoint(&parsed, &fingerprint)
         .expect("restoring the checkpoint");
     let second = replay(
         &mut second_host,
@@ -328,7 +341,8 @@ fn a_checkpoint_from_another_segment_is_refused() {
     parsed.header.identity.deployment = "QmSomeOtherDeployment".to_string();
     let error = runtime.block_on(async {
         let mut host = load_host().await;
-        host.restore_checkpoint(&parsed, cassette_sha256())
+        let fingerprint = cassette_fingerprint(&host);
+        host.restore_checkpoint(&parsed, &fingerprint)
             .expect_err("a checkpoint from another deployment is not loadable")
     });
     assert!(error.to_string().contains("deployment:"), "{error}");
@@ -342,10 +356,14 @@ fn a_checkpoint_whose_cassette_changed_is_refused() {
 
     let error = runtime.block_on(async {
         let mut host = load_host().await;
-        host.restore_checkpoint(&parsed, "0000".to_string())
+        let mut fingerprint = cassette_fingerprint(&host);
+        fingerprint.sha256 = "0000".to_string();
+        host.restore_checkpoint(&parsed, &fingerprint)
             .expect_err("a cassette that changed underneath the run is not loadable")
     });
-    assert!(error.to_string().contains("cassette_sha256:"), "{error}");
+    let message = format!("{error:#}");
+    assert!(message.contains("the cassette changed"), "{message}");
+    assert!(message.contains("was not recording"), "{message}");
 }
 
 #[test]
@@ -357,7 +375,8 @@ fn a_checkpoint_cannot_be_restored_over_a_host_that_has_already_replayed() {
     let error = runtime.block_on(async {
         let mut host = load_host().await;
         replay(&mut host, &FIXTURES[..1], None, false).await;
-        host.restore_checkpoint(&parsed, cassette_sha256())
+        let fingerprint = cassette_fingerprint(&host);
+        host.restore_checkpoint(&parsed, &fingerprint)
             .expect_err("a host that has replayed a block cannot adopt a checkpoint")
     });
     assert!(error.to_string().contains("already replayed"), "{error}");

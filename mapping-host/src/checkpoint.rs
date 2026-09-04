@@ -77,18 +77,36 @@ use backfill_common::MaterializedKey;
 use serde::{Deserialize, Serialize};
 
 use crate::bundle::sha256_hex;
+use crate::calls::CassetteFingerprint;
 use crate::store_state::{StoreEntityId, StorePoi, StoreValue};
 
 /// Schema identifier written into every checkpoint's header line.
-pub const CHECKPOINT_SCHEMA: &str = "pinax.substreams-backfills.mapping-host.checkpoint/v1";
-
-/// Everything that has to agree before a checkpoint may be loaded.
 ///
-/// A checkpoint is a store image plus a host set for *one* segment replayed
-/// against *one* cassette under *one* graph-node revision. Loading it into
-/// anything else would produce a store and a proof-of-indexing chain that no
-/// single run could have produced, so each field below is compared and any
-/// difference is a refusal.
+/// `v2` moved the cassette out of [`CheckpointIdentity`] and into its own
+/// [`CassettePin`], because a `--record` run rewrites the cassette and pinning
+/// its exact bytes made exactly the runs periodic checkpointing exists for
+/// unresumable. `v1` is refused rather than migrated; see
+/// [`HostCheckpoint::parse`].
+pub const CHECKPOINT_SCHEMA: &str = "pinax.substreams-backfills.mapping-host.checkpoint/v2";
+
+/// The schema a `v1` checkpoint carries, named so the refusal can be specific.
+pub const CHECKPOINT_SCHEMA_V1: &str = "pinax.substreams-backfills.mapping-host.checkpoint/v1";
+
+/// The inputs a run cannot change, and that a continuation must therefore match
+/// exactly.
+///
+/// A checkpoint is a store image plus a host set for *one* segment under *one*
+/// graph-node revision. Loading it into anything else would produce a store and
+/// a proof-of-indexing chain that no single run could have produced, so each
+/// field below is compared and any difference is a refusal.
+///
+/// The cassette is deliberately **not** here. It is the one input a run may
+/// legitimately rewrite, so it gets [`CassettePin`], which is a different rule.
+/// Everything that remains is immutable for the life of a run: the first six
+/// fields come from the resolved manifest inside the bundle, `graph_node_rev` is
+/// a compile-time constant, and `bundle_lock_sha256` and `descriptor_sha256`
+/// digest files that only the `build-bundles` and `build-descriptors`
+/// subcommands ever write.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CheckpointIdentity {
     /// Deployment CID; also the bundle directory name.
@@ -106,9 +124,6 @@ pub struct CheckpointIdentity {
     pub bundle_lock_sha256: String,
     /// SHA-256 of the segment's `block-changes-descriptor.json`.
     pub descriptor_sha256: String,
-    /// SHA-256 of the cassette file as it stood when the checkpoint was written.
-    /// Empty when no cassette file existed.
-    pub cassette_sha256: String,
 }
 
 impl CheckpointIdentity {
@@ -156,22 +171,89 @@ impl CheckpointIdentity {
             &self.descriptor_sha256,
             &current.descriptor_sha256,
         );
-        compare(
-            "cassette_sha256",
-            &self.cassette_sha256,
-            &current.cassette_sha256,
-        );
         if problems.is_empty() {
             return Ok(());
         }
         bail!(
             "this checkpoint was not taken by this host:\n{}\n\
-             A checkpoint is a store image and a host set for one segment, one cassette and one \
-             graph-node revision. Continuing across any of those differences would produce a \
-             store and a proof-of-indexing chain no single run could have produced.",
+             A checkpoint is a store image and a host set for one segment under one graph-node \
+             revision. Continuing across any of those differences would produce a store and a \
+             proof-of-indexing chain no single run could have produced.",
             problems.join("\n")
         )
     }
+}
+
+/// How a checkpoint pins the cassette it was taken against.
+///
+/// The cassette is the one input a run may rewrite, so it cannot be pinned the
+/// way the bundle is. A `--record` run appends a row every time a handler makes
+/// a call the file has not seen, and saves after each block, so the file the run
+/// wrote is *never* the file it read. Pinning the exact bytes therefore made
+/// every recording run unresumable — which is the one workflow periodic
+/// checkpointing exists to serve.
+///
+/// The property that actually matters is weaker and is the one enforced here:
+/// **the cassette has only grown.** Every row present when the checkpoint was
+/// taken must still be present with the same answer, so every call the store
+/// already reflects would be answered the same way again. Rows added since are
+/// fine; they are what a recording run produces.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "mode", rename_all = "snake_case")]
+pub enum CassettePin {
+    /// The run replayed the cassette without recording, so it cannot have
+    /// written to it: the file must be byte-identical. This is the strictest
+    /// rule and it costs nothing to keep, so a replay run keeps it.
+    Exact {
+        /// SHA-256 of the file. Empty when there was no cassette file.
+        sha256: String,
+    },
+    /// The run was recording. The file may have grown; every row it held then
+    /// must still be held now, unchanged. The rows themselves are carried as
+    /// separate `cassette_row` lines rather than in this header, so the header
+    /// stays one line whatever the cassette's size.
+    Extended {
+        /// SHA-256 of the file as it stood at the boundary. When the file still
+        /// digests to this, nothing has changed and the row check is skipped.
+        sha256: String,
+        /// How many rows the cassette held, and so how many `cassette_row`
+        /// lines this checkpoint carries.
+        rows: usize,
+    },
+}
+
+impl CassettePin {
+    /// The digest of the file this checkpoint was taken against.
+    pub fn sha256(&self) -> &str {
+        match self {
+            CassettePin::Exact { sha256 } | CassettePin::Extended { sha256, .. } => sha256,
+        }
+    }
+
+    /// Which rule this pin applies, for a log line or an error.
+    pub fn rule(&self) -> &'static str {
+        match self {
+            CassettePin::Exact { .. } => "exact bytes (the run was not recording)",
+            CassettePin::Extended { .. } => "rows only grew (the run was recording)",
+        }
+    }
+}
+
+/// One cassette row as a checkpoint records it.
+///
+/// Two digests and a block number, ~130 bytes a row. The key digest is the
+/// identity, the row digest is what must not have moved, and the block number is
+/// there so a refusal can point an operator at a place in the file rather than
+/// at a digest.
+///
+/// The key itself is deliberately not stored: it is a block hash, an address and
+/// arbitrary calldata, which would roughly triple the size of this list for no
+/// gain — a changed row is named from the cassette in hand, which does have it.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CheckpointCassetteRow {
+    pub block: i32,
+    pub key_sha256: String,
+    pub row_sha256: String,
 }
 
 /// Where the run that wrote this checkpoint stopped.
@@ -219,6 +301,10 @@ pub struct CheckpointTotals {
     /// Cache keys the store has no row for: a read that missed, cached as a
     /// known absence.
     pub cached_absent: usize,
+    /// Cassette rows carried as `cassette_row` lines. Zero unless the run was
+    /// recording; a replay run's cassette is pinned by its bytes instead.
+    #[serde(default)]
+    pub cassette_rows: usize,
 }
 
 /// The header line.
@@ -226,6 +312,8 @@ pub struct CheckpointTotals {
 pub struct CheckpointHeader {
     pub schema: String,
     pub identity: CheckpointIdentity,
+    /// The one input a run may rewrite, pinned by its own rule.
+    pub cassette: CassettePin,
     pub boundary: CheckpointBoundary,
     /// The closing proof of indexing across the whole chain of chunks, as the
     /// last block that opened the causality region left it. `None` when no block
@@ -321,6 +409,8 @@ enum CheckpointLine {
     Row(CheckpointRow),
     /// A cache key the store has no row for.
     CachedAbsent(CheckpointKey),
+    /// One cassette row, present only when the run was recording.
+    CassetteRow(CheckpointCassetteRow),
 }
 
 /// A whole checkpoint, in memory.
@@ -333,6 +423,8 @@ pub struct HostCheckpoint {
     pub rows: Vec<CheckpointRow>,
     /// Ordered by storage identity.
     pub cached_absent: Vec<CheckpointKey>,
+    /// Ordered by key digest. Empty unless the run was recording.
+    pub cassette_rows: Vec<CheckpointCassetteRow>,
 }
 
 impl HostCheckpoint {
@@ -340,8 +432,10 @@ impl HostCheckpoint {
     ///
     /// `rows` and `cached_absent` are sorted here rather than trusted, so the
     /// file is byte-stable no matter what order a caller collected them in.
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         identity: CheckpointIdentity,
+        cassette: &CassetteFingerprint,
         boundary: CheckpointBoundary,
         poi: Option<StorePoi>,
         poi_type: &str,
@@ -352,10 +446,40 @@ impl HostCheckpoint {
         rows.sort_by_key(|row| row.key().ordering());
         cached_absent.sort_by_key(CheckpointKey::ordering);
 
+        // A run that cannot write to the cassette is pinned by the file's bytes,
+        // which is stricter and costs nothing. A recording run carries the rows,
+        // because its file is guaranteed to differ by the time anyone resumes.
+        let (pin, cassette_rows) = if cassette.recording {
+            let rows: Vec<CheckpointCassetteRow> = cassette
+                .rows
+                .iter()
+                .map(|row| CheckpointCassetteRow {
+                    block: row.block,
+                    key_sha256: row.key_sha256.clone(),
+                    row_sha256: row.row_sha256.clone(),
+                })
+                .collect();
+            (
+                CassettePin::Extended {
+                    sha256: cassette.sha256.clone(),
+                    rows: rows.len(),
+                },
+                rows,
+            )
+        } else {
+            (
+                CassettePin::Exact {
+                    sha256: cassette.sha256.clone(),
+                },
+                Vec::new(),
+            )
+        };
+
         let mut counts_by_type: BTreeMap<String, usize> = BTreeMap::new();
         let mut totals = CheckpointTotals {
             dynamic_data_sources: data_sources.len(),
             cached_absent: cached_absent.len(),
+            cassette_rows: cassette_rows.len(),
             ..CheckpointTotals::default()
         };
         for row in &rows {
@@ -375,6 +499,7 @@ impl HostCheckpoint {
             header: CheckpointHeader {
                 schema: CHECKPOINT_SCHEMA.to_string(),
                 identity,
+                cassette: pin,
                 boundary,
                 poi,
                 totals,
@@ -383,6 +508,7 @@ impl HostCheckpoint {
             data_sources,
             rows,
             cached_absent,
+            cassette_rows,
         }
     }
 
@@ -401,6 +527,83 @@ impl HostCheckpoint {
             let line = CheckpointLine::CachedAbsent(key.clone());
             writeln!(sink, "{}", serde_json::to_string(&line)?)?;
         }
+        for row in &self.cassette_rows {
+            let line = CheckpointLine::CassetteRow(row.clone());
+            writeln!(sink, "{}", serde_json::to_string(&line)?)?;
+        }
+        Ok(())
+    }
+
+    /// Refuse a cassette that is not the one this checkpoint was taken against.
+    ///
+    /// Two rules, and which one applies is recorded in the checkpoint rather
+    /// than decided by the run doing the resuming:
+    ///
+    /// * [`CassettePin::Exact`] — the file must be byte-identical. A run that
+    ///   was not recording cannot have written to it, so anything else means
+    ///   somebody or something else did.
+    /// * [`CassettePin::Extended`] — the file may have grown, and every row the
+    ///   checkpoint recorded must still be there with the same digest. A row
+    ///   that is gone, or that answers differently, is a hard refusal naming the
+    ///   call, because the store this checkpoint carries was built from that
+    ///   answer and cannot be reconciled with another one.
+    ///
+    /// The whole-file digest short-circuits the second rule: a cassette that has
+    /// not moved at all needs no row walk.
+    pub fn check_cassette(&self, current: &CassetteFingerprint) -> Result<()> {
+        let pin = &self.header.cassette;
+        if pin.sha256() == current.sha256 {
+            return Ok(());
+        }
+        let CassettePin::Extended { sha256, rows } = pin else {
+            bail!(
+                "the cassette changed underneath this checkpoint:\n  \
+                 checkpoint has `{}`, this run has `{}`\n\
+                 The run that wrote this checkpoint was not recording, so it could not have \
+                 written to the cassette and the file was expected to be byte-identical. Point \
+                 --cassette at the file that checkpoint was taken against.",
+                pin.sha256(),
+                current.sha256
+            );
+        };
+
+        for recorded in &self.cassette_rows {
+            let Some(now) = current.row(&recorded.key_sha256) else {
+                bail!(
+                    "a cassette row this checkpoint was built on is gone: the call recorded at \
+                     block {} (key {}) is not in {} rows of the cassette this run loaded.\n\
+                     The store this checkpoint carries already reflects that call's answer, so a \
+                     cassette that no longer holds it cannot continue it. A recording run may \
+                     only ever *add* rows.",
+                    recorded.block,
+                    recorded.key_sha256,
+                    current.rows.len()
+                );
+            };
+            if now.row_sha256 != recorded.row_sha256 {
+                bail!(
+                    "a cassette row this checkpoint was built on has changed: `{}` at block {}.\n  \
+                     checkpoint recorded row digest {}\n  the cassette now holds {}\n\
+                     The store this checkpoint carries was built from the old answer, so \
+                     replaying on top of the new one would fold two different chains of \
+                     `eth_call` results into one store.",
+                    now.call,
+                    now.block,
+                    recorded.row_sha256,
+                    now.row_sha256
+                );
+            }
+        }
+
+        // Only reachable when every recorded row is still there, so the file
+        // genuinely only grew. Say so, because "the digest changed and the run
+        // continued anyway" should never be silent.
+        eprintln!(
+            "cassette: {rows} recorded row(s) all still present and unchanged; the file has \
+             grown to {} row(s) since this checkpoint ({sha256} -> {})",
+            current.rows.len(),
+            current.sha256
+        );
         Ok(())
     }
 
@@ -438,6 +641,13 @@ impl HostCheckpoint {
     }
 
     /// Parse JSON Lines, checking the header's totals against what was read.
+    ///
+    /// A `v1` checkpoint is refused with the reason rather than migrated. `v1`
+    /// pinned the cassette by its exact bytes, so a `v1` checkpoint written by a
+    /// `--record` run names a file that no longer exists anywhere: the run
+    /// itself overwrote it on the next block. There is nothing to migrate *to*,
+    /// because the information that would let a resume verify the cassette was
+    /// never written down.
     pub fn parse(source: impl BufRead) -> Result<Self> {
         let mut lines = source.lines();
         let header_line = lines
@@ -445,18 +655,44 @@ impl HostCheckpoint {
             .transpose()
             .context("reading the checkpoint header")?
             .ok_or_else(|| anyhow::anyhow!("the checkpoint is empty; it has no header line"))?;
-        let header: CheckpointHeader = serde_json::from_str(&header_line)
-            .context("parsing the checkpoint header; it is not a checkpoint/v1 header line")?;
-        if header.schema != CHECKPOINT_SCHEMA {
-            bail!(
-                "unexpected checkpoint schema `{}`, want `{CHECKPOINT_SCHEMA}`",
-                header.schema
-            );
+        // Read the schema before the header, so a version this build cannot
+        // parse gets the explanation rather than a serde field error.
+        let schema = serde_json::from_str::<serde_json::Value>(&header_line)
+            .ok()
+            .and_then(|value| {
+                value
+                    .get("schema")
+                    .and_then(serde_json::Value::as_str)
+                    .map(str::to_string)
+            });
+        match schema.as_deref() {
+            Some(CHECKPOINT_SCHEMA) => {}
+            Some(CHECKPOINT_SCHEMA_V1) => bail!(
+                "this is a `{CHECKPOINT_SCHEMA_V1}` checkpoint, and this build writes and reads \
+                 `{CHECKPOINT_SCHEMA}`.\n\
+                 A v1 checkpoint pins the cassette by the exact bytes of the file, which is a rule \
+                 no --record run can satisfy: a recording run appends a row whenever a handler \
+                 makes a call the file has not seen and saves after every block, so the file it \
+                 wrote is never the file it read. v2 records the cassette's rows instead, and \
+                 accepts a cassette that has only grown.\n\
+                 A v1 checkpoint cannot be migrated, because the rows it would need were never \
+                 written down and the cassette it pinned was overwritten in place. Restart the \
+                 chunk that wrote it under this build.",
+            ),
+            Some(other) => {
+                bail!("unexpected checkpoint schema `{other}`, want `{CHECKPOINT_SCHEMA}`")
+            }
+            None => {
+                bail!("the first line of this file is not a checkpoint header; it names no schema")
+            }
         }
+        let header: CheckpointHeader = serde_json::from_str(&header_line)
+            .context("parsing the checkpoint header; it is not a checkpoint/v2 header line")?;
 
         let mut data_sources = Vec::new();
         let mut rows = Vec::new();
         let mut cached_absent = Vec::new();
+        let mut cassette_rows = Vec::new();
         for (offset, line) in lines.enumerate() {
             let number = offset + 2;
             let line = line.with_context(|| format!("reading checkpoint line {number}"))?;
@@ -469,6 +705,7 @@ impl HostCheckpoint {
                 CheckpointLine::DataSource(value) => data_sources.push(value),
                 CheckpointLine::Row(value) => rows.push(value),
                 CheckpointLine::CachedAbsent(value) => cached_absent.push(value),
+                CheckpointLine::CassetteRow(value) => cassette_rows.push(value),
             }
         }
 
@@ -477,6 +714,7 @@ impl HostCheckpoint {
             data_sources,
             rows,
             cached_absent,
+            cassette_rows,
         };
         checkpoint.check_totals()?;
         Ok(checkpoint)
@@ -501,6 +739,7 @@ impl HostCheckpoint {
         let mut seen = CheckpointTotals {
             dynamic_data_sources: self.data_sources.len(),
             cached_absent: self.cached_absent.len(),
+            cassette_rows: self.cassette_rows.len(),
             ..CheckpointTotals::default()
         };
         // The header's `counts_by_type` names the proof-of-indexing type only
@@ -530,6 +769,7 @@ impl HostCheckpoint {
             ("fields", seen.fields, stated.fields),
             ("cached rows", seen.cached_present, stated.cached_present),
             ("cached absences", seen.cached_absent, stated.cached_absent),
+            ("cassette rows", seen.cassette_rows, stated.cassette_rows),
         ];
         for (what, seen, stated) in mismatches {
             if seen != stated {
@@ -538,6 +778,34 @@ impl HostCheckpoint {
                      or was edited"
                 );
             }
+        }
+
+        // The pin and the rows must agree, or a resume would walk a row list
+        // that does not describe the cassette the header names.
+        match &self.header.cassette {
+            CassettePin::Exact { .. } if !self.cassette_rows.is_empty() => bail!(
+                "the checkpoint pins the cassette by its exact bytes but also carries {} cassette \
+                 rows; it was edited",
+                self.cassette_rows.len()
+            ),
+            CassettePin::Extended { rows, .. } if *rows != self.cassette_rows.len() => bail!(
+                "the checkpoint states {rows} cassette rows in its header but carries {}; it is \
+                 truncated or was edited",
+                self.cassette_rows.len()
+            ),
+            _ => {}
+        }
+        let mut keys: Vec<&str> = self
+            .cassette_rows
+            .iter()
+            .map(|row| row.key_sha256.as_str())
+            .collect();
+        if keys.windows(2).any(|pair| pair[0] > pair[1]) {
+            bail!("the checkpoint's cassette rows are not in key-digest order");
+        }
+        keys.dedup();
+        if keys.len() != self.cassette_rows.len() {
+            bail!("the checkpoint carries two cassette rows with the same key digest");
         }
 
         let mut counts: BTreeMap<String, usize> = BTreeMap::new();
@@ -569,6 +837,7 @@ impl HostCheckpoint {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::calls::CassetteRowFingerprint;
 
     fn identity() -> CheckpointIdentity {
         CheckpointIdentity {
@@ -581,8 +850,36 @@ mod tests {
             graph_node_rev: "77823b5".to_string(),
             bundle_lock_sha256: "aa".to_string(),
             descriptor_sha256: "bb".to_string(),
-            cassette_sha256: "cc".to_string(),
         }
+    }
+
+    /// A cassette fingerprint with `calls` rows, of which the first `changed`
+    /// answer differently from [`cassette`]'s.
+    fn cassette_with(sha256: &str, recording: bool, calls: &[&str]) -> CassetteFingerprint {
+        let mut rows: Vec<CassetteRowFingerprint> = calls
+            .iter()
+            .enumerate()
+            .map(|(at, call)| CassetteRowFingerprint {
+                block: 12_369_621 + at as i32,
+                key_sha256: sha256_hex(call.as_bytes()),
+                row_sha256: sha256_hex(format!("{call}=answer").as_bytes()),
+                call: (*call).to_string(),
+            })
+            .collect();
+        rows.sort_by(|a, b| a.key_sha256.cmp(&b.key_sha256));
+        CassetteFingerprint {
+            sha256: sha256.to_string(),
+            recording,
+            rows,
+        }
+    }
+
+    fn cassette() -> CassetteFingerprint {
+        cassette_with("cc", false, &["a", "b"])
+    }
+
+    fn recording_cassette() -> CassetteFingerprint {
+        cassette_with("cc", true, &["a", "b"])
     }
 
     fn boundary() -> CheckpointBoundary {
@@ -611,8 +908,13 @@ mod tests {
     }
 
     fn sample() -> HostCheckpoint {
+        sample_against(&cassette())
+    }
+
+    fn sample_against(cassette: &CassetteFingerprint) -> HostCheckpoint {
         HostCheckpoint::new(
             identity(),
+            cassette,
             boundary(),
             None,
             "Poi$",
@@ -706,14 +1008,147 @@ mod tests {
     fn a_foreign_checkpoint_names_every_difference() {
         let mut other = identity();
         other.deployment = "QmSomethingElse".to_string();
-        other.cassette_sha256 = "dd".to_string();
+        other.descriptor_sha256 = "dd".to_string();
         let error = other
             .check_loadable_into(&identity())
             .expect_err("a checkpoint from another segment is not loadable");
         let message = error.to_string();
         assert!(message.contains("deployment:"), "{message}");
-        assert!(message.contains("cassette_sha256:"), "{message}");
+        assert!(message.contains("descriptor_sha256:"), "{message}");
         assert!(!message.contains("network:"), "{message}");
+    }
+
+    // -----------------------------------------------------------------------
+    // The cassette, which is the one input a run may rewrite
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn a_replay_run_pins_the_cassette_by_its_bytes() {
+        let checkpoint = sample_against(&cassette());
+        assert_eq!(
+            checkpoint.header.cassette,
+            CassettePin::Exact {
+                sha256: "cc".to_string()
+            }
+        );
+        // A replay run cannot write to the cassette, so no rows are carried and
+        // the file must be byte-identical.
+        assert!(checkpoint.cassette_rows.is_empty());
+        checkpoint
+            .check_cassette(&cassette())
+            .expect("the same file loads");
+        let error = checkpoint
+            .check_cassette(&cassette_with("dd", false, &["a", "b"]))
+            .expect_err("a changed file is refused");
+        let message = format!("{error:#}");
+        assert!(message.contains("was not recording"), "{message}");
+        assert!(message.contains("byte-identical"), "{message}");
+    }
+
+    #[test]
+    fn a_recording_run_pins_the_cassette_by_its_rows() {
+        let checkpoint = sample_against(&recording_cassette());
+        assert_eq!(
+            checkpoint.header.cassette,
+            CassettePin::Extended {
+                sha256: "cc".to_string(),
+                rows: 2
+            }
+        );
+        assert_eq!(checkpoint.cassette_rows.len(), 2);
+
+        // Grown: the two recorded rows are still there, a third has appeared,
+        // and the file digests differently. Accepted.
+        checkpoint
+            .check_cassette(&cassette_with("dd", true, &["a", "b", "c"]))
+            .expect("a cassette that only grew is loadable");
+
+        // Unchanged: the fast path, without walking a row.
+        checkpoint
+            .check_cassette(&recording_cassette())
+            .expect("an unchanged cassette is loadable");
+    }
+
+    #[test]
+    fn a_cassette_row_that_answers_differently_is_refused_by_name() {
+        let checkpoint = sample_against(&recording_cassette());
+        let mut grown = cassette_with("dd", true, &["a", "b", "c"]);
+        // Change the answer of the row keyed `b`, leaving its key alone.
+        let at = grown
+            .rows
+            .iter()
+            .position(|row| row.call == "b")
+            .expect("the row is there");
+        grown.rows[at].row_sha256 = sha256_hex(b"b=something else");
+
+        let error = checkpoint
+            .check_cassette(&grown)
+            .expect_err("a changed answer is refused");
+        let message = format!("{error:#}");
+        assert!(message.contains("has changed"), "{message}");
+        // Named by the call, not by a digest.
+        assert!(message.contains("`b` at block"), "{message}");
+        assert!(message.contains("fold two different chains"), "{message}");
+    }
+
+    #[test]
+    fn a_cassette_row_that_is_gone_is_refused() {
+        let checkpoint = sample_against(&recording_cassette());
+        let shrunk = cassette_with("dd", true, &["a"]);
+        let error = checkpoint
+            .check_cassette(&shrunk)
+            .expect_err("a removed row is refused");
+        let message = format!("{error:#}");
+        assert!(message.contains("is gone"), "{message}");
+        assert!(message.contains("may only ever *add* rows"), "{message}");
+    }
+
+    #[test]
+    fn a_checkpoint_that_claims_exact_bytes_may_not_carry_rows() {
+        let mut checkpoint = sample_against(&cassette());
+        checkpoint.cassette_rows = vec![CheckpointCassetteRow {
+            block: 1,
+            key_sha256: "aa".to_string(),
+            row_sha256: "bb".to_string(),
+        }];
+        checkpoint.header.totals.cassette_rows = 1;
+        let error = HostCheckpoint::parse(checkpoint.to_jsonl().expect("serialised").as_bytes())
+            .expect_err("the pin and the rows must agree");
+        assert!(format!("{error:#}").contains("exact bytes"), "{error:#}");
+    }
+
+    #[test]
+    fn a_truncated_cassette_row_list_is_refused() {
+        let checkpoint = sample_against(&recording_cassette());
+        let text = checkpoint.to_jsonl().expect("serialised");
+        let mut lines: Vec<&str> = text.lines().collect();
+        // The cassette rows are written last.
+        lines.pop();
+        let truncated = format!("{}\n", lines.join("\n"));
+        let error = HostCheckpoint::parse(truncated.as_bytes())
+            .expect_err("a checkpoint missing a cassette row is not loadable");
+        assert!(format!("{error:#}").contains("cassette rows"), "{error:#}");
+    }
+
+    #[test]
+    fn a_recording_checkpoint_round_trips_through_json_lines() {
+        let checkpoint = sample_against(&recording_cassette());
+        let text = checkpoint.to_jsonl().expect("serialised");
+        let back = HostCheckpoint::parse(text.as_bytes()).expect("parsed");
+        assert_eq!(checkpoint, back);
+        assert_eq!(back.to_jsonl().expect("re-serialised"), text);
+    }
+
+    #[test]
+    fn a_v1_checkpoint_is_refused_with_the_reason() {
+        let error = HostCheckpoint::parse(
+            format!("{{\"schema\":\"{CHECKPOINT_SCHEMA_V1}\"}}\n").as_bytes(),
+        )
+        .expect_err("a v1 checkpoint is not loadable");
+        let message = format!("{error:#}");
+        assert!(message.contains("cannot be migrated"), "{message}");
+        assert!(message.contains("--record"), "{message}");
+        assert!(message.contains("Restart the chunk"), "{message}");
     }
 
     #[test]

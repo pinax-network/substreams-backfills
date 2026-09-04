@@ -129,13 +129,22 @@ impl CheckpointPolicy {
                 .unwrap_or_default(),
             previous_checkpoint_sha256: self.previous.as_ref().map(|(_, digest)| digest.clone()),
         };
-        let checkpoint = host.checkpoint(file_sha256(&self.cassette)?, boundary, poi)?;
+        // Fingerprinted *after* the save above, so what the checkpoint pins is
+        // the cassette the next chunk will load rather than the one this chunk
+        // started from.
+        let cassette = host
+            .cassette()
+            .fingerprint(file_sha256(&self.cassette)?)
+            .context("fingerprinting the cassette for a checkpoint")?;
+        let checkpoint = host.checkpoint(&cassette, boundary, poi)?;
         let digest = checkpoint.write(path)?;
         eprintln!(
-            "{}: {} rows, {} dynamic data sources, after block {block} ({digest})",
+            "{}: {} rows, {} dynamic data sources, {} cassette row(s) pinned, after block \
+             {block} ({digest})",
             path.display(),
             checkpoint.rows.len(),
             checkpoint.data_sources.len(),
+            checkpoint.cassette_rows.len(),
         );
         Ok(digest)
     }

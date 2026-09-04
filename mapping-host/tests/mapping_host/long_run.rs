@@ -31,7 +31,7 @@ use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use graph::blockchain::Block as _;
 use graph_chain_ethereum::chain::BlockFinality;
-use graph_mapping_host::checkpoint::HostCheckpoint;
+use graph_mapping_host::checkpoint::{CassettePin, HostCheckpoint};
 use graph_mapping_host::live::{Bcf1Writer, FrameWriter, ReportWriter};
 use graph_mapping_host::outputs::{self, ResumePolicy};
 use graph_mapping_host::replay::{self, CheckpointPolicy, ReplayOutputs};
@@ -861,8 +861,11 @@ fn recovering_from_a_mid_run_checkpoint_reproduces_an_uninterrupted_run_byte_for
         assert_eq!(boundary, SECOND_BLOCK);
 
         let mut host = load_host().await;
-        let cassette = replay::file_sha256(&cassette_path()).expect("the cassette digest");
-        host.restore_checkpoint(&checkpoint, cassette)
+        let cassette = host
+            .cassette()
+            .fingerprint(replay::file_sha256(&cassette_path()).expect("the cassette digest"))
+            .expect("fingerprinting the cassette");
+        host.restore_checkpoint(&checkpoint, &cassette)
             .expect("restoring");
 
         let resume = ResumePolicy::new(Some(boundary), true).expect("a continue policy");
@@ -1019,7 +1022,7 @@ fn fixture_args(names: &[&str]) -> Vec<String> {
 fn checkpointed_blocks(stderr: &str) -> Vec<i32> {
     stderr
         .lines()
-        .filter_map(|line| line.split_once("dynamic data sources, after block "))
+        .filter_map(|line| line.split_once("pinned, after block "))
         .filter_map(|(_, rest)| rest.split_whitespace().next())
         .filter_map(|number| number.parse().ok())
         .collect()
@@ -1206,4 +1209,304 @@ fn the_cli_continues_output_files_across_a_resume() {
         FIXTURES.len() + 1,
         "{joined_text}"
     );
+}
+
+// ---------------------------------------------------------------------------
+// The cassette, which a --record run rewrites as it goes
+// ---------------------------------------------------------------------------
+//
+// Hermetic despite `--record`: the four fixtures replay entirely out of the
+// committed cassette, so no call ever misses and the RPC endpoint below is never
+// dialled. It points at a port nothing listens on precisely so that a miss would
+// fail loudly rather than reach the network.
+
+/// An endpoint a recording run would fail on, so a cassette miss cannot pass
+/// quietly for a reachable node.
+const UNREACHABLE_RPC: &str = "http://127.0.0.1:1";
+
+/// Run the binary against a cassette of the caller's choosing.
+fn cli_cassette(cassette: &Path, record: bool, args: &[&str]) -> std::process::Output {
+    let mut command = Command::new(env!("CARGO_BIN_EXE_graph-mapping-host"));
+    command
+        .current_dir(crate_dir())
+        .arg("run")
+        .arg("--segment")
+        .arg(format!("segments/{SEGMENT}"))
+        .arg("--cassette")
+        .arg(cassette)
+        .args(args)
+        .env_remove("FIREHOSE_API_TOKEN")
+        .env_remove("SUBSTREAMS_API_TOKEN")
+        .env_remove("FIREHOSE_ENDPOINT");
+    if record {
+        command
+            .arg("--record")
+            .env("ETHEREUM_RPC_URL", UNREACHABLE_RPC);
+    } else {
+        command.env_remove("ETHEREUM_RPC_URL");
+    }
+    command.output().expect("running graph-mapping-host")
+}
+
+fn expect_ok(output: std::process::Output, what: &str) -> String {
+    let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
+    assert!(output.status.success(), "{what} failed:\n{stderr}");
+    stderr
+}
+
+fn expect_refusal(output: std::process::Output, what: &str) -> String {
+    let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
+    assert!(
+        !output.status.success(),
+        "expected {what} to be refused:\n{stderr}"
+    );
+    stderr
+}
+
+/// A private copy of the committed cassette, so a test may edit it.
+fn cassette_copy(dir: &Path) -> PathBuf {
+    let path = dir.join("cassette.json");
+    std::fs::copy(cassette_path(), &path).expect("copying the committed cassette");
+    path
+}
+
+fn read_cassette(path: &Path) -> serde_json::Value {
+    serde_json::from_slice(&std::fs::read(path).expect("reading the cassette"))
+        .expect("parsing the cassette")
+}
+
+fn write_cassette(path: &Path, value: &serde_json::Value) {
+    let mut json = serde_json::to_string_pretty(value).expect("serialising the cassette");
+    json.push('\n');
+    std::fs::write(path, json).expect("writing the cassette");
+}
+
+fn entries(value: &serde_json::Value) -> &Vec<serde_json::Value> {
+    value["entries"]
+        .as_array()
+        .expect("the cassette has entries")
+}
+
+/// Replay the first two fixtures, checkpointing every block.
+fn first_chunk(cassette: &Path, checkpoint: &Path, record: bool) -> String {
+    let head = fixture_args(&FIXTURES[..2]);
+    let mut args: Vec<&str> = head.iter().map(String::as_str).collect();
+    args.extend([
+        "--checkpoint-out",
+        checkpoint.to_str().expect("utf-8"),
+        "--checkpoint-every",
+        "1",
+    ]);
+    expect_ok(cli_cassette(cassette, record, &args), "the first chunk")
+}
+
+/// Resume onto the last two fixtures.
+fn second_chunk(cassette: &Path, checkpoint: &Path, record: bool) -> std::process::Output {
+    let tail = fixture_args(&FIXTURES[2..]);
+    let mut args: Vec<&str> = tail.iter().map(String::as_str).collect();
+    args.extend(["--checkpoint-in", checkpoint.to_str().expect("utf-8")]);
+    cli_cassette(cassette, record, &args)
+}
+
+/// The bug this rule exists for: a `--record` run appends rows to the cassette
+/// as it goes, so the file it wrote is never the file it read, and pinning the
+/// exact bytes made every recording run unresumable.
+#[test]
+fn a_recording_run_resumes_after_its_cassette_grew() {
+    require_fixtures();
+    let temp = tempfile::tempdir().expect("temp dir");
+    let cassette = cassette_copy(temp.path());
+    let checkpoint = temp.path().join("run.ckpt");
+
+    first_chunk(&cassette, &checkpoint, true);
+    let (parsed, _) = HostCheckpoint::read(&checkpoint).expect("the checkpoint");
+    let pinned = entries(&read_cassette(&cassette)).len();
+    assert!(pinned > 0, "the committed cassette is empty");
+    assert_eq!(
+        parsed.header.cassette,
+        CassettePin::Extended {
+            sha256: replay::file_sha256(&cassette).expect("digest"),
+            rows: pinned,
+        },
+        "a recording run must pin the cassette by its rows"
+    );
+    assert_eq!(parsed.cassette_rows.len(), pinned);
+
+    // What a longer recording run would have done between the checkpoint and
+    // the resume: a row for a block past the boundary appears.
+    let mut grown = read_cassette(&cassette);
+    let mut added = entries(&grown)[0].clone();
+    added["block_hash"] = serde_json::json!(format!("0x{}", "ab".repeat(32)));
+    added["block_number"] = serde_json::json!(12_400_000);
+    grown["entries"]
+        .as_array_mut()
+        .expect("entries")
+        .push(added);
+    write_cassette(&cassette, &grown);
+    assert_ne!(
+        replay::file_sha256(&cassette).expect("digest"),
+        parsed.header.cassette.sha256(),
+        "the cassette must actually have changed, or this proves nothing"
+    );
+
+    let stderr = expect_ok(
+        second_chunk(&cassette, &checkpoint, true),
+        "the resumed chunk",
+    );
+    assert!(
+        stderr.contains("all still present and unchanged"),
+        "a resume across a grown cassette should say so:\n{stderr}"
+    );
+}
+
+/// A checkpoint taken while recording carries the rows, so it stays resumable
+/// even by a run that is not recording.
+#[test]
+fn a_recording_checkpoint_may_be_resumed_without_recording() {
+    require_fixtures();
+    let temp = tempfile::tempdir().expect("temp dir");
+    let cassette = cassette_copy(temp.path());
+    let checkpoint = temp.path().join("run.ckpt");
+
+    first_chunk(&cassette, &checkpoint, true);
+    expect_ok(
+        second_chunk(&cassette, &checkpoint, false),
+        "a replay resuming a recording checkpoint",
+    );
+}
+
+/// Growing is fine; changing an answer is not, and the refusal names the call
+/// rather than a digest.
+#[test]
+fn a_changed_cassette_answer_stops_a_resume_and_names_the_call() {
+    require_fixtures();
+    let temp = tempfile::tempdir().expect("temp dir");
+    let cassette = cassette_copy(temp.path());
+    let checkpoint = temp.path().join("run.ckpt");
+
+    first_chunk(&cassette, &checkpoint, true);
+
+    let mut edited = read_cassette(&cassette);
+    let victim = entries(&edited)[0].clone();
+    let address = victim["address"].as_str().expect("an address").to_string();
+    let calldata = victim["calldata"].as_str().expect("calldata").to_string();
+    edited["entries"][0]["retval"] = serde_json::json!({
+        "kind": "value",
+        "data": format!("0x{}", "11".repeat(32)),
+    });
+    write_cassette(&cassette, &edited);
+
+    let stderr = expect_refusal(
+        second_chunk(&cassette, &checkpoint, true),
+        "a resume across a changed answer",
+    );
+    assert!(stderr.contains("has changed"), "{stderr}");
+    assert!(
+        stderr.contains(&address),
+        "the refusal must name the call:\n{stderr}"
+    );
+    assert!(
+        stderr.contains(&calldata),
+        "the refusal must name the call:\n{stderr}"
+    );
+    assert!(stderr.contains("fold two different chains"), "{stderr}");
+}
+
+/// Editing the provenance beside the answer is caught too: a checkpoint pins the
+/// whole row, not only what the call returned.
+#[test]
+fn a_hand_edited_cassette_row_stops_a_resume() {
+    require_fixtures();
+    let temp = tempfile::tempdir().expect("temp dir");
+    let cassette = cassette_copy(temp.path());
+    let checkpoint = temp.path().join("run.ckpt");
+
+    first_chunk(&cassette, &checkpoint, true);
+
+    let mut edited = read_cassette(&cassette);
+    edited["entries"][0]["function"] = serde_json::json!("somethingElse");
+    write_cassette(&cassette, &edited);
+
+    let stderr = expect_refusal(
+        second_chunk(&cassette, &checkpoint, true),
+        "a resume across an edited row",
+    );
+    assert!(stderr.contains("has changed"), "{stderr}");
+}
+
+/// A row that is gone cannot be replayed, and the store the checkpoint carries
+/// already depends on its answer.
+#[test]
+fn a_removed_cassette_row_stops_a_resume() {
+    require_fixtures();
+    let temp = tempfile::tempdir().expect("temp dir");
+    let cassette = cassette_copy(temp.path());
+    let checkpoint = temp.path().join("run.ckpt");
+
+    first_chunk(&cassette, &checkpoint, true);
+
+    let mut shrunk = read_cassette(&cassette);
+    let removed = shrunk["entries"].as_array_mut().expect("entries").remove(0);
+    let block = removed["block_number"].as_i64().expect("a block number");
+    write_cassette(&cassette, &shrunk);
+
+    let stderr = expect_refusal(
+        second_chunk(&cassette, &checkpoint, true),
+        "a resume across a removed row",
+    );
+    assert!(stderr.contains("is gone"), "{stderr}");
+    assert!(
+        stderr.contains(&format!("at block {block}")),
+        "the refusal must point at the block:\n{stderr}"
+    );
+    assert!(stderr.contains("may only ever *add* rows"), "{stderr}");
+}
+
+/// A run that cannot write to the cassette is still pinned by its exact bytes,
+/// which is the stricter rule and costs nothing to keep.
+#[test]
+fn a_replay_run_still_pins_the_cassette_by_its_bytes() {
+    require_fixtures();
+    let temp = tempfile::tempdir().expect("temp dir");
+    let cassette = cassette_copy(temp.path());
+    let checkpoint = temp.path().join("run.ckpt");
+
+    first_chunk(&cassette, &checkpoint, false);
+    let (parsed, _) = HostCheckpoint::read(&checkpoint).expect("the checkpoint");
+    assert_eq!(
+        parsed.header.cassette,
+        CassettePin::Exact {
+            sha256: replay::file_sha256(&cassette).expect("digest"),
+        },
+        "a replay run must pin the cassette by its bytes"
+    );
+    assert!(
+        parsed.cassette_rows.is_empty(),
+        "a replay checkpoint carries no cassette rows; there is nothing it could grow into"
+    );
+
+    // The control: untouched, it resumes.
+    expect_ok(
+        second_chunk(&cassette, &checkpoint, false),
+        "an untouched cassette",
+    );
+
+    // Grown, it does not — a run that was not recording cannot have grown it,
+    // so something else did.
+    let mut grown = read_cassette(&cassette);
+    let mut added = entries(&grown)[0].clone();
+    added["block_hash"] = serde_json::json!(format!("0x{}", "cd".repeat(32)));
+    grown["entries"]
+        .as_array_mut()
+        .expect("entries")
+        .push(added);
+    write_cassette(&cassette, &grown);
+
+    let stderr = expect_refusal(
+        second_chunk(&cassette, &checkpoint, false),
+        "a resume across a cassette a non-recording run could not have written",
+    );
+    assert!(stderr.contains("the cassette changed"), "{stderr}");
+    assert!(stderr.contains("was not recording"), "{stderr}");
+    assert!(stderr.contains("byte-identical"), "{stderr}");
 }

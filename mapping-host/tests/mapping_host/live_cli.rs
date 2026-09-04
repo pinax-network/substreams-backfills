@@ -143,7 +143,7 @@ fn a_live_range_that_does_not_continue_the_checkpoint_is_refused() {
 /// a real one: this file never replays a block.
 fn write_boundary_checkpoint(path: &std::path::Path, block: i32) {
     let header = serde_json::json!({
-        "schema": "pinax.substreams-backfills.mapping-host.checkpoint/v1",
+        "schema": "pinax.substreams-backfills.mapping-host.checkpoint/v2",
         "identity": {
             "deployment": SEGMENT,
             "network": "mainnet",
@@ -154,8 +154,8 @@ fn write_boundary_checkpoint(path: &std::path::Path, block: i32) {
             "graph_node_rev": "unset",
             "bundle_lock_sha256": "unset",
             "descriptor_sha256": "unset",
-            "cassette_sha256": "unset",
         },
+        "cassette": { "mode": "exact", "sha256": "unset" },
         "boundary": {
             "block": block,
             "block_hash": "0x00",

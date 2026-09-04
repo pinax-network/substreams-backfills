@@ -61,6 +61,8 @@ use graph_chain_ethereum::Chain;
 use graph_runtime_wasm::asc_abi::class::{AscEnumArray, EthereumValueKind};
 use serde::{Deserialize, Serialize};
 
+use crate::bundle::sha256_hex;
+
 /// Schema identifier written into every cassette file.
 pub const CASSETTE_SCHEMA: &str = "pinax.substreams-backfills.mapping-host.cassette/v1";
 
@@ -178,6 +180,90 @@ impl Cassette {
         *self.dirty.read().expect("cassette lock poisoned")
     }
 
+    /// Whether this run may append rows, i.e. whether the cassette is an output
+    /// as well as an input.
+    pub fn is_recording(&self) -> bool {
+        matches!(self.mode, CassetteMode::Record { .. })
+    }
+
+    /// Reduce the cassette to what a checkpoint needs in order to pin it.
+    ///
+    /// `sha256` is the digest of the file on disk, which this type does not know
+    /// the path of. The rows are digested individually and ordered by key
+    /// digest, so a checkpoint can later be checked against a cassette that has
+    /// *grown* — which is the normal state of affairs for a `--record` run, and
+    /// the reason the whole-file digest alone is not a usable rule.
+    pub fn fingerprint(&self, sha256: String) -> Result<CassetteFingerprint> {
+        let entries = self.entries.read().expect("cassette lock poisoned");
+        let mut rows: Vec<CassetteRowFingerprint> = entries
+            .values()
+            .map(CassetteRowFingerprint::of)
+            .collect::<Result<Vec<_>>>()?;
+        rows.sort_by(|a, b| a.key_sha256.cmp(&b.key_sha256));
+        Ok(CassetteFingerprint {
+            sha256,
+            recording: self.is_recording(),
+            rows,
+        })
+    }
+}
+
+/// One cassette row, reduced to what pins it.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CassetteRowFingerprint {
+    /// The block the call was recorded at. Provenance, and the first thing an
+    /// operator needs in order to find the row in the file.
+    pub block: i32,
+    /// SHA-256 over the key: block hash, address and calldata, one per line.
+    pub key_sha256: String,
+    /// SHA-256 over the whole row — the key, the answer, and the provenance
+    /// beside it. A checkpoint asserts that this has not changed, so editing a
+    /// recorded row by hand is caught whether or not the answer moved.
+    pub row_sha256: String,
+    /// `<address> <calldata>`, carried only so a refusal can name the call
+    /// rather than a digest. Never written to a checkpoint.
+    pub call: String,
+}
+
+impl CassetteRowFingerprint {
+    fn of(entry: &CassetteEntry) -> Result<Self> {
+        let (block_hash, address, calldata) = entry.key();
+        Ok(CassetteRowFingerprint {
+            block: entry.block_number,
+            key_sha256: sha256_hex(format!("{block_hash}\n{address}\n{calldata}").as_bytes()),
+            row_sha256: sha256_hex(
+                serde_json::to_string(entry)
+                    .context("digesting a cassette row")?
+                    .as_bytes(),
+            ),
+            call: format!("{address} {calldata}"),
+        })
+    }
+}
+
+/// The cassette as a checkpoint sees it: the file's digest, whether the run may
+/// append to it, and every row reduced to a pair of digests.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CassetteFingerprint {
+    /// SHA-256 of the file on disk.
+    pub sha256: String,
+    /// Whether the run this belongs to was recording.
+    pub recording: bool,
+    /// Every row, ordered by `key_sha256`.
+    pub rows: Vec<CassetteRowFingerprint>,
+}
+
+impl CassetteFingerprint {
+    /// Look a row up by its key digest.
+    pub fn row(&self, key_sha256: &str) -> Option<&CassetteRowFingerprint> {
+        self.rows
+            .binary_search_by(|row| row.key_sha256.as_str().cmp(key_sha256))
+            .ok()
+            .map(|at| &self.rows[at])
+    }
+}
+
+impl Cassette {
     /// Write the cassette back, sorted by key so the file is byte-stable, and
     /// atomically so a run that dies mid-write cannot leave a truncated one.
     ///

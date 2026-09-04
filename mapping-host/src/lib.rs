@@ -31,8 +31,11 @@ pub mod store_state;
 
 pub use blockchanges::{bcf1_frame, BlockOpsBuilder, OpRecorder, RecordedOp};
 pub use bundle::{BundleFile, BundleLock, SegmentBundle};
-pub use calls::{Cassette, CassetteEntry, CassetteMode, CassetteRuntimeAdapter};
-pub use checkpoint::{HostCheckpoint, CHECKPOINT_SCHEMA};
+pub use calls::{
+    Cassette, CassetteEntry, CassetteFingerprint, CassetteMode, CassetteRowFingerprint,
+    CassetteRuntimeAdapter,
+};
+pub use checkpoint::{CassettePin, HostCheckpoint, CHECKPOINT_SCHEMA};
 pub use evidence::{RunEvidence, EVIDENCE_SCHEMA};
 pub use outputs::ResumePolicy;
 pub use replay::{replay_range, CheckpointPolicy, ReplayOutputs, ReplayResult};

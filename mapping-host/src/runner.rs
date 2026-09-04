@@ -76,6 +76,7 @@ use crate::report::{
     PoiReport, RunReport, TriggerReport,
 };
 use crate::store::{MemoryStore, NoEnsLookup};
+use crate::store_state;
 
 /// The graph-node revision every artifact in this crate is bound to.
 pub const GRAPH_NODE_REV: &str = "77823b5a7adc4eac4abf03202c8dd7cb00dea31d";
@@ -342,6 +343,38 @@ impl SegmentHost {
     /// The block range this segment's manifest claims.
     pub fn bounds(&self) -> SegmentBounds {
         self.bounds
+    }
+
+    /// Dump the final in-memory store in the consumer's generic-state encoding.
+    ///
+    /// `range` records what the run was asked to replay and `poi` the closing
+    /// digest the caller observed; neither can be recovered from the store, and
+    /// both belong in the artifact a consumer is compared against.
+    pub fn store_state(
+        &self,
+        range: Option<store_state::StoreRange>,
+        poi: Option<store_state::StorePoi>,
+    ) -> Result<store_state::StoreState> {
+        let rows = self.store.snapshot();
+        let (entities, poi_entities) = store_state::split_rows(&rows, &self.store.poi_typename())?;
+        let fields = entities.iter().map(|entity| entity.fields.len()).sum();
+        Ok(store_state::StoreState {
+            schema: store_state::STORE_STATE_SCHEMA.to_string(),
+            deployment: self.deployment.to_string(),
+            network: self.network.clone(),
+            spec_version: self.spec_version.clone(),
+            poi_causality_region: self.causality_region.clone(),
+            range,
+            totals: store_state::StoreTotals {
+                entities: entities.len(),
+                poi_entities: poi_entities.len(),
+                fields,
+            },
+            counts_by_type: self.store.counts_by_type(),
+            poi,
+            entities,
+            poi_entities,
+        })
     }
 
     fn error_policy(&self) -> pb::DeterministicErrorPolicy {

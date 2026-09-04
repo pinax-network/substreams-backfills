@@ -20,6 +20,7 @@ use graph_mapping_host::source::{
     token_from_env, BlockSource, CheckedSource, FirehoseSource, FirehoseTarget, FixtureSource,
     Ordering,
 };
+use graph_mapping_host::store_state::{StorePoi, StoreRange};
 use graph_mapping_host::{blockchanges, bundle, descriptor, evidence};
 
 #[derive(Parser)]
@@ -126,6 +127,12 @@ struct RunArgs {
     /// engine's `--input-format block-changes-v1-framed` reads directly.
     #[arg(long)]
     bcf1_out: Option<PathBuf>,
+    /// Write the final in-memory store as deterministic sorted JSON: every live
+    /// row in the frames' own value encoding, the closing proof of indexing, and
+    /// the per-type counts. This is what a consumer's final state is compared
+    /// against; see `src/store_state.rs`.
+    #[arg(long)]
+    store_out: Option<PathBuf>,
     /// Seconds between live progress lines on stderr; `0` silences them.
     #[arg(long, default_value_t = 10)]
     progress_secs: u64,
@@ -273,6 +280,10 @@ async fn run(args: RunArgs) -> Result<()> {
     };
     let mut progress =
         live_range.map(|range| Progress::new(range, Duration::from_secs(args.progress_secs)));
+    // The closing proof of indexing is the last block that opened the causality
+    // region, not the last block replayed: a block in which no handler ran does
+    // not advance the digest.
+    let mut closing_poi: Option<StorePoi> = None;
 
     while let Some(block) = source.next_block().await? {
         let number = block.number();
@@ -286,6 +297,14 @@ async fn run(args: RunArgs) -> Result<()> {
             .with_context(|| format!("sealing the BlockChanges frame for block {number}"))?;
         let mut block_report = outcome.report;
         block_report.block_changes = Some(blockchanges::summarize(&outcome.changes, &bytes));
+        if let Some(poi) = block_report.poi.as_ref() {
+            closing_poi = Some(StorePoi {
+                block: number,
+                version: poi.version.clone(),
+                causality_regions: poi.causality_regions.clone(),
+                public_digest: poi.public_digest.clone(),
+            });
+        }
 
         let block_number = outcome.changes.block_number;
         let block_hash = outcome.changes.block_hash.as_slice();
@@ -312,6 +331,25 @@ async fn run(args: RunArgs) -> Result<()> {
     }
     if let Some(bcf1) = bcf1 {
         bcf1.finish()?;
+    }
+    if let Some(path) = &args.store_out {
+        let blocks = writer.blocks();
+        let range = live_range.map(|(from, to)| StoreRange { from, to, blocks });
+        let state = host.store_state(range, closing_poi)?;
+        if let Some(parent) = path.parent() {
+            if !parent.as_os_str().is_empty() {
+                std::fs::create_dir_all(parent)
+                    .with_context(|| format!("creating {}", parent.display()))?;
+            }
+        }
+        std::fs::write(path, state.to_json()?)
+            .with_context(|| format!("writing {}", path.display()))?;
+        eprintln!(
+            "{}: {} entities, {} proof-of-indexing rows",
+            path.display(),
+            state.totals.entities,
+            state.totals.poi_entities
+        );
     }
     if host.cassette().is_dirty() {
         host.cassette().save(&args.cassette)?;

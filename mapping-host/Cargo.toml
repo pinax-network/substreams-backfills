@@ -46,3 +46,22 @@ ureq = { version = "2", default-features = false, features = ["tls", "json"] }
 
 [dev-dependencies]
 tempfile = "3"
+
+# Debug info is the bulk of a test binary here, and there is a lot of test
+# binary: this crate links `graph`, `graph-chain-ethereum`,
+# `graph-runtime-wasm` and wasmtime, 577 crates, into every target. With debug
+# info on, `cargo test` asked the linker for roughly 700 MB of executables and a
+# GitHub-hosted runner died with a bus error partway through.
+#
+# `dev` covers the dependencies a test build compiles, `test` covers this
+# crate's own test targets, and `strip` drops whatever debug info arrives from
+# either anyway. The cost is that a panic backtrace names functions but not
+# source lines, which no assertion depends on; the tests fail with their own
+# messages, not with a backtrace.
+[profile.dev]
+debug = 0
+strip = "debuginfo"
+
+[profile.test]
+debug = 0
+strip = "debuginfo"

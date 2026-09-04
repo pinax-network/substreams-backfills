@@ -24,6 +24,7 @@ pub mod report;
 pub mod runner;
 pub mod source;
 pub mod store;
+pub mod store_state;
 
 pub use blockchanges::{bcf1_frame, BlockOpsBuilder, OpRecorder, RecordedOp};
 pub use bundle::{BundleFile, BundleLock, SegmentBundle};
@@ -35,3 +36,4 @@ pub use source::{
     BlockSource, CheckedSource, FirehoseSource, FirehoseTarget, FixtureSource, Ordering,
 };
 pub use store::MemoryStore;
+pub use store_state::{StoreEntity, StoreState, StoreValue, STORE_STATE_SCHEMA};

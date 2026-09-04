@@ -435,8 +435,60 @@ clock-v1 stream, the envelope `cmd/substreams-native` produces and the engine's
 ```
 
 Golden frames live under `fixtures/block-changes/<cid>/`. Regenerate them with
-`UPDATE_GOLDENS=1 cargo test --test block_changes_qme66zn`, which rewrites them
+`UPDATE_GOLDENS=1 cargo test --test mapping_host block_changes_qme66zn`, which rewrites them
 and then fails, so a regeneration is never mistaken for a passing check.
+
+### `--store-out`: the final store, for a consumer to be compared against
+
+A frame is an *operation stream*: it says what each handler asked the store to
+do. What the store then holds is a separate fact, and the per-block report only
+counts it (`store_counts`). `--store-out PATH` writes the whole thing:
+
+```json
+{
+  "schema": "pinax.substreams-backfills.mapping-host.store-state/v1",
+  "deployment": "Qme66ZN…", "network": "mainnet", "spec_version": "0.0.2",
+  "poi_causality_region": "ethereum/mainnet",
+  "range": { "from": 12369621, "to": 12369921, "blocks": 300 },
+  "totals": { "entities": 142, "poi_entities": 1, "fields": 2251 },
+  "counts_by_type": { "Bundle": 1, "Factory": 1, "Poi$": 1, "…": 0 },
+  "poi": { "block": 12369910, "version": "legacy",
+           "causality_regions": { "ethereum/mainnet": "37f8b4…" },
+           "public_digest": "322f58…" },
+  "entities": [ { "entity_type": "Pool",
+                  "id": { "kind": "string", "value": "0x…" },
+                  "storage_causality_region": 0,
+                  "fields": [ [ "liquidity", { "kind": "big_int",
+                                               "value": { "signed_be": [1, 0] } } ] ] } ],
+  "poi_entities": [ { "entity_type": "Poi$", "…": null } ]
+}
+```
+
+Three properties make it a comparison target rather than a summary.
+
+**The encoding is the frames' encoding.** Every value goes through the same
+`convert_value` that fills a frame's `written_fields` and `materialized`, so a
+`BigInt` keeps its minimal two's-complement big-endian bytes and a `BigDecimal`
+keeps its (coefficient, scale) pair. Nothing is stringified or rounded on the
+way out.
+
+**Rows are ordered by storage identity**, the `MaterializedKey` the contract
+keys entities by, and fields by name with `vid` excluded, so the file is
+byte-stable and can be pinned by digest.
+
+**`Poi$` is dumped apart.** Graph Node writes the proof-of-indexing entity
+itself, at the end of the block, from a digest no mapping handler sees; it is in
+this store because `process_block` applies that write, and it is in no frame,
+because the recorder only observes mapping saves. Folding it into `entities`
+would make a frame-derived consumer state look wrong for a row no frame carries,
+and hiding it would make the file a partial image. So it sits in
+`poi_entities`, beside the `poi` digest a consumer computes for itself.
+
+`tests/mapping_host/store_state_qme66zn.rs` checks every dumped row against the last
+**committed** `Set` for that key in the frames, which is the fold a consumer
+performs. Block 12,370,523 is what makes that bite: its saves are discarded
+under the fatal policy, so a dump that ignored disposition would disagree there
+and nowhere else.
 
 `summarize` turns a long run's streamed report into the two committed files under
 `evidence/`; see
@@ -540,6 +592,7 @@ A contiguous range cannot be held in memory, so every writer flushes per block.
 | `--out` | one pretty-printed `RunReport`, exactly as before | JSON Lines: one `report-stream/v1` header line, then one `BlockReport` per line |
 | `--block-changes-out` | `<number>.pb` per block, `index.json` at the end | `<number>.pb` per block, `index.jsonl` appended per frame |
 | `--bcf1-out` | one `BCF1` stream | the same bytes, flushed per frame |
+| `--store-out` | the final store, written once at the end | the same file, written once at the end |
 
 The fixture report keeps its single-document form deliberately: it is what
 `fixtures/reports/<cid>.json` pins, and a golden that is one parseable document
@@ -574,12 +627,40 @@ proving the reconstruction round-trips; that is a piece of work, not a flag.
 ### What CI runs, and what a real range costs
 
 CI runs the **fixtures only**. Every test in this crate is hermetic:
-`tests/block_source.rs` drives a fake source and hand-built Firehose responses,
-`tests/live_cli.rs` asserts the CLI refusals with `FIREHOSE_ENDPOINT=127.0.0.1:1`
+`tests/mapping_host/block_source.rs` drives a fake source and hand-built Firehose responses,
+`tests/mapping_host/live_cli.rs` asserts the CLI refusals with `FIREHOSE_ENDPOINT=127.0.0.1:1`
 so a refusal that stopped short of the network would fail rather than pass
 quietly, the two segment tests are unchanged, and
-`tests/parity_window_evidence.rs` checks the committed evidence for the live
+`tests/mapping_host/parity_window_evidence.rs` checks the committed evidence for the live
 parity-window run without re-running it. No test opens a socket.
+
+#### One test binary, deliberately
+
+Every integration suite lives under `tests/mapping_host/` and is a module of
+`tests/mapping_host/main.rs`, so `cargo test` links **one** integration
+executable rather than one per file.
+
+That is not tidiness. This crate statically links `graph`,
+`graph-chain-ethereum`, `graph-runtime-wasm` and wasmtime — 577 crates — into
+every target, and a debug test binary was ~140 MB. Six files meant six such
+links per `cargo test`, and a GitHub-hosted runner did not survive it: the
+linker died with `ld terminated with signal 7 [Bus error]` partway through the
+last one. The same profiles also set `debug = 0` and `strip = "debuginfo"`,
+which is where most of the remaining bytes went.
+
+| | Executables | Total | Largest |
+|---|---:|---:|---:|
+| Before | 8 | 724 MB | 153 MB |
+| After | 3 | 132 MB | 121 MB |
+
+Two consequences worth knowing. A test now reports as `<suite>::<name>`, so
+`cargo test --test mapping_host store_state_qme66zn` runs one suite and
+`cargo test --locked <name>` still runs one test. And a panic backtrace names
+functions but not source lines; no assertion depends on that, because the tests
+fail with their own messages.
+
+Put a new suite in `tests/mapping_host/` and add a `mod` line. A new file
+directly under `tests/` costs another full link.
 
 Scale, for planning a real run:
 
@@ -787,7 +868,7 @@ row, no `Pool` row.
 
 ### What a test can still check
 
-`tests/parity_window_evidence.rs` is hermetic and opens no socket. It cannot
+`tests/mapping_host/parity_window_evidence.rs` is hermetic and opens no socket. It cannot
 re-run the window — that needed Firehose and an RPC endpoint — so it checks the
 overlap instead. Four blocks of the window are also committed `.pb` fixtures, and
 the test replays them under this host and holds the frames against the digests

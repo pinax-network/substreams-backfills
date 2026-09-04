@@ -34,6 +34,7 @@
 mod block_changes_qme66zn;
 mod block_source;
 mod checkpoint_resume;
+mod dynamic_sources;
 mod live_cli;
 mod long_run;
 mod parity_window_evidence;

@@ -221,6 +221,10 @@ async fn chunked() -> (Replay, Replay, HostCheckpoint, String) {
     second_host
         .restore_checkpoint(&parsed, &fingerprint)
         .expect("restoring the checkpoint");
+    assert_eq!(
+        first_host.stored_dynamic_data_sources().unwrap(),
+        second_host.stored_dynamic_data_sources().unwrap()
+    );
     let second = replay(
         &mut second_host,
         &FIXTURES[SPLIT..],

@@ -17,6 +17,7 @@ pub mod bundle;
 pub mod calls;
 pub mod checkpoint;
 pub mod descriptor;
+pub mod dynamic_sources;
 pub mod env_pin;
 pub mod evidence;
 pub mod live;

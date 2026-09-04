@@ -487,7 +487,30 @@ fn send_with_backoff(rpc_url: &str, body: &serde_json::Value) -> Result<serde_js
                 std::thread::sleep(backoff_delay(base_delay, attempt));
                 attempt += 1;
             }
-            Err(e) => return Err(anyhow!("eth_call transport failure: {e}")),
+            Err(e) => return Err(redacted_transport_error(&e)),
+        }
+    }
+}
+
+// `ureq::Error` Display includes the URL, which may carry credentials.
+fn redacted_transport_error(error: &ureq::Error) -> anyhow::Error {
+    match error {
+        ureq::Error::Status(status, _) => anyhow!("eth_call HTTP failure: status {status}"),
+        ureq::Error::Transport(error) => anyhow!("eth_call transport failure: {:?}", error.kind()),
+    }
+}
+
+#[cfg(test)]
+mod credential_redaction_tests {
+    #[test]
+    fn a_signed_endpoint_never_appears_in_transport_errors() {
+        let error = ureq::post("http://127.0.0.1:1/secret-api-key?token=private-value")
+            .timeout(std::time::Duration::from_millis(100))
+            .call()
+            .unwrap_err();
+        let rendered = super::redacted_transport_error(&error).to_string();
+        for secret in ["127.0.0.1", "secret-api-key", "private-value", "http:"] {
+            assert!(!rendered.contains(secret), "{rendered}");
         }
     }
 }

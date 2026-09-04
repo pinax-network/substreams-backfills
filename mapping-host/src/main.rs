@@ -136,6 +136,10 @@ struct RunArgs {
     /// engine's `--input-format block-changes-v1-framed` reads directly.
     #[arg(long)]
     bcf1_out: Option<PathBuf>,
+    /// Complete onchain source metadata for a fresh, contiguous root run only.
+    /// Bounded to 10000 blocks; refuses checkpoints, grafts and indexing errors.
+    #[arg(long, requires = "bcf1_out", conflicts_with_all = ["checkpoint_in", "continue_outputs"])]
+    data_sources_out: Option<PathBuf>,
     /// Write the final in-memory store as deterministic sorted JSON: every live
     /// row in the frames' own value encoding, the closing proof of indexing, and
     /// the per-type counts. This is what a consumer's final state is compared
@@ -291,6 +295,9 @@ async fn run(args: RunArgs) -> Result<()> {
              count, or drop it to checkpoint only at the end of the run."
         );
     }
+    if args.data_sources_out.as_ref().is_some_and(|p| p.exists()) {
+        bail!("--data-sources-out refuses an existing path");
+    }
 
     // The endpoint and the token are validated before anything expensive
     // happens, so a bad endpoint fails in milliseconds rather than after a
@@ -348,6 +355,26 @@ async fn run(args: RunArgs) -> Result<()> {
         record: args.record,
     })
     .await?;
+
+    if args.data_sources_out.is_some() {
+        let bundle = graph_mapping_host::SegmentBundle::load(&args.segment)?;
+        let manifest = bundle
+            .manifest(&graph::prelude::Logger::root(
+                graph::prelude::slog::Discard,
+                graph::prelude::o!(),
+            ))
+            .await?;
+        if manifest.graft.is_some() {
+            bail!("--data-sources-out refuses grafted segments");
+        }
+        if let Some((from, to)) = live_range {
+            if from != host.bounds().start
+                || (to - from) as usize > backfill_common::dynamic_sources::MAX_BLOCKS
+            {
+                bail!("--data-sources-out requires a fresh root run of at most 10000 blocks");
+            }
+        }
+    }
 
     if let Some((checkpoint, digest)) = resumed.as_ref() {
         let cassette = host
@@ -505,6 +532,15 @@ async fn run(args: RunArgs) -> Result<()> {
     }
     if let Some(bcf1) = bcf1 {
         bcf1.finish()?;
+    }
+    if let Some(path) = &args.data_sources_out {
+        let (compatibility, _) = descriptor::load(&args.segment)?;
+        graph_mapping_host::dynamic_sources::write(
+            &host,
+            args.bcf1_out.as_deref().expect("clap requires BCF1 output"),
+            path,
+            &compatibility,
+        )?;
     }
     if let Some(path) = &args.store_out {
         let blocks = writer.blocks();

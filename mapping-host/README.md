@@ -1,5 +1,8 @@
 # `mapping-host`
 
+For the bounded Mainnet root milestone, see the explicit
+[dynamic-source metadata companion](../docs/data-sources-sidecar-v1.md).
+
 A hermetic Rust host that runs a **deployed** subgraph's mapping WASM under Graph
 Node's own runtime crates, pinned to `graph-node` revision
 `77823b5a7adc4eac4abf03202c8dd7cb00dea31d` (tag `v0.44.0`).

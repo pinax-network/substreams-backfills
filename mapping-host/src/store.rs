@@ -113,6 +113,15 @@ impl MemoryStore {
         self.len() == 0
     }
 
+    /// The deployed schema this store was built over.
+    ///
+    /// [`ReadStore::input_schema`] returns a clone; a checkpoint restore needs
+    /// the schema to rebuild keys and entities and has no reason to pay for one
+    /// per row.
+    pub fn schema(&self) -> &InputSchema {
+        &self.schema
+    }
+
     /// The deployed schema's own proof-of-indexing typename.
     ///
     /// Read from the schema rather than spelled as a literal, so a deployment

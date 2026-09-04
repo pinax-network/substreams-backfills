@@ -102,6 +102,37 @@ impl StoreValue {
             },
         })
     }
+
+    /// The wire value this mirrors, variant for variant.
+    ///
+    /// The exact inverse of [`StoreValue::from_wire`], which is what lets a dump
+    /// be read back into the store it was taken from; see [`crate::checkpoint`].
+    pub fn to_wire(&self) -> pb::GraphValue {
+        use pb::graph_value::Kind;
+        let kind = match self {
+            StoreValue::String(value) => Kind::String(value.clone()),
+            StoreValue::Int(value) => Kind::Int(*value),
+            StoreValue::Int8(value) => Kind::Int8(*value),
+            StoreValue::TimestampMicros(value) => Kind::TimestampMicros(*value),
+            StoreValue::BigDecimal {
+                coefficient_signed_be,
+                scale,
+            } => Kind::BigDecimal(pb::BigDecimalValue {
+                coefficient_signed_be: coefficient_signed_be.clone(),
+                scale: *scale,
+            }),
+            StoreValue::Bool(value) => Kind::Bool(*value),
+            StoreValue::List(values) => Kind::List(pb::ListValue {
+                values: values.iter().map(StoreValue::to_wire).collect(),
+            }),
+            StoreValue::Null => Kind::Null(pb::NullValue {}),
+            StoreValue::Bytes(value) => Kind::Bytes(value.clone()),
+            StoreValue::BigInt { signed_be } => Kind::BigInt(pb::BigIntValue {
+                signed_be: signed_be.clone(),
+            }),
+        };
+        pb::GraphValue { kind: Some(kind) }
+    }
 }
 
 /// A typed entity id, in the three kinds the contract defines.
@@ -119,6 +150,28 @@ impl From<&MaterializedId> for StoreEntityId {
             MaterializedId::String(value) => StoreEntityId::String(value.clone()),
             MaterializedId::Bytes(value) => StoreEntityId::Bytes(value.clone()),
             MaterializedId::Int8(value) => StoreEntityId::Int8(*value),
+        }
+    }
+}
+
+impl StoreEntityId {
+    /// The wire id this mirrors, for reading a dump back into a store.
+    pub fn to_wire(&self) -> pb::EntityId {
+        let value = match self {
+            StoreEntityId::String(value) => pb::entity_id::Value::String(value.clone()),
+            StoreEntityId::Bytes(value) => pb::entity_id::Value::Bytes(value.clone()),
+            StoreEntityId::Int8(value) => pb::entity_id::Value::Int8(*value),
+        };
+        pb::EntityId { value: Some(value) }
+    }
+
+    /// The storage identity this mirrors, so a dumped row sorts exactly as the
+    /// live row it came from.
+    pub fn to_materialized(&self) -> MaterializedId {
+        match self {
+            StoreEntityId::String(value) => MaterializedId::String(value.clone()),
+            StoreEntityId::Bytes(value) => MaterializedId::Bytes(value.clone()),
+            StoreEntityId::Int8(value) => MaterializedId::Int8(*value),
         }
     }
 }

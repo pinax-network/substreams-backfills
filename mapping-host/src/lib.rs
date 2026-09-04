@@ -17,6 +17,7 @@ pub mod bundle;
 pub mod calls;
 pub mod descriptor;
 pub mod env_pin;
+pub mod evidence;
 pub mod live;
 pub mod poi;
 pub mod report;
@@ -27,6 +28,7 @@ pub mod store;
 pub use blockchanges::{bcf1_frame, BlockOpsBuilder, OpRecorder, RecordedOp};
 pub use bundle::{BundleFile, BundleLock, SegmentBundle};
 pub use calls::{Cassette, CassetteEntry, CassetteMode, CassetteRuntimeAdapter};
+pub use evidence::{RunEvidence, EVIDENCE_SCHEMA};
 pub use report::{BlockReport, RunReport};
 pub use runner::{SegmentHost, SegmentHostConfig};
 pub use source::{

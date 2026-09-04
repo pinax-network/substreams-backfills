@@ -169,7 +169,9 @@ pub struct RunReport {
     pub features: Vec<String>,
     pub graph_node_rev: String,
     pub blocks: Vec<BlockReport>,
-    /// Cassette rows the run consulted or recorded.
+    /// Rows in the cassette after the run: the whole file, not the subset this
+    /// run consulted. The committed segment-1 cassette covers the parity window
+    /// as well as the four fixture blocks, so a four-block replay reports 240.
     pub cassette_entries: usize,
 }
 

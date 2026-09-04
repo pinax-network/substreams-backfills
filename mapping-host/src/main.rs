@@ -20,7 +20,7 @@ use graph_mapping_host::source::{
     token_from_env, BlockSource, CheckedSource, FirehoseSource, FirehoseTarget, FixtureSource,
     Ordering,
 };
-use graph_mapping_host::{blockchanges, bundle, descriptor};
+use graph_mapping_host::{blockchanges, bundle, descriptor, evidence};
 
 #[derive(Parser)]
 #[command(
@@ -45,6 +45,37 @@ enum Command {
     },
     /// Generate each segment's BlockChanges compatibility descriptor and sidecar.
     BuildDescriptors(BuildDescriptorsArgs),
+    /// Derive a committable evidence summary from a live run's streamed report.
+    Summarize(SummarizeArgs),
+}
+
+#[derive(clap::Args)]
+struct SummarizeArgs {
+    /// The streamed report a live run wrote with `--out`.
+    #[arg(long)]
+    report: PathBuf,
+    /// The evidence summary to write. When it already exists its `run` and
+    /// `findings` are carried forward and everything else is recomputed, so a
+    /// regeneration keeps the prose and cannot keep a stale count.
+    #[arg(long)]
+    evidence: PathBuf,
+    /// The sibling per-block file. Defaults to the summary's name with
+    /// `.blocks.jsonl` in place of `.json`.
+    #[arg(long)]
+    per_block: Option<PathBuf>,
+    /// The segment bundle, for the entity types the deployed schema declares.
+    #[arg(long)]
+    segment: Option<PathBuf>,
+    /// The cassette the run replayed, for its row counts and digest.
+    #[arg(long)]
+    cassette: Option<PathBuf>,
+    /// Directory of committed golden frames to cross-check the run against.
+    #[arg(long)]
+    goldens: Option<PathBuf>,
+    /// The committed sampled-run report, so the cross-check reports what the
+    /// four-block replay produced beside what it digested to.
+    #[arg(long)]
+    sampled_report: Option<PathBuf>,
 }
 
 #[derive(clap::Args)]
@@ -134,6 +165,7 @@ fn main() -> Result<()> {
             .enable_all()
             .build()?
             .block_on(build_descriptors(args)),
+        Command::Summarize(args) => summarize(args),
         Command::VerifyBundle { segment } => {
             let bundle = bundle::SegmentBundle::load(&segment)?;
             println!(
@@ -294,6 +326,56 @@ async fn run(args: RunArgs) -> Result<()> {
             host.cassette().len()
         );
     }
+    Ok(())
+}
+
+/// Derive the evidence summary and its per-block sibling, and write both.
+///
+/// Nothing here touches the network or replays a block: the report the run
+/// already wrote is the only input, which is what makes the summary a record of
+/// *that* run rather than of a second one.
+fn summarize(args: SummarizeArgs) -> Result<()> {
+    let per_block_path = args.per_block.clone().unwrap_or_else(|| {
+        args.evidence
+            .with_extension("")
+            .with_extension("blocks.jsonl")
+    });
+    let per_block_name = per_block_path
+        .file_name()
+        .map(|name| name.to_string_lossy().to_string())
+        .unwrap_or_else(|| per_block_path.to_string_lossy().to_string());
+
+    // Carrying the previous file's prose forward is the whole reason this reads
+    // before it writes. A file that does not parse is an error, not a silent
+    // reset that would drop hand-written findings.
+    let previous = evidence::Narrative::read(&args.evidence)?;
+
+    let (summary, per_block) = evidence::summarize(evidence::SummarizeInputs {
+        report: &args.report,
+        previous,
+        per_block_name,
+        segment: args.segment.as_deref(),
+        cassette: args.cassette.as_deref(),
+        goldens: args.goldens.as_deref(),
+        sampled_report: args.sampled_report.as_deref(),
+    })?;
+
+    if let Some(parent) = args.evidence.parent() {
+        std::fs::create_dir_all(parent)
+            .with_context(|| format!("creating {}", parent.display()))?;
+    }
+    std::fs::write(&per_block_path, &per_block)
+        .with_context(|| format!("writing {}", per_block_path.display()))?;
+    std::fs::write(&args.evidence, summary.to_json()?)
+        .with_context(|| format!("writing {}", args.evidence.display()))?;
+
+    eprintln!(
+        "{}: {} blocks, {} handler groups, {} operations",
+        args.evidence.display(),
+        summary.range.blocks,
+        summary.totals.handler_groups,
+        summary.totals.operations
+    );
     Ok(())
 }
 

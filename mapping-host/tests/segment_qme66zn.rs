@@ -420,8 +420,11 @@ fn a_fixture_gap_error_exercises_the_fatal_discard_path() {
     // somewhere in 12,369,881 to 12,370,522, which the four sampled fixture
     // files do not cover, so no `Token` row for it exists in this run's store.
     // `Token.load` returns null and the old-codegen dereference aborts the
-    // handler. A contiguous replay from 12,369,621 would have the row and both
-    // handlers would succeed.
+    // handler. The contiguous replay of 12,369,621 to 12,370,673 has since
+    // confirmed that: it has the row, and the same block runs handleBurn,
+    // handleDecreaseLiquidity and handleCollect cleanly, 23 operations and no
+    // error. See `evidence/parity-window-12369621-12370674.json` and
+    // `tests/parity_window_evidence.rs`.
     //
     // What this test therefore asserts is the *host's* fatal-policy machinery —
     // that a deterministic error under a manifest without `nonFatalErrors`
@@ -494,6 +497,13 @@ fn the_fixture_set_leaves_five_handlers_unexercised() {
     // was created in an unsampled block cannot fire here, so this run is silent
     // about Swap, Burn, Flash, and a *successful* Collect or DecreaseLiquidity.
     // Recorded as a test so the gap cannot be forgotten when reading the report.
+    //
+    // This is a fact about the *fixture set*, and it stays one. Four of those
+    // five have since run successfully in the contiguous parity-window replay
+    // (`evidence/parity-window-12369621-12370674.json`); only handleFlash is
+    // unexercised there too, because the window holds no Flash event. Keeping
+    // this assertion hermetic is the point: it pins what these four blocks can
+    // and cannot show, so the two kinds of evidence are never conflated.
     let ran: Vec<&str> = report()
         .blocks
         .iter()
@@ -504,7 +514,8 @@ fn the_fixture_set_leaves_five_handlers_unexercised() {
     for unexercised in ["handleSwap", "handleBurn", "handleFlash"] {
         assert!(
             !ran.contains(&unexercised),
-            "{unexercised} ran; the fixture gap discussion in README.md needs updating"
+            "{unexercised} ran in the four-block fixture replay; the fixture gap discussion in \
+             README.md needs updating"
         );
     }
     // The two that did run, ran only as failures.

@@ -276,6 +276,15 @@ impl Cassette {
 /// An `execution reverted` style error becomes `Null`; any other error, including
 /// every transport error, is returned as an error so a recording never invents an
 /// answer.
+///
+/// A throttled or temporarily unavailable endpoint is retried with exponential
+/// backoff rather than failing the run: a 429 or 5xx is the endpoint declining to
+/// answer, which is not a revert and not an answer, so inventing either would be
+/// wrong and giving up discards a long recording. `ETHEREUM_RPC_MAX_RETRIES`
+/// (default 6) and `ETHEREUM_RPC_BASE_DELAY_MS` (default 500) bound it, and
+/// `ETHEREUM_RPC_MIN_INTERVAL_MS` paces every call so a long window does not
+/// trip the limiter in the first place. An `Authorization` header is sent when
+/// `ETHEREUM_RPC_BEARER` is set.
 fn rpc_eth_call(
     rpc_url: &str,
     block_hash: &str,
@@ -296,12 +305,7 @@ fn rpc_eth_call(
         ]
     });
 
-    let response: serde_json::Value = ureq::post(rpc_url)
-        .set("content-type", "application/json")
-        .send_json(body)
-        .map_err(|e| anyhow!("eth_call transport failure: {e}"))?
-        .into_json()
-        .map_err(|e| anyhow!("eth_call response was not JSON: {e}"))?;
+    let response: serde_json::Value = send_with_backoff(rpc_url, &body)?;
 
     if let Some(error) = response.get("error") {
         let message = error
@@ -332,6 +336,89 @@ fn rpc_eth_call(
         .and_then(|r| r.as_str())
         .ok_or_else(|| anyhow!("eth_call response has no result: {response}"))?;
     Ok(CassetteRetval::Value(result.to_lowercase()))
+}
+
+/// Environment knobs for the recording transport. All are optional.
+const RPC_MAX_RETRIES: &str = "ETHEREUM_RPC_MAX_RETRIES";
+const RPC_BASE_DELAY_MS: &str = "ETHEREUM_RPC_BASE_DELAY_MS";
+const RPC_MIN_INTERVAL_MS: &str = "ETHEREUM_RPC_MIN_INTERVAL_MS";
+const RPC_BEARER: &str = "ETHEREUM_RPC_BEARER";
+
+fn env_u64(name: &str, default: u64) -> u64 {
+    std::env::var(name)
+        .ok()
+        .and_then(|v| v.parse::<u64>().ok())
+        .unwrap_or(default)
+}
+
+/// Earliest instant the next request may be sent, so `ETHEREUM_RPC_MIN_INTERVAL_MS`
+/// paces the whole recording rather than one call site.
+static NEXT_REQUEST_AT: std::sync::Mutex<Option<std::time::Instant>> = std::sync::Mutex::new(None);
+
+fn pace() {
+    let interval = env_u64(RPC_MIN_INTERVAL_MS, 0);
+    if interval == 0 {
+        return;
+    }
+    let gap = std::time::Duration::from_millis(interval);
+    let wait = {
+        let mut next = NEXT_REQUEST_AT
+            .lock()
+            .expect("pacing mutex is not poisoned");
+        let now = std::time::Instant::now();
+        let ready = next.unwrap_or(now).max(now);
+        *next = Some(ready + gap);
+        ready.saturating_duration_since(now)
+    };
+    if !wait.is_zero() {
+        std::thread::sleep(wait);
+    }
+}
+
+/// POST the request, retrying only statuses that mean "ask again later".
+///
+/// A 429 or 5xx carries no answer: it is neither a value nor a revert, so the
+/// only faithful responses are to wait or to fail. Every other transport error
+/// fails immediately.
+fn send_with_backoff(rpc_url: &str, body: &serde_json::Value) -> Result<serde_json::Value> {
+    let max_retries = env_u64(RPC_MAX_RETRIES, 6);
+    let base_delay = env_u64(RPC_BASE_DELAY_MS, 500);
+    let bearer = std::env::var(RPC_BEARER).ok().filter(|t| !t.is_empty());
+    let mut attempt = 0;
+    loop {
+        pace();
+        let mut request = ureq::post(rpc_url).set("content-type", "application/json");
+        if let Some(token) = bearer.as_deref() {
+            request = request.set("authorization", &format!("Bearer {token}"));
+        }
+        match request.send_json(body.clone()) {
+            Ok(response) => {
+                return response
+                    .into_json()
+                    .map_err(|e| anyhow!("eth_call response was not JSON: {e}"));
+            }
+            Err(ureq::Error::Status(status, _)) if retryable(status) && attempt < max_retries => {
+                std::thread::sleep(backoff_delay(base_delay, attempt));
+                attempt += 1;
+            }
+            Err(e) => return Err(anyhow!("eth_call transport failure: {e}")),
+        }
+    }
+}
+
+/// Statuses that mean the endpoint declined to answer this time.
+fn retryable(status: u16) -> bool {
+    status == 429 || (500..=599).contains(&status)
+}
+
+/// How long to wait before attempt `attempt + 1`: the base delay doubled once
+/// per attempt already made.
+///
+/// The shift is clamped and the multiply saturates, so an operator who sets
+/// `ETHEREUM_RPC_MAX_RETRIES` to something absurd gets a very long wait rather
+/// than a panic on a shift overflow or a wrapped delay that retries instantly.
+fn backoff_delay(base_delay_ms: u64, attempt: u64) -> std::time::Duration {
+    std::time::Duration::from_millis(base_delay_ms.saturating_mul(1u64 << attempt.min(16)))
 }
 
 /// A [`RuntimeAdapter`] whose only host function is a cassette-backed
@@ -461,4 +548,55 @@ fn resolve_call(
         // that is a revert, so the same goes for the output.
         call::Retval::Value(output) => function.abi_decode_output(&output).ok(),
     })
+}
+
+#[cfg(test)]
+mod transport_tests {
+    use super::*;
+
+    #[test]
+    fn only_throttle_and_server_errors_are_retried() {
+        // 429 and 5xx mean "ask again later"; they carry neither a value nor a
+        // revert, so retrying is the only faithful response.
+        assert!(retryable(429));
+        assert!(retryable(500));
+        assert!(retryable(503));
+        assert!(retryable(599));
+        // A refusal that will not change on a second ask must fail the run.
+        assert!(!retryable(200));
+        assert!(!retryable(400));
+        assert!(!retryable(401));
+        assert!(!retryable(404));
+    }
+
+    #[test]
+    fn the_backoff_doubles_and_never_overflows() {
+        // Six retries at the 500 ms default is 500, 1s, 2s, 4s, 8s, 16s: about
+        // half a minute of patience, which is the right order for a throttled
+        // public endpoint and nowhere near a hung run.
+        let delays: Vec<u64> = (0..6)
+            .map(|attempt| backoff_delay(500, attempt).as_millis() as u64)
+            .collect();
+        assert_eq!(delays, vec![500, 1_000, 2_000, 4_000, 8_000, 16_000]);
+        assert_eq!(delays.iter().sum::<u64>(), 31_500);
+
+        // A retry count large enough to overflow the shift, and a base delay
+        // large enough to overflow the multiply, must both still return a
+        // duration rather than panicking or wrapping to zero.
+        assert!(backoff_delay(500, 64) >= backoff_delay(500, 16));
+        assert!(backoff_delay(u64::MAX, 40) > std::time::Duration::ZERO);
+        assert_eq!(backoff_delay(0, 3), std::time::Duration::ZERO);
+    }
+
+    #[test]
+    fn transport_knobs_fall_back_to_their_defaults() {
+        let unset = "ETHEREUM_RPC_TEST_KNOB_THAT_IS_NEVER_SET";
+        assert_eq!(env_u64(unset, 7), 7);
+        // A value that is not a whole number is ignored rather than guessed at.
+        unsafe { std::env::set_var(unset, "not-a-number") };
+        assert_eq!(env_u64(unset, 7), 7);
+        unsafe { std::env::set_var(unset, "11") };
+        assert_eq!(env_u64(unset, 7), 11);
+        unsafe { std::env::remove_var(unset) };
+    }
 }

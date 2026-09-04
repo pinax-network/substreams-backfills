@@ -56,11 +56,13 @@ fixtures/cassettes/        recorded eth_call answers          ─┤
   blockchanges.rs  the recorded save stream -> canonical frames
   descriptor.rs    per-segment compatibility descriptors
   report.rs        deterministic JSON
+  evidence.rs      a long run's report -> a committable summary
                                                                ▼
       fixtures/reports/<cid>.json   fixtures/block-changes/<cid>/<block>.pb
+      evidence/<run>.json           evidence/<run>.blocks.jsonl
 ```
 
-Roughly 4,700 lines of library and binary code, plus 1,800 lines of tests, on
+Roughly 5,600 lines of library and binary code, plus 2,300 lines of tests, on
 top of the vendored runtime crate.
 
 ### Segment bundles
@@ -253,17 +255,38 @@ block hash with EIP-1898, stores an RPC revert as `Null`, and treats a transport
 error as a hard failure — never as `HostExportError::PossibleReorg`, which in
 Graph Node restarts the block stream and here would quietly mean "no answer".
 
-The committed segment-1 cassette is 15 KB / 22 rows, recorded once against
-`https://eth.rpc.pinax.network`:
+The committed segment-1 cassette is 185 KB / 240 rows over 49 blocks, recorded
+against `https://eth.rpc.pinax.network` in two sittings: 22 rows for the four
+sampled fixture blocks, then the rest during the
+[parity-window run](#the-parity-window-run-1053-contiguous-blocks).
 
 | Contract | Function | Rows |
 |---|---|---:|
-| ERC20 | `symbol()`, `name()`, `decimals()`, `totalSupply()` | 3 each |
-| Factory | `getPool(address,address,uint24)` | 3 |
-| NonfungiblePositionManager | `positions(uint256)` | 3 |
-| Pool | `ticks(int24)` | 4 |
+| ERC20 | `symbol()`, `name()`, `decimals()`, `totalSupply()` | 14 each |
+| Factory | `getPool(address,address,uint24)` | 39 |
+| NonfungiblePositionManager | `positions(uint256)` | 39 |
+| Pool | `ticks(int24)` | 78 |
+| Pool | `feeGrowthGlobal0X128()`, `feeGrowthGlobal1X128()` | 14 each |
 
-Every answer is a value; no call reverted at these blocks.
+Every answer is a value; no call reverted anywhere in the window.
+
+#### Recording knobs
+
+A 1,053-block recording asks a public endpoint for hundreds of calls, so
+`--record` paces and retries. All four are optional and all four are read only
+on the recording path:
+
+| Variable | Default | What it does |
+|---|---|---|
+| `ETHEREUM_RPC_MIN_INTERVAL_MS` | `0` | Minimum gap between requests, applied across the whole run rather than per call site. The parity window used `120`. |
+| `ETHEREUM_RPC_MAX_RETRIES` | `6` | Retries for a 429 or 5xx. |
+| `ETHEREUM_RPC_BASE_DELAY_MS` | `500` | First backoff delay; it doubles per attempt. |
+| `ETHEREUM_RPC_BEARER` | unset | Sends an `Authorization: Bearer` header. |
+
+Only 429 and 5xx are retried, and the reason is the same one that governs the
+rest of this file: those statuses carry neither a value nor a revert, so waiting
+is the only faithful response. Every other transport error still fails the run
+immediately rather than being recorded as an answer.
 
 ### Proof of indexing
 
@@ -415,6 +438,10 @@ Golden frames live under `fixtures/block-changes/<cid>/`. Regenerate them with
 `UPDATE_GOLDENS=1 cargo test --test block_changes_qme66zn`, which rewrites them
 and then fails, so a regeneration is never mistaken for a passing check.
 
+`summarize` turns a long run's streamed report into the two committed files under
+`evidence/`; see
+[the parity-window run](#the-parity-window-run-1053-contiguous-blocks).
+
 ## Live mode: a contiguous range from Firehose
 
 The four committed fixtures are four sampled points. A block range that would
@@ -550,22 +577,25 @@ CI runs the **fixtures only**. Every test in this crate is hermetic:
 `tests/block_source.rs` drives a fake source and hand-built Firehose responses,
 `tests/live_cli.rs` asserts the CLI refusals with `FIREHOSE_ENDPOINT=127.0.0.1:1`
 so a refusal that stopped short of the network would fail rather than pass
-quietly, and the two segment tests are unchanged. No test opens a socket.
+quietly, the two segment tests are unchanged, and
+`tests/parity_window_evidence.rs` checks the committed evidence for the live
+parity-window run without re-running it. No test opens a socket.
 
 Scale, for planning a real run:
 
-| Range | Blocks | Approximate block bytes |
-|---|---:|---:|
-| parity window, 12,369,621 → 12,370,674 | 1,053 | ~1.2 GB |
-| segment 1, 12,369,621 → 13,450,880 | 1,081,260 | ~1.2 TB |
+| Range | Blocks | Approximate block bytes | Measured |
+|---|---:|---:|---|
+| parity window, 12,369,621 → 12,370,674 | 1,053 | ~1.2 GB | 252 s at 4.2 blocks/s |
+| segment 1, 12,369,621 → 13,450,880 | 1,081,260 | ~1.2 TB | ~3 days at that rate |
 
-At the ~0.3 blocks/second the smoke run measured — dominated by WASM execution,
-not by the network — the parity window is about an hour and the full segment is
-not a single-run proposition.
+The rate is dominated by WASM execution, not by the network. The two-block smoke
+run below measured ~0.3 blocks/second because process startup dominates it; over
+1,053 blocks the steady-state rate is an order of magnitude higher. The full
+segment is still not a single-run proposition.
 
 ### The live smoke run
 
-One run has been done end to end, on 2026-09-04, against
+The first live run, on 2026-09-04, against
 `eth.firehose.pinax.network:443` over `--from 12369739 --to 12369741`, without
 `--record-calls`:
 
@@ -576,7 +606,8 @@ One run has been done end to end, on 2026-09-04, against
   reports;
 * 12,369,740 triggered no handler, so it wrote a 114-byte frame and no PoI, which
   is what a block with no causality region is supposed to do;
-* **no cassette miss**: 22 rows consulted, 22 rows after, file byte-unchanged.
+* **no cassette miss**: the cassette held 22 rows at the time, 22 rows were
+  consulted, and the file was byte-unchanged afterwards.
 
 A second, longer probe over `--from 12369739 --to 12369790` replayed 21
 contiguous blocks and then stopped at 12,369,760 with
@@ -589,11 +620,12 @@ That is the second `PoolCreated` in this window, for DAI, whose `symbol()` the
 committed cassette does not cover — the intended outcome, not a bug: the run
 failed closed instead of reaching the RPC, the cassette was left byte-unchanged,
 and the artifacts written before the failure are a consistent 21-block prefix.
-The cassette was **not** extended here. Recording the calls a contiguous range
-needs belongs to the parity-window run that will consume them, not to this
-change.
+The cassette was **not** extended there. Recording the calls a contiguous range
+needs belonged to the
+[parity-window run](#the-parity-window-run-1053-contiguous-blocks) that consumed
+them, which is where the remaining 218 rows came from.
 
-## What the run shows
+## What the fixture run shows
 
 Segment 1 over the four committed fixture files, one block each. One host, one
 store and one PoI chain across the run, so Pool template instances accumulate:
@@ -649,11 +681,137 @@ token0 `0x956f47f50a910163d8bf957cf5846d573e7f87ca`. That pool was created
 somewhere in 12,369,881 to 12,370,522, which this fixture set does not sample, so
 no `Token` row for it exists in the run's store, `Token.load` returns null, and
 the old-codegen dereference aborts both `handleDecreaseLiquidity` and
-`handleCollect` with `Value is not a BigInt`. A contiguous replay would have the
-row and both handlers would succeed. What the run does demonstrate is the host's
-fatal-policy machinery: the store is restored to its pre-block state and only the
-PoI survives. The test that covers this says so explicitly and asserts nothing
-about the deployed mapping at this height.
+`handleCollect` with `Value is not a BigInt`. The
+[contiguous replay](#the-parity-window-run-1053-contiguous-blocks) has since
+**confirmed** that: it has the row, and that block runs `handleBurn`,
+`handleDecreaseLiquidity` and `handleCollect` cleanly, 23 operations and no
+error. What the fixture run demonstrates is the host's fatal-policy machinery:
+the store is restored to its pre-block state and only the PoI survives. The test
+that covers this says so explicitly and asserts nothing about the deployed
+mapping at this height.
+
+## The parity-window run: 1,053 contiguous blocks
+
+One contiguous replay has been done end to end, on 2026-09-04, over
+`--from 12369621 --to 12370674` — the window
+`uniswap-v3/fixtures/mainnet-chain-config-parity-v1.json` locks. It ran with
+`--record`, which is how the committed cassette grew from 22 rows to 240.
+
+It produced 1,053 block reports (2.1 MB) and 1,053 canonical frames (5.6 MB).
+Neither is committed. What is committed is a summary of them:
+
+```
+evidence/parity-window-12369621-12370674.json         10 KB, run-evidence/v1
+evidence/parity-window-12369621-12370674.blocks.jsonl 149 KB, one line per block
+```
+
+The summary carries the deployment, the range, the exact command and the
+**names** of the environment variables it needed, every tally below, the final
+PoI, and the findings as prose. The sibling file carries `number`,
+`frame_sha256`, `poi_public_digest` and `operations` for each of the 1,053
+blocks, and the summary pins it by SHA-256 — so a later re-run can be compared
+against this one frame by frame without 5.6 MB of frames in the repository.
+
+Everything in the summary except the prose is derived, never typed:
+
+```sh
+cargo run -- summarize \
+  --report report.jsonl \
+  --evidence evidence/parity-window-12369621-12370674.json \
+  --segment segments/Qme66ZNMxSdCQKzaDuvS381whCVYCQjf637sGZCqJHAWHB \
+  --cassette fixtures/cassettes/Qme66ZNMxSdCQKzaDuvS381whCVYCQjf637sGZCqJHAWHB.json \
+  --goldens fixtures/block-changes/Qme66ZNMxSdCQKzaDuvS381whCVYCQjf637sGZCqJHAWHB \
+  --sampled-report fixtures/reports/Qme66ZNMxSdCQKzaDuvS381whCVYCQjf637sGZCqJHAWHB.json
+```
+
+Rerunning it over the same report reproduces the file: the `run` and `findings`
+objects are carried forward and every count is recomputed, so a regeneration can
+keep the prose and cannot keep a stale number.
+
+### What it produced
+
+| | |
+|---|---:|
+| Blocks | 1,053, contiguous, none missing |
+| Blocks in which a handler ran | 50 |
+| Handler groups / invocations | 167 |
+| `BlockChanges` operations | 1,362, all Sets |
+| Collapsed modifications | 1,102 |
+| Deterministic errors | **0** |
+| Discarded blocks | **0** |
+| Dynamic data sources created | 18 |
+| Blocks with a PoI | 50 |
+
+Handlers, by invocation: `handleTransfer` 39, `handleIncreaseLiquidity` 38,
+`handleMint` 38, `handlePoolCreated` 18, `handleInitialize` 17, `handleSwap` 14,
+`handleBurn` 1, `handleDecreaseLiquidity` 1, `handleCollect` 1. Every one
+returned `ok`.
+
+`handleFlash` **is still unexercised**: the Pool template declares it, but no
+`Flash` event occurs anywhere in this window, so it has now been observed absent
+over 1,053 contiguous blocks rather than over four sampled ones. That is a
+stronger statement about the window and no statement at all about the handler.
+
+The run wrote 17 of the schema's 20 entity types. `Collect`, `Flash` and
+`TickHourData` were never written, which is the executable form of the
+required-absent claim in issue #37 — for this segment and this window.
+
+The final `ethereum/mainnet` Legacy public PoI, at block 12,370,671, is
+`24be9932…d21acc3b`. The last two blocks of the range triggered no handler, so
+they created no causality region and the digest does not advance past that.
+
+### Two things it settles
+
+**The 12,370,523 deterministic errors were a fixture artifact.** In the sampled
+four-block replay that block aborts `handleDecreaseLiquidity` and `handleCollect`
+with `Value is not a BigInt`, because pool
+`0xdc7b403e2e967eaf6c97d79316d285b8a112fda7` was created in an unsampled block
+and no `Token` row for `0x956f47f5…` exists in that run's store. In the
+contiguous run the same block runs `handleBurn`, `handleDecreaseLiquidity` and
+`handleCollect` to completion: 23 operations, 0 errors, nothing discarded. The
+diagnosis this README already recorded is confirmed, and the whole window has no
+deterministic error at all.
+
+**Segment 1's `Collect` is the correct one.** The successful `handleCollect`
+wrote `Position 33` with `collectedFeesToken0 = 4.737020364940845353` and
+`collectedFeesToken1 = 0.000457721123056046`. The values differ, so token0 got
+`amount0` and token1 got `amount1`. Segment 1 pins NPM mapping
+`QmYWR79pUmVbQ42JkvB24D6AKCGtdo4UG78ZSewmFxwQdR`, which
+`uniswap-v3/graft-ancestry/v2/writer-compatibility.json` assigns to the
+`mainnet-root-correct-collect` profile — exactly that behaviour. The "amount0
+added to both fields" quirk belongs to the `current-amount0-to-both` and
+`base-root-amount0-to-both` profiles, the current mainnet and Base NPM mappings.
+Issue #37's full-ancestry scope must not be read as applying it to segment 1.
+That handler also wrote only `Position` and `PositionSnapshot`: no `Collect`
+row, no `Pool` row.
+
+### What a test can still check
+
+`tests/parity_window_evidence.rs` is hermetic and opens no socket. It cannot
+re-run the window — that needed Firehose and an RPC endpoint — so it checks the
+overlap instead. Four blocks of the window are also committed `.pb` fixtures, and
+the test replays them under this host and holds the frames against the digests
+the summary records for the same block numbers:
+
+| Block | Sampled frame | Contiguous frame | |
+|---:|---|---|---|
+| 12,369,621 | `5b38a626…` | `5b38a626…` | identical |
+| 12,369,739 | `60f9fe24…` | `60f9fe24…` | identical |
+| 12,369,879 | `736ce04a…` | `4f644f3c…` | 33 ops vs 52 |
+| 12,370,523 | `2631ccbc…` | `cca37176…` | 4 ops and 2 errors vs 23 and 0 |
+
+Both halves matter. The first two agree because the window *starts* at 12,369,621
+and the first `PoolCreated` is in 12,369,739, so a sampled and a contiguous
+replay reach both with the same store behind them — which makes the agreement a
+real check on the contiguous run, not a tautology. The last two must differ,
+because the contiguous run holds pools, tokens and positions that the sampled run
+never created. Recording both digests pins the difference instead of describing
+it.
+
+The rest of that file checks the summary against itself: the totals are the sum
+of its own per-block list, the list is the file the summary pins by digest and
+byte length, the range really does ascend by one from `from` to `to - 1`, the
+cassette on disk is the one it names, and neither file carries a credential.
 
 ## Cross-reference against the frozen Substreams port
 
@@ -669,14 +827,12 @@ them is informative:
 | 12,369,879 | includes a `Swap` on pool `0xc2e9f25b…` | no `Swap` | That pool was created in a block the fixture set does not sample, so no Pool data source exists for it here. |
 | 12,370,523 | includes a `Burn` | none | Same cause, plus the fatal-policy discard above. |
 
-The last two rows are the sharpest limitation of this evidence: **the fixture set
-is four sampled points, not a contiguous range**, so any handler whose data source
-was created in an unsampled block cannot fire. `handleSwap`, `handleBurn`, a
-successful `handleCollect` and `handleDecreaseLiquidity`, and `handleFlash` are
-therefore unexercised. Exercising them needs a contiguous replay — the
-`12,369,621 → 12,370,674` window that `uniswap-v3/fixtures/mainnet-chain-config-parity-v1.json`
-already locks — which is what [live mode](#live-mode-a-contiguous-range-from-firehose)
-streams. What it still needs is a cassette covering that window's `eth_call`s.
+The last two rows are the sharpest limitation of the *fixture* evidence: four
+sampled points are not a contiguous range, so any handler whose data source was
+created in an unsampled block cannot fire there. That is a property of the
+fixture set, not of the deployed mapping, and the
+[parity-window run](#the-parity-window-run-1053-contiguous-blocks) above is the
+contiguous replay that separates the two.
 
 ## What could not be reproduced through public API
 
@@ -696,12 +852,17 @@ streams. What it still needs is a cassette covering that window's `eth_call`s.
 * **The other seven segments.** All eight are bundled and all eight have
   descriptors, but only segment 1 has a cassette and golden frames. The rest need
   their own cassettes, and the Base pair needs Base block fixtures.
-* **A contiguous block range, actually replayed.** The live source exists and
-  works (see [Live mode](#live-mode-a-contiguous-range-from-firehose)), but no
-  parity-window run has been done: the committed cassette covers the four fixture
-  blocks only, so a contiguous range stops at the first `eth_call` it has not
-  seen. Five handlers stay unexercised and `STORE_DISPOSITION_COMMITTED` after a
-  deterministic error stays untested until that cassette is recorded.
+* **The rest of segment 1.** The parity window is 1,053 of its 1,081,260 blocks.
+  At the ~4 blocks/second the run measured, the whole segment is roughly three
+  days of wall clock and a much larger cassette; it is not a single-run
+  proposition.
+* **`handleFlash`.** Still never invoked. No `Flash` event occurs in the parity
+  window, so exercising it needs a different range, chosen from where a `Flash`
+  actually is.
+* **`STORE_DISPOSITION_COMMITTED` after a deterministic error.** Untested, and
+  now for a better reason: the contiguous run produced no deterministic error at
+  all, so nothing in it reaches the non-fatal disposition. Reaching it needs one
+  of the three `nonFatalErrors` segments.
 * **`RemoveEntity`.** Implemented end to end, including the pre-key remove the
   proto models, but no Uniswap V3 module imports `store.remove`, so no fixture
   reaches it.
@@ -724,9 +885,16 @@ This directory is an execution harness and a set of recorded observations. It
   `boundary_state_continuity_complete`, `physical_parity_complete` and
   `poi_parity_complete` in `uniswap-v3/writer-runtime/segment-profiles-v1.json`
   remain false;
-* covers **one** of eight segments and four non-contiguous blocks.
+* covers **one** of eight segments: four committed fixture blocks, and one
+  contiguous window of 1,053 blocks out of that segment's 1,081,260.
 
 What it does establish is that the deployed AssemblyScript modules execute
 faithfully under our own host, with our own store and call provider, and that the
 wave scheduler, the fatal-error policy and the Legacy PoI chain behave as the
 segment survey described.
+
+The [parity-window run](#the-parity-window-run-1053-contiguous-blocks) adds one
+thing to that and nothing more: over 1,053 contiguous blocks, nine of the ten
+declared handlers ran and every one succeeded. It is an executable observation of
+the deployed mapping, not a comparison against the deployed subgraph. Nothing
+here has been checked against an indexer.

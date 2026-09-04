@@ -1,0 +1,257 @@
+{
+  "schema": "pinax.substreams-backfills.mapping-host.run-evidence/v1",
+  "run": {
+    "recorded_on": "2026-09-04",
+    "command": "graph-mapping-host run --segment segments/Qme66ZNMxSdCQKzaDuvS381whCVYCQjf637sGZCqJHAWHB --from 12369621 --to 12370674 --cassette fixtures/cassettes/Qme66ZNMxSdCQKzaDuvS381whCVYCQjf637sGZCqJHAWHB.json --record --out report.jsonl --block-changes-out frames --progress-secs 60",
+    "environment": [
+      "FIREHOSE_ENDPOINT",
+      "FIREHOSE_API_TOKEN",
+      "SUBSTREAMS_API_TOKEN",
+      "ETHEREUM_RPC_URL",
+      "ETHEREUM_RPC_MIN_INTERVAL_MS"
+    ],
+    "toolchain": "1.98.0",
+    "firehose_endpoint": "eth.firehose.pinax.network:443",
+    "rpc_endpoint": "eth.rpc.pinax.network",
+    "artifacts_not_committed": "The run wrote report.jsonl (1,054 lines, 2.1 MB: one report-stream/v1 header and 1,053 block reports) and 1,053 canonical BlockChanges frames (5.6 MB). Neither is committed. Every frame's SHA-256 is in the sibling per-block file, which this summary pins by digest, so a re-run can be compared against this one frame by frame without those artifacts being in the repository.",
+    "claim_boundary": "This is an executable observation of the deployed segment-1 mapping WASM running under our own Graph Node v0.44.0 host, our own in-memory store and a recorded eth_call cassette. It is not a parity claim against the deployed subgraph: no PoI here has been compared with an indexer's, the ancestor deployment is not queryable, and no readiness flag in uniswap-v3/writer-runtime/segment-profiles-v1.json changes. It covers one of eight segments and 1,053 of that segment's 1,081,260 blocks. handleFlash remains unexercised because no Flash event occurs in this window."
+  },
+  "deployment": {
+    "deployment": "Qme66ZNMxSdCQKzaDuvS381whCVYCQjf637sGZCqJHAWHB",
+    "network": "mainnet",
+    "spec_version": "0.0.2",
+    "api_versions": [
+      "0.0.4"
+    ],
+    "features": [],
+    "graph_node_rev": "77823b5a7adc4eac4abf03202c8dd7cb00dea31d",
+    "source": "Firehose eth.firehose.pinax.network:443 blocks [12369621, 12370674)"
+  },
+  "range": {
+    "from": 12369621,
+    "to": 12370674,
+    "blocks": 1053,
+    "first_block": 12369621,
+    "last_block": 12370673,
+    "contiguous": true
+  },
+  "totals": {
+    "blocks": 1053,
+    "blocks_with_handlers": 50,
+    "blocks_with_poi": 50,
+    "blocks_discarded": 0,
+    "handler_groups": 167,
+    "handler_invocations": 167,
+    "operations": 1362,
+    "sets": 1362,
+    "removes": 0,
+    "deterministic_errors": 0,
+    "collapsed_modifications": 1102,
+    "created_data_sources": 18,
+    "max_waves": 2,
+    "frame_bytes": 1502901
+  },
+  "handlers": {
+    "invocations": {
+      "handleBurn": 1,
+      "handleCollect": 1,
+      "handleDecreaseLiquidity": 1,
+      "handleIncreaseLiquidity": 38,
+      "handleInitialize": 17,
+      "handleMint": 38,
+      "handlePoolCreated": 18,
+      "handleSwap": 14,
+      "handleTransfer": 39
+    },
+    "outcomes": {
+      "ok": 167
+    }
+  },
+  "data_source_invocations": {
+    "Factory": 18,
+    "NonfungiblePositionManager": 79,
+    "Pool": 70
+  },
+  "modifications_by_entity": {
+    "Bundle": 1,
+    "Burn": 1,
+    "Factory": 71,
+    "Mint": 38,
+    "Pool": 71,
+    "PoolDayData": 70,
+    "PoolHourData": 70,
+    "Position": 79,
+    "PositionSnapshot": 79,
+    "Swap": 14,
+    "Tick": 78,
+    "TickDayData": 78,
+    "Token": 139,
+    "TokenDayData": 104,
+    "TokenHourData": 105,
+    "Transaction": 51,
+    "UniswapDayData": 53
+  },
+  "entity_types": {
+    "declared": [
+      "Bundle",
+      "Burn",
+      "Collect",
+      "Factory",
+      "Flash",
+      "Mint",
+      "Pool",
+      "PoolDayData",
+      "PoolHourData",
+      "Position",
+      "PositionSnapshot",
+      "Swap",
+      "Tick",
+      "TickDayData",
+      "TickHourData",
+      "Token",
+      "TokenDayData",
+      "TokenHourData",
+      "Transaction",
+      "UniswapDayData"
+    ],
+    "written": [
+      "Bundle",
+      "Burn",
+      "Factory",
+      "Mint",
+      "Pool",
+      "PoolDayData",
+      "PoolHourData",
+      "Position",
+      "PositionSnapshot",
+      "Swap",
+      "Tick",
+      "TickDayData",
+      "Token",
+      "TokenDayData",
+      "TokenHourData",
+      "Transaction",
+      "UniswapDayData"
+    ],
+    "never_written": [
+      "Collect",
+      "Flash",
+      "TickHourData"
+    ]
+  },
+  "final_store_counts": {
+    "Bundle": 1,
+    "Burn": 1,
+    "Factory": 1,
+    "Mint": 38,
+    "Poi$": 1,
+    "Pool": 18,
+    "PoolDayData": 17,
+    "PoolHourData": 25,
+    "Position": 38,
+    "PositionSnapshot": 40,
+    "Swap": 13,
+    "Tick": 66,
+    "TickDayData": 66,
+    "Token": 14,
+    "TokenDayData": 13,
+    "TokenHourData": 30,
+    "Transaction": 51,
+    "UniswapDayData": 1
+  },
+  "final_poi": {
+    "block": 12370671,
+    "version": "legacy",
+    "causality_region": "ethereum/mainnet",
+    "public_digest": "24be993216fc2f81114bb7043b612da84a3eb00f528a610b8f0a5b8ad21acc3b"
+  },
+  "cassette": {
+    "path": "fixtures/cassettes/Qme66ZNMxSdCQKzaDuvS381whCVYCQjf637sGZCqJHAWHB.json",
+    "rows": 240,
+    "bytes": 185165,
+    "sha256": "3949a5d257ff64e92cc22dea6df2282a5d4207e79cdbfb573821112153b828d6",
+    "rows_by_call": {
+      "ERC20::decimals()": 14,
+      "ERC20::name()": 14,
+      "ERC20::symbol()": 14,
+      "ERC20::totalSupply()": 14,
+      "Factory::getPool(address,address,uint24)": 39,
+      "NonfungiblePositionManager::positions(uint256)": 39,
+      "Pool::feeGrowthGlobal0X128()": 14,
+      "Pool::feeGrowthGlobal1X128()": 14,
+      "Pool::ticks(int24)": 78
+    },
+    "reverts": 0
+  },
+  "fixture_block_cross_check": [
+    {
+      "block": 12369621,
+      "identical": true,
+      "golden_sha256": "5b38a626c51ddb492c07fa3e0cfaa44678faad72c8d280531d794059212fe365",
+      "contiguous_sha256": "5b38a626c51ddb492c07fa3e0cfaa44678faad72c8d280531d794059212fe365",
+      "golden_operations": 0,
+      "golden_deterministic_errors": 0,
+      "contiguous_operations": 0,
+      "contiguous_deterministic_errors": 0
+    },
+    {
+      "block": 12369739,
+      "identical": true,
+      "golden_sha256": "60f9fe243477a60891240a6a8cc6160f175154b0f9a5dffc1a5e3c6cc45ba515",
+      "contiguous_sha256": "60f9fe243477a60891240a6a8cc6160f175154b0f9a5dffc1a5e3c6cc45ba515",
+      "golden_operations": 34,
+      "golden_deterministic_errors": 0,
+      "contiguous_operations": 34,
+      "contiguous_deterministic_errors": 0
+    },
+    {
+      "block": 12369879,
+      "identical": false,
+      "golden_sha256": "736ce04a7ef9ff0c0feb8b9092b372928ef37f3483121a831d52e2360bf83580",
+      "contiguous_sha256": "4f644f3c327146f5f4160ce5120fd1e70dfb6cf440091a51faae31be2e7b9e9a",
+      "golden_operations": 33,
+      "golden_deterministic_errors": 0,
+      "contiguous_operations": 52,
+      "contiguous_deterministic_errors": 0
+    },
+    {
+      "block": 12370523,
+      "identical": false,
+      "golden_sha256": "2631ccbcfe88b3669f7d9d4a59a79d127fb7976bbb223ad41bdd8aad8b580b44",
+      "contiguous_sha256": "cca37176e9d2a7676948522778ee7ca5c8ef26d08987fff651eecd480d69683a",
+      "golden_operations": 4,
+      "golden_deterministic_errors": 2,
+      "contiguous_operations": 23,
+      "contiguous_deterministic_errors": 0
+    }
+  ],
+  "per_block": {
+    "file": "parity-window-12369621-12370674.blocks.jsonl",
+    "lines": 1053,
+    "bytes": 152674,
+    "sha256": "1b5a8ef46b32293cad7ef8fc6c7e3063c0e7ae138b9a0eb7f910c3faca98d850",
+    "fields": [
+      "number",
+      "frame_sha256",
+      "poi_public_digest",
+      "operations"
+    ]
+  },
+  "findings": [
+    {
+      "id": "fixture-gap-error-does-not-reproduce",
+      "title": "The two deterministic errors at block 12,370,523 were a fixture artifact, not deployed behaviour",
+      "statement": "Replaying the four sampled fixture blocks, block 12,370,523 aborts handleDecreaseLiquidity and handleCollect with `Value is not a BigInt`, because pool 0xdc7b403e2e967eaf6c97d79316d285b8a112fda7 was created in an unsampled block and no Token row for 0x956f47f50a910163d8bf957cf5846d573e7f87ca exists in that run's store. In this contiguous replay the same block runs handleBurn, handleDecreaseLiquidity and handleCollect to completion: 23 operations, 0 deterministic errors, nothing discarded. The whole 1,053-block window records 0 deterministic errors and 0 discarded blocks. The diagnosis recorded in mapping-host/README.md is therefore confirmed, and the sampled run's errors say nothing about what the deployed mapping does at that height. fixture_block_cross_check holds both frame digests for the block."
+    },
+    {
+      "id": "segment-1-collect-adds-amount1-to-token1",
+      "title": "The `amount0 added to both collected-fee fields` quirk does not apply to segment 1",
+      "statement": "The successful handleCollect at block 12,370,523 wrote Position 33 with collectedFeesToken0 = 4.737020364940845353 and collectedFeesToken1 = 0.000457721123056046. The two values differ, so token0 received amount0 and token1 received amount1. Segment 1 pins NonfungiblePositionManager mapping QmYWR79pUmVbQ42JkvB24D6AKCGtdo4UG78ZSewmFxwQdR, which uniswap-v3/graft-ancestry/v2/writer-compatibility.json assigns to the `mainnet-root-correct-collect` profile, whose definition is exactly that. The `amount0 to both` quirk that issue #37 states belongs to the `current-amount0-to-both` and `base-root-amount0-to-both` profiles (the current mainnet and Base NPM mappings), not to this root deployment. This is the first executable observation of that profile; #37's full-ancestry scope paragraph must not be read as applying the quirk to segment 1."
+    },
+    {
+      "id": "collect-writes-no-collect-row",
+      "title": "handleCollect writes only Position and PositionSnapshot",
+      "statement": "The one successful handleCollect wrote Position 33 and PositionSnapshot 33#12370523 and nothing else; no Collect row and no Pool row. Across the window the run wrote 17 of the schema's 20 entity types and never wrote Collect, Flash or TickHourData. That is the executable form of the required-absent claim in issue #37 and of the reachable_store_set_targets recorded for handleCollect in writer-compatibility.json, for this segment and this window only."
+    }
+  ]
+}

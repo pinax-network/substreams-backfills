@@ -18,8 +18,17 @@ use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 
-/// Schema identifier written into every report.
+/// Schema identifier written into every whole-run report.
 pub const REPORT_SCHEMA: &str = "pinax.substreams-backfills.mapping-host.report/v1";
+
+/// Schema identifier for the first line of a streamed (JSON Lines) report.
+///
+/// A live run cannot buffer a whole `RunReport`: the parity window is 1,053
+/// blocks and the full segment-1 range is 1.08M, so the run-level metadata is
+/// written once as a header line and each block follows on its own line, flushed
+/// as it is produced. A fixture run still writes one pretty-printed
+/// [`RunReport`], which is what the goldens pin.
+pub const REPORT_STREAM_SCHEMA: &str = "pinax.substreams-backfills.mapping-host.report-stream/v1";
 
 /// One entity modification, as `EntityCache::as_modifications` produced it.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
@@ -185,4 +194,49 @@ impl RunReport {
         json.push('\n');
         Ok(json)
     }
+}
+
+/// The first line of a streamed report: everything in a [`RunReport`] except the
+/// blocks, plus what the run was asked to replay.
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct RunHeader {
+    pub schema: String,
+    pub deployment: String,
+    pub network: String,
+    pub spec_version: String,
+    pub api_versions: Vec<String>,
+    pub features: Vec<String>,
+    pub graph_node_rev: String,
+    /// How blocks reached this run, e.g. `Firehose eth.firehose.pinax.network:443
+    /// blocks [12369739, 12369741)`. Never carries a credential.
+    pub source: String,
+    /// The half-open range, when one was requested.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub from: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub to: Option<i32>,
+}
+
+impl RunHeader {
+    pub fn new(report: &RunReport, source: String, range: Option<(i32, i32)>) -> Self {
+        RunHeader {
+            schema: REPORT_STREAM_SCHEMA.to_string(),
+            deployment: report.deployment.clone(),
+            network: report.network.clone(),
+            spec_version: report.spec_version.clone(),
+            api_versions: report.api_versions.clone(),
+            features: report.features.clone(),
+            graph_node_rev: report.graph_node_rev.clone(),
+            source,
+            from: range.map(|(from, _)| from),
+            to: range.map(|(_, to)| to),
+        }
+    }
+}
+
+/// One JSON object on one line, newline-terminated.
+pub fn json_line<T: Serialize>(value: &T) -> anyhow::Result<String> {
+    let mut json = serde_json::to_string(value)?;
+    json.push('\n');
+    Ok(json)
 }

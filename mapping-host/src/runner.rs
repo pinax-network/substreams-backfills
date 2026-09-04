@@ -124,6 +124,50 @@ pub struct SegmentHost {
     recorder: Arc<OpRecorder>,
     compatibility: BlockChangesCompatibility,
     descriptor_sha256: String,
+    bounds: SegmentBounds,
+}
+
+/// The block range this segment's own manifest claims.
+///
+/// `start` is the first block the deployment itself processes: the lowest
+/// `dataSources[].source.startBlock`, or the block after the graft when the
+/// manifest grafts, because a graft copies the base deployment up to and
+/// including that block.
+///
+/// `end` is only `Some` when *every* data source declares an `endBlock`, which
+/// none of the deployed Uniswap V3 manifests do. A segment's upper bound in the
+/// deployment succession is a repository fact, not a manifest fact, so it cannot
+/// be enforced from a bundle; see `README.md`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct SegmentBounds {
+    pub start: i32,
+    pub end: Option<i32>,
+}
+
+impl SegmentBounds {
+    /// Refuse a half-open `[from, to)` range that leaves this segment.
+    pub fn check_range(&self, from: i32, to: i32) -> Result<()> {
+        if to <= from {
+            bail!("--from {from} --to {to} is an empty range; --to is exclusive and must exceed --from");
+        }
+        if from < self.start {
+            bail!(
+                "--from {from} is below this segment's first block {}; the deployment does not \
+                 process anything earlier, so the store and the PoI chain would start from a \
+                 block the mapping never saw",
+                self.start
+            );
+        }
+        if let Some(end) = self.end {
+            if to - 1 > end {
+                bail!(
+                    "--to {to} reaches block {} but this segment's manifest ends at {end}",
+                    to - 1
+                );
+            }
+        }
+        Ok(())
+    }
 }
 
 impl SegmentHost {
@@ -219,6 +263,28 @@ impl SegmentHost {
 
         let causality_region = PoICausalityRegion::from_network(&network);
 
+        // `start_blocks()` is graph-node's own accessor; `end_block()` is only
+        // set when a manifest declares one, which is why `end` collapses to
+        // `None` unless every data source has one.
+        let manifest_start =
+            manifest.start_blocks().into_iter().min().ok_or_else(|| {
+                anyhow!("the manifest declares no data source with a start block")
+            })?;
+        let graft_start = manifest.graft.as_ref().map(|graft| graft.block + 1);
+        let end_blocks: Vec<Option<i32>> = manifest
+            .data_sources
+            .iter()
+            .map(|ds| ds.end_block())
+            .collect();
+        let bounds = SegmentBounds {
+            start: manifest_start.max(graft_start.unwrap_or(i32::MIN)),
+            end: if end_blocks.iter().all(Option::is_some) {
+                end_blocks.into_iter().flatten().max()
+            } else {
+                None
+            },
+        };
+
         let mut host = SegmentHost {
             logger,
             deployment,
@@ -241,6 +307,7 @@ impl SegmentHost {
             recorder,
             compatibility,
             descriptor_sha256,
+            bounds,
         };
 
         // Manifest data sources first, in manifest order. That order feeds host
@@ -270,6 +337,11 @@ impl SegmentHost {
 
     pub fn descriptor_sha256(&self) -> &str {
         &self.descriptor_sha256
+    }
+
+    /// The block range this segment's manifest claims.
+    pub fn bounds(&self) -> SegmentBounds {
+        self.bounds
     }
 
     fn error_policy(&self) -> pb::DeterministicErrorPolicy {

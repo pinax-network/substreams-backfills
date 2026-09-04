@@ -452,7 +452,11 @@ impl FirehoseSource {
             target.authority(),
             target.uri(),
             token,
-            None,
+            std::env::var("FIREHOSE_API_KEY")
+                .ok()
+                .map(|key| validate_token("FIREHOSE_API_KEY", &key))
+                .transpose()?
+                .flatten(),
             // No transforms are sent, so filters stay off: we want every log in
             // every block, exactly as `parse_log_triggers` would see it.
             false,

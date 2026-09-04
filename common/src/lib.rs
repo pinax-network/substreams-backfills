@@ -7,6 +7,7 @@
 //! saves and empty-but-triggered proof-of-indexing streams.
 
 pub mod block_changes;
+pub mod dynamic_sources;
 pub mod pb;
 
 pub use block_changes::{

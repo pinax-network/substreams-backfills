@@ -373,6 +373,34 @@ impl SegmentHost {
         &self.dynamic
     }
 
+    /// Persist exactly the sources Graph Node accepted, not inferred Pool rows.
+    pub fn stored_dynamic_data_sources(
+        &self,
+    ) -> Result<Vec<backfill_common::dynamic_sources::DataSource>> {
+        self.hosts
+            .iter()
+            .filter_map(|host| {
+                let stored = host.data_source().as_stored_dynamic_data_source();
+                stored.creation_block.map(|creation_block| {
+                    Ok(backfill_common::dynamic_sources::DataSource {
+                        creation_block,
+                        manifest_idx: i32::try_from(stored.manifest_idx)?,
+                        causality_region: 0,
+                        param: hex::encode(
+                            stored
+                                .param
+                                .as_ref()
+                                .ok_or_else(|| anyhow!("onchain dynamic source has no address"))?
+                                .as_ref(),
+                        ),
+                        context: stored.context,
+                        done_at: stored.done_at,
+                    })
+                })
+            })
+            .collect()
+    }
+
     fn poi_version_name(&self) -> &'static str {
         match self.poi_version {
             ProofOfIndexingVersion::Fast => "fast",

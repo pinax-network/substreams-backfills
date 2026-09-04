@@ -52,6 +52,7 @@ dependencies = [
  "hex",
  "num-bigint",
  "prost 0.13.5",
+ "serde",
  "serde_json",
  "sha2",
  "substreams-entity-change",

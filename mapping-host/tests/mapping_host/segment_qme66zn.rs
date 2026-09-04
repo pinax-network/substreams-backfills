@@ -424,7 +424,7 @@ fn a_fixture_gap_error_exercises_the_fatal_discard_path() {
     // confirmed that: it has the row, and the same block runs handleBurn,
     // handleDecreaseLiquidity and handleCollect cleanly, 23 operations and no
     // error. See `evidence/parity-window-12369621-12370674.json` and
-    // `tests/parity_window_evidence.rs`.
+    // `tests/mapping_host/parity_window_evidence.rs`.
     //
     // What this test therefore asserts is the *host's* fatal-policy machinery —
     // that a deterministic error under a manifest without `nonFatalErrors`

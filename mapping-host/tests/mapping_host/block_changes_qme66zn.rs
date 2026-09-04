@@ -12,7 +12,7 @@
 //! Set `UPDATE_GOLDENS=1` to rewrite them from the current run:
 //!
 //! ```sh
-//! UPDATE_GOLDENS=1 cargo test --test block_changes_qme66zn
+//! UPDATE_GOLDENS=1 cargo test --test mapping_host block_changes_qme66zn
 //! ```
 //!
 //! That writes `fixtures/block-changes/<deployment>/<block>.pb` and fails the

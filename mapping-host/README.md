@@ -435,7 +435,7 @@ clock-v1 stream, the envelope `cmd/substreams-native` produces and the engine's
 ```
 
 Golden frames live under `fixtures/block-changes/<cid>/`. Regenerate them with
-`UPDATE_GOLDENS=1 cargo test --test block_changes_qme66zn`, which rewrites them
+`UPDATE_GOLDENS=1 cargo test --test mapping_host block_changes_qme66zn`, which rewrites them
 and then fails, so a regeneration is never mistaken for a passing check.
 
 ### `--store-out`: the final store, for a consumer to be compared against
@@ -484,7 +484,7 @@ would make a frame-derived consumer state look wrong for a row no frame carries,
 and hiding it would make the file a partial image. So it sits in
 `poi_entities`, beside the `poi` digest a consumer computes for itself.
 
-`tests/store_state_qme66zn.rs` checks every dumped row against the last
+`tests/mapping_host/store_state_qme66zn.rs` checks every dumped row against the last
 **committed** `Set` for that key in the frames, which is the fold a consumer
 performs. Block 12,370,523 is what makes that bite: its saves are discarded
 under the fatal policy, so a dump that ignored disposition would disagree there
@@ -627,12 +627,40 @@ proving the reconstruction round-trips; that is a piece of work, not a flag.
 ### What CI runs, and what a real range costs
 
 CI runs the **fixtures only**. Every test in this crate is hermetic:
-`tests/block_source.rs` drives a fake source and hand-built Firehose responses,
-`tests/live_cli.rs` asserts the CLI refusals with `FIREHOSE_ENDPOINT=127.0.0.1:1`
+`tests/mapping_host/block_source.rs` drives a fake source and hand-built Firehose responses,
+`tests/mapping_host/live_cli.rs` asserts the CLI refusals with `FIREHOSE_ENDPOINT=127.0.0.1:1`
 so a refusal that stopped short of the network would fail rather than pass
 quietly, the two segment tests are unchanged, and
-`tests/parity_window_evidence.rs` checks the committed evidence for the live
+`tests/mapping_host/parity_window_evidence.rs` checks the committed evidence for the live
 parity-window run without re-running it. No test opens a socket.
+
+#### One test binary, deliberately
+
+Every integration suite lives under `tests/mapping_host/` and is a module of
+`tests/mapping_host/main.rs`, so `cargo test` links **one** integration
+executable rather than one per file.
+
+That is not tidiness. This crate statically links `graph`,
+`graph-chain-ethereum`, `graph-runtime-wasm` and wasmtime — 577 crates — into
+every target, and a debug test binary was ~140 MB. Six files meant six such
+links per `cargo test`, and a GitHub-hosted runner did not survive it: the
+linker died with `ld terminated with signal 7 [Bus error]` partway through the
+last one. The same profiles also set `debug = 0` and `strip = "debuginfo"`,
+which is where most of the remaining bytes went.
+
+| | Executables | Total | Largest |
+|---|---:|---:|---:|
+| Before | 8 | 724 MB | 153 MB |
+| After | 3 | 132 MB | 121 MB |
+
+Two consequences worth knowing. A test now reports as `<suite>::<name>`, so
+`cargo test --test mapping_host store_state_qme66zn` runs one suite and
+`cargo test --locked <name>` still runs one test. And a panic backtrace names
+functions but not source lines; no assertion depends on that, because the tests
+fail with their own messages.
+
+Put a new suite in `tests/mapping_host/` and add a `mod` line. A new file
+directly under `tests/` costs another full link.
 
 Scale, for planning a real run:
 
@@ -840,7 +868,7 @@ row, no `Pool` row.
 
 ### What a test can still check
 
-`tests/parity_window_evidence.rs` is hermetic and opens no socket. It cannot
+`tests/mapping_host/parity_window_evidence.rs` is hermetic and opens no socket. It cannot
 re-run the window — that needed Firehose and an RPC endpoint — so it checks the
 overlap instead. Four blocks of the window are also committed `.pb` fixtures, and
 the test replays them under this host and holds the frames against the digests

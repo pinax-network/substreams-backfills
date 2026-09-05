@@ -57,6 +57,23 @@ image through an OCI referrer; CI downloads that referrer and compares both
 payloads byte-for-byte. The Actions artifact contains the same published pair
 and attachment reference. No `latest` or production alias is updated.
 
+The discovery verifier is pinned to the [ORAS 1.2.3 JSON model](https://github.com/oras-project/oras/blob/v1.2.3/cmd/oras/internal/display/metadata/model/discover.go):
+its top-level array is `manifests`, not `referrers`, and each descriptor carries
+its own repository reference. `package.py verify-discovery` requires one exact
+attachment digest, reference, artifact/media type, source revision and byte size.
+It hashes the fetched manifest and checks its subject and revision independently;
+discovery output alone has no subject field. Missing, malformed or duplicate
+records fail closed. The existing subject gate and downloaded archive/publication
+byte comparisons remain mandatory. The fetched manifest and discovery JSON are
+retained with the successful publication artifact.
+
+Canonical [run 33949642564](https://github.com/pinax-network/substreams-backfills/actions/runs/33949642564)
+published the first runtime and attachment, but failed because its discovery check
+read `.referrers[]`. That failed run remains historical evidence, not a successful
+release certificate. The repaired workflow must pass on its own reviewed candidate
+and canonical source; neither the parser repair nor sampled smoke proves the
+complete Kubernetes root lifecycle or full Mainnet readiness.
+
 The archive contains application files, **not** a portable copy of every OS
 library. Execute the digest-pinned image. Before using a new canonical build,
 verify its exact commit/tree, successful CI, attachment subject, archive hashes,

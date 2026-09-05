@@ -128,13 +128,16 @@ class PackagingTests(unittest.TestCase):
 
     def test_bcf_smoke_requires_exact_four_payloads_and_order(self):
         goldens = REPO / f"fixtures/block-changes/{pkg.ROOT_SEGMENT}"
+        report = pkg.read_json(REPO / f"fixtures/reports/{pkg.ROOT_SEGMENT}.json")
+        hashes = {block["number"]: bytes.fromhex(block["hash"].removeprefix("0x")) for block in report["blocks"]}
         frames = []
         for number in pkg.BLOCKS:
             payload = (goldens / f"{number}.pb").read_bytes()
-            frames.append(b"BCF1\x01\0\0\0" + struct.pack(">Q", number) + bytes(32) + struct.pack(">I", len(payload)) + payload)
+            frames.append(b"BCF1\x01\0\0\0" + struct.pack(">Q", number) + hashes[number] + struct.pack(">I", len(payload)) + payload)
         pkg.compare_bcf(b"".join(frames), goldens)
         for bad in (b"".join(frames[:-1]), b"".join(reversed(frames)), b"".join(frames)[:-1],
-                    b"".join(frames) + frames[-1]):
+                    b"".join(frames) + frames[-1],
+                    frames[0][:16] + bytes(32) + frames[0][48:] + b"".join(frames[1:])):
             with self.subTest(length=len(bad)), self.assertRaises(ValueError):
                 pkg.compare_bcf(bad, goldens)
 

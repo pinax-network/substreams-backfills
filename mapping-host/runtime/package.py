@@ -215,6 +215,8 @@ def verify_image_config(image, commit):
 
 def compare_bcf(data, goldens):
     numbers = []
+    report = read_json(goldens.parents[1] / "reports" / f"{goldens.name}.json")
+    expected_hashes = {block["number"]: bytes.fromhex(block["hash"].removeprefix("0x")) for block in report["blocks"]}
     while data:
         if len(data) < 52 or data[:8] != b"BCF1\x01\x00\x00\x00":
             raise ValueError("bad BCF1 header")
@@ -222,6 +224,8 @@ def compare_bcf(data, goldens):
         length, = struct.unpack(">I", data[48:52])
         if len(data) < 52 + length or number in numbers:
             raise ValueError("truncated or duplicate BCF1 frame")
+        if data[16:48] != expected_hashes.get(number):
+            raise ValueError("BCF1 clock hash differs from golden")
         if data[52:52 + length] != (goldens / f"{number}.pb").read_bytes():
             raise ValueError(f"BCF1 golden differs at {number}")
         numbers.append(number)

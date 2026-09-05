@@ -56,6 +56,7 @@ dependencies = [
  "serde_json",
  "sha2",
  "substreams-entity-change",
+ "tempfile",
 ]
 
 [[package]]

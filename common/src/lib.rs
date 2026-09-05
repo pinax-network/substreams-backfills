@@ -8,6 +8,7 @@
 
 pub mod block_changes;
 pub mod dynamic_sources;
+pub mod dynamic_sources_v2;
 pub mod pb;
 
 pub use block_changes::{

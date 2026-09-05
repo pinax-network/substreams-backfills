@@ -143,6 +143,33 @@ fn source_order_and_disk_index_are_chunk_boundary_independent() {
 }
 
 #[test]
+fn unpromoted_and_symlinked_chunks_are_not_predecessors() {
+    let root = tempfile::tempdir().unwrap();
+    let parent = complete(root.path(), "parent", 10, 11, None, &[]);
+    let staging = root.path().join("unpromoted.building");
+    fs::rename(&parent.directory, &staging).unwrap();
+    let error = seal::SealedChunk::open(&staging, &parent.chunk.descriptor_sha256)
+        .err()
+        .unwrap();
+    assert!(error.contains("promoted .ready"), "{error}");
+    assert!(parent.verify_unchanged().is_err());
+    #[cfg(unix)]
+    {
+        let linked = root.path().join("linked.ready");
+        std::os::unix::fs::symlink(&staging, &linked).unwrap();
+        assert!(seal::SealedChunk::open(&linked, &parent.chunk.descriptor_sha256).is_err());
+        let (building, output, chunk) = stage(root.path(), "broken-target", 10, 11, None, &[]);
+        std::os::unix::fs::symlink(root.path().join("absent"), &output).unwrap();
+        assert!(seal::publish(&building, &output, &chunk, None).is_err());
+        assert!(fs::symlink_metadata(&output)
+            .unwrap()
+            .file_type()
+            .is_symlink());
+        assert!(!building.join(seal::READY).exists());
+    }
+}
+
+#[test]
 fn index_refuses_cross_chunk_duplicates_before_output_and_keeps_parent_immutable() {
     let root = tempfile::tempdir().unwrap();
     let parent = complete(root.path(), "parent", 10, 12, None, &[(11, 8)]);

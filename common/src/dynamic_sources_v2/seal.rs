@@ -48,6 +48,14 @@ pub struct SealedChunk {
 impl SealedChunk {
     pub fn open(directory: &Path, descriptor: &str) -> Result<Self, String> {
         require(
+            directory.extension().and_then(|s| s.to_str()) == Some("ready"),
+            "source chunk predecessor must be a promoted .ready directory",
+        )?;
+        Self::inspect(directory, descriptor)
+    }
+
+    fn inspect(directory: &Path, descriptor: &str) -> Result<Self, String> {
+        require(
             fs::symlink_metadata(directory)
                 .map_err(|e| e.to_string())?
                 .file_type()
@@ -204,7 +212,11 @@ pub fn publish(
     chunk: &Chunk,
     parent: Option<&SealedChunk>,
 ) -> Result<SealedChunk, String> {
-    require(!output.exists(), "source chunk target already exists")?;
+    require(
+        output.extension().and_then(|s| s.to_str()) == Some("ready"),
+        "source chunk output must end in .ready",
+    )?;
+    require_absent(output)?;
     chunk.validate(&chunk.descriptor_sha256)?;
     match (chunk.parent.as_ref(), parent) {
         (Some(_), Some(parent)) => {
@@ -262,16 +274,13 @@ pub fn publish(
         &serde_json::to_vec(&ready).map_err(|e| e.to_string())?,
     )?;
     // Validate our own sealed inventory before any path can claim completion.
-    SealedChunk::open(building, &chunk.descriptor_sha256)?;
+    SealedChunk::inspect(building, &chunk.descriptor_sha256)?;
     File::open(building)
         .and_then(|f| f.sync_all())
         .map_err(|e| e.to_string())?;
     // The production caller owns a fresh unique sibling target. A rename must
     // never be used to repair/remove an existing directory.
-    require(
-        !output.exists(),
-        "source chunk target appeared during generation",
-    )?;
+    require_absent(output)?;
     fs::rename(building, output).map_err(|e| e.to_string())?;
     if let Some(parent_dir) = output.parent() {
         File::open(parent_dir)
@@ -279,6 +288,14 @@ pub fn publish(
             .map_err(|e| e.to_string())?;
     }
     SealedChunk::open(output, &chunk.descriptor_sha256)
+}
+
+fn require_absent(path: &Path) -> Result<(), String> {
+    match fs::symlink_metadata(path) {
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(error) => Err(error.to_string()),
+        Ok(_) => Err("source chunk target already exists".into()),
+    }
 }
 
 pub fn write_new(path: &Path, bytes: &[u8]) -> Result<(), String> {

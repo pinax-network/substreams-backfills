@@ -352,6 +352,7 @@ fn real_300_blocks_equal_200_plus_100_in_every_semantic_output() {
     let cassette = PathBuf::from(
         std::env::var("V3_SOURCE_CHUNK_CASSETTE").expect("set local retained cassette"),
     );
+    let raw_pins = raw_inventory(&corpus);
     assert_eq!(
         graph_mapping_host::bundle::sha256_hex(&fs::read(&cassette).unwrap()),
         "3949a5d257ff64e92cc22dea6df2282a5d4207e79cdbfb573821112153b828d6"
@@ -448,17 +449,16 @@ fn real_300_blocks_equal_200_plus_100_in_every_semantic_output() {
         backfill_common::dynamic_sources_v2::FilePin::read(binary_path).unwrap(),
         "producer executable changed during evidence run"
     );
-    let raw_pins: std::collections::BTreeMap<_, _> = (START..START + 300)
-        .map(|number| {
-            (
-                number.to_string(),
-                backfill_common::dynamic_sources_v2::FilePin::read(
-                    &corpus.join(format!("{number}.pb")),
-                )
-                .unwrap(),
-            )
-        })
-        .collect();
+    assert_eq!(
+        raw_pins,
+        raw_inventory(&corpus),
+        "raw corpus changed during evidence run"
+    );
+    assert_eq!(
+        graph_mapping_host::bundle::sha256_hex(&fs::read(&cassette).unwrap()),
+        "3949a5d257ff64e92cc22dea6df2282a5d4207e79cdbfb573821112153b828d6",
+        "historical cassette changed during evidence run"
+    );
     let receipt = serde_json::json!({"scope":"real host 300 vs 200+100; not production certification", "from":START,"to":START+300,"split":START+200,"stream_sha256":w.chunk.stream.sha256,"sources":w.chunk.after.order.count,"semantic_source_state":w.chunk.after,"all_semantic_checkpoint_fields_equal":true,"whole_manifest":w.manifest_pin,"first_manifest":a.manifest_pin,"second_manifest":b.manifest_pin,"producer_revision":String::from_utf8(revision).unwrap().trim(),"producer_worktree_dirty":false,"producer_binary":binary,"raw_block_inventory":raw_pins});
     fs::write(
         output_root.join("split-parity-receipt.json"),
@@ -475,4 +475,20 @@ fn git_snapshot(command: &str, option: &str) -> Vec<u8> {
         .unwrap();
     assert!(output.status.success());
     output.stdout
+}
+
+fn raw_inventory(
+    corpus: &Path,
+) -> std::collections::BTreeMap<String, backfill_common::dynamic_sources_v2::FilePin> {
+    (START..START + 300)
+        .map(|number| {
+            (
+                number.to_string(),
+                backfill_common::dynamic_sources_v2::FilePin::read(
+                    &corpus.join(format!("{number}.pb")),
+                )
+                .unwrap(),
+            )
+        })
+        .collect()
 }

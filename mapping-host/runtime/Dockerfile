@@ -1,6 +1,7 @@
 # Build only the committed, allowlisted context exported by package.py context.
 FROM rust:1.98.0-bookworm@sha256:4e4a7e7939c17991ab35f2b8c2e67593980f771d28f6b1254b1850f860fd0c7f AS builder
-RUN apt-get update && apt-get install -y --no-install-recommends libpq-dev protobuf-compiler python3 && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends libpq-dev libprotobuf-dev protobuf-compiler python3 && rm -rf /var/lib/apt/lists/*
+RUN test -r /usr/include/google/protobuf/any.proto
 WORKDIR /build
 COPY . .
 RUN python3 mapping-host/runtime/package.py verify-source --root /build

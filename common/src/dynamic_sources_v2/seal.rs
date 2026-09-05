@@ -212,6 +212,22 @@ pub fn publish(
     chunk: &Chunk,
     parent: Option<&SealedChunk>,
 ) -> Result<SealedChunk, String> {
+    publish_with_sync(building, output, chunk, parent, |path| {
+        index::open_regular(path)?
+            .sync_all()
+            .map_err(|e| e.to_string())
+    })
+}
+
+// Private injection point for durability failure tests; never a caller flag or
+// public route around fsync. All payload syncs must succeed before READY exists.
+fn publish_with_sync(
+    building: &Path,
+    output: &Path,
+    chunk: &Chunk,
+    parent: Option<&SealedChunk>,
+    mut sync_payload: impl FnMut(&Path) -> Result<(), String>,
+) -> Result<SealedChunk, String> {
     require(
         output.extension().and_then(|s| s.to_str()) == Some("ready"),
         "source chunk output must end in .ready",
@@ -247,6 +263,7 @@ pub fn publish(
             FilePin::read(&building.join(name))? == *pin,
             "source chunk staging artifact pin mismatch",
         )?;
+        sync_payload(&building.join(name))?;
     }
     index::Index::open(&building.join(IDENTITIES), &chunk.after)?;
     verify_stream(&building.join(STREAM), chunk)?;
@@ -278,16 +295,39 @@ pub fn publish(
     File::open(building)
         .and_then(|f| f.sync_all())
         .map_err(|e| e.to_string())?;
-    // The production caller owns a fresh unique sibling target. A rename must
-    // never be used to repair/remove an existing directory.
+    // Checking absence gives an early refusal; only the native no-replace
+    // primitive closes the race with a directory created after this check.
     require_absent(output)?;
-    fs::rename(building, output).map_err(|e| e.to_string())?;
+    rename_no_replace(building, output)?;
     if let Some(parent_dir) = output.parent() {
         File::open(parent_dir)
             .and_then(|f| f.sync_all())
             .map_err(|e| e.to_string())?;
     }
     SealedChunk::open(output, &chunk.descriptor_sha256)
+}
+
+/// Atomic filesystem promotion only, not validation or a sealing authority.
+/// Callers must first validate and sync their full payload and metadata, then
+/// sync the parent directory after this succeeds. Existing destinations of any
+/// kind are never replaced, including an empty directory racing the caller.
+pub fn rename_no_replace(from: &Path, to: &Path) -> Result<(), String> {
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
+    {
+        rustix::fs::renameat_with(
+            rustix::fs::CWD,
+            from,
+            rustix::fs::CWD,
+            to,
+            rustix::fs::RenameFlags::NOREPLACE,
+        )
+        .map_err(|e| e.to_string())
+    }
+    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
+    {
+        let _ = (from, to);
+        Err("v2 atomic no-replace promotion is unsupported on this platform".into())
+    }
 }
 
 fn require_absent(path: &Path) -> Result<(), String> {
@@ -307,4 +347,95 @@ pub fn write_new(path: &Path, bytes: &[u8]) -> Result<(), String> {
     file.write_all(bytes)
         .and_then(|()| file.sync_all())
         .map_err(|e| e.to_string())
+}
+
+#[cfg(test)]
+mod durability_tests {
+    use super::*;
+    use crate::dynamic_sources_v2::{Block, SourceState, CONTRACT};
+
+    #[test]
+    fn each_payload_sync_failure_prevents_metadata_ready_and_promotion() {
+        for failing in 0..3 {
+            let root = tempfile::tempdir().unwrap();
+            let building = root.path().join("chunk.building");
+            let output = root.path().join("chunk.ready");
+            fs::create_dir(&building).unwrap();
+            let mut stream = b"BCF1\x01\0\0\0".to_vec();
+            stream.extend(10u64.to_be_bytes());
+            stream.extend([1; 32]);
+            stream.extend(1u32.to_be_bytes());
+            stream.push(42);
+            fs::write(building.join(STREAM), &stream).unwrap();
+            fs::write(building.join(CHECKPOINT), b"synthetic checkpoint").unwrap();
+            fs::write(building.join(IDENTITIES), index::MAGIC).unwrap();
+            let chunk = Chunk {
+                contract: CONTRACT.into(),
+                deployment: "synthetic".into(),
+                network: "mainnet".into(),
+                descriptor_sha256: "ab".repeat(32),
+                root_start_block: 10,
+                from: 10,
+                to: 11,
+                parent: None,
+                stream: FilePin::for_bytes(&stream),
+                checkpoint: FilePin::for_bytes(b"synthetic checkpoint"),
+                before: SourceState::empty(),
+                after: SourceState::empty(),
+                blocks: vec![Block {
+                    block_number: 10,
+                    block_hash: "01".repeat(32),
+                    payload_sha256: FilePin::for_bytes(&[42]).sha256,
+                    sources: vec![],
+                }],
+            };
+            let mut calls = Vec::new();
+            let result = publish_with_sync(&building, &output, &chunk, None, |path| {
+                calls.push(path.file_name().unwrap().to_owned());
+                if calls.len() == failing + 1 {
+                    return Err("injected payload fsync failure".into());
+                }
+                index::open_regular(path)?
+                    .sync_all()
+                    .map_err(|e| e.to_string())
+            });
+            assert!(result
+                .err()
+                .unwrap()
+                .contains("injected payload fsync failure"));
+            assert_eq!(
+                calls,
+                [STREAM, CHECKPOINT, IDENTITIES][..=failing]
+                    .iter()
+                    .map(std::ffi::OsString::from)
+                    .collect::<Vec<_>>()
+            );
+            for name in [METADATA, MANIFEST, READY] {
+                assert!(!building.join(name).exists());
+            }
+            assert!(!output.exists());
+            assert_eq!(fs::read(building.join(STREAM)).unwrap(), stream);
+        }
+    }
+
+    #[test]
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
+    fn atomic_no_replace_preserves_an_existing_empty_directory() {
+        let root = tempfile::tempdir().unwrap();
+        let from = root.path().join("staged");
+        let to = root.path().join("raced.ready");
+        fs::create_dir(&from).unwrap();
+        fs::write(from.join("payload"), b"keep").unwrap();
+        // Equivalent to a competitor creating this directory immediately after
+        // the caller's final absence check. Ordinary rename would replace it.
+        fs::create_dir(&to).unwrap();
+        assert!(rename_no_replace(&from, &to).is_err());
+        assert!(to.is_dir());
+        assert_eq!(fs::read_dir(&to).unwrap().count(), 0);
+        assert_eq!(fs::read(from.join("payload")).unwrap(), b"keep");
+        let fresh = root.path().join("fresh.ready");
+        rename_no_replace(&from, &fresh).unwrap();
+        assert!(!from.exists());
+        assert_eq!(fs::read(fresh.join("payload")).unwrap(), b"keep");
+    }
 }

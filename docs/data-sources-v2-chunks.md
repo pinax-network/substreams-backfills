@@ -48,10 +48,15 @@ A completed directory contains exactly:
 | `manifest.json` | Raw byte length and SHA-256 of all four artifacts |
 | `READY.json` | Canonical manifest byte length and SHA-256 seal |
 
-The producer verifies all artifacts, syncs the files and staging directory, then
-renames its fresh sibling `.building` directory to `.ready`. The output parent
+The producer verifies and `sync_all`s every existing stream, checkpoint and
+index payload before writing/syncing metadata, manifest and READY. A payload
+sync failure cannot create READY. It then syncs the staging directory and uses
+atomic no-replace rename from `.building` to `.ready`, followed by a parent
+directory sync. Linux and macOS are supported; unsupported platforms/filesystems
+fail closed without a plain-rename fallback. The output parent
 must exist. Existing output/staging targets, symlinks, extra files, truncations
-and changed pins are refusals. A READY file inside a leftover building path is
+and changed pins are refusals. An empty destination directory created after an
+absence check is preserved, not overwritten. A READY file inside a leftover building path is
 not promotion of the requested ready path. Workflows must exclusively own
 building paths and treat completed paths as immutable.
 

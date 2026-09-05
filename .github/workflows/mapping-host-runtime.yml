@@ -1,0 +1,140 @@
+name: mapping-host-runtime
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/mapping-host-runtime.yml'
+      - 'mapping-host/**'
+      - 'common/**'
+      - 'Cargo.toml'
+      - 'uniswap-v3/fixtures/blocks.lock.json'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/mapping-host-runtime.yml'
+      - 'mapping-host/**'
+      - 'common/**'
+      - 'Cargo.toml'
+      - 'uniswap-v3/fixtures/blocks.lock.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      packages: write
+    env:
+      IMAGE: ghcr.io/pinax-network/substreams-backfills
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Verify packaging refusals
+        run: python3 -m unittest discover -s mapping-host/runtime -p 'test_*.py' -v
+      - name: Export exact committed build inputs
+        run: |
+          source_commit=$(git rev-parse HEAD)
+          echo "SOURCE_COMMIT=$source_commit" >> "$GITHUB_ENV"
+          echo "RUNTIME_TAG=mapping-host-sha-$source_commit" >> "$GITHUB_ENV"
+          python3 mapping-host/runtime/package.py context --repo . --dest "$RUNNER_TEMP/mapping-host-context" --revision "$source_commit"
+      - uses: docker/setup-buildx-action@v3
+      - name: Build the clean-source native Linux runtime
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ runner.temp }}/mapping-host-context
+          file: ${{ runner.temp }}/mapping-host-context/mapping-host/runtime/Dockerfile
+          platforms: linux/amd64
+          load: true
+          tags: ${{ env.IMAGE }}:${{ env.RUNTIME_TAG }}
+          build-args: SOURCE_COMMIT=${{ env.SOURCE_COMMIT }}
+          cache-from: type=gha,scope=mapping-host-runtime
+          cache-to: type=gha,mode=max,scope=mapping-host-runtime
+      - name: Fetch only checksum-locked sampled blocks
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import importlib.util
+          from pathlib import Path
+          import subprocess
+          spec = importlib.util.spec_from_file_location('package', 'mapping-host/runtime/package.py')
+          package = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(package)
+          lock = package.read_json(Path('uniswap-v3/fixtures/blocks.lock.json'))
+          for item in lock['assets']:
+              if int(Path(item['path']).stem) not in package.BLOCKS:
+                  continue
+              dest = Path(item['path'])
+              dest.parent.mkdir(parents=True, exist_ok=True)
+              subprocess.run(['gh', 'release', 'download', lock['release_tag'], '--repo', lock['repository'],
+                              '--pattern', item['asset'], '--output', str(dest)], check=True)
+              if package.digest(dest) != item['sha256'] or dest.stat().st_size != item['bytes']:
+                  raise SystemExit('fixture checksum mismatch')
+          PY
+      - name: Replay the exact image without network and compare committed goldens
+        run: |
+          python3 mapping-host/runtime/package.py smoke --repo . \
+            --image "$IMAGE:$RUNTIME_TAG" --commit "$SOURCE_COMMIT" --dest "$RUNNER_TEMP/mapping-host-smoke"
+      - name: Upload sampled image smoke receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: mapping-host-smoke-${{ env.SOURCE_COMMIT }}
+          path: |
+            ${{ runner.temp }}/mapping-host-smoke/smoke.json
+            ${{ runner.temp }}/mapping-host-smoke/runtime/opt/mapping-host/runtime.json
+            ${{ runner.temp }}/mapping-host-smoke/runtime/opt/mapping-host/source.json
+          if-no-files-found: error
+      - name: Log in to GHCR for canonical publication only
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish only the tested image under its distinct source tag
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          docker push "$IMAGE:$RUNTIME_TAG"
+          image_digest=$(docker image inspect "$IMAGE:$RUNTIME_TAG" --format '{{index .RepoDigests 0}}')
+          python3 mapping-host/runtime/package.py archive --image "$image_digest" \
+            --commit "$SOURCE_COMMIT" --dest "$RUNNER_TEMP/mapping-host-publication"
+          echo "IMMUTABLE_IMAGE=$image_digest" >> "$GITHUB_ENV"
+      - uses: oras-project/setup-oras@v1
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        with:
+          version: 1.2.3
+      - name: Attach and independently retrieve the runtime archive and identity
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        working-directory: ${{ runner.temp }}/mapping-host-publication
+        run: |
+          archive="mapping-host-${SOURCE_COMMIT}-linux-amd64.tar.gz"
+          artifact_type=application/vnd.pinax.mapping-host.runtime.v1
+          receipt=$(oras attach --distribution-spec v1.1-referrers-tag --format json \
+            --artifact-type "$artifact_type" \
+            --annotation "org.opencontainers.image.revision=$SOURCE_COMMIT" \
+            "$IMMUTABLE_IMAGE" "$archive:application/gzip" "publication.json:application/json")
+          attachment_digest=$(jq -er .digest <<< "$receipt")
+          [[ "$attachment_digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+          oras manifest fetch "$IMAGE@$attachment_digest" | jq -e \
+            --arg subject "${IMMUTABLE_IMAGE#*@}" --arg type "$artifact_type" \
+            '.subject.digest == $subject and .artifactType == $type'
+          oras discover --distribution-spec v1.1-referrers-tag --format json "$IMMUTABLE_IMAGE" | \
+            jq -e --arg digest "$attachment_digest" 'any(.referrers[]; .digest == $digest)'
+          pull_dir=$(mktemp -d)
+          oras pull "$IMAGE@$attachment_digest" --output "$pull_dir"
+          cmp "$archive" "$pull_dir/$archive"
+          cmp publication.json "$pull_dir/publication.json"
+          jq -n --arg image "$IMMUTABLE_IMAGE" --arg attachment "$IMAGE@$attachment_digest" \
+            '{image:$image,attachment:$attachment,production_selectable:false}' > attachment.json
+          printf 'Experimental mapping-host runtime: `%s`\n' "$IMMUTABLE_IMAGE" >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload the exact published pair
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: mapping-host-publication-${{ env.SOURCE_COMMIT }}
+          path: ${{ runner.temp }}/mapping-host-publication/*
+          if-no-files-found: error

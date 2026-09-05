@@ -338,6 +338,14 @@ fn v2_refuses_sampled_gaps_and_torn_staging_without_promoting_ready() {
 #[test]
 #[ignore = "needs V3_SOURCE_CHUNK_CORPUS and V3_SOURCE_CHUNK_CASSETTE; local real 300-block evidence, never network"]
 fn real_300_blocks_equal_200_plus_100_in_every_semantic_output() {
+    let revision = git_snapshot("rev-parse", "HEAD");
+    let status = git_snapshot("status", "--porcelain");
+    assert!(
+        status.is_empty(),
+        "real-host evidence requires a clean source worktree"
+    );
+    let binary_path = Path::new(env!("CARGO_BIN_EXE_graph-mapping-host"));
+    let binary = backfill_common::dynamic_sources_v2::FilePin::read(binary_path).unwrap();
     let corpus = PathBuf::from(
         std::env::var("V3_SOURCE_CHUNK_CORPUS").expect("set local raw corpus directory"),
     );
@@ -425,18 +433,21 @@ fn real_300_blocks_equal_200_plus_100_in_every_semantic_output() {
     // and cache keys, without changing or normalizing any semantic field.
     whole_cp.header.boundary = split_cp.header.boundary.clone();
     assert_eq!(whole_cp, split_cp);
-    let revision = Command::new("git")
-        .current_dir(root())
-        .args(["rev-parse", "HEAD"])
-        .output()
-        .unwrap();
-    assert!(revision.status.success());
-    let status = Command::new("git")
-        .current_dir(root())
-        .args(["status", "--porcelain"])
-        .output()
-        .unwrap();
-    assert!(status.status.success());
+    assert_eq!(
+        revision,
+        git_snapshot("rev-parse", "HEAD"),
+        "source revision changed during evidence run"
+    );
+    assert_eq!(
+        status,
+        git_snapshot("status", "--porcelain"),
+        "source worktree changed during evidence run"
+    );
+    assert_eq!(
+        binary,
+        backfill_common::dynamic_sources_v2::FilePin::read(binary_path).unwrap(),
+        "producer executable changed during evidence run"
+    );
     let raw_pins: std::collections::BTreeMap<_, _> = (START..START + 300)
         .map(|number| {
             (
@@ -448,14 +459,20 @@ fn real_300_blocks_equal_200_plus_100_in_every_semantic_output() {
             )
         })
         .collect();
-    let binary = backfill_common::dynamic_sources_v2::FilePin::read(Path::new(env!(
-        "CARGO_BIN_EXE_graph-mapping-host"
-    )))
-    .unwrap();
-    let receipt = serde_json::json!({"scope":"real host 300 vs 200+100; not production certification", "from":START,"to":START+300,"split":START+200,"stream_sha256":w.chunk.stream.sha256,"sources":w.chunk.after.order.count,"semantic_source_state":w.chunk.after,"all_semantic_checkpoint_fields_equal":true,"whole_manifest":w.manifest_pin,"first_manifest":a.manifest_pin,"second_manifest":b.manifest_pin,"producer_revision":String::from_utf8(revision.stdout).unwrap().trim(),"producer_worktree_dirty":!status.stdout.is_empty(),"producer_binary":binary,"raw_block_inventory":raw_pins});
+    let receipt = serde_json::json!({"scope":"real host 300 vs 200+100; not production certification", "from":START,"to":START+300,"split":START+200,"stream_sha256":w.chunk.stream.sha256,"sources":w.chunk.after.order.count,"semantic_source_state":w.chunk.after,"all_semantic_checkpoint_fields_equal":true,"whole_manifest":w.manifest_pin,"first_manifest":a.manifest_pin,"second_manifest":b.manifest_pin,"producer_revision":String::from_utf8(revision).unwrap().trim(),"producer_worktree_dirty":false,"producer_binary":binary,"raw_block_inventory":raw_pins});
     fs::write(
         output_root.join("split-parity-receipt.json"),
         serde_json::to_vec_pretty(&receipt).unwrap(),
     )
     .unwrap();
+}
+
+fn git_snapshot(command: &str, option: &str) -> Vec<u8> {
+    let output = Command::new("git")
+        .current_dir(root())
+        .args([command, option])
+        .output()
+        .unwrap();
+    assert!(output.status.success());
+    output.stdout
 }

@@ -392,7 +392,10 @@ fn rpc_eth_call(
     });
 
     let response: serde_json::Value = send_with_backoff(rpc_url, &body)?;
+    decode_eth_call_response(response)
+}
 
+fn decode_eth_call_response(response: serde_json::Value) -> Result<CassetteRetval> {
     if let Some(error) = response.get("error") {
         let message = error
             .get("message")
@@ -414,13 +417,15 @@ fn rpc_eth_call(
         if REVERT_MARKERS.iter().any(|m| message.contains(m)) {
             return Ok(CassetteRetval::Null);
         }
-        bail!("eth_call returned an error that is not a revert: {error}");
+        // An upstream error can reflect an authenticated URL or API key. Keep
+        // classification unchanged, but never render the remote error body.
+        bail!("eth_call returned an error that is not a revert (remote details redacted)");
     }
 
     let result = response
         .get("result")
         .and_then(|r| r.as_str())
-        .ok_or_else(|| anyhow!("eth_call response has no result: {response}"))?;
+        .ok_or_else(|| anyhow!("eth_call response has no result (remote details redacted)"))?;
     Ok(CassetteRetval::Value(result.to_lowercase()))
 }
 
@@ -502,6 +507,33 @@ fn redacted_transport_error(error: &ureq::Error) -> anyhow::Error {
 
 #[cfg(test)]
 mod credential_redaction_tests {
+    #[test]
+    fn reflected_credentials_never_appear_in_rpc_errors() {
+        for response in [
+            serde_json::json!({"error": {"code": -32000, "message": "invalid key secret-api-key?token=private-value"}}),
+            serde_json::json!({"unexpected": "https://user:private-value@rpc.invalid/secret-api-key"}),
+        ] {
+            let rendered = super::decode_eth_call_response(response)
+                .unwrap_err()
+                .to_string();
+            assert!(rendered.contains("redacted"));
+            assert!(!rendered.contains("secret-api-key"));
+            assert!(!rendered.contains("private-value"));
+        }
+    }
+
+    #[test]
+    fn redaction_preserves_revert_and_value_classification() {
+        let reverted = super::decode_eth_call_response(
+            serde_json::json!({"error": {"message": "execution reverted"}}),
+        )
+        .unwrap();
+        assert!(matches!(reverted, super::CassetteRetval::Null));
+        let value =
+            super::decode_eth_call_response(serde_json::json!({"result": "0xABCD"})).unwrap();
+        assert!(matches!(value, super::CassetteRetval::Value(data) if data == "0xabcd"));
+    }
+
     #[test]
     fn a_signed_endpoint_never_appears_in_transport_errors() {
         let error = ureq::post("http://127.0.0.1:1/secret-api-key?token=private-value")

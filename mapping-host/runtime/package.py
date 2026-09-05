@@ -171,8 +171,13 @@ def verify(root, commit):
     if inventory(root, (RUNTIME,)) != document["files"]:
         raise ValueError("runtime file inventory mismatch")
     source = read_json(root / SOURCE)
-    if source["source_commit"] != commit or sha(canonical(source["files"])) != source["input_set_sha256"]:
+    if (source["schema"] != "pinax.mapping-host.build-inputs/v1" or source["source_commit"] != commit
+            or sha(canonical(source["files"])) != source["input_set_sha256"]):
         raise ValueError("runtime build input identity mismatch")
+    expected_files = {BINARY, SOURCE} | {
+        "opt/" + name for name in source["files"] if name.startswith("mapping-host/segments/")}
+    if set(document["files"]) != expected_files:
+        raise ValueError("runtime payload differs from the explicit application allowlist")
     if source["input_set_sha256"] != document["build_input_set_sha256"]:
         raise ValueError("runtime build input set mismatch")
     if document["binary_sha256"] != digest(root / BINARY):
@@ -183,6 +188,8 @@ def verify(root, commit):
 
 def extract(image, dest, commit):
     # Extraction is from the exact image, never from the host build tree.
+    config = json.loads(run("docker", "image", "inspect", image))[0]
+    verify_image_config(config, commit)
     dest.mkdir(parents=True, exist_ok=False)
     container = run("docker", "create", "--platform", "linux/amd64", image).decode().strip()
     try:
@@ -193,6 +200,17 @@ def extract(image, dest, commit):
     finally:
         run("docker", "rm", container)
     return verify(dest, commit)
+
+
+def verify_image_config(image, commit):
+    config = image["Config"]
+    if (image["Os"] != "linux" or image["Architecture"] != "amd64"
+            or config["User"] != "10001:10001"
+            or config["Entrypoint"] != ["/" + BINARY]
+            or config["WorkingDir"] != "/opt/mapping-host"
+            or config["Labels"]["org.opencontainers.image.revision"] != commit
+            or config["Labels"]["network.pinax.production-selectable"] != "false"):
+        raise ValueError("unsupported image execution identity")
 
 
 def compare_bcf(data, goldens):

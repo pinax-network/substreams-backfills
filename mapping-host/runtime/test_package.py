@@ -59,6 +59,8 @@ class PackagingTests(unittest.TestCase):
         extra.write_text("unexpected")
         with self.assertRaisesRegex(ValueError, "inventory"):
             pkg.verify(root, COMMIT)
+        with self.assertRaisesRegex(ValueError, "allowlist"):
+            pkg.seal(root)
         extra.unlink()
         extra.symlink_to(root / pkg.BINARY)
         with self.assertRaisesRegex(ValueError, "non-regular"):
@@ -114,6 +116,15 @@ class PackagingTests(unittest.TestCase):
         for image in ("ghcr.io/pinax-network/substreams-backfills:latest", "local:sha"):
             with self.assertRaisesRegex(ValueError, "immutable"):
                 pkg.archive(image, self.root / "archive", COMMIT)
+
+    def test_image_execution_identity_is_checked(self):
+        image = {"Os": "linux", "Architecture": "amd64", "Config": {
+            "User": "10001:10001", "Entrypoint": ["/" + pkg.BINARY], "WorkingDir": "/opt/mapping-host",
+            "Labels": {"org.opencontainers.image.revision": COMMIT, "network.pinax.production-selectable": "false"}}}
+        pkg.verify_image_config(image, COMMIT)
+        image["Config"]["User"] = "0:0"
+        with self.assertRaisesRegex(ValueError, "execution identity"):
+            pkg.verify_image_config(image, COMMIT)
 
     def test_bcf_smoke_requires_exact_four_payloads_and_order(self):
         goldens = REPO / f"fixtures/block-changes/{pkg.ROOT_SEGMENT}"

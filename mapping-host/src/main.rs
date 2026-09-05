@@ -45,7 +45,7 @@ struct Cli {
 #[derive(Subcommand)]
 enum Command {
     /// Replay blocks under one segment bundle.
-    Run(RunArgs),
+    Run(Box<RunArgs>),
     /// Build segment bundles from a flat directory of IPFS objects.
     BuildBundles(BuildBundlesArgs),
     /// Verify a bundle's digests without running anything.
@@ -140,6 +140,14 @@ struct RunArgs {
     /// Bounded to 10000 blocks; refuses checkpoints, grafts and indexing errors.
     #[arg(long, requires = "bcf1_out", conflicts_with_all = ["checkpoint_in", "continue_outputs"])]
     data_sources_out: Option<PathBuf>,
+    /// Seal one immutable v2 source/checkpoint chunk. Owns all output files;
+    /// reports stream to stdout. Does not support grafts or partial appends.
+    #[arg(long, conflicts_with_all = ["data_sources_out", "bcf1_out", "checkpoint_in", "checkpoint_out", "checkpoint_every", "continue_outputs", "block_changes_out", "store_out", "out"])]
+    source_chunk_out: Option<PathBuf>,
+    /// The verified immutable v2 predecessor. Its checkpoint is selected by
+    /// the sealed inventory, never by an independent caller-provided path.
+    #[arg(long, requires = "source_chunk_out")]
+    source_chunk_in: Option<PathBuf>,
     /// Write the final in-memory store as deterministic sorted JSON: every live
     /// row in the frames' own value encoding, the closing proof of indexing, and
     /// the per-type counts. This is what a consumer's final state is compared
@@ -227,7 +235,7 @@ fn main() -> Result<()> {
         Command::Run(args) => tokio::runtime::Builder::new_multi_thread()
             .enable_all()
             .build()?
-            .block_on(run(args)),
+            .block_on(run(*args)),
         Command::BuildBundles(args) => {
             let built = bundle::build_bundles(&args.from, &args.out)?;
             for deployment in built {
@@ -271,7 +279,7 @@ A continuation must start at exactly the checkpoint's boundary block plus one, \
 and is refused on a gap, an overlap, a different segment, a different bundle or \
 a cassette that changed underneath it.";
 
-async fn run(args: RunArgs) -> Result<()> {
+async fn run(mut args: RunArgs) -> Result<()> {
     // Before anything else, so an old command line gets the pointer rather than
     // whichever of the checks below happens to fire first.
     if args.resume {
@@ -297,6 +305,31 @@ async fn run(args: RunArgs) -> Result<()> {
     }
     if args.data_sources_out.as_ref().is_some_and(|p| p.exists()) {
         bail!("--data-sources-out refuses an existing path");
+    }
+
+    // v2 cannot select a naked diagnostic checkpoint or separate output files.
+    // Verify the direct predecessor before network access or any file creation.
+    let mut chunk_plan = args
+        .source_chunk_out
+        .as_deref()
+        .map(|output| {
+            graph_mapping_host::source_chunk::Plan::preflight(
+                &args.segment,
+                output,
+                args.source_chunk_in.as_deref(),
+            )
+        })
+        .transpose()?;
+    if let Some(plan) = &chunk_plan {
+        args.checkpoint_in = plan.checkpoint_input();
+        args.checkpoint_out = Some(
+            plan.building
+                .join(backfill_common::dynamic_sources_v2::seal::CHECKPOINT),
+        );
+        args.bcf1_out = Some(
+            plan.building
+                .join(backfill_common::dynamic_sources_v2::seal::STREAM),
+        );
     }
 
     // The endpoint and the token are validated before anything expensive
@@ -341,7 +374,7 @@ async fn run(args: RunArgs) -> Result<()> {
     // A mid-run checkpoint may never be ahead of the outputs it belongs with, so
     // asking for one puts the report and the frame index into their streamed
     // forms even for a fixture replay. Without it nothing about either changes.
-    let streaming = live_range.is_some() || args.checkpoint_every.is_some();
+    let streaming = live_range.is_some() || args.checkpoint_every.is_some() || chunk_plan.is_some();
 
     // The cassette as it stands before the run: its digest, and every row
     // reduced to a pair of digests. A recording run appends rows as it goes, so
@@ -402,6 +435,9 @@ async fn run(args: RunArgs) -> Result<()> {
             checkpoint.header.boundary.block
         );
     }
+    if let Some(plan) = &chunk_plan {
+        plan.validate_restored(&host, resumed.as_ref().map(|(checkpoint, _)| checkpoint))?;
+    }
 
     // Replay in ascending order. Out of order would make both the store and the
     // PoI chain meaningless, so either source is wrapped in a `CheckedSource`.
@@ -414,6 +450,9 @@ async fn run(args: RunArgs) -> Result<()> {
             // The range is checked against the segment *before* the stream is
             // opened, so an out-of-bounds request costs no network at all.
             host.bounds().check_range(from, to)?;
+            if let Some(plan) = &mut chunk_plan {
+                plan.bind_range(&host, (from, to))?;
+            }
             let retry = RetryPolicy {
                 retries: args.stream_retries,
                 backoff: Duration::from_millis(args.stream_backoff_ms),
@@ -426,24 +465,46 @@ async fn run(args: RunArgs) -> Result<()> {
                 ReconnectingSource::connect(FirehoseConnector::new(target, token), from, to, retry)
                     .await?;
             reconnects = Some(live.reconnect_counter());
-            Box::new(CheckedSource::new(
+            let checked = CheckedSource::new(
                 live,
                 Ordering::Contiguous {
                     start: from,
                     stop: to,
                 },
-            ))
+            );
+            Box::new(if chunk_plan.is_some() {
+                checked.require_parent_hashes()
+            } else {
+                checked
+            })
         }
-        None => Box::new(CheckedSource::new(
-            FixtureSource::load(&args.blocks, &args.only)?,
-            // The four committed fixtures are four sampled points, not a range,
-            // so only strict ascent is enforced here.
-            Ordering::Sampled,
-        )),
+        None => {
+            let fixtures = FixtureSource::load(&args.blocks, &args.only)?;
+            let ordering = if let Some(plan) = &mut chunk_plan {
+                let range = fixtures.contiguous_range()?;
+                plan.bind_range(&host, range)?;
+                Ordering::Contiguous {
+                    start: range.0,
+                    stop: range.1,
+                }
+            } else {
+                // Legacy sampled fixtures keep their existing behavior.
+                Ordering::Sampled
+            };
+            let checked = CheckedSource::new(fixtures, ordering);
+            Box::new(if chunk_plan.is_some() {
+                checked.require_parent_hashes()
+            } else {
+                checked
+            })
+        }
     };
 
     let source_description = source.describe();
     let base_report = host.new_report();
+    if let Some(plan) = &chunk_plan {
+        plan.prepare()?;
+    }
     // Every output destination is inspected before any of them is opened, so a
     // resumed run that would have to refuse one refuses before it truncates
     // another.
@@ -503,7 +564,10 @@ async fn run(args: RunArgs) -> Result<()> {
         every: args.checkpoint_every,
         cassette: args.cassette.clone(),
         source: source_description,
-        range: live_range,
+        range: chunk_plan
+            .as_ref()
+            .and_then(|plan| plan.range())
+            .or(live_range),
         previous: resumed
             .as_ref()
             .map(|(checkpoint, digest)| (checkpoint.header.boundary.clone(), digest.clone())),
@@ -582,6 +646,15 @@ async fn run(args: RunArgs) -> Result<()> {
 
     let blocks = writer.blocks();
     writer.finish(host.cassette().len())?;
+    if let Some(plan) = &chunk_plan {
+        let sealed = plan.finish(&host)?;
+        eprintln!(
+            "v2 source chunk sealed: {} ({} blocks, {} cumulative sources)",
+            sealed.directory.display(),
+            sealed.chunk.to - sealed.chunk.from,
+            sealed.chunk.after.order.count
+        );
+    }
     if let Some(mut progress) = progress {
         if let Some((block, _)) = result.last_checkpoint.as_ref() {
             progress.record_checkpoint(*block);

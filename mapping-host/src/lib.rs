@@ -27,6 +27,7 @@ pub mod replay;
 pub mod report;
 pub mod runner;
 pub mod source;
+pub mod source_chunk;
 pub mod store;
 pub mod store_state;
 

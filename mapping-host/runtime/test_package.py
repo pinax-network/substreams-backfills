@@ -1,10 +1,12 @@
 import importlib.util
+import copy
 from pathlib import Path
 import shutil
 import struct
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
 
 SPEC = importlib.util.spec_from_file_location("package", Path(__file__).with_name("package.py"))
 pkg = importlib.util.module_from_spec(SPEC)
@@ -120,11 +122,60 @@ class PackagingTests(unittest.TestCase):
     def test_image_execution_identity_is_checked(self):
         image = {"Os": "linux", "Architecture": "amd64", "Config": {
             "User": "10001:10001", "Entrypoint": ["/" + pkg.BINARY], "WorkingDir": "/opt/mapping-host",
-            "Labels": {"org.opencontainers.image.revision": COMMIT, "network.pinax.production-selectable": "false"}}}
+            "Cmd": ["--help"], "Env": pkg.RUNTIME_ENV,
+            "Labels": {"org.opencontainers.image.revision": COMMIT, "network.pinax.production-selectable": "false",
+                       "org.opencontainers.image.source": "https://github.com/pinax-network/substreams-backfills",
+                       "org.opencontainers.image.title": "Uniswap V3 mapping-host execution runtime"}}}
         pkg.verify_image_config(image, COMMIT)
-        image["Config"]["User"] = "0:0"
-        with self.assertRaisesRegex(ValueError, "execution identity"):
-            pkg.verify_image_config(image, COMMIT)
+        for field, value in (("User", "0:0"), ("Cmd", ["run"]), ("Env", ["LD_PRELOAD=/malicious.so"]),
+                             ("Healthcheck", {"Test": ["CMD", "curl"]}), ("Volumes", {"/opt": {}}),
+                             ("OnBuild", ["COPY . /"])):
+            changed = copy.deepcopy(image)
+            changed["Config"][field] = value
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                pkg.verify_image_config(changed, COMMIT)
+
+    def test_extract_pins_inspected_config_id_not_mutable_tag(self):
+        image_id = "sha256:" + "b" * 64
+        with patch.object(pkg, "inspect_image", return_value={"Id": image_id}), \
+                patch.object(pkg, "run", return_value=b"container\n") as calls, \
+                patch.object(pkg, "verify", return_value={}):
+            pkg.extract("mutable:tag", self.root / "extracted", COMMIT)
+        self.assertEqual(calls.call_args_list[0].args, ("docker", "create", "--platform", "linux/amd64", image_id))
+        self.assertFalse(any("mutable:tag" in call.args for call in calls.call_args_list))
+
+    def test_publication_must_match_exact_smoked_image_and_manifest(self):
+        image_id, runtime_sha = "sha256:" + "b" * 64, "c" * 64
+        document = {"source_commit": COMMIT, "binary_sha256": "d" * 64}
+        receipt = {"schema": "pinax.mapping-host.runtime-smoke/v1", "source_commit": COMMIT,
+                   "image_config_sha256": image_id, "runtime_json_sha256": runtime_sha,
+                   "runtime_binary_sha256": document["binary_sha256"], "network": "none",
+                   "blocks": list(pkg.BLOCKS), "production_selectable": False}
+        pkg.verify_smoke_binding(receipt, image_id, runtime_sha, document)
+        for key in ("source_commit", "image_config_sha256", "runtime_json_sha256", "runtime_binary_sha256"):
+            changed = dict(receipt, **{key: "wrong"})
+            with self.subTest(key=key), self.assertRaisesRegex(ValueError, "exact tested"):
+                pkg.verify_smoke_binding(changed, image_id, runtime_sha, document)
+
+    def test_smoke_refuses_edited_committed_goldens(self):
+        repo = self.root / "repo"
+        repo.mkdir()
+        subprocess.run(["git", "init", "-q", str(repo)], check=True)
+        paths = ["uniswap-v3/fixtures/blocks.lock.json", f"mapping-host/fixtures/cassettes/{pkg.ROOT_SEGMENT}.json",
+                 f"mapping-host/fixtures/reports/{pkg.ROOT_SEGMENT}.json"]
+        paths += [f"mapping-host/fixtures/block-changes/{pkg.ROOT_SEGMENT}/{number}.pb" for number in pkg.BLOCKS]
+        for name in paths:
+            path = repo / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(b"committed evidence")
+        subprocess.run(["git", "-C", str(repo), "add", "."], check=True)
+        subprocess.run(["git", "-C", str(repo), "-c", "user.name=Test", "-c", "user.email=test@example.invalid",
+                        "commit", "-qm", "fixture"], check=True)
+        commit = pkg.run("git", "-C", str(repo), "rev-parse", "HEAD").decode().strip()
+        pkg.verify_fixture_inputs(repo, commit)
+        (repo / paths[-1]).write_bytes(b"edited golden")
+        with self.assertRaisesRegex(ValueError, "evidence input differs"):
+            pkg.verify_fixture_inputs(repo, commit)
 
     def test_bcf_smoke_requires_exact_four_payloads_and_order(self):
         goldens = REPO / f"fixtures/block-changes/{pkg.ROOT_SEGMENT}"

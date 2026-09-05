@@ -12,6 +12,7 @@ RUN install -D -m 0555 mapping-host/target/release/graph-mapping-host /payload/u
     && python3 mapping-host/runtime/package.py seal --root /payload
 
 FROM debian:bookworm-slim@sha256:5ae3c39ebd15e229dcedd5cee596b2497182493d41ff162e824ba13fc1b2b867 AS runtime
+ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates libpq5 \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --gid 10001 mapping-host \

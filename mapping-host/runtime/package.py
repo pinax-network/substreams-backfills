@@ -19,6 +19,7 @@ RUNTIME = "opt/mapping-host/runtime.json"
 SOURCE = "opt/mapping-host/source.json"
 BINARY = "usr/local/bin/graph-mapping-host"
 SCHEMA = "pinax.mapping-host.execution-runtime/v1"
+RUNTIME_ENV = ["PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"]
 EXACT = {
     "Cargo.toml", "mapping-host/Cargo.toml", "mapping-host/Cargo.lock",
     "mapping-host/rust-toolchain.toml", "mapping-host/runtime/Dockerfile",
@@ -188,10 +189,9 @@ def verify(root, commit):
 
 def extract(image, dest, commit):
     # Extraction is from the exact image, never from the host build tree.
-    config = json.loads(run("docker", "image", "inspect", image))[0]
-    verify_image_config(config, commit)
+    config = inspect_image(image, commit)
     dest.mkdir(parents=True, exist_ok=False)
-    container = run("docker", "create", "--platform", "linux/amd64", image).decode().strip()
+    container = run("docker", "create", "--platform", "linux/amd64", config["Id"]).decode().strip()
     try:
         (dest / "usr/local/bin").mkdir(parents=True)
         (dest / "opt").mkdir()
@@ -204,13 +204,45 @@ def extract(image, dest, commit):
 
 def verify_image_config(image, commit):
     config = image["Config"]
+    labels = {"org.opencontainers.image.source": "https://github.com/pinax-network/substreams-backfills",
+              "org.opencontainers.image.revision": commit,
+              "org.opencontainers.image.title": "Uniswap V3 mapping-host execution runtime",
+              "network.pinax.production-selectable": "false"}
     if (image["Os"] != "linux" or image["Architecture"] != "amd64"
             or config["User"] != "10001:10001"
             or config["Entrypoint"] != ["/" + BINARY]
+            or config["Cmd"] != ["--help"] or config["Env"] != RUNTIME_ENV
             or config["WorkingDir"] != "/opt/mapping-host"
-            or config["Labels"]["org.opencontainers.image.revision"] != commit
-            or config["Labels"]["network.pinax.production-selectable"] != "false"):
+            or config["Labels"] != labels):
         raise ValueError("unsupported image execution identity")
+    checked = {"User", "Entrypoint", "Cmd", "Env", "WorkingDir", "Labels", "ArgsEscaped"}
+    if config.get("ArgsEscaped") is not None and type(config["ArgsEscaped"]) is not bool:
+        raise ValueError("invalid legacy Windows ArgsEscaped metadata")
+    for key in set(config) - checked:
+        if config[key] not in (None, False, "", [], {}):
+            raise ValueError(f"unexpected image execution field: {key}")
+
+
+def inspect_image(image, commit):
+    info = json.loads(run("docker", "image", "inspect", image))[0]
+    verify_image_config(info, commit)
+    if not re.fullmatch("sha256:[0-9a-f]{64}", info["Id"]):
+        raise ValueError("invalid immutable image config ID")
+    return info
+
+
+def verify_fixture_inputs(repo, commit):
+    names = ["uniswap-v3/fixtures/blocks.lock.json",
+             f"mapping-host/fixtures/cassettes/{ROOT_SEGMENT}.json",
+             f"mapping-host/fixtures/reports/{ROOT_SEGMENT}.json"]
+    names += [f"mapping-host/fixtures/block-changes/{ROOT_SEGMENT}/{number}.pb" for number in BLOCKS]
+    verified = {}
+    for name in names:
+        expected = run("git", "-C", str(repo), "cat-file", "blob", commit + ":" + name)
+        if (repo / name).read_bytes() != expected:
+            raise ValueError("smoke evidence input differs from the exact commit: " + name)
+        verified[name] = expected
+    return verified
 
 
 def compare_bcf(data, goldens):
@@ -236,21 +268,28 @@ def compare_bcf(data, goldens):
 
 def smoke(repo, image, dest, commit):
     dest.mkdir(parents=True, exist_ok=False)
-    document = extract(image, dest / "runtime", commit)
+    image_id = inspect_image(image, commit)["Id"]
+    document = extract(image_id, dest / "runtime", commit)
     context(repo, dest / "committed-inputs", commit)
     if (dest / "committed-inputs/source.json").read_bytes() != (dest / "runtime" / SOURCE).read_bytes():
         raise ValueError("image source inventory differs from the exact Git commit")
     # Fixture/golden/cassette inputs are read-only and intentionally not in the image.
-    lock = read_json(repo / "uniswap-v3/fixtures/blocks.lock.json")
+    evidence = dest / "committed-evidence"
+    for name, raw in verify_fixture_inputs(repo, commit).items():
+        path = evidence / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(raw)
+    lock = read_json(evidence / "uniswap-v3/fixtures/blocks.lock.json")
     fixtures = dest / "fixtures"
     fixtures.mkdir()
     for number in BLOCKS:
         item = next(x for x in lock["assets"] if x["path"].endswith(f"/{number}.pb"))
         path = repo / item["path"]
-        if digest(path) != item["sha256"] or path.stat().st_size != item["bytes"]:
+        raw = path.read_bytes()
+        if sha(raw) != item["sha256"] or len(raw) != item["bytes"]:
             raise ValueError("block fixture differs from lock")
-        shutil.copyfile(path, fixtures / f"{number}.pb")
-    shutil.copyfile(repo / f"mapping-host/fixtures/cassettes/{ROOT_SEGMENT}.json", fixtures / "cassette.json")
+        (fixtures / f"{number}.pb").write_bytes(raw)
+    shutil.copyfile(evidence / f"mapping-host/fixtures/cassettes/{ROOT_SEGMENT}.json", fixtures / "cassette.json")
     output = dest / "output"
     output.mkdir()
     # Runner host owns this directory; the image still executes as UID 10001.
@@ -261,34 +300,48 @@ def smoke(repo, image, dest, commit):
                 "--mount", f"type=bind,src={fixtures.resolve()},dst=/fixtures,readonly",
                 "--mount", f"type=bind,src={output.resolve()},dst=/output"]
     for segment in (dest / "runtime/opt/mapping-host/segments").iterdir():
-        run(*security, image, "verify-bundle", "--segment", f"/opt/mapping-host/segments/{segment.name}")
-    run(*security, image, "run", "--segment", f"/opt/mapping-host/segments/{ROOT_SEGMENT}",
+        run(*security, image_id, "verify-bundle", "--segment", f"/opt/mapping-host/segments/{segment.name}")
+    run(*security, image_id, "run", "--segment", f"/opt/mapping-host/segments/{ROOT_SEGMENT}",
         "--blocks", *(f"/fixtures/{x}.pb" for x in BLOCKS), "--cassette", "/fixtures/cassette.json",
         "--out", "/output/report.json", "--bcf1-out", "/output/blocks.bcf1", "--store-out", "/output/store.json")
-    compare_bcf((output / "blocks.bcf1").read_bytes(), repo / f"mapping-host/fixtures/block-changes/{ROOT_SEGMENT}")
+    compare_bcf((output / "blocks.bcf1").read_bytes(), evidence / f"mapping-host/fixtures/block-changes/{ROOT_SEGMENT}")
     report = read_json(output / "report.json")
-    if report != read_json(repo / f"mapping-host/fixtures/reports/{ROOT_SEGMENT}.json"):
+    if report != read_json(evidence / f"mapping-host/fixtures/reports/{ROOT_SEGMENT}.json"):
         raise ValueError("packaged sampled replay report differs from golden")
     receipt = {"schema": "pinax.mapping-host.runtime-smoke/v1", "source_commit": commit,
+               "image_config_sha256": image_id, "runtime_json_sha256": digest(dest / "runtime" / RUNTIME),
                "runtime_binary_sha256": document["binary_sha256"], "network": "none",
                "blocks": BLOCKS, "contiguous": False, "production_selectable": False,
                "outputs": inventory(output)}
     (dest / "smoke.json").write_bytes(canonical(receipt))
 
 
-def archive(image, dest, commit):
+def verify_smoke_binding(receipt, image_id, runtime_sha, document):
+    if (receipt["schema"] != "pinax.mapping-host.runtime-smoke/v1" or receipt["source_commit"] != document["source_commit"]
+            or receipt["image_config_sha256"] != image_id or receipt["runtime_json_sha256"] != runtime_sha
+            or receipt["runtime_binary_sha256"] != document["binary_sha256"] or receipt["network"] != "none"
+            or receipt["blocks"] != list(BLOCKS) or receipt["production_selectable"] is not False):
+        raise ValueError("published image differs from the exact tested image receipt")
+
+
+def archive(image, dest, commit, smoke_receipt=None):
     if not re.fullmatch(r"ghcr\.io/pinax-network/substreams-backfills@sha256:[0-9a-f]{64}", image):
         raise ValueError("publication requires the immutable mapping-host image digest")
     dest.mkdir(parents=True, exist_ok=False)
+    image_id = inspect_image(image, commit)["Id"]
+    receipt = read_json(smoke_receipt)
     with tempfile.TemporaryDirectory() as work:
         root = Path(work) / "runtime"
-        document = extract(image, root, commit)
+        document = extract(image_id, root, commit)
+        verify_smoke_binding(receipt, image_id, digest(root / RUNTIME), document)
         archive_file = dest / f"mapping-host-{commit}-linux-amd64.tar.gz"
         with tarfile.open(archive_file, "w:gz") as out:
             for name in sorted(inventory(root)):
                 out.add(root / name, arcname=name, recursive=False)
         external = {"schema": "pinax.mapping-host.oci-publication/v1", "source_commit": commit,
-                    "image": image, "runtime": document, "runtime_json_sha256": digest(root / RUNTIME),
+                    "image": image, "image_config_sha256": image_id,
+                    "runtime": document, "runtime_json_sha256": digest(root / RUNTIME),
+                    "smoke_receipt_sha256": digest(smoke_receipt),
                     "archive": {"file": archive_file.name, "sha256": digest(archive_file)},
                     "production_selectable": False}
         (dest / "publication.json").write_bytes(canonical(external))
@@ -311,6 +364,8 @@ def main():
             p.add_argument("--image", required=True)
         if name in ("verify", "extract", "smoke", "archive"):
             p.add_argument("--commit", required=True)
+        if name == "archive":
+            p.add_argument("--smoke-receipt", required=True, type=Path)
     args = vars(parser.parse_args())
     command = args.pop("command").replace("-", "_")
     globals()[command](**args)

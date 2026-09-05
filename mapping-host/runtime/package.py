@@ -19,6 +19,8 @@ RUNTIME = "opt/mapping-host/runtime.json"
 SOURCE = "opt/mapping-host/source.json"
 BINARY = "usr/local/bin/graph-mapping-host"
 SCHEMA = "pinax.mapping-host.execution-runtime/v1"
+ARTIFACT_TYPE = "application/vnd.pinax.mapping-host.runtime.v1"
+OCI_MANIFEST = "application/vnd.oci.image.manifest.v1+json"
 RUNTIME_ENV = ["PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"]
 EXACT = {
     "Cargo.toml", "mapping-host/Cargo.toml", "mapping-host/Cargo.lock",
@@ -347,6 +349,51 @@ def archive(image, dest, commit, smoke_receipt=None):
         (dest / "publication.json").write_bytes(canonical(external))
 
 
+def verify_discovery(discovery, manifest, image, attachment, commit):
+    """Verify the pinned ORAS 1.2.3 discovery shape and exact fetched referrer."""
+    if not re.fullmatch(r"ghcr\.io/pinax-network/substreams-backfills@sha256:[0-9a-f]{64}", image):
+        raise ValueError("discovery requires the immutable mapping-host image")
+    if not re.fullmatch(r"sha256:[0-9a-f]{64}", attachment) or not re.fullmatch(r"[0-9a-f]{40}", commit):
+        raise ValueError("invalid attachment or source revision")
+    raw = manifest.read_bytes()
+    if "sha256:" + sha(raw) != attachment:
+        raise ValueError("fetched attachment digest mismatch")
+    document = read_json(manifest)
+    if (not isinstance(document, dict) or type(document.get("schemaVersion")) is not int
+            or document["schemaVersion"] != 2
+            or document.get("mediaType") != OCI_MANIFEST
+            or document.get("artifactType") != ARTIFACT_TYPE
+            or not isinstance(document.get("subject"), dict)
+            or document["subject"].get("digest") != image.split("@", 1)[1]
+            or not isinstance(document.get("annotations"), dict)
+            or document["annotations"].get("org.opencontainers.image.revision") != commit):
+        raise ValueError("fetched attachment identity mismatch")
+    listing = read_json(discovery)
+    # ORAS 1.2.3 uses manifests, with references on each descriptor, not at the root.
+    if not isinstance(listing, dict) or set(listing) != {"manifests"} or not isinstance(listing["manifests"], list):
+        raise ValueError("unsupported ORAS 1.2.3 discovery format")
+    seen, matches = set(), []
+    for item in listing["manifests"]:
+        if (not isinstance(item, dict) or not isinstance(item.get("digest"), str)
+                or not re.fullmatch(r"sha256:[0-9a-f]{64}", item["digest"])
+                or type(item.get("size")) is not int or item["size"] <= 0
+                or not isinstance(item.get("mediaType"), str)
+                or item.get("reference") != image.split("@", 1)[0] + "@" + item["digest"]):
+            raise ValueError("malformed discovery descriptor")
+        if item["digest"] in seen:
+            raise ValueError("duplicate discovery descriptor")
+        seen.add(item["digest"])
+        if item["digest"] == attachment:
+            matches.append(item)
+    if len(matches) != 1:
+        raise ValueError("expected exactly one discovered attachment")
+    selected = matches[0]
+    if (selected["mediaType"] != OCI_MANIFEST or selected.get("artifactType") != ARTIFACT_TYPE
+            or selected["size"] != len(raw) or not isinstance(selected.get("annotations"), dict)
+            or selected["annotations"].get("org.opencontainers.image.revision") != commit):
+        raise ValueError("discovered attachment identity mismatch")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
@@ -366,6 +413,12 @@ def main():
             p.add_argument("--commit", required=True)
         if name == "archive":
             p.add_argument("--smoke-receipt", required=True, type=Path)
+    p = commands.add_parser("verify-discovery")
+    p.add_argument("--discovery", required=True, type=Path)
+    p.add_argument("--manifest", required=True, type=Path)
+    p.add_argument("--image", required=True)
+    p.add_argument("--attachment", required=True)
+    p.add_argument("--commit", required=True)
     args = vars(parser.parse_args())
     command = args.pop("command").replace("-", "_")
     globals()[command](**args)

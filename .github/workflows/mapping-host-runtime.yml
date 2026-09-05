@@ -126,11 +126,14 @@ jobs:
             "$IMMUTABLE_IMAGE" "$archive:application/gzip" "publication.json:application/json")
           attachment_digest=$(jq -er .digest <<< "$receipt")
           [[ "$attachment_digest" =~ ^sha256:[0-9a-f]{64}$ ]]
-          oras manifest fetch "$IMAGE@$attachment_digest" | jq -e \
+          oras manifest fetch "$IMAGE@$attachment_digest" > attachment-manifest.json
+          jq -e \
             --arg subject "${IMMUTABLE_IMAGE#*@}" --arg type "$artifact_type" \
-            '.subject.digest == $subject and .artifactType == $type'
-          oras discover --distribution-spec v1.1-referrers-tag --format json "$IMMUTABLE_IMAGE" | \
-            jq -e --arg digest "$attachment_digest" 'any(.referrers[]; .digest == $digest)'
+            '.subject.digest == $subject and .artifactType == $type' attachment-manifest.json
+          oras discover --distribution-spec v1.1-referrers-tag --format json "$IMMUTABLE_IMAGE" > discovery.json
+          python3 "$GITHUB_WORKSPACE/mapping-host/runtime/package.py" verify-discovery \
+            --discovery discovery.json --manifest attachment-manifest.json \
+            --image "$IMMUTABLE_IMAGE" --attachment "$attachment_digest" --commit "$SOURCE_COMMIT"
           pull_dir=$(mktemp -d)
           oras pull "$IMAGE@$attachment_digest" --output "$pull_dir"
           cmp "$archive" "$pull_dir/$archive"

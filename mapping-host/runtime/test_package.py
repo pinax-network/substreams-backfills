@@ -1,10 +1,12 @@
 import importlib.util
 import copy
+import json
 from pathlib import Path
 import shutil
 import struct
 import subprocess
 import tempfile
+import sys
 import unittest
 from unittest.mock import patch
 
@@ -191,6 +193,119 @@ class PackagingTests(unittest.TestCase):
                     frames[0][:16] + bytes(32) + frames[0][48:] + b"".join(frames[1:])):
             with self.subTest(length=len(bad)), self.assertRaises(ValueError):
                 pkg.compare_bcf(bad, goldens)
+
+
+class DiscoveryTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        root = Path(self.temp.name)
+        self.discovery = root / "discovery.json"
+        self.manifest = root / "attachment-manifest.json"
+        self.image = "ghcr.io/pinax-network/substreams-backfills@sha256:" + "b" * 64
+        self.document = {
+            "schemaVersion": 2, "mediaType": pkg.OCI_MANIFEST, "artifactType": pkg.ARTIFACT_TYPE,
+            "subject": {"digest": self.image.split("@")[1]},
+            "annotations": {"org.opencontainers.image.revision": COMMIT},
+        }
+        self.reseal()
+
+    def reseal(self):
+        self.manifest.write_bytes(pkg.canonical(self.document))
+        self.attachment = "sha256:" + pkg.digest(self.manifest)
+        # Exact ORAS v1.2.3 model: only manifests at the root; reference per descriptor.
+        self.listing = {"manifests": [{
+            "mediaType": pkg.OCI_MANIFEST, "digest": self.attachment,
+            "size": self.manifest.stat().st_size, "artifactType": pkg.ARTIFACT_TYPE,
+            "annotations": {"org.opencontainers.image.revision": COMMIT},
+            "reference": self.image.split("@")[0] + "@" + self.attachment,
+        }]}
+
+    def verify(self, listing=None):
+        self.discovery.write_bytes(pkg.canonical(self.listing if listing is None else listing))
+        pkg.verify_discovery(self.discovery, self.manifest, self.image, self.attachment, COMMIT)
+
+    def test_pinned_oras_123_discovery_and_unrelated_referrer_pass(self):
+        self.verify()
+        other = copy.deepcopy(self.listing["manifests"][0])
+        other.update(digest="sha256:" + "c" * 64, artifactType="application/another-type",
+                     reference=self.image.split("@")[0] + "@sha256:" + "c" * 64)
+        self.listing["manifests"].append(other)
+        self.verify()
+
+    def test_missing_legacy_empty_and_non_array_discovery_refused(self):
+        for listing in ({}, {"referrers": self.listing["manifests"]}, {"manifests": []},
+                        {"manifests": None}, {"manifests": {}}, {"manifests": "bad"}, [],
+                        {"manifests": self.listing["manifests"], "referrers": []}):
+            with self.subTest(listing=listing), self.assertRaises(ValueError):
+                self.verify(listing)
+
+    def test_null_and_malformed_json_and_duplicate_keys_refused(self):
+        for raw in (b"null", b"{", b'{"manifests":[],"manifests":[]}',
+                    pkg.canonical(self.listing) + pkg.canonical(self.listing)):
+            self.discovery.write_bytes(raw)
+            with self.subTest(raw=raw[:30]), self.assertRaises(ValueError):
+                pkg.verify_discovery(self.discovery, self.manifest, self.image, self.attachment, COMMIT)
+
+    def test_malformed_and_duplicate_descriptor_records_refused(self):
+        descriptor = self.listing["manifests"][0]
+        for entries in ([None], ["bad"], [{}], [descriptor, descriptor], [descriptor, None]):
+            with self.subTest(entries=entries), self.assertRaises(ValueError):
+                self.verify({"manifests": entries})
+
+    def test_selected_descriptor_fields_and_size_must_match(self):
+        changes = [("digest", "sha256:" + "c" * 64), ("digest", None), ("digest", "bad"),
+                   ("reference", "ghcr.io/another/repo@" + self.attachment),
+                   ("reference", self.image), ("artifactType", "application/other"),
+                   ("mediaType", "application/other"), ("annotations", {}),
+                   ("annotations", {"org.opencontainers.image.revision": "c" * 40})]
+        changes += [("size", value) for value in (0, -1, True, 1.5, "10", None,
+                                                  self.manifest.stat().st_size + 1)]
+        for key, value in changes:
+            listing = copy.deepcopy(self.listing)
+            listing["manifests"][0][key] = value
+            with self.subTest(key=key, value=value), self.assertRaises(ValueError):
+                self.verify(listing)
+        for key in self.listing["manifests"][0]:
+            listing = copy.deepcopy(self.listing)
+            del listing["manifests"][0][key]
+            with self.subTest(missing=key), self.assertRaises(ValueError):
+                self.verify(listing)
+
+    def test_manifest_bytes_are_bound_to_attachment_digest(self):
+        self.manifest.write_bytes(self.manifest.read_bytes() + b" ")
+        with self.assertRaisesRegex(ValueError, "digest mismatch"):
+            self.verify()
+
+    def test_fetched_manifest_subject_revision_and_type_are_bound(self):
+        original = copy.deepcopy(self.document)
+        for key, value in (("subject", {"digest": "sha256:" + "c" * 64}), ("subject", None),
+                           ("annotations", {"org.opencontainers.image.revision": "c" * 40}),
+                           ("annotations", None), ("mediaType", "wrong"),
+                           ("artifactType", "wrong"), ("schemaVersion", 1),
+                           ("schemaVersion", 2.0), ("schemaVersion", True)):
+            self.document = dict(original, **{key: value})
+            self.reseal()
+            with self.subTest(key=key), self.assertRaisesRegex(ValueError, "identity mismatch"):
+                self.verify()
+
+    def test_mutable_or_wrong_repository_and_bad_identity_arguments_refused(self):
+        self.discovery.write_bytes(pkg.canonical(self.listing))
+        for image in (self.image.split("@")[0] + ":latest", self.image.replace("pinax-network", "another")):
+            with self.subTest(image=image), self.assertRaises(ValueError):
+                pkg.verify_discovery(self.discovery, self.manifest, image, self.attachment, COMMIT)
+        for attachment, commit in (("bad", COMMIT), (self.attachment, "main")):
+            with self.assertRaises(ValueError):
+                pkg.verify_discovery(self.discovery, self.manifest, self.image, attachment, commit)
+
+    def test_discovery_cli_success_and_refusal(self):
+        self.verify()
+        command = [sys.executable, str(Path(pkg.__file__)), "verify-discovery",
+                   "--discovery", str(self.discovery), "--manifest", str(self.manifest),
+                   "--image", self.image, "--attachment", self.attachment, "--commit", COMMIT]
+        self.assertEqual(0, subprocess.run(command, capture_output=True).returncode)
+        self.discovery.write_text(json.dumps({"referrers": self.listing["manifests"]}))
+        self.assertNotEqual(0, subprocess.run(command, capture_output=True).returncode)
 
 
 if __name__ == "__main__":

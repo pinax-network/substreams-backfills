@@ -3,6 +3,11 @@
 For the bounded Mainnet root milestone, see the explicit
 [dynamic-source metadata companion](../docs/data-sources-sidecar-v1.md).
 
+For explicitly versioned resumable producer chunks, see
+[source metadata v2](../docs/data-sources-v2-chunks.md). This bounds each metadata
+chunk and its index processing, not the host's full entity state, and does not
+relax the v1 root-only consumer or load gates.
+
 A hermetic Rust host that runs a **deployed** subgraph's mapping WASM under Graph
 Node's own runtime crates, pinned to `graph-node` revision
 `77823b5a7adc4eac4abf03202c8dd7cb00dea31d` (tag `v0.44.0`).

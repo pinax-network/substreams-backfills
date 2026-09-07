@@ -134,6 +134,7 @@ pub struct SegmentHost {
     descriptor_sha256: String,
     bundle_lock_sha256: String,
     bounds: SegmentBounds,
+    grafted: bool,
     /// Every dynamic data source this host has instantiated, in creation order,
     /// as the checkpoint records them. Duplicates that `create_dynamic_data_sources`
     /// skipped are not here, because they are not hosts.
@@ -325,6 +326,7 @@ impl SegmentHost {
             descriptor_sha256,
             bundle_lock_sha256: bundle.lock_sha256().to_string(),
             bounds,
+            grafted: manifest.graft.is_some(),
             dynamic: Vec::new(),
             blocks_processed: 0,
         };
@@ -377,28 +379,37 @@ impl SegmentHost {
     pub fn stored_dynamic_data_sources(
         &self,
     ) -> Result<Vec<backfill_common::dynamic_sources::DataSource>> {
-        self.hosts
-            .iter()
-            .filter_map(|host| {
-                let stored = host.data_source().as_stored_dynamic_data_source();
-                stored.creation_block.map(|creation_block| {
-                    Ok(backfill_common::dynamic_sources::DataSource {
-                        creation_block,
-                        manifest_idx: i32::try_from(stored.manifest_idx)?,
-                        causality_region: 0,
-                        param: hex::encode(
-                            stored
-                                .param
-                                .as_ref()
-                                .ok_or_else(|| anyhow!("onchain dynamic source has no address"))?
-                                .as_ref(),
-                        ),
-                        context: stored.context,
-                        done_at: stored.done_at,
-                    })
+        self.stored_dynamic_data_sources_iter().collect()
+    }
+
+    pub fn is_grafted(&self) -> bool {
+        self.grafted
+    }
+
+    /// Stream the accepted runtime inventory without cloning historical hosts
+    /// into a second vector. v2 metadata uses this iterator across checkpoints.
+    pub fn stored_dynamic_data_sources_iter(
+        &self,
+    ) -> impl Iterator<Item = Result<backfill_common::dynamic_sources::DataSource>> + '_ {
+        self.hosts.iter().filter_map(|host| {
+            let stored = host.data_source().as_stored_dynamic_data_source();
+            stored.creation_block.map(|creation_block| {
+                Ok(backfill_common::dynamic_sources::DataSource {
+                    creation_block,
+                    manifest_idx: i32::try_from(stored.manifest_idx)?,
+                    causality_region: 0,
+                    param: hex::encode(
+                        stored
+                            .param
+                            .as_ref()
+                            .ok_or_else(|| anyhow!("onchain dynamic source has no address"))?
+                            .as_ref(),
+                    ),
+                    context: stored.context,
+                    done_at: stored.done_at,
                 })
             })
-            .collect()
+        })
     }
 
     fn poi_version_name(&self) -> &'static str {

@@ -1687,6 +1687,7 @@ dependencies = [
  "hex",
  "num-bigint 0.4.8",
  "prost 0.13.5",
+ "rustix",
  "serde",
  "serde_json",
  "sha2 0.10.9",

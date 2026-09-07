@@ -112,6 +112,7 @@ pub struct CheckedSource<S> {
     /// The previous block's own hash, `0x`-prefixed. Only meaningful in
     /// contiguous mode, where the next block must name it as its parent.
     previous_hash: Option<String>,
+    require_parent_hashes: bool,
     finished: bool,
 }
 
@@ -122,13 +123,31 @@ impl<S: BlockSource> CheckedSource<S> {
             ordering,
             previous: None,
             previous_hash: None,
+            require_parent_hashes: false,
             finished: false,
         }
+    }
+
+    /// Additional v2 provenance requirement. Legacy sampled/live callers keep
+    /// their existing semantics; v2 must never skip a missing ancestry link.
+    pub fn require_parent_hashes(mut self) -> Self {
+        self.require_parent_hashes = true;
+        self
     }
 
     fn check(&mut self, block: &BlockFinality) -> Result<()> {
         let identity = crate::block::identify(block);
         let number = identity.number;
+        if self.require_parent_hashes && number > 0 {
+            let valid = identity
+                .parent_hash
+                .as_deref()
+                .and_then(|hash| hex::decode(hash.trim_start_matches("0x")).ok())
+                .is_some_and(|bytes| bytes.len() == 32 && bytes.iter().any(|byte| *byte != 0));
+            if !valid {
+                bail!("v2 source chunk block {number} has no valid parent hash");
+            }
+        }
         if let Some(previous) = self.previous {
             if number == previous {
                 bail!("block {number} was produced twice; a source must not repeat a block");
@@ -237,6 +256,26 @@ pub struct FixtureSource {
 }
 
 impl FixtureSource {
+    /// The v2 production-shaped chunk path requires a complete finite range;
+    /// legacy sampled-fixture replay does not call this stricter check.
+    pub fn contiguous_range(&self) -> Result<(i32, i32)> {
+        let start = self
+            .blocks
+            .front()
+            .ok_or_else(|| anyhow!("a source chunk requires at least one block"))?
+            .0;
+        let mut expected = start;
+        for (number, _, _) in &self.blocks {
+            if *number != expected {
+                bail!("a source chunk requires contiguous fixtures; expected {expected}, got {number}");
+            }
+            expected = expected
+                .checked_add(1)
+                .ok_or_else(|| anyhow!("source chunk range overflow"))?;
+        }
+        Ok((start, expected))
+    }
+
     /// Load every file, optionally keep only the named block numbers, and sort.
     ///
     /// A block number requested through `only` that no file holds is an error,

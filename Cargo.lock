@@ -52,10 +52,12 @@ dependencies = [
  "hex",
  "num-bigint",
  "prost 0.13.5",
+ "rustix 1.1.4",
  "serde",
  "serde_json",
  "sha2",
  "substreams-entity-change",
+ "tempfile",
 ]
 
 [[package]]

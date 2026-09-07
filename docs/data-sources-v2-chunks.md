@@ -60,6 +60,11 @@ absence check is preserved, not overwritten. A READY file inside a leftover buil
 not promotion of the requested ready path. Workflows must exclusively own
 building paths and treat completed paths as immutable.
 
+A basename output such as `--source-chunk-out chunk-000.ready` is supported:
+the current directory is synced after promotion, just as an explicit parent
+directory is. Regression coverage uses an isolated subprocess working directory
+and verifies both successful completion and the exact sealed output inventory.
+
 ## Cross-chunk contract
 
 Every block binds its number, canonical hash and exact payload SHA-256. The

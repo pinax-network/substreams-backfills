@@ -299,11 +299,15 @@ fn publish_with_sync(
     // primitive closes the race with a directory created after this check.
     require_absent(output)?;
     rename_no_replace(building, output)?;
-    if let Some(parent_dir) = output.parent() {
-        File::open(parent_dir)
-            .and_then(|f| f.sync_all())
-            .map_err(|e| e.to_string())?;
-    }
+    // A basename such as `chunk.ready` has an empty parent, not `None`.
+    // Sync its real containing directory rather than failing after promotion.
+    let parent_dir = output
+        .parent()
+        .filter(|p| !p.as_os_str().is_empty())
+        .unwrap_or(Path::new("."));
+    File::open(parent_dir)
+        .and_then(|f| f.sync_all())
+        .map_err(|e| e.to_string())?;
     SealedChunk::open(output, &chunk.descriptor_sha256)
 }
 

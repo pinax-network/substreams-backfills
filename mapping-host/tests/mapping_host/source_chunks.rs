@@ -255,6 +255,30 @@ fn root_cli_seals_exact_inventory_and_refuses_overwriting_or_reusing_raw_checkpo
 }
 
 #[test]
+fn relative_chunk_output_syncs_the_current_directory_and_reports_success() {
+    // A process-local cwd avoids racing other tests. `Path::parent` returns an
+    // empty path for this basename, which must mean the current directory when
+    // syncing the completed promotion, not a nonexistent directory.
+    let tmp = tempfile::tempdir().unwrap();
+    success(
+        command(&cassette())
+            .current_dir(tmp.path())
+            .arg("--blocks")
+            .arg(fixture(START))
+            .arg("--source-chunk-out")
+            .arg("root.ready")
+            .output()
+            .unwrap(),
+    );
+    let output = tmp.path().join("root.ready");
+    let receipt = sealed(&output);
+    assert_eq!(receipt.chunk.from, START);
+    assert_eq!(receipt.chunk.to, START + 1);
+    assert!(!tmp.path().join("root.building").exists());
+    assert_eq!(fs::read_dir(tmp.path()).unwrap().count(), 1);
+}
+
+#[test]
 fn every_mutated_direct_predecessor_file_is_refused_before_creating_outputs_or_network() {
     let tmp = tempfile::tempdir().unwrap();
     let parent = tmp.path().join("root.ready");

@@ -217,6 +217,14 @@ Two differences remain, neither reachable by these mappings:
   a `Remove` followed by an `Insert` here. None of the twenty deployed Uniswap V3
   modules imports `store.remove`, so the case cannot arise.
 
+Fatal-block rollback records the first pre-block value (or absence) only for
+keys modified by handlers, rather than copying the entire store at every block.
+Rollback restores those values, including VIDs, resets the LFU cache, and leaves
+the runner's subsequent PoI write unchanged. Per-type live counts are maintained
+alongside the rows instead of scanning all keys for every report. Checkpoint and
+store exports still copy full state; this is not a bounded-memory backend. See
+[delta rollback and its verification boundaries](../docs/mapping-host-delta-rollback.md).
+
 ### The `eth_call` cassette
 
 Graph Node's own `graph_chain_ethereum::RuntimeAdapter` cannot be reused with a

@@ -55,31 +55,86 @@ use graph::schema::{EntityKey, InputSchema};
 /// A `BTreeMap`-backed store over one subgraph schema.
 pub struct MemoryStore {
     schema: InputSchema,
-    rows: RwLock<BTreeMap<EntityKey, Entity>>,
+    rows: RwLock<Rows>,
+}
+
+/// The first value of each key changed in one block, including absence. This
+/// grows with distinct writes in the block, not with all historical live rows.
+pub(crate) type StoreUndo = BTreeMap<EntityKey, Option<Entity>>;
+
+#[derive(Default)]
+struct Rows {
+    entities: BTreeMap<EntityKey, Entity>,
+    counts: BTreeMap<String, usize>,
+}
+
+impl Rows {
+    fn set(&mut self, key: EntityKey, value: Option<Entity>) {
+        match value {
+            Some(entity) => {
+                let name = key.entity_type.typename().to_string();
+                if self.entities.insert(key, entity).is_none() {
+                    *self.counts.entry(name).or_default() += 1;
+                }
+            }
+            None => {
+                if self.entities.remove(&key).is_some() {
+                    let name = key.entity_type.typename().to_string();
+                    let count = self.counts.get_mut(&name).expect("live row has a count");
+                    *count -= 1;
+                    if *count == 0 {
+                        self.counts.remove(&name);
+                    }
+                }
+            }
+        }
+    }
 }
 
 impl MemoryStore {
     pub fn new(schema: InputSchema) -> Self {
         MemoryStore {
             schema,
-            rows: RwLock::new(BTreeMap::new()),
+            rows: RwLock::new(Rows::default()),
         }
     }
 
     /// Apply one handler's modifications, in the order Graph Node would have
     /// written them at the end of the block.
     pub fn apply(&self, mods: &[EntityModification]) {
+        self.apply_inner(mods, None);
+    }
+
+    /// Preserve each key's pre-block value once, across all handlers and waves.
+    /// Recording a later overwrite as the original would corrupt fatal rollback.
+    pub(crate) fn apply_recording(&self, mods: &[EntityModification], undo: &mut StoreUndo) {
+        self.apply_inner(mods, Some(undo));
+    }
+
+    fn apply_inner(&self, mods: &[EntityModification], mut undo: Option<&mut StoreUndo>) {
         let mut rows = self.rows.write().expect("store lock poisoned");
         for m in mods {
-            match m {
+            let (key, value) = match m {
                 EntityModification::Insert { key, data, .. }
                 | EntityModification::Overwrite { key, data, .. } => {
-                    rows.insert(key.clone(), data.as_ref().clone());
+                    (key, Some(data.as_ref().clone()))
                 }
-                EntityModification::Remove { key, .. } => {
-                    rows.remove(key);
-                }
+                EntityModification::Remove { key, .. } => (key, None),
+            };
+            if let Some(undo) = undo.as_mut() {
+                undo.entry(key.clone())
+                    .or_insert_with(|| rows.entities.get(key).cloned());
             }
+            rows.set(key.clone(), value);
+        }
+    }
+
+    /// Restore only keys touched by this block. PoI is applied separately by
+    /// the runner after a fatal block's entity modifications have been undone.
+    pub(crate) fn rollback(&self, undo: StoreUndo) {
+        let mut rows = self.rows.write().expect("store lock poisoned");
+        for (key, value) in undo {
+            rows.set(key, value);
         }
     }
 
@@ -89,24 +144,42 @@ impl MemoryStore {
         self.rows
             .read()
             .expect("store lock poisoned")
+            .entities
             .get(key)
             .cloned()
     }
 
-    /// A copy of every row, for the fatal-policy rollback in
-    /// [`crate::runner::SegmentHost::process_block`].
+    /// A copy of every row for explicit checkpoint/export operations, not for
+    /// per-block rollback. Those exports still require full-state memory.
     pub fn snapshot(&self) -> BTreeMap<EntityKey, Entity> {
-        self.rows.read().expect("store lock poisoned").clone()
+        self.rows
+            .read()
+            .expect("store lock poisoned")
+            .entities
+            .clone()
     }
 
     /// Replace every row with a snapshot taken earlier.
     pub fn restore(&self, snapshot: BTreeMap<EntityKey, Entity>) {
-        *self.rows.write().expect("store lock poisoned") = snapshot;
+        let mut counts = BTreeMap::new();
+        for key in snapshot.keys() {
+            *counts
+                .entry(key.entity_type.typename().to_string())
+                .or_default() += 1;
+        }
+        *self.rows.write().expect("store lock poisoned") = Rows {
+            entities: snapshot,
+            counts,
+        };
     }
 
     /// Number of live rows, for reporting.
     pub fn len(&self) -> usize {
-        self.rows.read().expect("store lock poisoned").len()
+        self.rows
+            .read()
+            .expect("store lock poisoned")
+            .entities
+            .len()
     }
 
     pub fn is_empty(&self) -> bool {
@@ -133,13 +206,11 @@ impl MemoryStore {
 
     /// Live rows grouped by entity type, for reporting.
     pub fn counts_by_type(&self) -> BTreeMap<String, usize> {
-        let rows = self.rows.read().expect("store lock poisoned");
-        let mut out: BTreeMap<String, usize> = BTreeMap::new();
-        for key in rows.keys() {
-            *out.entry(key.entity_type.typename().to_string())
-                .or_default() += 1;
-        }
-        out
+        self.rows
+            .read()
+            .expect("store lock poisoned")
+            .counts
+            .clone()
     }
 }
 
@@ -150,6 +221,7 @@ impl ReadStore for MemoryStore {
             .rows
             .read()
             .expect("store lock poisoned")
+            .entities
             .get(key)
             .cloned())
     }
@@ -161,7 +233,7 @@ impl ReadStore for MemoryStore {
         let rows = self.rows.read().expect("store lock poisoned");
         Ok(keys
             .into_iter()
-            .filter_map(|k| rows.get(&k).cloned().map(|e| (k, e)))
+            .filter_map(|k| rows.entities.get(&k).cloned().map(|e| (k, e)))
             .collect())
     }
 
@@ -171,6 +243,7 @@ impl ReadStore for MemoryStore {
     ) -> Result<BTreeMap<EntityKey, Entity>, StoreError> {
         let rows = self.rows.read().expect("store lock poisoned");
         Ok(rows
+            .entities
             .iter()
             .filter(|(key, entity)| query.matches(key, entity))
             .map(|(key, entity)| (key.clone(), entity.clone()))
@@ -195,5 +268,205 @@ impl EnsLookup for NoEnsLookup {
 
     async fn is_table_empty(&self) -> Result<bool, StoreError> {
         Ok(true)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use graph::data::store::Value;
+    use graph::prelude::DeploymentHash;
+    use std::sync::Arc;
+
+    fn store() -> MemoryStore {
+        MemoryStore::new(
+            InputSchema::parse_latest(
+                "type Thing @entity(immutable: false) { id: ID!, value: Int! }\n\
+             type Other @entity(immutable: false) { id: ID!, value: Int! }",
+                DeploymentHash::new("rollback_test").unwrap(),
+            )
+            .unwrap(),
+        )
+    }
+
+    fn key(store: &MemoryStore, kind: &str, id: &str) -> EntityKey {
+        store
+            .schema()
+            .entity_type(kind)
+            .unwrap()
+            .parse_key(id)
+            .unwrap()
+    }
+
+    fn put(store: &MemoryStore, kind: &str, id: &str, value: i32) -> EntityModification {
+        let mut entity = store
+            .schema()
+            .make_entity(vec![
+                ("id".into(), Value::String(id.to_string())),
+                ("value".into(), Value::Int(value)),
+            ])
+            .unwrap();
+        entity.set_vid(i64::from(value) + 100).unwrap();
+        EntityModification::Insert {
+            key: key(store, kind, id),
+            data: Arc::new(entity),
+            block: 1,
+            end: None,
+        }
+    }
+
+    fn remove(store: &MemoryStore, kind: &str, id: &str) -> EntityModification {
+        EntityModification::Remove {
+            key: key(store, kind, id),
+            block: 1,
+        }
+    }
+
+    fn overwrite(store: &MemoryStore, kind: &str, id: &str, value: i32) -> EntityModification {
+        match put(store, kind, id, value) {
+            EntityModification::Insert {
+                key,
+                data,
+                block,
+                end,
+            } => EntityModification::Overwrite {
+                key,
+                data,
+                block,
+                end,
+            },
+            _ => unreachable!(),
+        }
+    }
+
+    fn assert_snapshot(store: &MemoryStore, expected: &BTreeMap<EntityKey, Entity>) {
+        let actual = store.snapshot();
+        assert_eq!(&actual, expected);
+        // Graph Node's Entity equality deliberately excludes VID.
+        for (key, entity) in expected {
+            assert_eq!(actual[key].vid(), entity.vid(), "VID changed for {key:?}");
+        }
+    }
+
+    fn check_counts(store: &MemoryStore) {
+        let mut expected = BTreeMap::new();
+        for key in store.snapshot().keys() {
+            *expected
+                .entry(key.entity_type.typename().to_string())
+                .or_default() += 1;
+        }
+        assert_eq!(store.counts_by_type(), expected);
+        assert_eq!(store.len(), expected.values().sum::<usize>());
+    }
+
+    #[test]
+    fn rollback_preserves_first_value_and_absence_across_handlers() {
+        let store = store();
+        store.apply(&[put(&store, "Thing", "a", 1), put(&store, "Other", "a", 2)]);
+        let before = store.snapshot();
+        let mut undo = StoreUndo::new();
+        // Distinct batches stand for handlers/waves in the same block.
+        store.apply_recording(
+            &[
+                overwrite(&store, "Thing", "a", 3),
+                put(&store, "Thing", "new", 4),
+            ],
+            &mut undo,
+        );
+        store.apply_recording(
+            &[
+                remove(&store, "Thing", "a"),
+                remove(&store, "Thing", "new"),
+                remove(&store, "Other", "a"),
+                remove(&store, "Other", "absent"),
+            ],
+            &mut undo,
+        );
+        store.apply_recording(
+            &[put(&store, "Thing", "a", 5), put(&store, "Thing", "new", 6)],
+            &mut undo,
+        );
+        assert_eq!(undo.len(), 4);
+        assert_eq!(
+            undo[&key(&store, "Thing", "a")],
+            Some(before[&key(&store, "Thing", "a")].clone())
+        );
+        assert_eq!(undo[&key(&store, "Thing", "new")], None);
+        check_counts(&store);
+        store.rollback(undo);
+        assert_snapshot(&store, &before);
+        check_counts(&store);
+    }
+
+    #[test]
+    fn successful_block_discards_only_undo_and_next_block_has_new_baseline() {
+        let store = store();
+        let mut undo = StoreUndo::new();
+        store.apply_recording(&[put(&store, "Thing", "a", 1)], &mut undo);
+        drop(undo); // Successful block: keep the modified store.
+        let before = store.snapshot();
+        let mut undo = StoreUndo::new();
+        store.apply_recording(&[overwrite(&store, "Thing", "a", 2)], &mut undo);
+        store.rollback(undo);
+        assert_snapshot(&store, &before);
+        // The runner's separate post-rollback PoI write uses the ordinary path.
+        store.apply(&[put(&store, "Other", "poi", 3)]);
+        assert_eq!(store.len(), 2);
+        check_counts(&store);
+    }
+
+    #[test]
+    fn empty_and_sparse_blocks_do_not_copy_unrelated_rows() {
+        let store = store();
+        let rows: Vec<_> = (0..10_000)
+            .map(|i| put(&store, "Thing", &i.to_string(), i))
+            .collect();
+        store.apply(&rows);
+        let mut undo = StoreUndo::new();
+        store.apply_recording(&[], &mut undo);
+        assert!(undo.is_empty());
+        store.apply_recording(&[put(&store, "Thing", "500", 1)], &mut undo);
+        assert_eq!(undo.len(), 1);
+        assert_eq!(store.len(), 10_000);
+        store.rollback(undo);
+        assert_eq!(
+            store.lookup(&key(&store, "Thing", "500")),
+            match &rows[500] {
+                EntityModification::Insert { data, .. } => Some(data.as_ref().clone()),
+                _ => unreachable!(),
+            }
+        );
+        check_counts(&store);
+    }
+
+    #[test]
+    fn cached_counts_match_full_scan_through_mutations_rollback_and_restore() {
+        let store = store();
+        for block in 0..10 {
+            let before = store.snapshot();
+            let mut undo = StoreUndo::new();
+            for i in 0..50 {
+                let kind = if i % 2 == 0 { "Thing" } else { "Other" };
+                let id = ((i * 7 + block) % 13).to_string();
+                let change = if (i + block) % 3 == 0 {
+                    remove(&store, kind, &id)
+                } else {
+                    put(&store, kind, &id, i + block)
+                };
+                store.apply_recording(&[change], &mut undo);
+                check_counts(&store);
+            }
+            if block % 2 == 0 {
+                store.rollback(undo);
+                assert_snapshot(&store, &before);
+            }
+            check_counts(&store);
+            let saved = store.snapshot();
+            store.restore(BTreeMap::new());
+            assert!(store.is_empty());
+            assert!(store.counts_by_type().is_empty());
+            store.restore(saved);
+            check_counts(&store);
+        }
     }
 }

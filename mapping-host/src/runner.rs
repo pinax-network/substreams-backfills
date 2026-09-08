@@ -82,7 +82,7 @@ use crate::report::{
     BlockReport, CreatedDataSourceReport, HandlerGroupReport, HandlerReport, ModificationReport,
     PoiReport, RunReport, TriggerReport,
 };
-use crate::store::{MemoryStore, NoEnsLookup};
+use crate::store::{MemoryStore, NoEnsLookup, StoreUndo};
 use crate::store_state::{self, StoreEntityId, StorePoi, StoreValue};
 
 /// The graph-node revision every artifact in this crate is bound to.
@@ -851,12 +851,12 @@ impl SegmentHost {
             block_changes: None,
         };
 
-        // Snapshot for the fatal-policy rollback below. Under a manifest without
-        // `nonFatalErrors`, one deterministic error makes Graph Node keep only
-        // the PoI write and discard everything else in the block
+        // Record touched rows for the fatal-policy rollback below. Under a
+        // manifest without `nonFatalErrors`, one deterministic error keeps only
+        // the PoI write and discards everything else in the block
         // (`runner/mod.rs:731`, `mods.retain(is_poi_entity)`), so the store must
         // not carry forward writes earlier handlers in the block made.
-        let pre_block = self.store.snapshot();
+        let mut pre_block = StoreUndo::new();
 
         // Anything the previous block left behind would be attributed to this
         // one; a non-empty drain here is a bug, not a recoverable state.
@@ -899,6 +899,7 @@ impl SegmentHost {
                         &mut pending,
                         &mut report,
                         &mut ops,
+                        &mut pre_block,
                     )
                     .await?;
                 if let Some(group) = group {
@@ -926,7 +927,7 @@ impl SegmentHost {
             // is applied on top, which is exactly the one modification Graph Node
             // keeps. The entity cache is dropped rather than rewound, because it
             // is only a cache: the next read repopulates it from the store.
-            self.store.restore(pre_block);
+            self.store.rollback(pre_block);
             self.lfu_cache = EntityLfuCache::default();
         }
 
@@ -1009,6 +1010,7 @@ impl SegmentHost {
         pending: &mut Vec<InstanceDSTemplateInfo>,
         report: &mut BlockReport,
         ops: &mut BlockOpsBuilder,
+        pre_block: &mut StoreUndo,
     ) -> Result<Option<HandlerGroupReport>> {
         let trigger_data = TriggerData::Onchain(trigger.clone());
 
@@ -1095,7 +1097,7 @@ impl SegmentHost {
                 .as_modifications(block_number, &self.stopwatch)
                 .await?;
             self.lfu_cache = entity_lfu_cache;
-            self.store.apply(&modifications);
+            self.store.apply_recording(&modifications, pre_block);
 
             let created_reports: Vec<CreatedDataSourceReport> = created
                 .iter()

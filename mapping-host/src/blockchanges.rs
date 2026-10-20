@@ -196,10 +196,20 @@ pub fn convert_value(value: &Value) -> pb::GraphValue {
         Value::Int8(value) => Kind::Int8(*value),
         Value::Timestamp(value) => Kind::TimestampMicros(value.as_microseconds_since_epoch()),
         Value::BigDecimal(value) => {
-            // `graph`'s `BigDecimal` is normalized on construction: at most 34
-            // significant digits and no trailing zeros, which is exactly the
-            // canonical form. `as_bigint_and_exponent` returns the (coefficient,
-            // scale) pair the wire format defines.
+            // The recorder sees the entity after `asc_get`, so `BigDecimal::new`
+            // has already run Graph Node v0.44's `normalized()` on this value.
+            // The coefficient is emitted unchanged and may have more than 34
+            // digits. bigdecimal 0.1.2 counts a negative coefficient's digits
+            // from its bit length, so a negative value keeps up to 116 bits,
+            // which includes 35-digit values below 2^116. Arithmetic results
+            // are normalized again on the way back from the mapping, so they
+            // always arrive as fixed points, which `seal` accepts. A raw
+            // `BigInt.toBigDecimal()` saved without host arithmetic can arrive
+            // as a 117-bit coefficient that a second pass would truncate.
+            // `seal` refuses that value with `DecimalPrecision` rather than
+            // emitting a frame no re-normalizing consumer reproduces; see
+            // docs/block-changes-v1.md. `as_bigint_and_exponent` returns the
+            // (coefficient, scale) pair the wire format defines.
             // `to_signed_bytes_be` is called on whatever `num_bigint` version
             // `graph` links; naming the type here would tie this crate to one of
             // the two in the graph, and bytes are bytes.
@@ -235,7 +245,9 @@ pub fn convert_value(value: &Value) -> pb::GraphValue {
 /// two's-complement big-endian with the empty slice for zero, which
 /// `num_bigint` reads back unchanged, and `BigDecimal::new(digits, exp)` negates
 /// its argument to reach `bigdecimal`'s scale, so the recorded `scale` goes back
-/// in as `-scale`.
+/// in as `-scale`. `BigDecimal::new` also normalizes again. That is the identity
+/// on exactly the decimal domain `seal` accepts, Graph Node's normalization
+/// fixed points, so a checkpoint never changes an emitted value.
 pub fn value_from_wire(value: &pb::GraphValue) -> Result<Value> {
     use graph::data::store::scalar::{BigDecimal, BigInt, Bytes, Timestamp};
     use pb::graph_value::Kind;
@@ -733,5 +745,276 @@ mod value_round_trip_tests {
         let error = value_from_wire(&pb::GraphValue { kind: None })
             .expect_err("a kindless value is not a value");
         assert!(error.to_string().contains("no kind"), "{error}");
+    }
+}
+
+/// The BlockChanges v1 decimal domain, checked against Graph Node's own
+/// `BigDecimal` rather than a restatement of it.
+///
+/// `backfill_common` accepts a decimal exactly when Graph Node v0.44's
+/// `normalized()` maps it to itself. This crate links that code, through
+/// `graph` and bigdecimal 0.1.2, so these tests can treat it as the oracle:
+/// `BigDecimal::new` is the normalization `asc_get` applies to every value a
+/// mapping hands to the host, and the arithmetic operators are the host's.
+#[cfg(test)]
+mod graph_decimal_domain_tests {
+    use super::*;
+    use graph::data::store::scalar::{BigDecimal, BigInt};
+    use pb::graph_value::Kind;
+    use std::str::FromStr;
+
+    const REGION: &str = "ethereum/base";
+    const PRECISION_REFUSAL: &str = "normalization would round";
+
+    fn compatibility() -> BlockChangesCompatibility {
+        let descriptor = format!(
+            "{{\"contract\":\"{}\",\"descriptor_version\":1,\"deterministic_error_policy\":\"non_fatal\",\"network\":\"base\",\"expected_poi_causality_region\":\"{REGION}\"}}",
+            backfill_common::BLOCK_CHANGES_V1_CONTRACT
+        );
+        BlockChangesCompatibility::from_descriptor(descriptor.as_bytes())
+            .expect("a minimal fixture-only descriptor")
+    }
+
+    /// Seal a one-save frame whose only non-ID field is `value`, through the
+    /// same `seal` the runner calls for every block.
+    fn seal_one(value: pb::GraphValue, compatibility: &BlockChangesCompatibility) -> Result<()> {
+        let fields = vec![
+            pb::EntityField {
+                name: "id".to_owned(),
+                value: Some(pb::GraphValue {
+                    kind: Some(Kind::String("t".to_owned())),
+                }),
+            },
+            pb::EntityField {
+                name: "value".to_owned(),
+                value: Some(value),
+            },
+        ];
+        let changes = pb::BlockChanges {
+            contract: backfill_common::BLOCK_CHANGES_V1_CONTRACT.to_owned(),
+            compatibility_id: compatibility.to_vec(),
+            block_number: 1,
+            block_hash: vec![0xab; 32],
+            mapping_triggered: true,
+            triggered_poi_causality_regions: vec![REGION.to_owned()],
+            operations: vec![pb::EntityOperation {
+                operation_index: 0,
+                handler_group_order: 0,
+                source_trigger_order: 0,
+                poi_causality_region: Some(REGION.to_owned()),
+                handler_order: 0,
+                source_causality_region: 0,
+                operation: Some(pb::entity_operation::Operation::Set(pb::SetEntity {
+                    key: Some(pb::EntityKey {
+                        entity_type: "Token".to_owned(),
+                        id: Some(pb::EntityId {
+                            value: Some(pb::entity_id::Value::String("t".to_owned())),
+                        }),
+                        storage_causality_region: 0,
+                    }),
+                    poi_entity_type: "Token".to_owned(),
+                    poi_entity_id: "t".to_owned(),
+                    written_fields: fields.clone(),
+                    materialized: Some(pb::EntityFields { fields }),
+                    store_disposition: pb::StoreDisposition::Committed as i32,
+                    failure_stage: pb::SetFailureStage::Unspecified as i32,
+                })),
+            }],
+            deterministic_error_policy: pb::DeterministicErrorPolicy::NonFatal as i32,
+        };
+        seal(&changes, compatibility).map(|_| ())
+    }
+
+    fn wire(value: &BigDecimal) -> pb::GraphValue {
+        convert_value(&Value::BigDecimal(value.clone()))
+    }
+
+    fn tuple(value: &BigDecimal) -> (Vec<u8>, i64) {
+        match wire(value).kind {
+            Some(Kind::BigDecimal(decimal)) => (decimal.coefficient_signed_be, decimal.scale),
+            other => panic!("a BigDecimal converted to {other:?}"),
+        }
+    }
+
+    /// Graph Node's normalization once more: what `asc_get` does to a value
+    /// the mapping passes back to the host, including `store.set`'s entity.
+    fn renormalized(value: &BigDecimal) -> BigDecimal {
+        let (coefficient, scale) = value.as_bigint_and_exponent();
+        let coefficient = BigInt::from_signed_bytes_be(&coefficient.to_signed_bytes_be())
+            .expect("a normalized coefficient is far inside the BigInt limit");
+        BigDecimal::new(coefficient, -scale)
+    }
+
+    fn is_fixed_point(value: &BigDecimal) -> bool {
+        tuple(&renormalized(value)) == tuple(value)
+    }
+
+    fn negate(value: BigInt) -> BigInt {
+        BigInt::from(0_i64) - value
+    }
+
+    #[test]
+    fn every_fixture_row_matches_graph_nodes_normalization_and_the_validator() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!(
+            "../../common/fixtures/block-changes-v1/graph-decimal-domain.json"
+        ))
+        .expect("the checked-in decimal domain fixture");
+        let compatibility = compatibility();
+        let cases = fixture["cases"].as_array().expect("cases");
+        assert_eq!(cases.len(), 20);
+        for case in cases {
+            let name = case["name"].as_str().expect("name");
+            let coefficient = BigInt::from_str(case["coefficient"].as_str().expect("coefficient"))
+                .expect("a decimal coefficient");
+            let scale = case["scale"].as_i64().expect("scale");
+            let given = (signed_be(&coefficient), scale);
+
+            let normalized = BigDecimal::new(coefficient, -scale);
+            let fixed_point = tuple(&normalized) == given;
+            assert_eq!(
+                fixed_point,
+                case["graph_node_fixed_point"].as_bool().expect("flag"),
+                "{name}: Graph Node v0.44 normalizes it to {normalized:?}"
+            );
+
+            let sealed = seal_one(
+                pb::GraphValue {
+                    kind: Some(Kind::BigDecimal(pb::BigDecimalValue {
+                        coefficient_signed_be: given.0,
+                        scale,
+                    })),
+                },
+                &compatibility,
+            );
+            assert_eq!(sealed.is_ok(), fixed_point, "{name}: {:?}", sealed.err());
+        }
+    }
+
+    #[test]
+    fn host_arithmetic_saves_carry_35_digit_negatives_that_seal() {
+        let compatibility = compatibility();
+
+        let third = renormalized(&(BigDecimal::from(-1) / BigDecimal::from(3)));
+        assert_eq!(third.to_string(), "-0.33333333333333333333333333333333333");
+        seal_one(wire(&third), &compatibility).expect("Graph Node's -1/3");
+        let third = renormalized(&(BigDecimal::from(1) / BigDecimal::from(3)));
+        assert_eq!(third.to_string(), "0.3333333333333333333333333333333333");
+        seal_one(wire(&third), &compatibility).expect("Graph Node's 1/3");
+
+        // The production V4 Base Token TVL, as the deployed mapping computes it:
+        // two host multiplications, the intermediate handed back through WASM.
+        let tvl = BigDecimal::from_str("-1958.23222").unwrap();
+        let derived = BigDecimal::from_str("0.000443428497055167816687599679621575").unwrap();
+        let eth_usd = BigDecimal::from_str("2255.190161262956454194198227130777").unwrap();
+        let intermediate = tvl * derived;
+        assert_eq!(
+            intermediate.to_string(),
+            "-0.86833597019960473614471136709664557"
+        );
+        assert!(!is_fixed_point(&intermediate));
+        let error = seal_one(wire(&intermediate), &compatibility)
+            .expect_err("the mapping never saves the transient intermediate");
+        assert!(error.to_string().contains(PRECISION_REFUSAL), "{error:#}");
+        let passed_back = renormalized(&intermediate);
+        assert_eq!(
+            passed_back.to_string(),
+            "-0.8683359701996047361447113670966455"
+        );
+        let saved = renormalized(&(passed_back * eth_usd));
+        assert_eq!(saved.to_string(), "-1958.2627366648723548155211868460794");
+        assert!(is_fixed_point(&saved));
+        seal_one(wire(&saved), &compatibility).expect("the V4 Base TVL value");
+    }
+
+    #[test]
+    fn a_raw_negative_to_big_decimal_past_116_bits_is_refused() {
+        let compatibility = compatibility();
+        // `BigInt.toBigDecimal()` of -(2^126 - 1), saved with no host
+        // arithmetic: the store boundary normalizes it exactly once.
+        let raw = negate(BigInt::from_str("85070591730234615865843651857942052863").unwrap());
+        let stored = BigDecimal::new(raw, 0);
+        let expected = negate(BigInt::from_str("85070591730234615865843651857942052").unwrap());
+        assert_eq!(tuple(&stored), (signed_be(&expected), -3));
+        assert!(!is_fixed_point(&stored));
+        let error = seal_one(wire(&stored), &compatibility)
+            .expect_err("a value no re-normalizing consumer reproduces");
+        assert!(error.to_string().contains(PRECISION_REFUSAL), "{error:#}");
+        // Loading and saving it again, or restoring it from a checkpoint,
+        // truncates it to 34 digits.
+        let truncated = negate(BigInt::from_str("8507059173023461586584365185794205").unwrap());
+        assert_eq!(tuple(&renormalized(&stored)), (signed_be(&truncated), -4));
+        let restored = value_from_wire(&wire(&stored)).unwrap();
+        assert_ne!(convert_value(&restored), wire(&stored));
+    }
+
+    /// A seeded sweep: for every stored value Graph Node can produce from a
+    /// raw `(digits, exp)` in this range, the validator's verdict equals
+    /// Graph Node's fixed-point test. Re-saving any of them, which is what an
+    /// arithmetic result goes through, always seals.
+    #[test]
+    fn the_validator_accepts_exactly_graph_nodes_normalization_fixed_points() {
+        let compatibility = compatibility();
+        let mut state = 0x9E37_79B9_7F4A_7C15_u64;
+        let mut next = move || {
+            state ^= state << 13;
+            state ^= state >> 7;
+            state ^= state << 17;
+            state
+        };
+        let mut accepted_negative_35_digits = 0;
+        let mut refused = 0;
+        for round in 0..4_000_u32 {
+            let magnitude = if round % 4 == 0 {
+                // Just below a power of two whose bigdecimal 0.1.2 truncation
+                // lands at or above 2^116, the only source of refusals.
+                let bits = [126_u8, 136, 146, 156][(next() % 4) as usize];
+                (BigInt::from(1_u8) << bits) - BigInt::from(1_u8) - BigInt::from(next() >> 1)
+            } else {
+                let bits = 1 + next() % 160;
+                let mut bytes: Vec<u8> = (0..bits.div_ceil(8)).map(|_| next() as u8).collect();
+                let top_bits = (bits - (bytes.len() as u64 - 1) * 8) as u32;
+                let top = bytes.last_mut().expect("at least one byte");
+                *top = (*top & ((1_u16 << top_bits) - 1) as u8) | (1_u8 << (top_bits - 1));
+                BigInt::from_unsigned_bytes_le(&bytes).expect("at most 160 bits")
+            };
+            let negative = next() % 2 == 0;
+            let digits = if negative {
+                negate(magnitude)
+            } else {
+                magnitude
+            };
+            let exp = (next() % 81) as i64 - 40;
+
+            let stored = BigDecimal::new(digits, exp);
+            let fixed_point = is_fixed_point(&stored);
+            let sealed = seal_one(wire(&stored), &compatibility);
+            assert_eq!(
+                sealed.is_ok(),
+                fixed_point,
+                "{stored:?}: {:?}",
+                sealed.err()
+            );
+            if fixed_point {
+                // A checkpoint restore is exact on the accepted domain.
+                let back = value_from_wire(&wire(&stored)).unwrap();
+                assert_eq!(convert_value(&back), wire(&stored), "{stored:?}");
+                if negative && stored.as_bigint_and_exponent().0.to_string().len() == 36 {
+                    accepted_negative_35_digits += 1;
+                }
+            } else {
+                assert!(
+                    negative,
+                    "{stored:?}: only negatives escape the fixed points"
+                );
+                refused += 1;
+            }
+
+            let resaved = renormalized(&stored);
+            assert!(is_fixed_point(&resaved), "{resaved:?}");
+            seal_one(wire(&resaved), &compatibility)
+                .unwrap_or_else(|error| panic!("{resaved:?}: {error:#}"));
+        }
+        assert!(accepted_negative_35_digits > 0);
+        assert!(refused > 0);
     }
 }

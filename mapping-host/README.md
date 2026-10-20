@@ -15,7 +15,9 @@ Node's own runtime crates, pinned to `graph-node` revision
 It is family-neutral. It knows about segment bundles, Firehose blocks, an
 in-memory store, an `eth_call` cassette and Graph Node's wave scheduler; it knows
 nothing about Uniswap. Uniswap V3 is simply the first family whose eight
-deployments are bundled under `segments/`.
+deployments are bundled under `segments/`. The second is Aerodrome Slipstream
+on Base, bundled as an execution oracle; see
+[Aerodrome Slipstream Base](#aerodrome-slipstream-base-the-oracle-segment).
 
 It runs the deployed mappings hermetically, records the **ordered per-save
 operation stream**, and seals one canonical
@@ -112,8 +114,8 @@ One more bundle is not a Uniswap V3 deployment:
 | `QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV` | Base 13,843,704–head | 1.2.0 | 0.0.7 | nonFatalErrors, grafting (no concrete graft) |
 
 It is the deployed Aerodrome Slipstream CL Base subgraph, built from the exact
-objects `aerodrome-slipstream-base/reference/` pins, and bundled as an execution
-oracle.
+objects `aerodrome-slipstream-base/reference/` pins; see
+[Aerodrome Slipstream Base](#aerodrome-slipstream-base-the-oracle-segment).
 
 Rebuild the bundles from a directory of IPFS objects with:
 
@@ -1397,6 +1399,131 @@ fixture set, not of the deployed mapping, and the
 [parity-window run](#the-parity-window-run-1053-contiguous-blocks) above is the
 contiguous replay that separates the two.
 
+## Aerodrome Slipstream Base: the oracle segment
+
+`segments/QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV/` is the deployed
+Aerodrome Slipstream CL Base subgraph: spec 1.2.0, API 0.0.7, `nonFatalErrors`,
+a Factory at 13,843,704, a NonfungiblePositionManager at 13,843,719 and a `Pool`
+template. It is here to be the **exact oracle** every faster route is compared
+against — a Substreams extractor plus a native reducer must reproduce its frames
+and PoI digests on the windows it covers. It is not a route for the whole range;
+see the throughput below.
+
+### What it took to run a Base, spec 1.2.0 deployment
+
+Nothing in the host had to change. Every identity a V3 segment needed is read
+from the resolved manifest, and an Aerodrome segment reads different values out
+of the same code:
+
+| Identity | Where it comes from | Aerodrome |
+|---|---|---|
+| network, PoI causality region | `manifest.network_name()`, `PoICausalityRegion::from_network` | `base`, `ethereum/base` |
+| PoI hasher | `poi::version_for_spec` (`>= 0.0.6`) | `fast` |
+| deterministic-error policy | `features` contains `nonFatalErrors` | non-fatal |
+| first block | lowest `startBlock`, or the block after a graft | 13,843,704 (`grafting` is declared, no graft is) |
+| `eth_call` gas | 50,000,000 unless the chain is in `GRAPH_ETH_CALL_NO_GAS` (default `421613,421614`) | 50,000,000 for chain 8453 |
+
+Three things a Base spec-1.2.0 deployment brings, checked rather than assumed:
+
+* **OP-stack deposit transactions.** Every Base block opens with an
+  L1-attributes deposit transaction, type `0x7e`. graph-node v0.44's own
+  `TryInto<BlockFinality>` converts an unknown type into an
+  `AnyTxEnvelope::Unknown` (`chain/ethereum/src/codec.rs:146-253`, with its own
+  type-126 tests at `:936-1020`), and this host uses that conversion verbatim.
+  The root-window runs below converted 75,959 consecutive Base blocks with no
+  conversion error, and the dense fixture block also carries EIP-7702
+  transactions.
+* **Declared calls.** Spec 1.2.0 attaches `calls:` to handlers. graph-node's
+  parser resolves them and `match_and_decode` attaches them to each trigger, both
+  reused verbatim. Graph Node's `DecoderHook` then runs them ahead of the handler
+  purely to warm its call cache — a revert is only logged — so the handler's own
+  `ethereum.call` is what the cassette answers, and the hook is not reproduced.
+* **`grafting` without a graft.** The deployment is its own root, so a replay
+  from 13,843,704 is complete.
+
+What *was* Uniswap-V3-specific was outside the host: the all-bundles test and the
+runtime packaging test asserted exactly eight bundles, and the evidence writer
+could put an absolute path into a committed file when a cassette lived outside
+the crate.
+
+### The root window: 75,959 contiguous blocks
+
+Two live Firehose replays on 2026-10-20, from `base.firehose.pinax.network:443`
+with calls recorded against `base.rpc.pinax.network` (EIP-1898, pinned to the
+block hash):
+
+| Run | Range | Blocks | Handler groups | Operations | Wall clock | Max RSS |
+|---|---|---:|---:|---:|---:|---:|
+| root prefix | 13,843,704 → 13,899,663 | 55,959 | 0 | 0 | 587.8 s, 95.2 blocks/s | 138 MB |
+| first pools, recording | 13,899,663 → 13,919,663 | 20,000 | 6,089 | 90,966 | 997.0 s, 20.1 blocks/s | 586 MB |
+| first pools, replay from the prefix checkpoint | same | 20,000 | 6,089 | 90,966 | 462.6 s, 43.2 blocks/s | 267 MB |
+
+* **Nothing happens before 13,899,663.** The root prefix ran no handler, wrote
+  no PoI and made no call; eth_getLogs agrees, finding the first `PoolCreated`
+  at 13,899,663 and one position-manager log before it, for an event no handler
+  declares.
+* **One chain from the root.** The replay continued with `--checkpoint-in` from
+  the prefix's checkpoint, whose boundary hash is block 13,899,663's parent, with
+  recording off. Its `BCF1` stream and final store are byte-identical to the
+  recording run's.
+* **The wave trap is real.** All thirteen pools in the window are created by a
+  position-manager multicall, and in all thirteen `Initialize` is the log just
+  before `PoolCreated`. `handleInitialize` and `handleMint` therefore run in wave
+  1, after the wave-0 `handlePoolCreated`, `handleTransfer` and
+  `handleIncreaseLiquidity` — the last two at *higher* log indices.
+* **Every handler but `handleFlash` ran,** 6,089 invocations, all `ok`; no
+  `Flash` occurs in the window. `Collect`, `Flash` and `TickHourData` rows were
+  never written. No deterministic error, so no BigDecimal outside the
+  BlockChanges v1 precision contract reached a frame.
+* **Calls.** 9,394 cassette rows over nine function signatures; the 46 reverts
+  are all `positions(tokenId)` on a token the same block burns, because a call
+  reads end-of-block state.
+* **Throughput.** Recording is RPC-bound: 6 to 10 handler groups/s once density
+  passes 0.4 groups per block. Replay costs about 31 ms of CPU per handler group
+  (the prefix's 3.4 ms of CPU per block subtracted). Near head, at about 58
+  groups per block, that is roughly 0.5 blocks/s — an estimate, and one that the
+  growing store can only make worse.
+
+The committed evidence is the two summaries,
+`evidence/aerodrome-root-prefix-13843704-13899663.json` and
+`evidence/aerodrome-first-pools-13899663-13919663.json`. Both were written with
+`summarize --per-block-scope handler-blocks`, which lists only blocks that did
+something and pins the complete per-block file by digest
+(`per_block.all_blocks`), so a re-run can still be compared block by block. The
+prefix's sparse file is empty, and its digest proves that without the file. The
+window's sparse file (672 KB), its cassette (6.5 MB), frames and `BCF1` stream are
+a release asset that has not been published.
+
+### Fixtures
+
+`fixtures/cassettes/QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV.json` answers
+every call two Base blocks make when replayed in sequence:
+
+* **13,899,663**, the first pool, the first position-manager events and the
+  first wave-1 handlers, all in one transaction. Replayed from the fixture alone
+  it produces the frame and PoI the live root run produced
+  (`62c0b927…`, PoI `6645b82f…`).
+* **52,800,000**, a dense recent block: 2,631 logs, 501 from the position
+  manager, three deposit and two EIP-7702 transactions. With only the first pool
+  behind it, 175 position-manager handlers abort on rows the sampled store does
+  not hold — a fixture gap, not deployed behaviour — and the non-fatal policy
+  discards only those handlers' saves: the block is kept, with the work of its
+  other 80 handler groups (255 in all, 479 operations). This is the first fixture
+  that reaches `STORE_DISPOSITION_COMMITTED` after a deterministic error.
+
+The two block files (708 KB and 6.6 MB) need a release asset under the
+block-fixtures lock, so `tests/mapping_host/segment_aerodrome.rs` replays them in
+an `#[ignore]`d test that pins each file by SHA-256 and reads them from
+`$AERODROME_BLOCK_FIXTURES`:
+
+```sh
+AERODROME_BLOCK_FIXTURES=<dir> cargo test --test mapping_host segment_aerodrome -- --ignored
+```
+
+Everything else about the bundle — that it is byte-for-byte the target M7 pinned,
+that graph-node resolves it as deployed, the host identity and the descriptor's
+byte-for-byte regeneration — runs in CI.
+
 ## What could not be reproduced through public API
 
 | Wanted | Status | Why |
@@ -1425,10 +1552,19 @@ contiguous replay that separates the two.
   range from the factory forward with no sampling. Reaching it means replaying
   394,776 blocks from the graft-free root, which is what checkpoints are for; the
   run has not been done.
-* **`STORE_DISPOSITION_COMMITTED` after a deterministic error.** Untested, and
-  now for a better reason: the contiguous run produced no deterministic error at
-  all, so nothing in it reaches the non-fatal disposition. Reaching it needs one
-  of the three `nonFatalErrors` segments.
+* **`STORE_DISPOSITION_COMMITTED` after a deterministic error.** Not reached by
+  any Uniswap V3 run: the contiguous run produced no deterministic error at all.
+  The Aerodrome dense fixture block reaches it, but only in an `#[ignore]`d test
+  until its block fixture is published.
+* **Aerodrome's release asset.** The two Base block fixtures, the first-pools
+  window's cassette, frames, `BCF1` stream and sparse per-block file are local
+  only. Publishing them under a new release tag and lock would turn the two
+  ignored Aerodrome tests into CI tests.
+* **Aerodrome's `data_sources$`.** `--data-sources-out` is bounded to a 10,000
+  block root run, and Aerodrome's first data source is created 55,959 blocks
+  after its root, so v1 can never cover it. The v2 source chunks are the path, and
+  they refuse a chunk with a deterministic error, which a `nonFatalErrors`
+  deployment is allowed to have.
 * **`RemoveEntity`.** Implemented end to end, including the pre-key remove the
   proto models, but no Uniswap V3 module imports `store.remove`, so no fixture
   reaches it.

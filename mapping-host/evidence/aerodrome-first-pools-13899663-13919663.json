@@ -1,0 +1,230 @@
+{
+  "schema": "pinax.substreams-backfills.mapping-host.run-evidence/v1",
+  "run": {
+    "recorded_on": "2026-10-20",
+    "command": "graph-mapping-host run --segment segments/QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV --from 13899663 --to 13919663 --cassette cassette.json --record --out report.jsonl --block-changes-out frames --bcf1-out window.bcf1 --store-out store.json --checkpoint-out ckpt.jsonl --checkpoint-every 5000 --progress-secs 30 --stream-retries 20",
+    "environment": [
+      "FIREHOSE_ENDPOINT",
+      "SUBSTREAMS_API_TOKEN",
+      "ETHEREUM_RPC_URL",
+      "ETHEREUM_RPC_MIN_INTERVAL_MS",
+      "ETHEREUM_RPC_MAX_RETRIES"
+    ],
+    "toolchain": "1.98.0",
+    "firehose_endpoint": "base.firehose.pinax.network:443",
+    "rpc_endpoint": "base.rpc.pinax.network",
+    "artifacts_not_committed": "The run wrote report.jsonl (20,001 lines, 90.2 MB), 20,000 canonical frames (108,245,006 frame bytes), window.bcf1 (109,285,006 bytes, SHA-256 d5ab1d907f2a992385a765bbef114852af9f827767221d9cbebd4fee7d72a59e), store.json (10,213 entities, 35.9 MB, SHA-256 8318a8342dcc2f8bd48fc7793b304085b15216b60a3d74b687819a6a77f3d8b0), the closing checkpoint ckpt.jsonl (10,214 rows, 13 dynamic data sources, 14.7 MB, SHA-256 1c536c2566caf9248fd937f56cfee465f2ed0c80783759c1e7c8c445a7279f78) and the cassette described below (9,394 rows, 6,451,176 bytes). None is committed: together they are a release asset that has not been published. The sparse per-block file this summary pins (3,276 lines, 671,574 bytes) belongs to the same asset; the complete per-block file (20,000 lines, 3,046,382 bytes) is pinned by per_block.all_blocks, so a re-run can be compared with this one block by block without either file in the repository.",
+    "claim_boundary": "This is an executable observation of the deployed Aerodrome Slipstream Base mapping WASMs running under our own Graph Node v0.44.0 host, our own in-memory store and a recorded eth_call cassette, over the first 20,000 blocks after the first pool, continuing an empty root prefix. It is not a parity claim against the deployed subgraph: no PoI here has been compared with an indexer's, and no truth gate in aerodrome-slipstream-base/QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV.yaml changes. It is the oracle a Substreams extractor and native reducer would be compared against frame by frame on this window. handleFlash remains unexercised because no Flash event occurs in this window."
+  },
+  "deployment": {
+    "deployment": "QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV",
+    "network": "base",
+    "spec_version": "1.2.0",
+    "api_versions": [
+      "0.0.7"
+    ],
+    "features": [
+      "nonFatalErrors",
+      "grafting"
+    ],
+    "graph_node_rev": "77823b5a7adc4eac4abf03202c8dd7cb00dea31d",
+    "source": "Firehose base.firehose.pinax.network:443 blocks [13899663, 13919663)"
+  },
+  "range": {
+    "from": 13899663,
+    "to": 13919663,
+    "blocks": 20000,
+    "first_block": 13899663,
+    "last_block": 13919662,
+    "contiguous": true
+  },
+  "totals": {
+    "blocks": 20000,
+    "blocks_with_handlers": 3276,
+    "blocks_with_poi": 3276,
+    "blocks_discarded": 0,
+    "handler_groups": 6089,
+    "handler_invocations": 6089,
+    "operations": 90966,
+    "sets": 90966,
+    "removes": 0,
+    "deterministic_errors": 0,
+    "collapsed_modifications": 60941,
+    "created_data_sources": 13,
+    "max_waves": 2,
+    "frame_bytes": 108245006
+  },
+  "handlers": {
+    "invocations": {
+      "handleBurn": 536,
+      "handleCollect": 536,
+      "handleDecreaseLiquidity": 86,
+      "handleIncreaseLiquidity": 475,
+      "handleInitialize": 13,
+      "handleMint": 475,
+      "handlePoolCreated": 13,
+      "handleSwap": 3014,
+      "handleTransfer": 941
+    },
+    "outcomes": {
+      "ok": 6089
+    }
+  },
+  "data_source_invocations": {
+    "Factory": 13,
+    "NonfungiblePositionManager": 2038,
+    "Pool": 4038
+  },
+  "modifications_by_entity": {
+    "Bundle": 2290,
+    "Burn": 536,
+    "Factory": 4038,
+    "Mint": 475,
+    "Pool": 4051,
+    "PoolDayData": 4038,
+    "PoolHourData": 4038,
+    "Position": 1872,
+    "PositionSnapshot": 1991,
+    "Swap": 3014,
+    "Tick": 2025,
+    "TickDayData": 2029,
+    "Token": 8067,
+    "TokenDayData": 7270,
+    "TokenHourData": 7277,
+    "Transaction": 3905,
+    "UniswapDayData": 4025
+  },
+  "entity_types": {
+    "declared": [
+      "Bundle",
+      "Burn",
+      "Collect",
+      "Factory",
+      "Flash",
+      "Mint",
+      "Pool",
+      "PoolDayData",
+      "PoolHourData",
+      "Position",
+      "PositionSnapshot",
+      "Swap",
+      "Tick",
+      "TickDayData",
+      "TickHourData",
+      "Token",
+      "TokenDayData",
+      "TokenHourData",
+      "Transaction",
+      "UniswapDayData"
+    ],
+    "written": [
+      "Bundle",
+      "Burn",
+      "Factory",
+      "Mint",
+      "Pool",
+      "PoolDayData",
+      "PoolHourData",
+      "Position",
+      "PositionSnapshot",
+      "Swap",
+      "Tick",
+      "TickDayData",
+      "Token",
+      "TokenDayData",
+      "TokenHourData",
+      "Transaction",
+      "UniswapDayData"
+    ],
+    "never_written": [
+      "Collect",
+      "Flash",
+      "TickHourData"
+    ]
+  },
+  "final_store_counts": {
+    "Bundle": 1,
+    "Burn": 536,
+    "Factory": 1,
+    "Mint": 475,
+    "Poi$": 1,
+    "Pool": 13,
+    "PoolDayData": 25,
+    "PoolHourData": 97,
+    "Position": 438,
+    "PositionSnapshot": 1023,
+    "Swap": 3014,
+    "Tick": 233,
+    "TickDayData": 295,
+    "Token": 14,
+    "TokenDayData": 27,
+    "TokenHourData": 114,
+    "Transaction": 3905,
+    "UniswapDayData": 2
+  },
+  "final_poi": {
+    "block": 13919660,
+    "version": "fast",
+    "causality_region": "ethereum/base",
+    "public_digest": "f1d57922f8f46f89257f4f73d052c2e18387cf8ad185202b4a8b3bdfb62c0245"
+  },
+  "cassette": {
+    "path": "cassette.json",
+    "rows": 9394,
+    "bytes": 6451176,
+    "sha256": "1dabafa49d6c0e7725fd0a0a76975c22db183931cf56a2c76f12b35060fc61e3",
+    "rows_by_call": {
+      "ERC20::decimals()": 14,
+      "ERC20::name()": 14,
+      "ERC20::symbol()": 14,
+      "ERC20::totalSupply()": 14,
+      "Factory::getPool(address,address,int24)": 479,
+      "NonfungiblePositionManager::positions(uint256)": 1011,
+      "Pool::feeGrowthGlobal0X128()": 2736,
+      "Pool::feeGrowthGlobal1X128()": 2736,
+      "Pool::ticks(int24)": 2376
+    },
+    "reverts": 46
+  },
+  "fixture_block_cross_check": [],
+  "per_block": {
+    "file": "aerodrome-first-pools-13899663-13919663.blocks.jsonl",
+    "lines": 3276,
+    "bytes": 671574,
+    "sha256": "0dae46d0d132dd0fdc1d797cefe6aa74a926994506e42d0b7e0a831d7cc16fab",
+    "fields": [
+      "number",
+      "frame_sha256",
+      "poi_public_digest",
+      "operations"
+    ],
+    "scope": "handler_blocks",
+    "all_blocks": {
+      "lines": 20000,
+      "bytes": 3046382,
+      "sha256": "697617b36ed1e72e5e5b83589ce891ec7c3bf3b112087ae7a370bda54d85275b"
+    }
+  },
+  "findings": [
+    {
+      "id": "wave-trap-on-real-data",
+      "title": "Initialize precedes PoolCreated, and runs in the second wave, for every pool",
+      "statement": "All thirteen pools created in this window come from one position-manager multicall each, and in all thirteen the pool's Initialize log is the log immediately before the Factory's PoolCreated (13,899,663: Initialize at log 171, PoolCreated at 172). The Pool data source does not exist until handlePoolCreated runs, so handleInitialize and handleMint run in wave 1, after the wave-0 position-manager handleTransfer and handleIncreaseLiquidity at higher log indices (13,899,663: wave 0 runs logs 172, 177 and 178, then wave 1 runs 171 and 176). Thirteen of thirteen pool-creation blocks show both orders; max_waves is 2. An extractor that orders by log index alone would run handleInitialize before handlePoolCreated and handleMint before handleIncreaseLiquidity, and both are wrong."
+    },
+    {
+      "id": "root-chain-and-determinism",
+      "title": "Replayed from the root checkpoint with recording off, the window is byte-identical",
+      "statement": "The same 20,000 blocks were replayed a second time, continuing with --checkpoint-in from the recording root-prefix checkpoint (boundary 13,899,662, whose hash is block 13,899,663's parent hash), with the finished cassette and recording off, so any call the first run had not recorded would have failed. The second run's BCF1 stream (d5ab1d90…a59e) and final store (8318a834…d8b0) are byte-identical to this run's. Recording and replay are therefore indistinguishable in output, and 13,843,704 to 13,919,662 is one root-anchored chain of frames and PoI digests."
+    },
+    {
+      "id": "throughput-and-memory",
+      "title": "Recording is RPC-bound; replay costs about 31 ms of CPU per handler group",
+      "statement": "This recording run took 997.0 s (20.1 blocks/s, maximum resident set 586 MB). It started at 80 blocks/s and fell to 7 to 15 blocks/s once density reached 0.4 to 1.1 handler groups per block, where it executed 6 to 10 groups/s: each group makes about 1.5 eth_calls, paced 40 ms apart, so the RPC is the bottleneck. The replay with the warm cassette took 462.6 s (43.2 blocks/s, 267 MB, 258.7 s user CPU) and ran 20 to 30 groups/s in the densest stretches. Subtracting the root prefix's 3.4 ms of CPU per block leaves about 31 ms of CPU per handler group, frame sealing included. At the roughly 58 groups per block measured near head that is about 1.8 CPU-seconds per block, about 0.5 blocks/s, an estimate that will only rise with the store: the deployed mapping is an oracle for windows, not a route for the whole range."
+    },
+    {
+      "id": "handlers-and-calls",
+      "title": "Every handler but Flash ran, cleanly, against block-hash-pinned calls",
+      "statement": "6,089 handler invocations, every one ok: handleSwap 3,014, handleTransfer 941, handleBurn 536, handleCollect 536, handleIncreaseLiquidity 475, handleMint 475, handleDecreaseLiquidity 86, handlePoolCreated 13 and handleInitialize 13. No deterministic error, so no BigDecimal outside the BlockChanges v1 precision contract reached a frame. Collect, Flash and TickHourData were never written. The cassette's 9,394 rows cover nine function signatures, every call made with EIP-1898 {blockHash, requireCanonical} against base.rpc.pinax.network; its 46 reverts are all NonfungiblePositionManager.positions on a token the same block burns (a Transfer to the zero address, checked with eth_getLogs for all 46): the call reads end-of-block state, so a handler running before the burn in log order still sees the revert. The declared calls in the manifest are resolved and attached by graph-node's own match_and_decode; Graph Node executes them only to warm its call cache, so the handlers' own ethereum.call is what the cassette answers."
+    }
+  ]
+}

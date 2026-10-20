@@ -1,0 +1,147 @@
+{
+  "schema": "pinax.substreams-backfills.mapping-host.run-evidence/v1",
+  "run": {
+    "recorded_on": "2026-10-20",
+    "command": "graph-mapping-host run --segment segments/QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV --from 13843704 --to 13899663 --cassette cassette.json --record --out report.jsonl --bcf1-out prefix.bcf1 --checkpoint-out ckpt.jsonl --checkpoint-every 10000 --progress-secs 60",
+    "environment": [
+      "FIREHOSE_ENDPOINT",
+      "SUBSTREAMS_API_TOKEN",
+      "ETHEREUM_RPC_URL"
+    ],
+    "toolchain": "1.98.0",
+    "firehose_endpoint": "base.firehose.pinax.network:443",
+    "rpc_endpoint": "base.rpc.pinax.network (configured because the run recorded; no block made a call)",
+    "artifacts_not_committed": "The run wrote report.jsonl (55,960 lines, 35.5 MB), prefix.bcf1 (9,289,194 bytes, SHA-256 87ad11fb710f89364ef8c7f2ac282642fd6a3fc710d001af6c53c82ab383447b) and the closing checkpoint ckpt.jsonl (boundary block 13,899,662, hash 0x8a45b8e3f3c6dd913d69deed9c773ecd8f7c14e11a352c85e082008c5b1cc040, 0 rows, 0 dynamic data sources, an extended cassette pin over 0 rows, SHA-256 97def80808e5378f6d74f7d7e95298a7cee38646683fb3f4c91753bf93e0bb80). None is committed. The complete per-block file (55,959 lines, 7,946,178 bytes) is pinned by per_block.all_blocks; the committed sparse file would be empty, so its digest is the empty string's and needs no file. No cassette file was ever written, because no call was made.",
+    "claim_boundary": "This is an executable observation of the deployed Aerodrome Slipstream Base mapping WASMs running under our own Graph Node v0.44.0 host over the first 55,959 blocks of the deployment. It is not a parity claim against the deployed subgraph: no PoI here has been compared with an indexer's, and no truth gate in aerodrome-slipstream-base/QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV.yaml changes. Its one claim is negative and complete for this range: no handler ran, so the store and the PoI chain leave this range exactly as they entered it, empty."
+  },
+  "deployment": {
+    "deployment": "QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV",
+    "network": "base",
+    "spec_version": "1.2.0",
+    "api_versions": [
+      "0.0.7"
+    ],
+    "features": [
+      "nonFatalErrors",
+      "grafting"
+    ],
+    "graph_node_rev": "77823b5a7adc4eac4abf03202c8dd7cb00dea31d",
+    "source": "Firehose base.firehose.pinax.network:443 blocks [13843704, 13899663)"
+  },
+  "range": {
+    "from": 13843704,
+    "to": 13899663,
+    "blocks": 55959,
+    "first_block": 13843704,
+    "last_block": 13899662,
+    "contiguous": true
+  },
+  "totals": {
+    "blocks": 55959,
+    "blocks_with_handlers": 0,
+    "blocks_with_poi": 0,
+    "blocks_discarded": 0,
+    "handler_groups": 0,
+    "handler_invocations": 0,
+    "operations": 0,
+    "sets": 0,
+    "removes": 0,
+    "deterministic_errors": 0,
+    "collapsed_modifications": 0,
+    "created_data_sources": 0,
+    "max_waves": 1,
+    "frame_bytes": 6379326
+  },
+  "handlers": {
+    "invocations": {},
+    "outcomes": {}
+  },
+  "data_source_invocations": {},
+  "modifications_by_entity": {},
+  "entity_types": {
+    "declared": [
+      "Bundle",
+      "Burn",
+      "Collect",
+      "Factory",
+      "Flash",
+      "Mint",
+      "Pool",
+      "PoolDayData",
+      "PoolHourData",
+      "Position",
+      "PositionSnapshot",
+      "Swap",
+      "Tick",
+      "TickDayData",
+      "TickHourData",
+      "Token",
+      "TokenDayData",
+      "TokenHourData",
+      "Transaction",
+      "UniswapDayData"
+    ],
+    "written": [],
+    "never_written": [
+      "Bundle",
+      "Burn",
+      "Collect",
+      "Factory",
+      "Flash",
+      "Mint",
+      "Pool",
+      "PoolDayData",
+      "PoolHourData",
+      "Position",
+      "PositionSnapshot",
+      "Swap",
+      "Tick",
+      "TickDayData",
+      "TickHourData",
+      "Token",
+      "TokenDayData",
+      "TokenHourData",
+      "Transaction",
+      "UniswapDayData"
+    ]
+  },
+  "final_store_counts": {},
+  "final_poi": null,
+  "cassette": null,
+  "fixture_block_cross_check": [],
+  "per_block": {
+    "file": "aerodrome-root-prefix-13843704-13899663.blocks.jsonl",
+    "lines": 0,
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "fields": [
+      "number",
+      "frame_sha256",
+      "poi_public_digest",
+      "operations"
+    ],
+    "scope": "handler_blocks",
+    "all_blocks": {
+      "lines": 55959,
+      "bytes": 7946178,
+      "sha256": "e823316d4d49959623e64f27bf7f8173f97ae2f6d3764b635e75472576a794d4"
+    }
+  },
+  "findings": [
+    {
+      "id": "root-prefix-is-inert",
+      "title": "Nothing indexed happens between the root and the first pool",
+      "statement": "Every block from the Factory's start block 13,843,704 (the deployment's root; the manifest declares grafting but no concrete graft) to 13,899,662 was streamed from Firehose and replayed: 55,959 contiguous blocks, 0 handler groups, 0 operations, 0 PoI writes, 0 created data sources and 0 eth_calls. The same range was also replayed once with recording off and an absent cassette, which fails closed on any call; it produced a byte-identical BCF1 stream (87ad11fb…447b). Independently, eth_getLogs over the same range in 1,000-block chunks finds the first Factory PoolCreated at 13,899,663 and exactly one position-manager log before it, at 13,843,746 (topic0 0xcfaaa26691e16e66e73290fc725eee1a6b4e0e693a1640484937aac25ffb55a4, one indexed address), an event for which the manifest declares no handler."
+    },
+    {
+      "id": "root-prefix-checkpoint-chains",
+      "title": "The prefix's checkpoint is where the first-pools window continues from",
+      "statement": "The closing checkpoint stops after block 13,899,662 with hash 0x8a45b8e3f3c6dd913d69deed9c773ecd8f7c14e11a352c85e082008c5b1cc040, which is the parent hash of block 13,899,663, and holds an empty store, no dynamic data sources and no Poi$ row. Because the run recorded, it pins its (empty) cassette by rows rather than by bytes, so a later run may resume from it with a grown cassette. The replay of aerodrome-first-pools-13899663-13919663 that continued from exactly this checkpoint, with --checkpoint-in and recording off, reproduced that run's BCF1 stream and final store byte for byte, which makes 13,843,704 to 13,919,662 one root-anchored chain."
+    },
+    {
+      "id": "root-prefix-throughput",
+      "title": "Throughput and memory with no trigger in range",
+      "statement": "With nothing to execute, the host is bounded by Firehose transfer, protobuf decoding, graph-node's own TryInto<BlockFinality> conversion (including the OP-stack L1-attributes deposit transaction, type 0x7e, that opens every Base block) and building a trigger for every log: 95.2 blocks/s alone (587.8 s, maximum resident set 138 MB) and 62.5 blocks/s for this recording run, which shared the machine with two other replays (895.4 s, 133 MB). Both used 191 s of user CPU, about 3.4 ms of CPU per block."
+    }
+  ]
+}

@@ -27,6 +27,8 @@
 //! * `segment_aerodrome` — the Aerodrome Slipstream Base bundle, its identity
 //!   and descriptor, and (ignored until its fixtures are published) two real
 //!   Base blocks
+//! * `aerodrome_root_window_evidence` — the committed Aerodrome root-window run
+//!   summaries
 //! * `segment_qme66zn` — the segment bundle, wave scheduling and handler groups
 //! * `store_state_qme66zn` — `--store-out`, the final store a consumer is
 //!   compared against
@@ -34,6 +36,7 @@
 //! Adding another file here costs nothing; adding another file to `tests/`
 //! costs another full link, so put new suites in `tests/mapping_host/`.
 
+mod aerodrome_root_window_evidence;
 mod block_changes_qme66zn;
 mod block_source;
 mod checkpoint_resume;

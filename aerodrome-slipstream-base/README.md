@@ -65,6 +65,18 @@ position accounting, and a Flash handler that updates Pool fee-growth fields
 without creating a `Flash` row. The profile records these as static facts, not
 as a complete value/order/persistence proof.
 
+## Executable oracle
+
+The same eleven objects are bundled for the deployed-mapping host as
+`mapping-host/segments/QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV/`, so the
+deployed WASMs can be executed under Graph Node v0.44.0's own runtime and their
+per-save BlockChanges frames and Fast PoI digests used as the oracle for any
+reimplementation. Its first committed evidence replays the root window,
+13,843,704 to 13,919,662, from Firehose; see
+[the mapping-host README](../mapping-host/README.md#aerodrome-slipstream-base-the-oracle-segment).
+That is an executable observation, not parity with the deployed subgraph, and no
+truth gate in `QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV.yaml` changes.
+
 ## Remaining gates
 
 Runtime work must not begin until fresh evidence fully accounts for both

@@ -66,8 +66,15 @@ use crate::bundle::sha256_hex;
 /// Schema identifier written into every cassette file.
 pub const CASSETTE_SCHEMA: &str = "pinax.substreams-backfills.mapping-host.cassette/v1";
 
-/// Gas limit for `eth_call`, copied from `runtime_adapter.rs:42`. It is a
-/// protocol-wide parameter, so it is pinned rather than configurable.
+/// Gas limit for `eth_call`, copied from `runtime_adapter.rs:43`, and sent with
+/// every recorded call.
+///
+/// This is a pinned constant, not a rule the host follows. Graph Node's own
+/// `eth_call_gas` sends it unless the RPC's `net_version` is listed in
+/// `GRAPH_ETH_CALL_NO_GAS` (default `421613,421614`), and then sends no gas at
+/// all. The host has no such exemption, and `env_pin` does not pin that
+/// variable: the constant equals Graph Node's value for every chain this crate
+/// bundles (mainnet `1`, Base `8453`) only because none is in the default list.
 pub const ETH_CALL_GAS: u32 = 50_000_000;
 
 /// The recorded outcome of one call.

@@ -1411,9 +1411,10 @@ see the throughput below.
 
 ### What it took to run a Base, spec 1.2.0 deployment
 
-Nothing in the host had to change. Every identity a V3 segment needed is read
-from the resolved manifest, and an Aerodrome segment reads different values out
-of the same code:
+Nothing in the host had to change. Every identity a V3 segment needed except
+one is read from the resolved manifest, and an Aerodrome segment reads different
+values out of the same code. The exception, `eth_call` gas, is a pinned
+constant, and the last row says why it still holds for Base:
 
 | Identity | Where it comes from | Aerodrome |
 |---|---|---|
@@ -1421,7 +1422,7 @@ of the same code:
 | PoI hasher | `poi::version_for_spec` (`>= 0.0.6`) | `fast` |
 | deterministic-error policy | `features` contains `nonFatalErrors` | non-fatal |
 | first block | lowest `startBlock`, or the block after a graft | 13,843,704 (`grafting` is declared, no graft is) |
-| `eth_call` gas | 50,000,000 unless the chain is in `GRAPH_ETH_CALL_NO_GAS` (default `421613,421614`) | 50,000,000 for chain 8453 |
+| `eth_call` gas | **not derived**: `calls::ETH_CALL_GAS`, a constant 50,000,000 the host sends with every recorded call. Graph Node sends the same value unless the RPC's `net_version` is in `GRAPH_ETH_CALL_NO_GAS` (default `421613,421614`, `runtime_adapter.rs` `eth_call_gas`), in which case it sends none. The host implements no such rule and `env_pin` does not pin that variable | 50,000,000, which equals Graph Node's value for Base because `8453` is not in the default list. An indexer that adds `8453` to the variable would send no gas, and these recordings would not describe it |
 
 Three things a Base spec-1.2.0 deployment brings, checked rather than assumed:
 

@@ -105,6 +105,16 @@ The first five declare no `features`, so their deterministic-error policy is
 last three are **non-fatal**. Getting that wrong is a silent correctness bug, so
 it is read from the resolved manifest and reported per block.
 
+One more bundle is not a Uniswap V3 deployment:
+
+| Deployment | Blocks | Spec | API | Features |
+|---|---|---|---|---|
+| `QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV` | Base 13,843,704–head | 1.2.0 | 0.0.7 | nonFatalErrors, grafting (no concrete graft) |
+
+It is the deployed Aerodrome Slipstream CL Base subgraph, built from the exact
+objects `aerodrome-slipstream-base/reference/` pins, and bundled as an execution
+oracle.
+
 Rebuild the bundles from a directory of IPFS objects with:
 
 ```sh
@@ -318,7 +328,8 @@ Two different things happen at the end of a block:
 
 Version rule: spec `>= 0.0.6` uses `Fast`, below uses `Legacy`. All eight Uniswap
 V3 deployments are 0.0.2 or 0.0.4, so all eight are **Legacy**, which is why the
-`stable-hash` revisions are pinned.
+`stable-hash` revisions are pinned. The Aerodrome bundle is spec 1.2.0, so its
+chain is **Fast**; the rule is the same code path, read from the manifest.
 
 A block in which no handler ran produces no causality region, so no PoI entity is
 written and the digest does not advance. The report says `poi: null` for such a

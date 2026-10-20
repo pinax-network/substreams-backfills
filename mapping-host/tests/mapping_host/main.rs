@@ -24,6 +24,9 @@
 //!   reconnecting source: what a replay too long for one process or one
 //!   connection recovers from, and what it refuses
 //! * `parity_window_evidence` — the committed 1,053-block run summary
+//! * `segment_aerodrome` — the Aerodrome Slipstream Base bundle, its identity
+//!   and descriptor, and (ignored until its fixtures are published) two real
+//!   Base blocks
 //! * `segment_qme66zn` — the segment bundle, wave scheduling and handler groups
 //! * `store_state_qme66zn` — `--store-out`, the final store a consumer is
 //!   compared against
@@ -38,6 +41,7 @@ mod dynamic_sources;
 mod live_cli;
 mod long_run;
 mod parity_window_evidence;
+mod segment_aerodrome;
 mod segment_qme66zn;
 mod source_chunks;
 mod store_state_qme66zn;

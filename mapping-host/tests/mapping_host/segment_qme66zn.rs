@@ -567,7 +567,7 @@ fn gas_is_not_reachable_through_the_public_api() {
 #[test]
 fn every_segment_bundle_verifies() {
     let segments = crate_dir().join("segments");
-    let mut found = 0;
+    let mut found = Vec::new();
     for entry in std::fs::read_dir(&segments).expect("listing segments") {
         let path = entry.expect("a segment directory").path();
         if !path.is_dir() {
@@ -586,9 +586,25 @@ fn every_segment_bundle_verifies() {
             .files
             .iter()
             .any(|f| f.path == "schema.graphql"));
-        found += 1;
+        found.push(bundle.lock().deployment.clone());
     }
-    assert_eq!(found, 8, "all eight Uniswap V3 deployments are bundled");
+    found.sort();
+    // All eight Uniswap V3 deployments, plus the Aerodrome Slipstream Base
+    // oracle segment.
+    assert_eq!(
+        found,
+        vec![
+            "QmPWDTWRfS8XewMJhxXoQiZX6RkrUMYH7BFnnB846v6wzR",
+            "QmRvEgUpbjVV326W2zPvxWimzQwcDREfjejUdFn2L92qry",
+            "QmS13421u6qsbVdBCrZhdRaZw2wH67drwF3urmueJvvJ5P",
+            "QmSLHXCZBNKVtJRrWiEAF1yRQNPqAFptBsAcLdXQPsubSX",
+            "QmTZ8ejXJxRo7vDBS4uwqBeGoxLSWbhaA7oXa1RvxunLy7",
+            "QmZeCuoZeadgHkGwLwMeguyqUKz1WPWQYKcKyMCeQqGhsF",
+            "QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV",
+            "Qmb4VUcAY9LsVgeCuCCMs7X1XrkbRcaiuAbSK8SqhmsAfP",
+            "Qme66ZNMxSdCQKzaDuvS381whCVYCQjf637sGZCqJHAWHB",
+        ]
+    );
 }
 
 #[test]

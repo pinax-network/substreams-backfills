@@ -35,11 +35,12 @@ class PackagingTests(unittest.TestCase):
         pkg.seal(root)
         return root
 
-    def test_all_eight_bundles_and_binary_verify(self):
+    def test_all_nine_bundles_and_binary_verify(self):
+        # Eight Uniswap V3 deployments plus the Aerodrome Slipstream Base oracle.
         root = self.payload()
         document = pkg.verify(root, COMMIT)
         self.assertFalse(document["production_selectable"])
-        self.assertEqual(8, len(list((root / "opt/mapping-host/segments").iterdir())))
+        self.assertEqual(9, len(list((root / "opt/mapping-host/segments").iterdir())))
 
     def test_binary_mutation_refused(self):
         root = self.payload()

@@ -1601,6 +1601,133 @@ fn accepts_exact_bigint_and_decimal_boundaries() {
     }
 }
 
+/// The decimal domain is Graph Node v0.44's own: a tuple is accepted exactly
+/// when `BigDecimal::normalized()` maps it to itself. The table pins the cases
+/// a digit-count rule gets wrong in either direction. A 35-digit negative
+/// coefficient is accepted up to 2^116 - 1, the same magnitude is refused when
+/// positive, and a 35-digit negative coefficient of 117 bits is refused. The
+/// mapping-host replays the same table through Graph Node's real `BigDecimal`,
+/// so each `graph_node_fixed_point` flag is checked against the pinned crates
+/// and not just restated.
+#[test]
+fn accepts_exactly_the_graph_node_v044_decimal_fixed_points() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(
+        "../fixtures/block-changes-v1/graph-decimal-domain.json"
+    ))
+    .unwrap();
+    assert_eq!(fixture["contract"], BLOCK_CHANGES_V1_CONTRACT);
+    assert_eq!(
+        fixture["graph_node"]["commit"],
+        "77823b5a7adc4eac4abf03202c8dd7cb00dea31d"
+    );
+    assert_eq!(fixture["graph_node"]["bigdecimal"], "0.1.2");
+    let cases = fixture["cases"].as_array().unwrap();
+    assert_eq!(cases.len(), 20);
+
+    for case in cases {
+        let name = case["name"].as_str().unwrap();
+        let coefficient =
+            BigInt::parse_bytes(case["coefficient"].as_str().unwrap().as_bytes(), 10).unwrap();
+        let scale = case["scale"].as_i64().unwrap();
+        let fixed_point = case["graph_node_fixed_point"].as_bool().unwrap();
+        let expected = case["expected"].as_str().unwrap();
+        assert_eq!(fixed_point, expected == "accept", "{name}");
+
+        let mut changes = golden_changes();
+        set_first_boundary_value(
+            &mut changes,
+            "bigDecimal",
+            graph_value::Kind::BigDecimal(BigDecimalValue {
+                coefficient_signed_be: coefficient.to_signed_bytes_be(),
+                scale,
+            }),
+        );
+        let result = validate_block_changes(&changes, &COMPATIBILITY_ID);
+        match expected {
+            "accept" => {
+                result.unwrap_or_else(|error| panic!("{name}: {error}"));
+                let encoded = encode_canonical_block_changes(&changes, &COMPATIBILITY_ID).unwrap();
+                assert_eq!(
+                    decode_canonical_block_changes(&encoded, &COMPATIBILITY_ID).unwrap(),
+                    changes,
+                    "{name}"
+                );
+            }
+            "DecimalPrecision" => assert!(
+                matches!(result, Err(ValidationError::DecimalPrecision { .. })),
+                "{name}: {result:?}"
+            ),
+            "NonNormalizedDecimal" => assert!(
+                matches!(result, Err(ValidationError::NonNormalizedDecimal { .. })),
+                "{name}: {result:?}"
+            ),
+            other => panic!("{name}: unknown expectation {other:?}"),
+        }
+    }
+}
+
+/// The negative bound is a bit length, so it is pinned directly as well as
+/// through the table. Every negative magnitude in 2^115..2^116 is accepted,
+/// and the first magnitude past it is refused, whatever its decimal length.
+#[test]
+fn negative_decimal_bound_is_116_bits_not_35_digits() {
+    let check = |coefficient: BigInt| -> Result<(), ValidationError> {
+        let mut changes = golden_changes();
+        set_first_boundary_value(
+            &mut changes,
+            "bigDecimal",
+            graph_value::Kind::BigDecimal(BigDecimalValue {
+                coefficient_signed_be: coefficient.to_signed_bytes_be(),
+                scale: 0,
+            }),
+        );
+        validate_block_changes(&changes, &COMPATIBILITY_ID)
+    };
+    let two_116: BigInt = BigInt::from(1u8) << 116usize;
+    let two_115: BigInt = BigInt::from(1u8) << 115usize;
+    // Odd magnitudes, so the trailing-zero rule cannot decide the outcome.
+    for magnitude in [&two_115 + 1u8, &two_116 - 1u8] {
+        check(-magnitude).unwrap();
+    }
+    let two_117: BigInt = BigInt::from(1u8) << 117usize;
+    for magnitude in [&two_116 + 1u8, two_117 - 1u8] {
+        assert!(matches!(
+            check(-magnitude),
+            Err(ValidationError::DecimalPrecision { .. })
+        ));
+    }
+    // The same 116-bit magnitude has 35 digits, which a positive coefficient
+    // never keeps.
+    assert_eq!((&two_116 - 1u8).to_string().len(), 35);
+    assert!(matches!(
+        check(&two_116 - 1u8),
+        Err(ValidationError::DecimalPrecision { .. })
+    ));
+}
+
+/// The ported digit count stops as soon as its bit estimate passes the
+/// precision, so a coefficient far past the bound is refused without
+/// expanding it to decimal.
+#[test]
+fn refuses_oversized_decimal_coefficients_of_either_sign() {
+    let huge: BigInt = (BigInt::from(1u8) << 400_000usize) + 1u8;
+    for coefficient in [huge.clone(), -huge] {
+        let mut changes = golden_changes();
+        set_first_boundary_value(
+            &mut changes,
+            "bigDecimal",
+            graph_value::Kind::BigDecimal(BigDecimalValue {
+                coefficient_signed_be: coefficient.to_signed_bytes_be(),
+                scale: 0,
+            }),
+        );
+        assert!(matches!(
+            validate_block_changes(&changes, &COMPATIBILITY_ID),
+            Err(ValidationError::DecimalPrecision { .. })
+        ));
+    }
+}
+
 #[test]
 fn enforces_pinned_graph_timestamp_domain() {
     let mut changes = golden_changes();

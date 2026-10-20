@@ -12,7 +12,14 @@ use std::{collections::HashMap, error::Error, fmt};
 pub const BLOCK_CHANGES_V1_CONTRACT: &str = "pinax.graph.backfill.block-changes/v1";
 const COMPATIBILITY_ID_LEN: usize = 32;
 const GRAPH_BIGINT_MAX_BITS: u64 = 435_412;
-const GRAPH_DECIMAL_MAX_SIGNIFICANT_DIGITS: usize = 34;
+/// Graph Node v0.44 `BigDecimal::MAX_SIGNFICANT_DIGITS`: the precision its
+/// `normalized()` passes to bigdecimal 0.1.2's `with_prec`.
+const GRAPH_DECIMAL_PRECISION: u64 = 34;
+/// The literal divisor bigdecimal 0.1.2's `count_decimal_digits` uses to turn a
+/// bit length into a digit estimate. It is deliberately not
+/// `std::f64::consts::LOG2_10`: the port has to divide by the same `f64`.
+#[allow(clippy::approx_constant)]
+const BIGDECIMAL_0_1_2_BITS_PER_DIGIT: f64 = 3.3219280949;
 const GRAPH_DECIMAL_MIN_SCALE: i64 = -6_144;
 const GRAPH_DECIMAL_MAX_SCALE: i64 = 6_143;
 // Prost 0.13 enforces a 100-message decode recursion limit. Each list layer
@@ -717,7 +724,7 @@ impl fmt::Display for ValidationError {
                 field,
             } => write!(
                 formatter,
-                "BlockChanges operation {operation_index} field {field:?} exceeds 34 decimal significant digits"
+                "BlockChanges operation {operation_index} field {field:?} has a decimal coefficient Graph Node v0.44 normalization would round: more than 34 digits if positive, a magnitude of 2^116 or more if negative"
             ),
             Self::NonNormalizedDecimal {
                 operation_index,
@@ -1861,21 +1868,70 @@ fn validate_decimal(
         return Ok(());
     }
 
-    let digits = coefficient.to_str_radix(10);
-    let digits = digits.trim_start_matches('-');
-    if digits.len() > GRAPH_DECIMAL_MAX_SIGNIFICANT_DIGITS {
+    // A nonzero tuple is accepted exactly when Graph Node v0.44's
+    // `BigDecimal::normalized()` maps it to itself. That function runs
+    // bigdecimal 0.1.2's `with_prec(34)` and then strips base-10 trailing
+    // zeros. `with_prec` changes the value only in its `digits > prec` branch,
+    // which rounds a positive coefficient and truncates a negative one. Its
+    // `digits < prec` branch appends zeros, which the strip removes again, and
+    // its `digits == prec` branch is the identity. So the tuple is a fixed
+    // point if and only if the ported digit count is at most 34 and the
+    // coefficient has no trailing zero.
+    if bigdecimal_0_1_2_digits_exceed(&coefficient, GRAPH_DECIMAL_PRECISION) {
         return Err(ValidationError::DecimalPrecision {
             operation_index,
             field: field.to_owned(),
         });
     }
-    if digits.ends_with('0') {
+    if coefficient.magnitude() % 10u8 == num_bigint::BigUint::from(0u8) {
         return Err(ValidationError::NonNormalizedDecimal {
             operation_index,
             field: field.to_owned(),
         });
     }
     Ok(())
+}
+
+/// Whether bigdecimal 0.1.2's `count_decimal_digits(int)` exceeds `prec`.
+///
+/// This is a port of the pinned crate's arithmetic, not a digit count:
+///
+/// ```text
+/// let mut digits = (int.bits() as f64 / 3.3219280949) as u64;
+/// let mut num = ten_to_the(digits);
+/// while int >= &num { num *= 10u8; digits += 1; }
+/// ```
+///
+/// `bits()` is the magnitude's bit length in both num-bigint 0.2 and 0.4. The
+/// correction loop compares the *signed* integer with a positive power of ten,
+/// so it never runs for a negative coefficient. A negative coefficient's
+/// count is therefore the bit estimate alone, which is one short of its decimal
+/// length across part of each decade. For precision 34 that makes the exact
+/// boundary 116 bits, not 35 digits: a negative magnitude is accepted up to
+/// 2^116 - 1 = 83,076,749,736,557,242,056,487,941,267,521,535. A positive
+/// coefficient gets the true decimal length.
+///
+/// The loop only ever increases the count, so an estimate already above
+/// `prec` is final. Returning early there keeps the cost bounded however large
+/// the coefficient is; the port never computes a power of ten above `prec`.
+fn bigdecimal_0_1_2_digits_exceed(int: &BigInt, prec: u64) -> bool {
+    if int.sign() == num_bigint::Sign::NoSign {
+        // `count_decimal_digits` returns 1 for zero.
+        return 1 > prec;
+    }
+    let mut digits = (int.bits() as f64 / BIGDECIMAL_0_1_2_BITS_PER_DIGIT) as u64;
+    if digits > prec {
+        return true;
+    }
+    let mut num = BigInt::from(10u8).pow(digits as u32);
+    while int >= &num {
+        num *= 10u8;
+        digits += 1;
+        if digits > prec {
+            return true;
+        }
+    }
+    false
 }
 
 fn validate_signed_bytes(

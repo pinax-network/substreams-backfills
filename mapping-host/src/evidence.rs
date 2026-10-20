@@ -220,6 +220,66 @@ pub struct PerBlockFile {
     pub bytes: usize,
     pub sha256: String,
     pub fields: Vec<String>,
+    /// Absent when the file lists every block, which is the default and what
+    /// the parity-window evidence does. `handler_blocks` when it lists only the
+    /// blocks [`PerBlockScope::HandlerBlocks`] keeps.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub scope: Option<String>,
+    /// The file a [`PerBlockScope::All`] summary would have written, pinned by
+    /// digest but not committed. Present exactly when `scope` is. This is what
+    /// keeps a sparse file complete evidence: every block's frame digest is
+    /// still bound, so a re-run can be compared block for block by recomputing
+    /// the full file from its own report.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub all_blocks: Option<PerBlockDigest>,
+}
+
+/// A per-block file reduced to its size and digest.
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct PerBlockDigest {
+    pub lines: usize,
+    pub bytes: usize,
+    pub sha256: String,
+}
+
+/// Which blocks the sibling per-block file lists.
+///
+/// A long contiguous range is mostly blocks in which no handler ran. Listing
+/// every one costs about 140 bytes a block, so a range of tens of thousands of
+/// blocks makes a multi-megabyte file that belongs in a release asset rather
+/// than in the repository.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum PerBlockScope {
+    /// One line per block. The default, and unchanged.
+    #[default]
+    All,
+    /// One line per block that ran a handler, wrote a PoI, carried an operation
+    /// or was discarded. Every other block is still pinned through
+    /// [`PerBlockFile::all_blocks`].
+    HandlerBlocks,
+}
+
+impl PerBlockScope {
+    /// The value `--per-block-scope` takes.
+    pub fn parse(value: &str) -> Result<Self> {
+        match value {
+            "all" => Ok(PerBlockScope::All),
+            "handler-blocks" => Ok(PerBlockScope::HandlerBlocks),
+            other => bail!("unknown per-block scope `{other}`; want `all` or `handler-blocks`"),
+        }
+    }
+
+    fn keeps(self, block: &BlockReport, line: &PerBlockLine) -> bool {
+        match self {
+            PerBlockScope::All => true,
+            PerBlockScope::HandlerBlocks => {
+                block.mapping_triggered
+                    || block.block_discarded
+                    || line.poi_public_digest.is_some()
+                    || line.operations > 0
+            }
+        }
+    }
 }
 
 /// One line of the sibling per-block file.
@@ -316,6 +376,8 @@ pub struct SummarizeInputs<'a> {
     /// The committed sampled-run report, so the cross-check can say what the
     /// four-block replay produced as well as what it digested to.
     pub sampled_report: Option<&'a Path>,
+    /// Which blocks the per-block file lists; see [`PerBlockScope`].
+    pub per_block_scope: PerBlockScope,
 }
 
 /// Derive an evidence summary and the per-block file it pins.
@@ -444,18 +506,39 @@ pub fn summarize(inputs: SummarizeInputs<'_>) -> Result<(RunEvidence, String)> {
             }
         }
 
-        per_block.push(PerBlockLine {
+        let line = PerBlockLine {
             number: block.number,
             frame_sha256: changes.frame_sha256.clone(),
             poi_public_digest: block.poi.as_ref().map(|poi| poi.public_digest.clone()),
             operations: changes.operations,
-        });
+        };
+        let kept = inputs.per_block_scope.keeps(block, &line);
+        per_block.push((line, kept));
     }
 
+    // The complete file is always built, because a sparse summary pins it.
+    let mut all_blocks_text = String::new();
     let mut per_block_text = String::new();
-    for line in &per_block {
-        per_block_text.push_str(&crate::report::json_line(line)?);
+    let mut per_block_lines = 0;
+    for (line, kept) in &per_block {
+        let json = crate::report::json_line(line)?;
+        if *kept {
+            per_block_text.push_str(&json);
+            per_block_lines += 1;
+        }
+        all_blocks_text.push_str(&json);
     }
+    let (scope, all_blocks) = match inputs.per_block_scope {
+        PerBlockScope::All => (None, None),
+        PerBlockScope::HandlerBlocks => (
+            Some("handler_blocks".to_string()),
+            Some(PerBlockDigest {
+                lines: per_block.len(),
+                bytes: all_blocks_text.len(),
+                sha256: sha256_hex(all_blocks_text.as_bytes()),
+            }),
+        ),
+    };
 
     let written: Vec<String> = modifications_by_entity.keys().cloned().collect();
     let declared = match inputs.segment {
@@ -515,7 +598,7 @@ pub fn summarize(inputs: SummarizeInputs<'_>) -> Result<(RunEvidence, String)> {
         },
         per_block: PerBlockFile {
             file: inputs.per_block_name,
-            lines: per_block.len(),
+            lines: per_block_lines,
             bytes: per_block_text.len(),
             sha256: sha256_hex(per_block_text.as_bytes()),
             fields: vec![
@@ -524,6 +607,8 @@ pub fn summarize(inputs: SummarizeInputs<'_>) -> Result<(RunEvidence, String)> {
                 "poi_public_digest".into(),
                 "operations".into(),
             ],
+            scope,
+            all_blocks,
         },
         findings: inputs
             .previous
@@ -663,12 +748,21 @@ fn cross_check(
 
 /// A path as it reads from the crate root, so no machine-specific prefix is ever
 /// written into a committed file.
+///
+/// An absolute path outside the crate, such as a cassette a long run kept in a
+/// scratch directory because it is too large to commit, is reduced to its file
+/// name rather than written out whole.
 fn relative_to_crate(path: &Path) -> String {
     let crate_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
-    path.strip_prefix(crate_dir)
-        .unwrap_or(path)
-        .to_string_lossy()
-        .replace('\\', "/")
+    let relative = match path.strip_prefix(crate_dir) {
+        Ok(relative) => relative,
+        Err(_) if path.is_absolute() => path
+            .file_name()
+            .map(Path::new)
+            .unwrap_or_else(|| Path::new("")),
+        Err(_) => path,
+    };
+    relative.to_string_lossy().replace('\\', "/")
 }
 
 #[cfg(test)]
@@ -689,6 +783,133 @@ mod tests {
         assert!(
             json.contains("\"poi_public_digest\":null"),
             "the null must be explicit: {json}"
+        );
+    }
+
+    /// A three-block streamed report: an empty block, a block with one handler
+    /// and a PoI, and another empty block.
+    fn three_block_report(dir: &Path) -> std::path::PathBuf {
+        let header = RunHeader {
+            schema: REPORT_STREAM_SCHEMA.to_string(),
+            deployment: "QmTest".into(),
+            network: "base".into(),
+            spec_version: "1.2.0".into(),
+            api_versions: vec!["0.0.7".into()],
+            features: vec!["nonFatalErrors".into()],
+            graph_node_rev: crate::runner::GRAPH_NODE_REV.into(),
+            source: "fixture".into(),
+            from: Some(100),
+            to: Some(103),
+        };
+        let block = |number: i32, triggered: bool| BlockReport {
+            number,
+            hash: format!("0x{number:064x}"),
+            parent_hash: None,
+            timestamp: 0,
+            mapping_triggered: triggered,
+            triggers_per_stage: vec![1],
+            hosts_per_stage: vec![1],
+            handler_groups: Vec::new(),
+            created_data_sources: Vec::new(),
+            deterministic_errors: Vec::new(),
+            deterministic_error_policy: "non_fatal".into(),
+            block_discarded: false,
+            modification_count: 0,
+            poi: triggered.then(|| crate::report::PoiReport {
+                version: "fast".into(),
+                causality_regions: [("ethereum/base".to_string(), "aa".to_string())].into(),
+                public_digest: format!("{number:064x}"),
+            }),
+            store_counts: BTreeMap::new(),
+            block_changes: Some(crate::report::BlockChangesSummary {
+                operations: usize::from(triggered),
+                sets: usize::from(triggered),
+                removes: 0,
+                deterministic_errors: 0,
+                frame_bytes: 114,
+                frame_sha256: format!("{:064x}", number + 1),
+            }),
+        };
+        let mut text = crate::report::json_line(&header).unwrap();
+        for (number, triggered) in [(100, false), (101, true), (102, false)] {
+            text.push_str(&crate::report::json_line(&block(number, triggered)).unwrap());
+        }
+        let path = dir.join("report.jsonl");
+        std::fs::write(&path, text).unwrap();
+        path
+    }
+
+    fn summarize_with(report: &Path, scope: PerBlockScope) -> (RunEvidence, String) {
+        summarize(SummarizeInputs {
+            report,
+            previous: None,
+            per_block_name: "x.blocks.jsonl".into(),
+            segment: None,
+            cassette: None,
+            goldens: None,
+            sampled_report: None,
+            per_block_scope: scope,
+        })
+        .unwrap()
+    }
+
+    #[test]
+    fn a_sparse_per_block_file_still_pins_every_block() {
+        let dir = tempfile::tempdir().unwrap();
+        let report = three_block_report(dir.path());
+        let (all, all_text) = summarize_with(&report, PerBlockScope::All);
+        let (sparse, sparse_text) = summarize_with(&report, PerBlockScope::HandlerBlocks);
+
+        // The default is unchanged: no scope, no second digest, every block.
+        assert_eq!(all.per_block.scope, None);
+        assert_eq!(all.per_block.all_blocks, None);
+        assert_eq!(all.per_block.lines, 3);
+        assert!(!serde_json::to_string(&all.per_block)
+            .unwrap()
+            .contains("all_blocks"));
+
+        // The sparse file lists only the block that did something...
+        assert_eq!(sparse.per_block.scope.as_deref(), Some("handler_blocks"));
+        assert_eq!(sparse.per_block.lines, 1);
+        assert_eq!(sparse_text.lines().count(), 1);
+        assert!(sparse_text.contains("\"number\":101"));
+        assert_eq!(sparse.per_block.sha256, sha256_hex(sparse_text.as_bytes()));
+
+        // ...and pins the complete file by the digest the default would write.
+        let pinned = sparse.per_block.all_blocks.as_ref().unwrap();
+        assert_eq!(pinned.sha256, all.per_block.sha256);
+        assert_eq!(pinned.sha256, sha256_hex(all_text.as_bytes()));
+        assert_eq!((pinned.lines, pinned.bytes), (3, all_text.len()));
+
+        // Nothing but the per-block file depends on the scope.
+        assert_eq!(sparse.totals, all.totals);
+        assert_eq!(sparse.final_poi, all.final_poi);
+    }
+
+    #[test]
+    fn per_block_scopes_parse_strictly() {
+        assert_eq!(PerBlockScope::parse("all").unwrap(), PerBlockScope::All);
+        assert_eq!(
+            PerBlockScope::parse("handler-blocks").unwrap(),
+            PerBlockScope::HandlerBlocks
+        );
+        assert!(PerBlockScope::parse("handlers").is_err());
+    }
+
+    #[test]
+    fn no_absolute_path_reaches_a_committed_file() {
+        let crate_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
+        assert_eq!(
+            relative_to_crate(&crate_dir.join("fixtures/cassettes/x.json")),
+            "fixtures/cassettes/x.json"
+        );
+        assert_eq!(
+            relative_to_crate(Path::new("/private/scratch/run/cassette.json")),
+            "cassette.json"
+        );
+        assert_eq!(
+            relative_to_crate(Path::new("fixtures/cassettes/x.json")),
+            "fixtures/cassettes/x.json"
         );
     }
 

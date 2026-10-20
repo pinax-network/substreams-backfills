@@ -86,6 +86,12 @@ struct SummarizeArgs {
     /// four-block replay produced beside what it digested to.
     #[arg(long)]
     sampled_report: Option<PathBuf>,
+    /// Which blocks the per-block file lists: `all` (the default), or
+    /// `handler-blocks`, which lists only blocks that ran a handler, wrote a
+    /// PoI, carried an operation or were discarded, and pins the complete file
+    /// by digest instead. Use it for a range too long to commit block by block.
+    #[arg(long, default_value = "all")]
+    per_block_scope: String,
 }
 
 #[derive(clap::Args)]
@@ -679,6 +685,7 @@ async fn run(mut args: RunArgs) -> Result<()> {
 /// already wrote is the only input, which is what makes the summary a record of
 /// *that* run rather than of a second one.
 fn summarize(args: SummarizeArgs) -> Result<()> {
+    let per_block_scope = evidence::PerBlockScope::parse(&args.per_block_scope)?;
     let per_block_path = args.per_block.clone().unwrap_or_else(|| {
         args.evidence
             .with_extension("")
@@ -702,6 +709,7 @@ fn summarize(args: SummarizeArgs) -> Result<()> {
         cassette: args.cassette.as_deref(),
         goldens: args.goldens.as_deref(),
         sampled_report: args.sampled_report.as_deref(),
+        per_block_scope,
     })?;
 
     if let Some(parent) = args.evidence.parent() {

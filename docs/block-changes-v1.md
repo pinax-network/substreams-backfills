@@ -208,6 +208,21 @@ Null, Bytes, and BigInt. Entity IDs cover String, Bytes, and Int8.
   The mapping-host tests check each row against Graph Node's real
   `BigDecimal`, and also run a seeded sweep of random values.
 
+  This rule widens v1's accepted BigDecimal domain in place. The contract
+  string is unchanged, and every tuple the earlier 34-digit rule accepted is
+  still accepted. A consumer built on the earlier v1 validator, however,
+  refuses the newly accepted negatives with `DecimalPrecision`. It fails
+  closed and writes no wrong data, but it halts on frames that mapping-host
+  now seals, such as one carrying the V4 TVL value above. The engine's vendored
+  `third_party/backfill-common` at `COMMON_COMMIT` `d01b0fe7` is such a
+  consumer. It accepts the new values only after it re-vendors
+  `common/src/block_changes.rs` from a commit that has this rule, re-pins
+  `COMMON_COMMIT`, and updates the file's SHA-256 in both places it is pinned:
+  `COMMON_VALIDATOR_SHA256` in `src/block_changes_descriptor.rs`, and the
+  `validator` and `vendored_validator` entries of
+  `adapters/uniswap-v4-base/block-changes-v1.json`. A descriptor that pins the
+  validator's digest gets a new compatibility ID when it is regenerated.
+
   The fixed-point set is exactly what an arithmetic result can be saved as.
   Graph Node normalizes every BigDecimal that a mapping passes to the host,
   including the entity data of `store.set`, and the host normalizes every
@@ -229,6 +244,26 @@ Null, Bytes, and BigInt. Entity IDs cover String, Bytes, and Int8.
   re-saves it, and so do the mapping-host checkpoint restore
   (`BigDecimal::new`) and the engine's numeric writer. Accepting it would need
   all of those consumers changed together.
+
+  This refusal is reachable, so it is a known liveness risk. Uniswap-V3-style
+  mappings convert token amounts with `convertTokenToDecimal`, which returns
+  the raw `amount.toBigDecimal()` when the token's `decimals` is 0. `handleSwap`
+  saves that result unchanged as `Swap.amount0` and `Swap.amount1`, and one of
+  the two is normally negative. The
+  [Aerodrome Slipstream Base target](provenance/aerodrome-slipstream-base-target.json)
+  does this, and it also records 0 decimals for a token whose `decimals()` call
+  reverts or is out of range. A single normalization leaves a refused value
+  only when the raw amount is negative with a magnitude of at least
+  `2^116 * 10^3` (83,076,749,736,557,242,056,487,941,267,521,536,000, which is
+  126 bits). Positive raw amounts always normalize to a fixed point. When a
+  swap like that is saved, mapping-host refuses to seal its block and the run
+  halts there. A read-only check of the live deployment decides whether a
+  carve-out is needed. The check looks for saved Swap rows whose `amount0` or
+  `amount1` is at or below that negative bound and whose coefficient
+  magnitude is at least `2^116`. If there are none, the strict rule covers
+  the history the deployment has indexed. If there are any, the run needs a
+  carve-out that accepts once-normalized values, and that means changing the
+  consumers above together.
 - Timestamp validation reproduces Graph Node v0.44.0/Chrono 0.4.44's
   `from_microseconds_since_epoch` domain exactly, including its rejection of
   negative fractional-second microsecond values.

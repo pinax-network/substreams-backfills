@@ -14,7 +14,7 @@
 //! [`graph_mapping_host::replay`]; what a resumed run may do to output files
 //! that already exist lives in [`graph_mapping_host::outputs`].
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 use anyhow::{bail, Context, Result};
@@ -86,12 +86,20 @@ struct SummarizeArgs {
     /// four-block replay produced beside what it digested to.
     #[arg(long)]
     sampled_report: Option<PathBuf>,
-    /// Which blocks the per-block file lists: `all` (the default), or
-    /// `handler-blocks`, which lists only blocks that ran a handler, wrote a
-    /// PoI, carried an operation or were discarded, and pins the complete file
-    /// by digest instead. Use it for a range too long to commit block by block.
+    /// Which blocks the per-block file lists: `all` (the default, a
+    /// `run-evidence/v1` summary), or `handler-blocks`, which lists only blocks
+    /// that ran a handler, wrote a PoI, carried an operation or were discarded,
+    /// writes the complete file beside it (`--all-blocks`) and pins it by
+    /// digest. That makes a `run-evidence/v2` summary, which also records every
+    /// data source creation by wave. Use it for a range too long to commit block
+    /// by block.
     #[arg(long, default_value = "all")]
     per_block_scope: String,
+    /// The complete per-block file a `handler-blocks` summary pins. Defaults to
+    /// the summary's name with `.all-blocks.jsonl` in place of `.json`. Ignored
+    /// with `--per-block-scope all`, whose one per-block file is complete.
+    #[arg(long)]
+    all_blocks: Option<PathBuf>,
 }
 
 #[derive(clap::Args)]
@@ -686,47 +694,57 @@ async fn run(mut args: RunArgs) -> Result<()> {
 /// *that* run rather than of a second one.
 fn summarize(args: SummarizeArgs) -> Result<()> {
     let per_block_scope = evidence::PerBlockScope::parse(&args.per_block_scope)?;
-    let per_block_path = args.per_block.clone().unwrap_or_else(|| {
-        args.evidence
-            .with_extension("")
-            .with_extension("blocks.jsonl")
-    });
-    let per_block_name = per_block_path
-        .file_name()
-        .map(|name| name.to_string_lossy().to_string())
-        .unwrap_or_else(|| per_block_path.to_string_lossy().to_string());
+    let sibling = |explicit: &Option<PathBuf>, extension: &str| {
+        explicit
+            .clone()
+            .unwrap_or_else(|| args.evidence.with_extension("").with_extension(extension))
+    };
+    let file_name = |path: &Path| {
+        path.file_name()
+            .map(|name| name.to_string_lossy().to_string())
+            .unwrap_or_else(|| path.to_string_lossy().to_string())
+    };
+    let per_block_path = sibling(&args.per_block, "blocks.jsonl");
+    let all_blocks_path = sibling(&args.all_blocks, "all-blocks.jsonl");
 
     // Carrying the previous file's prose forward is the whole reason this reads
     // before it writes. A file that does not parse is an error, not a silent
     // reset that would drop hand-written findings.
     let previous = evidence::Narrative::read(&args.evidence)?;
 
-    let (summary, per_block) = evidence::summarize(evidence::SummarizeInputs {
+    let summary = evidence::summarize(evidence::SummarizeInputs {
         report: &args.report,
         previous,
-        per_block_name,
+        per_block_name: file_name(&per_block_path),
         segment: args.segment.as_deref(),
         cassette: args.cassette.as_deref(),
         goldens: args.goldens.as_deref(),
         sampled_report: args.sampled_report.as_deref(),
         per_block_scope,
+        all_blocks_name: Some(file_name(&all_blocks_path)),
     })?;
 
     if let Some(parent) = args.evidence.parent() {
         std::fs::create_dir_all(parent)
             .with_context(|| format!("creating {}", parent.display()))?;
     }
-    std::fs::write(&per_block_path, &per_block)
+    std::fs::write(&per_block_path, &summary.per_block)
         .with_context(|| format!("writing {}", per_block_path.display()))?;
-    std::fs::write(&args.evidence, summary.to_json()?)
+    if let Some(all_blocks) = &summary.all_blocks {
+        std::fs::write(&all_blocks_path, all_blocks)
+            .with_context(|| format!("writing {}", all_blocks_path.display()))?;
+    }
+    let evidence = &summary.evidence;
+    std::fs::write(&args.evidence, evidence.to_json()?)
         .with_context(|| format!("writing {}", args.evidence.display()))?;
 
     eprintln!(
-        "{}: {} blocks, {} handler groups, {} operations",
+        "{}: {} blocks, {} handler groups, {} operations ({})",
         args.evidence.display(),
-        summary.range.blocks,
-        summary.totals.handler_groups,
-        summary.totals.operations
+        evidence.range.blocks,
+        evidence.totals.handler_groups,
+        evidence.totals.operations,
+        evidence.schema
     );
     Ok(())
 }

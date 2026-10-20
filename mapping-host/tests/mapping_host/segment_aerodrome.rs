@@ -14,19 +14,32 @@
 //!   Factory's start block as the segment's first block;
 //! * the descriptor regenerates byte for byte.
 //!
-//! Two real Base blocks are replayed by an `#[ignore]`d test, because the block
-//! fixtures are release assets that have not been published yet (708 KB and
-//! 6.6 MB). Hydrate them into a directory and point `AERODROME_BLOCK_FIXTURES`
-//! at it; the test pins each file by SHA-256 and replays it against the
-//! committed fixture cassette with recording off, so it never opens a socket.
+//! Two real Base blocks are then replayed against the committed fixture
+//! cassette with recording off, so no test here opens a socket. The block files
+//! (708 KB and 6.6 MB) are release assets locked by
+//! `aerodrome-slipstream-base/fixtures/blocks.lock.json`, which CI hydrates with
+//! `cargo xtask evidence fetch` before `cargo test`, as it does the Uniswap V3
+//! fixtures:
+//!
+//! * 13,899,663, the first pool, must reproduce the frame and the PoI the live
+//!   root-window run produced for the same block, read from that run's published
+//!   per-block file: live-frame parity.
+//! * 52,800,000, a dense recent block replayed behind only that one pool, is a
+//!   regression pin. Its digests are this host's own, and the 175 deterministic
+//!   errors in it come from rows the two-block store does not hold. It is the
+//!   only replay that reaches `STORE_DISPOSITION_COMMITTED` after a
+//!   deterministic error, so the non-fatal path is exercised here on a
+//!   synthetic store gap, not shown against deployed behaviour.
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
 
 use backfill_common::pb::pinax::graph::backfill::v1 as pb;
 use graph::data::subgraph::SubgraphFeature;
 use graph::prelude::{o, slog, Logger};
 use graph_mapping_host::bundle::{sha256_hex, SegmentBundle};
+use graph_mapping_host::evidence::PerBlockLine;
 use graph_mapping_host::report::BlockReport;
 use graph_mapping_host::runner::{SegmentBounds, SegmentHost, SegmentHostConfig};
 use graph_mapping_host::{block, blockchanges, descriptor};
@@ -342,7 +355,8 @@ fn copy_dir(from: &Path, to: &Path) -> std::io::Result<()> {
     Ok(())
 }
 
-/// The two local Base block fixtures, with the SHA-256 each file must have.
+/// The two Base block fixtures, with the SHA-256 each file must have. The same
+/// digests are in `aerodrome-slipstream-base/fixtures/blocks.lock.json`.
 ///
 /// * 13,899,663 is the first block in which anything indexed happens: the first
 ///   `PoolCreated`, and the first NonfungiblePositionManager events, all in one
@@ -362,6 +376,10 @@ const FIXTURES: &[(i32, &str)] = &[
         "06fe030c7921ee57b12f711f5cfb66040f5b578b25cf86dc66c9cec6e809d957",
     ),
 ];
+const BLOCKS_LOCK: &str = "aerodrome-slipstream-base/fixtures/blocks.lock.json";
+/// The live root-window run's complete per-block file, a locked release asset
+/// (`mapping-host/evidence/aerodrome-root-window.lock.json`).
+const LIVE_PER_BLOCK: &str = "evidence/aerodrome-first-pools-13899663-13919663.all-blocks.jsonl";
 
 /// A frame's operations by kind and store disposition.
 fn dispositions(changes: &pb::BlockChanges) -> BTreeMap<&'static str, usize> {
@@ -400,48 +418,97 @@ fn groups(report: &BlockReport) -> Vec<(usize, u64, String)> {
         .collect()
 }
 
-#[test]
-#[ignore = "needs AERODROME_BLOCK_FIXTURES: local Base block fixtures whose release asset is not published; never network"]
-fn the_base_fixture_blocks_replay_to_the_live_frames() {
-    let dir = PathBuf::from(
-        std::env::var("AERODROME_BLOCK_FIXTURES").expect("set the local fixture directory"),
-    );
-    let mut blocks = Vec::new();
-    for (number, sha256) in FIXTURES {
-        let path = dir.join(format!("{number}.pb"));
-        let bytes =
-            std::fs::read(&path).unwrap_or_else(|e| panic!("reading {}: {e}", path.display()));
-        assert_eq!(
-            &sha256_hex(&bytes),
-            sha256,
-            "{} is not the pinned fixture",
-            path.display()
-        );
-        blocks.push(block::load_block(&path).expect("one Firehose block per file"));
-    }
-
-    let replayed: Vec<(BlockReport, BTreeMap<&str, usize>)> = runtime().block_on(async {
-        let mut host = SegmentHost::load(SegmentHostConfig {
-            bundle_dir: &segment_dir(),
-            cassette_path: &crate_dir().join(format!("fixtures/cassettes/{SEGMENT}.json")),
-            // Replay only: a cassette miss fails the test, it never reaches out.
-            record: false,
-        })
-        .await
-        .expect("loading the segment");
-        let mut reports = Vec::new();
-        for raw in blocks {
-            let outcome = host.process_block(raw).await.expect("replaying a fixture");
-            let bytes = blockchanges::seal(&outcome.changes, host.compatibility())
-                .expect("sealing a frame");
-            let mut report = outcome.report;
-            report.block_changes = Some(blockchanges::summarize(&outcome.changes, &bytes));
-            reports.push((report, dispositions(&outcome.changes)));
+/// Both fixture blocks replayed in order through one host, each with its report
+/// and its frame's dispositions. The dense block needs the first pool behind it,
+/// so the two tests below share this one replay.
+fn replayed() -> &'static [(BlockReport, BTreeMap<&'static str, usize>)] {
+    static REPLAY: OnceLock<Vec<(BlockReport, BTreeMap<&'static str, usize>)>> = OnceLock::new();
+    REPLAY.get_or_init(|| {
+        let mut blocks = Vec::new();
+        for (number, sha256) in FIXTURES {
+            let path = repo_root().join(format!(
+                "aerodrome-slipstream-base/fixtures/blocks/base/{number}.pb"
+            ));
+            let bytes = std::fs::read(&path).unwrap_or_else(|e| {
+                panic!(
+                    "reading {}: {e}; hydrate the Base block fixtures with `cargo xtask \
+                     evidence fetch --lock {BLOCKS_LOCK}` from the repository root",
+                    path.display()
+                )
+            });
+            assert_eq!(
+                &sha256_hex(&bytes),
+                sha256,
+                "{} is not the pinned fixture",
+                path.display()
+            );
+            blocks.push(block::load_block(&path).expect("one Firehose block per file"));
         }
-        assert!(!host.cassette().is_dirty());
-        reports
-    });
-    let reports: Vec<&BlockReport> = replayed.iter().map(|(report, _)| report).collect();
+
+        runtime().block_on(async {
+            let mut host = SegmentHost::load(SegmentHostConfig {
+                bundle_dir: &segment_dir(),
+                cassette_path: &crate_dir().join(format!("fixtures/cassettes/{SEGMENT}.json")),
+                // Replay only: a cassette miss fails the test, it never reaches out.
+                record: false,
+            })
+            .await
+            .expect("loading the segment");
+            let mut reports = Vec::new();
+            for raw in blocks {
+                let outcome = host.process_block(raw).await.expect("replaying a fixture");
+                let bytes = blockchanges::seal(&outcome.changes, host.compatibility())
+                    .expect("sealing a frame");
+                let mut report = outcome.report;
+                report.block_changes = Some(blockchanges::summarize(&outcome.changes, &bytes));
+                reports.push((report, dispositions(&outcome.changes)));
+            }
+            assert!(!host.cassette().is_dirty());
+            reports
+        })
+    })
+}
+
+#[test]
+fn the_fixture_digests_are_the_locked_ones() {
+    // The digests this file pins and the lock CI hydrates from must agree, or
+    // a test could pass against a fixture the release does not hold.
+    let lock: serde_json::Value = serde_json::from_slice(
+        &std::fs::read(repo_root().join(BLOCKS_LOCK)).expect("reading the block-fixture lock"),
+    )
+    .expect("parsing the block-fixture lock");
+    assert_eq!(lock["release_tag"], "aerodrome-base-block-fixtures-v1");
+    let locked: Vec<(String, String)> = lock["assets"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|asset| {
+            (
+                asset["path"].as_str().unwrap().to_string(),
+                asset["sha256"].as_str().unwrap().to_string(),
+            )
+        })
+        .collect();
+    let pinned: Vec<(String, String)> = FIXTURES
+        .iter()
+        .map(|(number, sha256)| {
+            (
+                format!("aerodrome-slipstream-base/fixtures/blocks/base/{number}.pb"),
+                sha256.to_string(),
+            )
+        })
+        .collect();
+    assert_eq!(locked, pinned);
+}
+
+#[test]
+fn the_first_pool_block_replays_to_the_live_frame() {
+    // Live-frame parity: replayed from its fixture alone, 13,899,663 must give
+    // the frame and the PoI the live Firehose run from the root produced for the
+    // same block. Nothing before it triggers a handler, so the store behind it
+    // is the same empty store either way.
+    let first = &replayed()[0].0;
+    assert_eq!(first.number, 13_899_663);
 
     // The wave trap, on real data. Slipstream's `CLFactory.createPool` calls
     // `CLPool.initialize` before it emits `PoolCreated`, so `Initialize` (log
@@ -449,8 +516,6 @@ fn the_base_fixture_blocks_replay_to_the_live_frames() {
     // not exist until `handlePoolCreated` runs, so `handleInitialize` and
     // `handleMint` run in wave 1, after the wave-0 position-manager handlers at
     // higher log indices.
-    let first = &reports[0];
-    assert_eq!(first.number, 13_899_663);
     assert_eq!(first.triggers_per_stage, vec![209, 209]);
     assert_eq!(first.hosts_per_stage, vec![2, 1]);
     assert_eq!(
@@ -473,25 +538,51 @@ fn the_base_fixture_blocks_replay_to_the_live_frames() {
         poi.causality_regions.keys().collect::<Vec<_>>(),
         vec!["ethereum/base"]
     );
-    // The frame and PoI the live Firehose run produced for the same block from
-    // the root: the first line of the sparse per-block file that
-    // `evidence/aerodrome-first-pools-13899663-13919663.json` pins.
+    let changes = first.block_changes.as_ref().unwrap();
+
+    // The live run's own line for this block, out of its published per-block
+    // file: the comparison is against the run, not a constant copied from it.
+    let path = crate_dir().join(LIVE_PER_BLOCK);
+    let text = std::fs::read_to_string(&path).unwrap_or_else(|e| {
+        panic!(
+            "reading {}: {e}; hydrate it with `cargo xtask evidence fetch --lock \
+             mapping-host/evidence/aerodrome-root-window.lock.json` from the repository root",
+            path.display()
+        )
+    });
+    let live: PerBlockLine = text
+        .lines()
+        .map(|line| serde_json::from_str::<PerBlockLine>(line).expect("a per-block line"))
+        .find(|line| line.number == first.number)
+        .expect("the live run covers the first pool");
+    assert_eq!(changes.frame_sha256, live.frame_sha256);
+    assert_eq!(Some(&poi.public_digest), live.poi_public_digest.as_ref());
+    assert_eq!(changes.operations, live.operations);
+    // The same two digests, spelled out so a reader need not fetch anything.
+    assert_eq!(
+        changes.frame_sha256,
+        "62c0b927ea0a70cedbf20c39a5b6683028c84e97b71dd3c457e41110db8607a3"
+    );
     assert_eq!(
         poi.public_digest,
         "6645b82ff589f650cae124a23ac62580f93b3dd59bbc1afc0128bc50a038e765"
     );
-    assert_eq!(
-        first.block_changes.as_ref().unwrap().frame_sha256,
-        "62c0b927ea0a70cedbf20c39a5b6683028c84e97b71dd3c457e41110db8607a3"
-    );
+    // Every save in the first block committed.
+    assert_eq!(replayed()[0].1, BTreeMap::from([("set_committed", 35)]));
+}
 
-    // A dense recent block, replayed with only that one pool behind it. Every
-    // OP-stack deposit and EIP-7702 transaction converts through graph-node's
-    // own codec. The position-manager handlers abort on rows this sampled store
-    // does not hold — a fixture gap, not deployed behaviour — and under
-    // `nonFatalErrors` only those handlers' saves are discarded: the block is
-    // kept, and so is everything the other handlers wrote.
-    let dense = &reports[1];
+#[test]
+fn the_dense_block_pins_the_non_fatal_path_on_a_synthetic_store_gap() {
+    // A regression pin, not parity. 52,800,000 is replayed with only the first
+    // pool behind it, so its frame and PoI are this host's own and no live run
+    // has produced them. Every OP-stack deposit and EIP-7702 transaction in it
+    // converts through graph-node's own codec. The position-manager handlers
+    // abort on rows the two-block store does not hold: a gap in the fixture,
+    // not deployed behaviour. That gap is what makes this the one replay that
+    // reaches the non-fatal path: under `nonFatalErrors` only the failing
+    // handlers' saves are discarded, and the block is kept with everything the
+    // other handlers wrote.
+    let (dense, dispositions) = &replayed()[1];
     assert_eq!(dense.number, 52_800_000);
     assert_eq!(dense.triggers_per_stage, vec![2631]);
     assert_eq!(dense.hosts_per_stage, vec![3]);
@@ -510,14 +601,13 @@ fn the_base_fixture_blocks_replay_to_the_live_frames() {
         dense.poi.as_ref().unwrap().public_digest,
         "25a7187b3281f077af766830a08e11ecaa17f9423b8fd6edac524b24bf046a5f"
     );
-    // Every save in the first block committed. In the dense block the failing
-    // handlers' saves are DISCARDED, each group closed by its DeterministicError,
-    // and every other save is COMMITTED: the non-fatal policy, not the fatal
-    // one, which would have marked them all BLOCK_DISCARDED.
-    assert_eq!(replayed[0].1, BTreeMap::from([("set_committed", 35)]));
+    // The failing handlers' saves are DISCARDED, each group closed by its
+    // DeterministicError, and every other save is COMMITTED: the non-fatal
+    // policy, not the fatal one, which would have marked them all
+    // BLOCK_DISCARDED.
     assert_eq!(
-        replayed[1].1,
-        BTreeMap::from([
+        dispositions,
+        &BTreeMap::from([
             ("deterministic_error", 175),
             ("set_committed", 266),
             ("set_discarded", 38),

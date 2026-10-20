@@ -1470,7 +1470,11 @@ block hash):
   position-manager multicall, and in all thirteen `Initialize` is the log just
   before `PoolCreated`. `handleInitialize` and `handleMint` therefore run in wave
   1, after the wave-0 `handlePoolCreated`, `handleTransfer` and
-  `handleIncreaseLiquidity` — the last two at *higher* log indices.
+  `handleIncreaseLiquidity` — the last two at *higher* log indices. The summary
+  records this per pool (`data_source_creations`: the creating handler, and the
+  log index and wave of every handler in the creating transaction or on the new
+  pool in that block), and a CI test asserts all thirteen rows and that every
+  `handleInitialize` in the window is one of them.
 * **Every handler but `handleFlash` ran,** 6,089 invocations, all `ok`; no
   `Flash` occurs in the window. `Collect`, `Flash` and `TickHourData` rows were
   never written. No deterministic error, so no BigDecimal outside the
@@ -1484,45 +1488,88 @@ block hash):
   groups per block, that is roughly 0.5 blocks/s — an estimate, and one that the
   growing store can only make worse.
 
+### What is committed, what is locked, and what CI checks
+
 The committed evidence is the two summaries,
 `evidence/aerodrome-root-prefix-13843704-13899663.json` and
 `evidence/aerodrome-first-pools-13899663-13919663.json`. Both were written with
-`summarize --per-block-scope handler-blocks`, which lists only blocks that did
-something and pins the complete per-block file by digest
-(`per_block.all_blocks`), so a re-run can still be compared block by block. The
-prefix's sparse file is empty, and its digest proves that without the file. The
-window's sparse file (672 KB), its cassette (6.5 MB), frames and `BCF1` stream are
-a release asset that has not been published.
+`summarize --per-block-scope handler-blocks`, which makes a
+**`run-evidence/v2`** summary:
+
+* the sparse per-block file (`per_block.file`) lists only blocks that ran a
+  handler, wrote a PoI, carried an operation or were discarded
+  (`per_block.scope` is `handler_blocks`);
+* the complete per-block file, one line per block, is written beside it and
+  named and pinned by `per_block.all_blocks`, so a re-run can still be compared
+  block by block;
+* `data_source_creations` places every created data source by wave, as above.
+
+The version is v2 rather than v1 so that a reader that knows nothing of
+`per_block.scope` refuses the file instead of taking a 3,276-line file for a
+20,000-block range. **A v2 reader must honour `per_block.scope`.**
+`RunEvidence::check_schema` refuses a summary whose version and shape disagree,
+and `summarize --per-block-scope all` still writes exactly the v1 summary it
+always did, so the parity-window file above regenerates unchanged.
+
+What the summaries were derived from is not committed. It is locked by digest
+and published as release assets, like the Uniswap V3 block fixtures
+(`docs/evidence-assets.md`):
+
+| Lock | Release | Holds | CI |
+|---|---|---|---|
+| `aerodrome-slipstream-base/fixtures/blocks.lock.json` | `aerodrome-base-block-fixtures-v1` | the two Base fixture blocks below | fetched |
+| `evidence/aerodrome-root-window.lock.json` | `aerodrome-root-window-evidence-v1` | both runs' streamed reports (90 MB and 35 MB), the window's cassette (6.5 MB), the window's sparse per-block file and both complete ones | fetched |
+| `evidence/aerodrome-root-window-archive.lock.json` | `aerodrome-root-window-archive-v1` | both `BCF1` streams, both closing checkpoints and the window's final store | not fetched |
+
+`ci-mapping-host` hydrates the first two before `cargo test`, and
+`tests/mapping_host/aerodrome_root_window_evidence.rs` then **re-derives both
+summaries byte for byte from the published reports**: every total, handler
+count, creation row, final store count, final PoI, cassette fact and per-block
+pin is recomputed by the same `summarize` code and must equal the committed
+file. It also checks the published per-block files against their pins directly,
+that the sparse file is exactly the complete file's handler blocks, and that
+every locked asset is one a summary names by digest. Changing any derived field
+of either summary by hand fails CI. The archive is for continuing the chain past
+13,919,662 with `--checkpoint-in`, or for checking the `BCF1` and store digests
+the prose states; fetch it explicitly:
+
+```sh
+cargo xtask evidence fetch --lock aerodrome-slipstream-base/fixtures/blocks.lock.json
+cargo xtask evidence fetch --lock mapping-host/evidence/aerodrome-root-window.lock.json
+cargo xtask evidence fetch --lock mapping-host/evidence/aerodrome-root-window-archive.lock.json   # optional
+```
+
+The prefix's sparse file is empty and is not published: its digest is the empty
+string's, which the summary proves without the file.
 
 ### Fixtures
 
 `fixtures/cassettes/QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV.json` answers
-every call two Base blocks make when replayed in sequence:
+every call two Base blocks make when replayed in sequence. The block files
+(708 KB and 6.6 MB) hydrate from the block-fixtures lock above, and
+`tests/mapping_host/segment_aerodrome.rs` replays them in two tests that make
+different claims:
 
-* **13,899,663**, the first pool, the first position-manager events and the
-  first wave-1 handlers, all in one transaction. Replayed from the fixture alone
-  it produces the frame and PoI the live root run produced
-  (`62c0b927…`, PoI `6645b82f…`).
-* **52,800,000**, a dense recent block: 2,631 logs, 501 from the position
-  manager, three deposit and two EIP-7702 transactions. With only the first pool
-  behind it, 175 position-manager handlers abort on rows the sampled store does
-  not hold — a fixture gap, not deployed behaviour — and the non-fatal policy
-  discards only those handlers' saves: the block is kept, with the work of its
-  other 80 handler groups (255 in all, 479 operations). This is the first fixture
-  that reaches `STORE_DISPOSITION_COMMITTED` after a deterministic error.
+* **13,899,663: live-frame parity.** The first pool, the first position-manager
+  events and the first wave-1 handlers, all in one transaction. Replayed from
+  the fixture alone it produces the frame and PoI the live root run produced
+  (`62c0b927…`, PoI `6645b82f…`); the test compares them with the live run's own
+  line in the published complete per-block file.
+* **52,800,000: a regression pin for the non-fatal path, on a synthetic store
+  gap.** A dense recent block: 2,631 logs, 501 from the position manager, three
+  deposit and two EIP-7702 transactions. It is replayed with only the first pool
+  behind it, so its frame and PoI digests are this host's own: no live run has
+  produced them. 175 position-manager handlers abort on rows this two-block
+  store does not hold, and the non-fatal policy discards only those handlers'
+  saves: the block is kept, with the work of its other 80 handler groups (255 in
+  all, 479 operations). This is the only replay that reaches
+  `STORE_DISPOSITION_COMMITTED` after a deterministic error. **The non-fatal
+  path is therefore exercised only on an artificial gap, not shown on deployed
+  behaviour**: the root window had no deterministic error at all.
 
-The two block files (708 KB and 6.6 MB) need a release asset under the
-block-fixtures lock, so `tests/mapping_host/segment_aerodrome.rs` replays them in
-an `#[ignore]`d test that pins each file by SHA-256 and reads them from
-`$AERODROME_BLOCK_FIXTURES`:
-
-```sh
-AERODROME_BLOCK_FIXTURES=<dir> cargo test --test mapping_host segment_aerodrome -- --ignored
-```
-
-Everything else about the bundle — that it is byte-for-byte the target M7 pinned,
-that graph-node resolves it as deployed, the host identity and the descriptor's
-byte-for-byte regeneration — runs in CI.
+The bundle tests (that it is byte-for-byte the target M7 pinned, that graph-node
+resolves it as deployed, the host identity and the descriptor's byte-for-byte
+regeneration) need nothing fetched.
 
 ## What could not be reproduced through public API
 
@@ -1552,14 +1599,35 @@ byte-for-byte regeneration — runs in CI.
   range from the factory forward with no sampling. Reaching it means replaying
   394,776 blocks from the graft-free root, which is what checkpoints are for; the
   run has not been done.
-* **`STORE_DISPOSITION_COMMITTED` after a deterministic error.** Not reached by
-  any Uniswap V3 run: the contiguous run produced no deterministic error at all.
-  The Aerodrome dense fixture block reaches it, but only in an `#[ignore]`d test
-  until its block fixture is published.
-* **Aerodrome's release asset.** The two Base block fixtures, the first-pools
-  window's cassette, frames, `BCF1` stream and sparse per-block file are local
-  only. Publishing them under a new release tag and lock would turn the two
-  ignored Aerodrome tests into CI tests.
+* **`STORE_DISPOSITION_COMMITTED` after a deterministic error, on real data.**
+  Not reached by any Uniswap V3 run, nor by the Aerodrome root window: neither
+  produced a deterministic error. The Aerodrome dense fixture block reaches it,
+  but only because its two-block store lacks rows the handlers read, so the
+  non-fatal path is exercised on a synthetic gap and has not been shown on
+  deployed behaviour.
+* **Publishing the three Aerodrome releases.** The locks are committed and the
+  tests are not ignored, so `ci-mapping-host` fails at its fetch step until
+  `aerodrome-base-block-fixtures-v1` and `aerodrome-root-window-evidence-v1`
+  exist (the archive release is not fetched in CI). Publication follows
+  `docs/evidence-assets.md`, "Round trip proof", then
+  `cargo xtask evidence audit-release --lock <lock>` for each.
+* **Aerodrome parity with an indexer.** "Exact oracle" is still a claim about
+  this host alone. No Aerodrome PoI here has been compared with a production
+  Base indexer's `proofOfIndexing` (public, `indexer: null`); the first
+  candidate is the window's final Fast PoI, `f1d57922…` at 13,919,660. A match
+  would turn the root window from an observation into parity evidence. Also
+  open: whether ingesting blocks over RPC rather than Firehose changes any
+  transaction field a handler reads, `gasPrice` on OP-stack deposit transactions
+  in particular. Whether any handler in the window ran inside a deposit
+  transaction has not been checked: the report records transaction hashes, not
+  types.
+* **Aerodrome's `handleFlash`, root, and position-manager start.** No `Flash`
+  occurs in the root window, so `handleFlash` (which updates fee growth without
+  writing a `Flash` row) is unexercised; the next step is an `eth_getLogs` scan
+  for `Flash` over the thirteen known pools to choose the next window. The
+  fixture set also has no block at the root (13,843,704) or at the position
+  manager's start (13,843,719); the root-window run covers both, but no fixture
+  replays them.
 * **Aerodrome's `data_sources$`.** `--data-sources-out` is bounded to a 10,000
   block root run, and Aerodrome's first data source is created 55,959 blocks
   after its root, so v1 can never cover it. The v2 source chunks are the path, and

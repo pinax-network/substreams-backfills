@@ -38,7 +38,7 @@ pub use calls::{
     CassetteRuntimeAdapter,
 };
 pub use checkpoint::{CassettePin, HostCheckpoint, CHECKPOINT_SCHEMA};
-pub use evidence::{RunEvidence, EVIDENCE_SCHEMA};
+pub use evidence::{RunEvidence, EVIDENCE_SCHEMA, EVIDENCE_SCHEMA_V2};
 pub use outputs::ResumePolicy;
 pub use replay::{replay_range, CheckpointPolicy, ReplayOutputs, ReplayResult};
 pub use report::{BlockReport, RunReport};

@@ -1,5 +1,5 @@
 {
-  "schema": "pinax.substreams-backfills.mapping-host.run-evidence/v1",
+  "schema": "pinax.substreams-backfills.mapping-host.run-evidence/v2",
   "run": {
     "recorded_on": "2026-10-20",
     "command": "graph-mapping-host run --segment segments/QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV --from 13843704 --to 13899663 --cassette cassette.json --record --out report.jsonl --bcf1-out prefix.bcf1 --checkpoint-out ckpt.jsonl --checkpoint-every 10000 --progress-secs 60",
@@ -11,7 +11,7 @@
     "toolchain": "1.98.0",
     "firehose_endpoint": "base.firehose.pinax.network:443",
     "rpc_endpoint": "base.rpc.pinax.network (configured because the run recorded; no block made a call)",
-    "artifacts_not_committed": "The run wrote report.jsonl (55,960 lines, 35.5 MB), prefix.bcf1 (9,289,194 bytes, SHA-256 87ad11fb710f89364ef8c7f2ac282642fd6a3fc710d001af6c53c82ab383447b) and the closing checkpoint ckpt.jsonl (boundary block 13,899,662, hash 0x8a45b8e3f3c6dd913d69deed9c773ecd8f7c14e11a352c85e082008c5b1cc040, 0 rows, 0 dynamic data sources, an extended cassette pin over 0 rows, SHA-256 97def80808e5378f6d74f7d7e95298a7cee38646683fb3f4c91753bf93e0bb80). None is committed. The complete per-block file (55,959 lines, 7,946,178 bytes) is pinned by per_block.all_blocks; the committed sparse file would be empty, so its digest is the empty string's and needs no file. No cassette file was ever written, because no call was made.",
+    "artifacts_not_committed": "The run wrote report.jsonl (55,960 lines, 35,477,901 bytes, SHA-256 b68122396b66f38f9af9684bc763ecb3104ad1a861e512b72681ec11f334a983), prefix.bcf1 (9,289,194 bytes, SHA-256 87ad11fb710f89364ef8c7f2ac282642fd6a3fc710d001af6c53c82ab383447b) and the closing checkpoint ckpt.jsonl (boundary block 13,899,662, hash 0x8a45b8e3f3c6dd913d69deed9c773ecd8f7c14e11a352c85e082008c5b1cc040, 0 rows, 0 dynamic data sources, an extended cassette pin over 0 rows, SHA-256 97def80808e5378f6d74f7d7e95298a7cee38646683fb3f4c91753bf93e0bb80). None is committed. The report and the complete per-block file that per_block.all_blocks names and pins (55,959 lines, 7,946,178 bytes) are locked by evidence/aerodrome-root-window.lock.json to the release aerodrome-root-window-evidence-v1, which CI fetches to re-derive this summary from the report and check the pin. prefix.bcf1 and the checkpoint, which the first-pools window continued from, are locked by evidence/aerodrome-root-window-archive.lock.json to the release aerodrome-root-window-archive-v1, which CI does not fetch. The sparse per-block file is empty, so its digest is the empty string's and nothing is published for it. No cassette file was ever written, because no call was made.",
     "claim_boundary": "This is an executable observation of the deployed Aerodrome Slipstream Base mapping WASMs running under our own Graph Node v0.44.0 host over the first 55,959 blocks of the deployment. It is not a parity claim against the deployed subgraph: no PoI here has been compared with an indexer's, and no truth gate in aerodrome-slipstream-base/QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV.yaml changes. Its one claim is negative and complete for this range: no handler ran, so the store and the PoI chain leave this range exactly as they entered it, empty."
   },
   "deployment": {
@@ -57,6 +57,7 @@
     "outcomes": {}
   },
   "data_source_invocations": {},
+  "data_source_creations": [],
   "modifications_by_entity": {},
   "entity_types": {
     "declared": [
@@ -122,6 +123,7 @@
     ],
     "scope": "handler_blocks",
     "all_blocks": {
+      "file": "aerodrome-root-prefix-13843704-13899663.all-blocks.jsonl",
       "lines": 55959,
       "bytes": 7946178,
       "sha256": "e823316d4d49959623e64f27bf7f8173f97ae2f6d3764b635e75472576a794d4"

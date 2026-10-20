@@ -31,6 +31,24 @@
 //! No credential can reach either file. The report header records the endpoint's
 //! `host:port` and nothing else, and [`RunContext::environment`] holds variable
 //! *names*.
+//!
+//! # Two schema versions
+//!
+//! * [`EVIDENCE_SCHEMA`] (`run-evidence/v1`) is the default, [`PerBlockScope::All`]:
+//!   the per-block file lists every block of the range. It is what the
+//!   parity-window summary is, and a regeneration of it stays byte-identical.
+//! * [`EVIDENCE_SCHEMA_V2`] (`run-evidence/v2`) is written exactly when the
+//!   per-block file is sparse, [`PerBlockScope::HandlerBlocks`], for a range too
+//!   long to commit block by block. **A reader must honour `per_block.scope`**:
+//!   the committed file then lists only the blocks that did something, and the
+//!   complete file is named and pinned by `per_block.all_blocks`. The version
+//!   changes so that a v1 reader, which knows nothing of `scope`, refuses the file
+//!   instead of reading a 3,276-line file as a complete 20,000-block range. A v2
+//!   summary also records every data source creation with the wave each handler
+//!   on it ran in ([`DataSourceCreation`]), because neither per-block file
+//!   carries scheduling and the report that does is not committed.
+//!
+//! [`RunEvidence::check_schema`] enforces that pairing.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
@@ -39,10 +57,17 @@ use anyhow::{anyhow, bail, Context, Result};
 use serde::{Deserialize, Serialize};
 
 use crate::bundle::sha256_hex;
-use crate::report::{BlockReport, RunHeader, REPORT_STREAM_SCHEMA};
+use crate::report::{
+    BlockReport, HandlerGroupReport, HandlerReport, RunHeader, REPORT_STREAM_SCHEMA,
+};
 
-/// Schema identifier written into every evidence summary.
+/// Schema identifier of a summary whose per-block file lists every block.
 pub const EVIDENCE_SCHEMA: &str = "pinax.substreams-backfills.mapping-host.run-evidence/v1";
+
+/// Schema identifier of a summary whose per-block file may be sparse: see the
+/// module documentation. A reader of this version must honour
+/// `per_block.scope`.
+pub const EVIDENCE_SCHEMA_V2: &str = "pinax.substreams-backfills.mapping-host.run-evidence/v2";
 
 /// What a reader has to be told, because no artifact records it: how the run was
 /// invoked and what it is and is not a claim about.
@@ -220,26 +245,115 @@ pub struct PerBlockFile {
     pub bytes: usize,
     pub sha256: String,
     pub fields: Vec<String>,
-    /// Absent when the file lists every block, which is the default and what
-    /// the parity-window evidence does. `handler_blocks` when it lists only the
-    /// blocks [`PerBlockScope::HandlerBlocks`] keeps.
+    /// Absent when the file lists every block, which is the default, the v1
+    /// schema, and what the parity-window evidence does. `handler_blocks` when it
+    /// lists only the blocks [`PerBlockScope::HandlerBlocks`] keeps, which makes
+    /// the summary v2: a reader must then not take `lines` for the range.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub scope: Option<String>,
-    /// The file a [`PerBlockScope::All`] summary would have written, pinned by
-    /// digest but not committed. Present exactly when `scope` is. This is what
-    /// keeps a sparse file complete evidence: every block's frame digest is
-    /// still bound, so a re-run can be compared block for block by recomputing
-    /// the full file from its own report.
+    /// The file a [`PerBlockScope::All`] summary would have written, named and
+    /// pinned by digest. Present exactly when `scope` is. This is what keeps a
+    /// sparse file complete evidence: every block's frame digest is still bound,
+    /// so a re-run can be compared block for block. `summarize` writes it beside
+    /// the sparse file; it is published rather than committed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub all_blocks: Option<PerBlockDigest>,
 }
 
-/// A per-block file reduced to its size and digest.
+/// A per-block file reduced to its name, size and digest.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct PerBlockDigest {
+    /// Path relative to the summary, like [`PerBlockFile::file`].
+    pub file: String,
     pub lines: usize,
     pub bytes: usize,
     pub sha256: String,
+}
+
+/// One data source a handler created, and how its creation block scheduled the
+/// handlers around it. Recorded in v2 summaries only.
+///
+/// A dynamic data source exists only once the handler that creates it has run,
+/// so Graph Node rescans the creation block for it in a later wave. When the
+/// new source's own events precede the creating event in the block, as a
+/// Slipstream pool's `Initialize` precedes the Factory's `PoolCreated`, they run
+/// *after* handlers at higher log indices. This row is that observation, taken
+/// from the report rather than restated by hand.
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct DataSourceCreation {
+    pub block: i32,
+    pub template: String,
+    pub params: Vec<String>,
+    /// The transaction whose handler created it. `None` only if no handler in
+    /// the block reports the creation, which the host never produces.
+    pub transaction_hash: Option<String>,
+    /// The handler that created it.
+    pub created_by: Option<ScheduledHandler>,
+    /// Every handler in the creation block that ran either in the creating
+    /// transaction or on the created data source, in execution order. Bounded by
+    /// one transaction plus the new source's own events in that block.
+    pub creation_block_handlers: Vec<ScheduledHandler>,
+}
+
+/// One handler invocation, placed by log index and by wave.
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct ScheduledHandler {
+    pub data_source: String,
+    pub handler: String,
+    pub log_index: u64,
+    /// The report's `stage`: 0 for the hosts the block started with, 1 for the
+    /// first rescan after a creation, and so on.
+    pub wave: usize,
+    pub outcome: String,
+}
+
+impl ScheduledHandler {
+    fn of(group: &HandlerGroupReport, handler: &HandlerReport) -> Self {
+        ScheduledHandler {
+            data_source: handler.data_source.clone(),
+            handler: handler.handler.clone(),
+            log_index: group.trigger.log_index,
+            wave: group.stage,
+            outcome: handler.outcome.clone(),
+        }
+    }
+}
+
+/// Every data source created in `block`, with the handlers around it.
+fn creations_in(block: &BlockReport) -> Vec<DataSourceCreation> {
+    let invocations = || {
+        block
+            .handler_groups
+            .iter()
+            .flat_map(|group| group.handlers.iter().map(move |handler| (group, handler)))
+    };
+    block
+        .created_data_sources
+        .iter()
+        .map(|created| {
+            let creator =
+                invocations().find(|(_, handler)| handler.created_data_sources.contains(created));
+            let transaction_hash = creator.map(|(group, _)| group.trigger.transaction_hash.clone());
+            let address = created.params.first();
+            let creation_block_handlers = invocations()
+                .filter(|(group, handler)| {
+                    transaction_hash.as_ref() == Some(&group.trigger.transaction_hash)
+                        || (handler.data_source == created.template
+                            && address.is_some()
+                            && handler.data_source_address.as_ref() == address)
+                })
+                .map(|(group, handler)| ScheduledHandler::of(group, handler))
+                .collect();
+            DataSourceCreation {
+                block: block.number,
+                template: created.template.clone(),
+                params: created.params.clone(),
+                transaction_hash,
+                created_by: creator.map(|(group, handler)| ScheduledHandler::of(group, handler)),
+                creation_block_handlers,
+            }
+        })
+        .collect()
 }
 
 /// Which blocks the sibling per-block file lists.
@@ -305,6 +419,10 @@ pub struct RunEvidence {
     pub handlers: Handlers,
     /// Data source name to handler invocation count.
     pub data_source_invocations: BTreeMap<String, usize>,
+    /// v2 only: every data source the run created, in block order, with the
+    /// wave each handler around it ran in. Absent from a v1 summary.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub data_source_creations: Option<Vec<DataSourceCreation>>,
     /// Entity type to *collapsed modification* count. This is `as_modifications`
     /// output, not saves, so it sums to `totals.collapsed_modifications`.
     pub modifications_by_entity: BTreeMap<String, usize>,
@@ -324,6 +442,37 @@ impl RunEvidence {
         let mut json = serde_json::to_string_pretty(self)?;
         json.push('\n');
         Ok(json)
+    }
+
+    /// Refuse a summary whose schema version does not match its shape: a v1
+    /// summary carries a complete per-block file and nothing v2 adds, and a v2
+    /// summary carries a sparse one, the complete file's pin and the creation
+    /// rows. Anything else is a file a reader of either version would misread.
+    pub fn check_schema(&self) -> Result<()> {
+        let per_block = &self.per_block;
+        let v2_fields = [
+            per_block.scope.is_some(),
+            per_block.all_blocks.is_some(),
+            self.data_source_creations.is_some(),
+        ];
+        match self.schema.as_str() {
+            EVIDENCE_SCHEMA if v2_fields.iter().any(|present| *present) => bail!(
+                "a `{EVIDENCE_SCHEMA}` summary must list every block: it carries a per-block \
+                 scope, an all-blocks pin or creation rows, which only `{EVIDENCE_SCHEMA_V2}` defines"
+            ),
+            EVIDENCE_SCHEMA => Ok(()),
+            EVIDENCE_SCHEMA_V2 if v2_fields.iter().all(|present| *present) => {
+                if per_block.scope.as_deref() != Some("handler_blocks") {
+                    bail!("unknown per-block scope {:?}", per_block.scope);
+                }
+                Ok(())
+            }
+            EVIDENCE_SCHEMA_V2 => bail!(
+                "a `{EVIDENCE_SCHEMA_V2}` summary needs `per_block.scope`, `per_block.all_blocks` \
+                 and `data_source_creations`"
+            ),
+            other => bail!("unknown evidence schema `{other}`"),
+        }
     }
 }
 
@@ -378,14 +527,28 @@ pub struct SummarizeInputs<'a> {
     pub sampled_report: Option<&'a Path>,
     /// Which blocks the per-block file lists; see [`PerBlockScope`].
     pub per_block_scope: PerBlockScope,
+    /// Name of the complete per-block file, as it will be referenced. Required
+    /// with [`PerBlockScope::HandlerBlocks`], ignored otherwise.
+    pub all_blocks_name: Option<String>,
 }
 
-/// Derive an evidence summary and the per-block file it pins.
+/// What [`summarize`] derives: the summary and the exact bytes of every
+/// per-block file it pins.
+#[derive(Clone, Debug)]
+pub struct Summary {
+    pub evidence: RunEvidence,
+    /// The file [`PerBlockFile::file`] names.
+    pub per_block: String,
+    /// The file [`PerBlockDigest::file`] names, for a sparse summary only.
+    pub all_blocks: Option<String>,
+}
+
+/// Derive an evidence summary and the per-block files it pins.
 ///
-/// Returns the summary and the per-block file's exact bytes; the caller writes
-/// both. The digest in [`PerBlockFile::sha256`] is taken over those bytes, so a
-/// summary and its sibling can never disagree about what was produced.
-pub fn summarize(inputs: SummarizeInputs<'_>) -> Result<(RunEvidence, String)> {
+/// Returns the summary and each per-block file's exact bytes; the caller writes
+/// them. The digests in [`PerBlockFile`] are taken over those bytes, so a
+/// summary and its siblings can never disagree about what was produced.
+pub fn summarize(inputs: SummarizeInputs<'_>) -> Result<Summary> {
     let text = std::fs::read_to_string(inputs.report)
         .with_context(|| format!("reading {}", inputs.report.display()))?;
     let mut lines = text.lines();
@@ -435,6 +598,7 @@ pub fn summarize(inputs: SummarizeInputs<'_>) -> Result<(RunEvidence, String)> {
     let mut data_source_invocations: BTreeMap<String, usize> = BTreeMap::new();
     let mut modifications_by_entity: BTreeMap<String, usize> = BTreeMap::new();
     let mut per_block = Vec::with_capacity(blocks.len());
+    let mut creations = Vec::new();
     let mut final_poi = None;
     let mut contiguous = blocks.first().map(|b| b.number) == Some(from)
         && blocks.last().map(|b| b.number) == Some(to - 1)
@@ -457,6 +621,7 @@ pub fn summarize(inputs: SummarizeInputs<'_>) -> Result<(RunEvidence, String)> {
         totals.collapsed_modifications += block.modification_count;
         totals.created_data_sources += block.created_data_sources.len();
         totals.max_waves = totals.max_waves.max(block.triggers_per_stage.len());
+        creations.extend(creations_in(block));
 
         for group in &block.handler_groups {
             for handler in &group.handlers {
@@ -528,16 +693,27 @@ pub fn summarize(inputs: SummarizeInputs<'_>) -> Result<(RunEvidence, String)> {
         }
         all_blocks_text.push_str(&json);
     }
-    let (scope, all_blocks) = match inputs.per_block_scope {
-        PerBlockScope::All => (None, None),
-        PerBlockScope::HandlerBlocks => (
-            Some("handler_blocks".to_string()),
-            Some(PerBlockDigest {
-                lines: per_block.len(),
-                bytes: all_blocks_text.len(),
-                sha256: sha256_hex(all_blocks_text.as_bytes()),
-            }),
-        ),
+    let (schema, scope, all_blocks, data_source_creations) = match inputs.per_block_scope {
+        PerBlockScope::All => (EVIDENCE_SCHEMA, None, None, None),
+        PerBlockScope::HandlerBlocks => {
+            let file = inputs.all_blocks_name.clone().ok_or_else(|| {
+                anyhow!("a sparse per-block file needs the complete per-block file's name")
+            })?;
+            if file == inputs.per_block_name {
+                bail!("the sparse and the complete per-block file cannot both be `{file}`");
+            }
+            (
+                EVIDENCE_SCHEMA_V2,
+                Some("handler_blocks".to_string()),
+                Some(PerBlockDigest {
+                    file,
+                    lines: per_block.len(),
+                    bytes: all_blocks_text.len(),
+                    sha256: sha256_hex(all_blocks_text.as_bytes()),
+                }),
+                Some(creations),
+            )
+        }
     };
 
     let written: Vec<String> = modifications_by_entity.keys().cloned().collect();
@@ -554,7 +730,7 @@ pub fn summarize(inputs: SummarizeInputs<'_>) -> Result<(RunEvidence, String)> {
 
     let last = blocks.last().expect("at least one block");
     let evidence = RunEvidence {
-        schema: EVIDENCE_SCHEMA.to_string(),
+        schema: schema.to_string(),
         run: inputs
             .previous
             .as_ref()
@@ -580,6 +756,7 @@ pub fn summarize(inputs: SummarizeInputs<'_>) -> Result<(RunEvidence, String)> {
         totals,
         handlers,
         data_source_invocations,
+        data_source_creations,
         modifications_by_entity,
         entity_types: EntityTypes {
             declared,
@@ -615,8 +792,17 @@ pub fn summarize(inputs: SummarizeInputs<'_>) -> Result<(RunEvidence, String)> {
             .map(|previous| previous.findings)
             .unwrap_or_default(),
     };
+    evidence.check_schema()?;
 
-    Ok((evidence, per_block_text))
+    Ok(Summary {
+        all_blocks: evidence
+            .per_block
+            .all_blocks
+            .is_some()
+            .then_some(all_blocks_text),
+        evidence,
+        per_block: per_block_text,
+    })
 }
 
 /// The entity types the deployed schema declares, out of the segment's
@@ -786,8 +972,47 @@ mod tests {
         );
     }
 
-    /// A three-block streamed report: an empty block, a block with one handler
-    /// and a PoI, and another empty block.
+    #[allow(clippy::too_many_arguments)]
+    fn handler(
+        order: u32,
+        stage: usize,
+        transaction: &str,
+        log_index: u64,
+        data_source: &str,
+        address: &str,
+        name: &str,
+        created: Vec<crate::report::CreatedDataSourceReport>,
+    ) -> HandlerGroupReport {
+        HandlerGroupReport {
+            handler_group_order: order,
+            stage,
+            source_trigger_order: log_index as usize,
+            causality_region: "ethereum/base".into(),
+            trigger: crate::report::TriggerReport {
+                transaction_hash: transaction.into(),
+                log_index,
+                address: address.into(),
+            },
+            handlers: vec![HandlerReport {
+                handler_order: 0,
+                data_source: data_source.into(),
+                data_source_address: Some(address.into()),
+                handler: name.into(),
+                gas: None,
+                outcome: "ok".into(),
+                error: None,
+                modifications: Vec::new(),
+                created_data_sources: created,
+            }],
+        }
+    }
+
+    /// A three-block streamed report: an empty block, a block with handlers and
+    /// a PoI, and another empty block.
+    ///
+    /// Block 101 is the wave trap in miniature: the Factory's `PoolCreated` at
+    /// log 5 creates `Pool` 0xpool in wave 0, beside an unrelated wave-0 handler
+    /// in another transaction; the new pool's `Initialize` at log 4 runs in wave 1.
     fn three_block_report(dir: &Path) -> std::path::PathBuf {
         let header = RunHeader {
             schema: REPORT_STREAM_SCHEMA.to_string(),
@@ -830,16 +1055,40 @@ mod tests {
                 frame_sha256: format!("{:064x}", number + 1),
             }),
         };
+        let pool = crate::report::CreatedDataSourceReport {
+            template: "Pool".into(),
+            params: vec!["0xpool".into()],
+            creation_block: 101,
+        };
         let mut text = crate::report::json_line(&header).unwrap();
         for (number, triggered) in [(100, false), (101, true), (102, false)] {
-            text.push_str(&crate::report::json_line(&block(number, triggered)).unwrap());
+            let mut report = block(number, triggered);
+            if triggered {
+                report.triggers_per_stage = vec![3, 3];
+                report.handler_groups = vec![
+                    handler(
+                        0,
+                        0,
+                        "0xt",
+                        5,
+                        "Factory",
+                        "0xfactory",
+                        "handlePoolCreated",
+                        vec![pool.clone()],
+                    ),
+                    handler(1, 0, "0xu", 9, "Other", "0xother", "handleOther", vec![]),
+                    handler(2, 1, "0xt", 4, "Pool", "0xpool", "handleInitialize", vec![]),
+                ];
+                report.created_data_sources = vec![pool.clone()];
+            }
+            text.push_str(&crate::report::json_line(&report).unwrap());
         }
         let path = dir.join("report.jsonl");
         std::fs::write(&path, text).unwrap();
         path
     }
 
-    fn summarize_with(report: &Path, scope: PerBlockScope) -> (RunEvidence, String) {
+    fn summarize_with(report: &Path, scope: PerBlockScope) -> Summary {
         summarize(SummarizeInputs {
             report,
             previous: None,
@@ -849,6 +1098,7 @@ mod tests {
             goldens: None,
             sampled_report: None,
             per_block_scope: scope,
+            all_blocks_name: Some("x.all-blocks.jsonl".into()),
         })
         .unwrap()
     }
@@ -857,33 +1107,128 @@ mod tests {
     fn a_sparse_per_block_file_still_pins_every_block() {
         let dir = tempfile::tempdir().unwrap();
         let report = three_block_report(dir.path());
-        let (all, all_text) = summarize_with(&report, PerBlockScope::All);
-        let (sparse, sparse_text) = summarize_with(&report, PerBlockScope::HandlerBlocks);
+        let all = summarize_with(&report, PerBlockScope::All);
+        let sparse = summarize_with(&report, PerBlockScope::HandlerBlocks);
+        let (all, all_text) = (all.evidence, all.per_block);
+        let sparse_all_text = sparse
+            .all_blocks
+            .expect("a sparse summary writes both files");
+        let (sparse, sparse_text) = (sparse.evidence, sparse.per_block);
 
-        // The default is unchanged: no scope, no second digest, every block.
+        // The default is unchanged: v1, no scope, no second digest, every block.
+        assert_eq!(all.schema, EVIDENCE_SCHEMA);
         assert_eq!(all.per_block.scope, None);
         assert_eq!(all.per_block.all_blocks, None);
+        assert_eq!(all.data_source_creations, None);
         assert_eq!(all.per_block.lines, 3);
-        assert!(!serde_json::to_string(&all.per_block)
-            .unwrap()
-            .contains("all_blocks"));
+        let json = all.to_json().unwrap();
+        for v2_only in ["all_blocks", "scope", "data_source_creations"] {
+            assert!(
+                !json.contains(v2_only),
+                "{v2_only} leaked into a v1 summary"
+            );
+        }
 
-        // The sparse file lists only the block that did something...
+        // The sparse file lists only the block that did something, and so it is
+        // v2, which a v1 reader refuses rather than misreads...
+        assert_eq!(sparse.schema, EVIDENCE_SCHEMA_V2);
         assert_eq!(sparse.per_block.scope.as_deref(), Some("handler_blocks"));
         assert_eq!(sparse.per_block.lines, 1);
         assert_eq!(sparse_text.lines().count(), 1);
         assert!(sparse_text.contains("\"number\":101"));
         assert_eq!(sparse.per_block.sha256, sha256_hex(sparse_text.as_bytes()));
 
-        // ...and pins the complete file by the digest the default would write.
+        // ...and names and pins the complete file, byte for byte the one the
+        // default would write.
         let pinned = sparse.per_block.all_blocks.as_ref().unwrap();
+        assert_eq!(pinned.file, "x.all-blocks.jsonl");
+        assert_eq!(sparse_all_text, all_text);
         assert_eq!(pinned.sha256, all.per_block.sha256);
         assert_eq!(pinned.sha256, sha256_hex(all_text.as_bytes()));
         assert_eq!((pinned.lines, pinned.bytes), (3, all_text.len()));
 
-        // Nothing but the per-block file depends on the scope.
+        // Nothing but the per-block files, the version and the creation rows
+        // depend on the scope.
         assert_eq!(sparse.totals, all.totals);
         assert_eq!(sparse.final_poi, all.final_poi);
+        assert_eq!(sparse.handlers, all.handlers);
+    }
+
+    #[test]
+    fn a_v2_summary_places_every_creation_by_wave() {
+        let dir = tempfile::tempdir().unwrap();
+        let report = three_block_report(dir.path());
+        let evidence = summarize_with(&report, PerBlockScope::HandlerBlocks).evidence;
+        assert_eq!(evidence.totals.created_data_sources, 1);
+        assert_eq!(evidence.totals.max_waves, 2);
+
+        let creations = evidence.data_source_creations.as_ref().unwrap();
+        assert_eq!(creations.len(), 1);
+        let pool = &creations[0];
+        assert_eq!(
+            (pool.block, pool.template.as_str(), pool.params.clone()),
+            (101, "Pool", vec!["0xpool".to_string()])
+        );
+        assert_eq!(pool.transaction_hash.as_deref(), Some("0xt"));
+        let created_by = pool.created_by.as_ref().unwrap();
+        assert_eq!(
+            (
+                created_by.handler.as_str(),
+                created_by.log_index,
+                created_by.wave
+            ),
+            ("handlePoolCreated", 5, 0)
+        );
+        // The creating transaction and the new pool's own handlers, in
+        // execution order; the unrelated wave-0 handler in `0xu` is left out.
+        let placed: Vec<(&str, u64, usize)> = pool
+            .creation_block_handlers
+            .iter()
+            .map(|h| (h.handler.as_str(), h.log_index, h.wave))
+            .collect();
+        assert_eq!(
+            placed,
+            vec![("handlePoolCreated", 5, 0), ("handleInitialize", 4, 1)]
+        );
+    }
+
+    #[test]
+    fn a_summary_whose_version_contradicts_its_shape_is_refused() {
+        let dir = tempfile::tempdir().unwrap();
+        let report = three_block_report(dir.path());
+        let v1 = summarize_with(&report, PerBlockScope::All).evidence;
+        let v2 = summarize_with(&report, PerBlockScope::HandlerBlocks).evidence;
+        v1.check_schema().unwrap();
+        v2.check_schema().unwrap();
+
+        // A sparse file under the v1 name is exactly what a v1 reader misreads.
+        let mut sparse_as_v1 = v2.clone();
+        sparse_as_v1.schema = EVIDENCE_SCHEMA.into();
+        assert!(sparse_as_v1.check_schema().is_err());
+        // A v2 name without the complete file's pin is not v2.
+        let mut unpinned = v2.clone();
+        unpinned.per_block.all_blocks = None;
+        assert!(unpinned.check_schema().is_err());
+        let mut no_rows = v2;
+        no_rows.data_source_creations = None;
+        assert!(no_rows.check_schema().is_err());
+        let mut unknown = v1;
+        unknown.schema = "pinax.substreams-backfills.mapping-host.run-evidence/v3".into();
+        assert!(unknown.check_schema().is_err());
+
+        // And a sparse summary cannot be written without naming its full file.
+        let refused = summarize(SummarizeInputs {
+            report: &report,
+            previous: None,
+            per_block_name: "x.blocks.jsonl".into(),
+            segment: None,
+            cassette: None,
+            goldens: None,
+            sampled_report: None,
+            per_block_scope: PerBlockScope::HandlerBlocks,
+            all_blocks_name: None,
+        });
+        assert!(refused.is_err());
     }
 
     #[test]

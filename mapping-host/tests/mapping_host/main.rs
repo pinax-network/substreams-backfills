@@ -25,10 +25,10 @@
 //!   connection recovers from, and what it refuses
 //! * `parity_window_evidence` — the committed 1,053-block run summary
 //! * `segment_aerodrome` — the Aerodrome Slipstream Base bundle, its identity
-//!   and descriptor, and (ignored until its fixtures are published) two real
-//!   Base blocks
+//!   and descriptor, and two real Base blocks from its locked fixtures: one
+//!   compared with the live run's frame, one pinning the non-fatal path
 //! * `aerodrome_root_window_evidence` — the committed Aerodrome root-window run
-//!   summaries
+//!   summaries, re-derived from their locked reports
 //! * `segment_qme66zn` — the segment bundle, wave scheduling and handler groups
 //! * `store_state_qme66zn` — `--store-out`, the final store a consumer is
 //!   compared against

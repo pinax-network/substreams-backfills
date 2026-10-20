@@ -1,0 +1,43 @@
+{
+  "schema": "pinax.substreams-backfills.evidence-assets/v1",
+  "repository": "pinax-network/substreams-backfills",
+  "release_tag": "aerodrome-root-window-evidence-v1",
+  "assets": [
+    {
+      "path": "mapping-host/evidence/aerodrome-first-pools-13899663-13919663.all-blocks.jsonl",
+      "asset": "sha256-697617b36ed1e72e5e5b83589ce891ec7c3bf3b112087ae7a370bda54d85275b.jsonl",
+      "bytes": 3046382,
+      "sha256": "697617b36ed1e72e5e5b83589ce891ec7c3bf3b112087ae7a370bda54d85275b"
+    },
+    {
+      "path": "mapping-host/evidence/aerodrome-first-pools-13899663-13919663.blocks.jsonl",
+      "asset": "sha256-0dae46d0d132dd0fdc1d797cefe6aa74a926994506e42d0b7e0a831d7cc16fab.jsonl",
+      "bytes": 671574,
+      "sha256": "0dae46d0d132dd0fdc1d797cefe6aa74a926994506e42d0b7e0a831d7cc16fab"
+    },
+    {
+      "path": "mapping-host/evidence/aerodrome-first-pools-13899663-13919663.cassette.json",
+      "asset": "sha256-1dabafa49d6c0e7725fd0a0a76975c22db183931cf56a2c76f12b35060fc61e3.json",
+      "bytes": 6451176,
+      "sha256": "1dabafa49d6c0e7725fd0a0a76975c22db183931cf56a2c76f12b35060fc61e3"
+    },
+    {
+      "path": "mapping-host/evidence/aerodrome-first-pools-13899663-13919663.report.jsonl",
+      "asset": "sha256-b812935ffff923263803e09def2cd72432ccea8389da1a3d264765d7cf6ab666.jsonl",
+      "bytes": 90163952,
+      "sha256": "b812935ffff923263803e09def2cd72432ccea8389da1a3d264765d7cf6ab666"
+    },
+    {
+      "path": "mapping-host/evidence/aerodrome-root-prefix-13843704-13899663.all-blocks.jsonl",
+      "asset": "sha256-e823316d4d49959623e64f27bf7f8173f97ae2f6d3764b635e75472576a794d4.jsonl",
+      "bytes": 7946178,
+      "sha256": "e823316d4d49959623e64f27bf7f8173f97ae2f6d3764b635e75472576a794d4"
+    },
+    {
+      "path": "mapping-host/evidence/aerodrome-root-prefix-13843704-13899663.report.jsonl",
+      "asset": "sha256-b68122396b66f38f9af9684bc763ecb3104ad1a861e512b72681ec11f334a983.jsonl",
+      "bytes": 35477901,
+      "sha256": "b68122396b66f38f9af9684bc763ecb3104ad1a861e512b72681ec11f334a983"
+    }
+  ]
+}

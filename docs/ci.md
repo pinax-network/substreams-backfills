@@ -12,7 +12,7 @@ a PR that touches that family cannot merge with the family job failing.
 | `ci-core.yaml` | `core` | always: `cargo fmt`, `cargo test --workspace --locked`, the BlockChanges v1 golden test, `cargo clippy -D warnings`, `cargo xtask verify-targets` (Rust eligibility library, market-snapshot locks) |
 | `ci.yaml` (workflow name `ci`, Uniswap V3) | `changes`, `v3-evidence`, `v3-reference` | `uniswap-v3/**`, `common/**`, `xtask/**`, `Cargo.toml`, `Cargo.lock`, `.cargo/**`, `evidence-assets.lock.json`, `docs/provenance/uniswap-v3*`, `scripts/**`, `requirements-ci.txt`, the workflow file |
 | `ci-uniswap-v4.yaml` | `changes`, `uniswap-v4-reference` | `uniswap-v4/**`, `artifacts/**`, `docs/provenance/uniswap-v4*`, `docs/provenance/uniswap-v4*/**`, `scripts/**`, `requirements-ci.txt`, the workflow file |
-| `ci-mapping-host.yaml` | `changes`, `mapping-host` | `mapping-host/**`, `common/**`, `uniswap-v3/fixtures/blocks.lock.json`, root `Cargo.toml`, the workflow file |
+| `ci-mapping-host.yaml` | `changes`, `mapping-host` | `mapping-host/**`, `common/**`, `uniswap-v3/fixtures/blocks.lock.json`, `aerodrome-slipstream-base/**`, `docs/provenance/aerodrome-slipstream-base-target.json`, root `Cargo.toml`, the workflow file |
 | `ci-targets.yaml` | `changes`, `target-baselines`, `uniswap-v3-matic-reference`, `uniswap-v2-base-reference`, `pancakeswap-infinity-cl-bsc-reference`, `exchange-v3-bsc-reference` | the seven pinned-family directories, `docs/provenance/**`, `eligibility/**`, `schemas/**`, `scripts/**`, the workflow file |
 
 ## Why nothing can evade its checks
@@ -60,6 +60,7 @@ restore, so a stale or poisoned cache can only fail, never bypass a check:
 | Cargo registry for the frozen Rust 1.79 imports | `hashFiles` of the V3 lockfiles | `cargo … --locked` |
 | Evidence assets (`cargo xtask evidence fetch`, unconditional in every job that reads externalized contracts: `core` (the Matic target tests copy two externalized retained contracts), `v3-evidence`, `v3-reference`, `target-baselines`, `uniswap-v3-matic-reference`) | `evidence-assets-<sha256 of the lock>` | every blob re-hashed before promotion (`docs/evidence-assets.md`) |
 | Block fixtures (`cargo xtask evidence fetch --lock uniswap-v3/fixtures/blocks.lock.json`, then `cargo xtask fixtures check`, in `v3-evidence` and `mapping-host`) | `block-fixtures-<sha256 of the lock>` | same content-addressed verification; release `block-fixtures-v2` (`uniswap-v3/fixtures/README.md`) |
+| Aerodrome evidence (`cargo xtask evidence fetch --lock aerodrome-slipstream-base/fixtures/blocks.lock.json` and `--lock mapping-host/evidence/aerodrome-root-window.lock.json`, in `mapping-host`) | `aerodrome-evidence-<sha256 of both locks>` | same content-addressed verification; releases `aerodrome-base-block-fixtures-v1` and `aerodrome-root-window-evidence-v1` (`mapping-host/README.md`). The archive lock `mapping-host/evidence/aerodrome-root-window-archive.lock.json` is not fetched in CI |
 | Cargo registry, git db, and `target/` for the `mapping-host` workspace | `Swatinem/rust-cache` with `workspaces: mapping-host` | `cargo … --locked`; the git dependencies are pinned by revision in `mapping-host/Cargo.lock` |
 | pip | `requirements-ci.txt` via `actions/setup-python` | `pip install --require-hashes` |
 

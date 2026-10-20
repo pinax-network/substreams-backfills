@@ -1624,11 +1624,17 @@ regeneration) need nothing fetched.
   types.
 * **Aerodrome's `handleFlash`, root, and position-manager start.** No `Flash`
   occurs in the root window, so `handleFlash` (which updates fee growth without
-  writing a `Flash` row) is unexercised; the next step is an `eth_getLogs` scan
-  for `Flash` over the thirteen known pools to choose the next window. The
-  fixture set also has no block at the root (13,843,704) or at the position
-  manager's start (13,843,719); the root-window run covers both, but no fixture
-  replays them.
+  writing a `Flash` row) is unexercised. On 2026-10-20 an `eth_getLogs` scan of
+  `base.rpc.pinax.network` for the `Flash` topic (`0xbdbdb71d…`, as
+  `aerodrome-slipstream-base/layout-profile-v1.json` pins it) over the thirteen
+  root-window pools, in contiguous 10,000-block ranges from 13,899,663, found
+  the first at **14,713,512** (log 84, the first pool `0x98c7a233…`, transaction
+  `0x1d7aabe3…`), then five more by 14,717,636. That is an upper bound, not the
+  deployment's first `Flash`: pools created after 13,919,662 were not scanned.
+  Reaching it from the window's archived checkpoint is a replay of 793,850
+  blocks. The fixture set also has no block at the root (13,843,704) or at the
+  position manager's start (13,843,719); the root-window run covers both, but
+  no fixture replays them.
 * **Aerodrome's `data_sources$`.** `--data-sources-out` is bounded to a 10,000
   block root run, and Aerodrome's first data source is created 55,959 blocks
   after its root, so v1 can never cover it. The v2 source chunks are the path, and

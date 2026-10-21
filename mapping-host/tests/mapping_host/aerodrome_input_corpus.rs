@@ -113,6 +113,74 @@ fn aerodrome_input_corpus() {
             events.push(json!({"log_index":index,"source":source,"event":name,"mutation":mutation,"topics":topics.iter().map(hex::encode).collect::<Vec<_>>(),"data":hex::encode(data),"result":result}));
         }
     }
+    // Synthetic decoder boundary mutations supplement the real creation logs.
+    // These are raw Graph Node ABI results, not Solidity-valid chain events.
+    for name in ["Initialize", "Swap"] {
+        let abi = abi("Pool.json");
+        let event = abi.events.get(name).unwrap().first().unwrap();
+        for mutation in [
+            "zero",
+            "minus_one",
+            "extra_word",
+            "extra_topic",
+            "missing_topic",
+            "bad_topic0",
+            "truncated",
+            "positive_int24_overflow",
+            "positive_i32_overflow",
+            "negative_i32_overflow",
+            "positive_high_padding",
+            "negative_high_padding",
+        ] {
+            let mut topics = vec![event.selector().to_vec()];
+            if name == "Swap" {
+                topics.extend([vec![0; 32], vec![0; 32]]);
+            }
+            let mut data = vec![0; if name == "Swap" { 160 } else { 64 }];
+            let offset = data.len() - 32;
+            match mutation {
+                "minus_one" => data[offset..].fill(255),
+                "extra_word" => data.extend([0; 32]),
+                "extra_topic" => topics.push(vec![0; 32]),
+                "missing_topic" => {
+                    topics.pop();
+                }
+                "bad_topic0" => topics[0][0] ^= 1,
+                "truncated" => {
+                    data.pop();
+                }
+                "positive_int24_overflow" => data[offset + 29] = 128,
+                "positive_i32_overflow" => data[offset + 28] = 128,
+                "negative_i32_overflow" => {
+                    data[offset..].fill(255);
+                    data[offset + 28] = 127;
+                }
+                "positive_high_padding" => data[offset] = 1,
+                "negative_high_padding" => data[offset] = 255,
+                _ => (),
+            }
+            let log = alloy::rpc::types::Log {
+                inner: alloy::primitives::Log {
+                    address: [1; 20].into(),
+                    data: alloy::primitives::LogData::new_unchecked(
+                        topics
+                            .iter()
+                            .map(|b| alloy::primitives::B256::from_slice(b))
+                            .collect(),
+                        data.clone().into(),
+                    ),
+                },
+                ..Default::default()
+            };
+            let result = event.decode_log(&log).ok().map(|params| {
+                params
+                    .into_iter()
+                    .map(|p| json!({"name":p.name,"value":format!("{:?}",p.value)}))
+                    .collect::<Vec<_>>()
+            });
+            events.push(json!({"synthetic":true,"source":3,"event":name,"mutation":mutation,"topics":topics.iter().map(hex::encode).collect::<Vec<_>>(),"data":hex::encode(data),"result":result}));
+        }
+    }
     let mut functions = Vec::new();
     let mut padded = b"M\0KR!".to_vec();
     padded.resize(32, 0);

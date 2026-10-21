@@ -324,6 +324,24 @@ fn identity_is_bound_to_exact_descriptor_and_final_module() {
     let mut wrong = v.clone();
     wrong["storage_profile"]["entity_types"] = json!(["Pool"]);
     assert!(bind(wrong, &e).is_err());
+    for field in ["graft", "concrete_graft"] {
+        let mut explicit_null = v.clone();
+        explicit_null[field] = Value::Null;
+        assert!(bind(explicit_null, &e).is_ok());
+        for graft in [json!({"base":"other", "block":INITIAL_BLOCK}), json!(false)] {
+            let mut wrong = v.clone();
+            wrong[field] = graft;
+            assert!(bind(wrong, &e).is_err());
+        }
+    }
+    let mut wrong = v.clone();
+    wrong["graph_node"]["poi_version"] = json!("legacy");
+    assert!(bind(wrong, &e).is_err());
+    let mut wrong = v.clone();
+    wrong["network"] = json!("mainnet");
+    assert!(bind(wrong.clone(), &e).is_err());
+    wrong["expected_poi_causality_region"] = json!("ethereum/mainnet");
+    assert!(bind(wrong, &e).is_err());
     let bytes = serde_json::to_vec(&v).unwrap();
     assert!(InputBinding::new(&bytes, [0; 32], &e).is_err());
 }
@@ -691,7 +709,7 @@ fn raw_decoding_matches_independent_graph_node_corpus() {
         graph_numerics::GRAPH_NODE_COMMIT
     );
     assert_eq!(fixture["alloy_dyn_abi"], "1.7.2");
-    assert_eq!(fixture["events"].as_array().unwrap().len(), 30);
+    assert_eq!(fixture["events"].as_array().unwrap().len(), 54);
     assert_eq!(fixture["functions"].as_array().unwrap().len(), 78);
     for row in fixture["events"].as_array().unwrap() {
         let c = pb::CandidateLog {

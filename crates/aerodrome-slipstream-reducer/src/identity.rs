@@ -46,9 +46,18 @@ impl InputBinding {
             "descriptor digest mismatch",
         )?;
         require(
-            compatibility.expected_poi_causality_region() == "ethereum/base",
+            compatibility.expected_poi_causality_region() == "ethereum/base"
+                && document.get("network").and_then(serde_json::Value::as_str) == Some("base"),
             "wrong target network",
         )?;
+        // The locked deployment declares the grafting feature but has no graft.
+        // Accept absent/null metadata only; never silently accept a grafted seed.
+        for field in ["graft", "concrete_graft"] {
+            require(
+                document.get(field).is_none_or(serde_json::Value::is_null),
+                "locked deployment has no concrete graft",
+            )?;
+        }
         let cap = compatibility
             .capabilities()
             .ok_or_else(|| refuse("Aerodrome reducer requires descriptor v2"))?;
@@ -57,6 +66,10 @@ impl InputBinding {
                 && cap.spec_version == "1.2.0"
                 && cap.start_block == INITIAL_BLOCK,
             "wrong Aerodrome deployment/start/spec",
+        )?;
+        require(
+            cap.graph_node.poi_version == "fast",
+            "Aerodrome spec 1.2.0 requires Fast PoI",
         )?;
         require(
             cap.storage_profile.entity_types == entity_types(),
@@ -124,7 +137,7 @@ pub fn build_descriptor(
         "deterministic_error_policy":if emit_non_fatal {"non_fatal"} else {"fatal"},
         "network":"base","expected_poi_causality_region":"ethereum/base",
         "deployment":DEPLOYMENT,"spec_version":"1.2.0","start_block":INITIAL_BLOCK,
-        "manifest_features":["nonFatalErrors","grafting"],
+        "manifest_features":["nonFatalErrors","grafting"],"graft":null,
         "graph_node":{"version":"0.44.0","commit":graph_numerics::GRAPH_NODE_COMMIT,"poi_version":"fast"},
         "storage_profile":{"entity_types":entity_types()},
         "data_sources":{"transport":"in_band_v1","templates":[{"name":"Pool","manifest_idx":2,"param":"address20"}]},

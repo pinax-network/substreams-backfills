@@ -9,7 +9,7 @@ use sha2::{Digest, Sha256};
 use std::{
     fs::{self, OpenOptions},
     io::{BufWriter, Write},
-    path::PathBuf,
+    path::{Path, PathBuf},
     time::Instant,
 };
 fn run() -> Result<(), Box<dyn std::error::Error>> {
@@ -66,19 +66,74 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     receipt["extractor_bcf1_bytes"] = json!(bytes);
     receipt["compared_cassette_calls"] = json!(reference.compared_calls());
     receipt["all_capture_receipts_and_eof_verified"] = json!(true);
-    let mut complete = create("complete.json")?;
-    serde_json::to_writer_pretty(&mut complete, &receipt)?;
-    complete.write_all(b"\n")?;
-    complete.sync_all()?;
+    publish_complete(&root, &receipt)?;
     eprintln!(
         "reference input complete: {} cassette calls compared",
         reference.compared_calls()
     );
     Ok(())
 }
+fn publish_complete(
+    root: &Path,
+    receipt: &impl serde::Serialize,
+) -> Result<(), Box<dyn std::error::Error>> {
+    // Persist the raw output directory before any completion marker exists.
+    fs::File::open(root)?.sync_all()?;
+    let partial = root.join("complete.json.partial");
+    let mut file = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&partial)?;
+    serde_json::to_writer_pretty(&mut file, receipt)?;
+    file.write_all(b"\n")?;
+    file.flush()?;
+    file.sync_all()?;
+    fs::File::open(root)?.sync_all()?;
+    // Publication is the final fallible operation. A partial write/sync error
+    // leaves only .partial, which is never a success marker.
+    fs::rename(partial, root.join("complete.json"))?;
+    Ok(())
+}
+
 fn main() {
     if let Err(e) = run() {
         eprintln!("reference input refused: {e}");
         std::process::exit(4)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    struct Failed;
+    impl serde::Serialize for Failed {
+        fn serialize<S: serde::Serializer>(&self, _: S) -> Result<S::Ok, S::Error> {
+            Err(serde::ser::Error::custom(
+                "injected receipt serialization failure",
+            ))
+        }
+    }
+    #[test]
+    fn failed_receipt_write_never_publishes_completion() {
+        let dir = tempfile::tempdir().unwrap();
+        assert!(publish_complete(dir.path(), &Failed).is_err());
+        assert!(!dir.path().join("complete.json").exists());
+        assert!(dir.path().join("complete.json.partial").exists());
+        assert!(publish_complete(dir.path(), &json!({"complete":true})).is_err());
+        assert!(!dir.path().join("complete.json").exists());
+    }
+    #[test]
+    fn complete_receipt_appears_only_after_successful_publication() {
+        let dir = tempfile::tempdir().unwrap();
+        let receipt = json!({"complete":true});
+        publish_complete(dir.path(), &receipt).unwrap();
+        assert!(!dir.path().join("complete.json.partial").exists());
+        assert_eq!(
+            serde_json::from_slice::<serde_json::Value>(
+                &fs::read(dir.path().join("complete.json")).unwrap()
+            )
+            .unwrap(),
+            receipt
+        );
     }
 }

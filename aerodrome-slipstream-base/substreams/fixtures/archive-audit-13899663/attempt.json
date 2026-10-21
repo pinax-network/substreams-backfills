@@ -1,5 +1,5 @@
 {
-  "auditor_binary_sha256": "93f9d440cbc65aa190e9bc08fe384b3bc33733bb01674303dca83b8a994a604c",
+  "auditor_binary_sha256": "7468b66d3398419635f69dcdcebc75e0a3f60f3caf1d8543a3e3f797df8a9756",
   "block_hash": "d83042b6a32dc9b18d4c7c9819b914bc04470f77458e7276cb72f3d8fde5eb3d",
   "block_number": 13899663,
   "expected_calls": 12,

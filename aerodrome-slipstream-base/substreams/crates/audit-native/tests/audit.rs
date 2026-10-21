@@ -136,6 +136,7 @@ fn erc20_raw_bytes_masks_and_duplicate_keys_are_checked() {
     compare(&c[0], &expected).unwrap();
     assert!(compare(&c[0], &Retval::Reverted).is_err());
     let r = request(&c[0], &b.hash, 9);
+    assert_eq!(r["params"][0]["gas"], "0x2faf080");
     assert_eq!(
         r["params"][1],
         json!({"blockHash":format!("0x{}",hex::encode(&b.hash)),"requireCanonical":true})
@@ -235,4 +236,10 @@ fn every_position_consumed_field_and_revert_is_checked() {
     .is_err());
     b.calls.as_mut().unwrap().positions[0].token_id = vec![0, 1];
     assert!(checks(&b, &cfg, false).is_err());
+    b.calls.as_mut().unwrap().positions[0].token_id = vec![0];
+    assert!(checks(&b, &cfg, false).is_err());
+    b.calls.as_mut().unwrap().positions[0].token_id.clear();
+    let zero = checks(&b, &cfg, false).unwrap();
+    assert_eq!(&zero[0].calldata[4..], &[0; 32]);
+    compare(&zero[0], &Retval::Reverted).unwrap();
 }

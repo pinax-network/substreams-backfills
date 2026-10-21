@@ -132,7 +132,8 @@ cargo xtask aerodrome-substreams audit-erc20 --input extractor.pb --output new-m
 
 Inputs are canonical single-message `ExtractorBlock` protobufs. The tool checks
 chain ID, block identity, duplicate answers and raw ERC20 masks; each call uses
-EIP-1898 `blockHash` with `requireCanonical: true`. Storage answers compare every
+EIP-1898 `blockHash` with `requireCanonical: true` and the frozen oracle's
+50,000,000 gas limit. Storage answers compare every
 field consumed by the deployed mapping. Only explicit execution-revert errors
 (code 3 and an `execution reverted` message) or empty successful returns count
 as reverts. Timeouts, missing archive state, generic errors and HTTP failures

@@ -154,10 +154,7 @@ pub fn checks(
             )?;
         }
         for a in &calls.positions {
-            if a.token_id.is_empty()
-                || a.token_id.len() > 32
-                || (a.token_id.len() > 1 && a.token_id[0] == 0)
-            {
+            if a.token_id.len() > 32 || a.token_id.first() == Some(&0) {
                 return Err("noncanonical token ID".into());
             }
             let expected = match a.result.as_ref().ok_or("missing position result")? {
@@ -266,6 +263,6 @@ pub fn call_retval(response: &Value, expected_id: u64) -> Result<Retval, String>
 
 pub fn request(check: &Check, hash: &[u8], id: u64) -> Value {
     json!({"jsonrpc":"2.0","id":id,"method":"eth_call","params":[
-        {"to":format!("0x{}",hex::encode(check.address)),"data":format!("0x{}",hex::encode(&check.calldata))},
+        {"to":format!("0x{}",hex::encode(check.address)),"data":format!("0x{}",hex::encode(&check.calldata)),"gas":"0x2faf080"},
         {"blockHash":format!("0x{}",hex::encode(hash)),"requireCanonical":true}]})
 }

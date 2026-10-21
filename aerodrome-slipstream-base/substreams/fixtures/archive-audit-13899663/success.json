@@ -1,9 +1,9 @@
 {
-  "attempt_sha256": "aab77834c0fec9f8acbd8eb9a8e613e04459b91acf2dd92a540b600cdf5d8d93",
+  "attempt_sha256": "02f51c8f03b2f1ddf0a8e4df396be84abea5722b8ba89c1f635d1033c4078a30",
   "calls_checked": 12,
   "input_sha256": "e4cd95b41894ac5a84bb3fd36da75791d58686612fa9b9a4e9efeb1d04e3adb4",
   "nonempty": true,
-  "observations_sha256": "9a8099ed4c5d1c1773554361440b656055af7ad4b974b062fce58fe1165d8571",
+  "observations_sha256": "aa23c97a486dd4b207c3205af83a168b554e423703c91930f0e61509e5a0c303",
   "production_qualified": false,
   "proves_completeness": false,
   "schema": "pinax.aerodrome.archive-call-audit-success/v1"

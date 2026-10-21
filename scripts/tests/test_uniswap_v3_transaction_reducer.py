@@ -155,6 +155,19 @@ class TransactionReducerContractTests(unittest.TestCase):
         self.assertLess(flash_proof, cleanup)
         self.assertLess(cleanup, transaction)
 
+        position_cleanup = workflow.index("      - name: Release completed Position build cache before Flash validation")
+        flash_materialize = workflow.index("      - name: Materialize the host-only Pool Flash reducer after the writer")
+        self.assertLess(position_proof, position_cleanup)
+        self.assertLess(position_cleanup, flash_materialize)
+        self.assertEqual(
+            [line.strip() for line in workflow[position_cleanup:flash_materialize].splitlines() if line.strip()],
+            [
+                "- name: Release completed Position build cache before Flash validation",
+                "run: |",
+                'cargo +1.79.0 clean --manifest-path "$RUNNER_TEMP/uniswap-v3-position-reducer/Cargo.toml"',
+                'test ! -e "$RUNNER_TEMP/uniswap-v3-position-reducer/target"',
+            ],
+        )
         cleanup_block = workflow[cleanup:transaction]
         self.assertEqual(
             [line.strip() for line in cleanup_block.splitlines() if line.strip()],
@@ -162,7 +175,6 @@ class TransactionReducerContractTests(unittest.TestCase):
                 "- name: Release completed reducer build caches before Transaction validation",
                 "run: |",
                 'cargo +1.79.0 clean --manifest-path "$RUNNER_TEMP/uniswap-v3-configured/Cargo.toml"',
-                'cargo +1.79.0 clean --manifest-path "$RUNNER_TEMP/uniswap-v3-position-reducer/Cargo.toml"',
                 'cargo +1.79.0 clean --manifest-path "$RUNNER_TEMP/uniswap-v3-flash-reducer/Cargo.toml"',
                 'test ! -e "$RUNNER_TEMP/uniswap-v3-configured/target"',
                 'test ! -e "$RUNNER_TEMP/uniswap-v3-position-reducer/target"',

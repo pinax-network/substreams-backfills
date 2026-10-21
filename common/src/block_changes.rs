@@ -1,5 +1,6 @@
 //! Fail-closed semantic and canonical-wire validation for BlockChanges v1.
 
+use crate::descriptor::DescriptorCapabilities;
 use crate::pb::pinax::graph::backfill::v1::{
     entity_id, entity_operation, graph_value, BlockChanges, DeterministicErrorPolicy, EntityField,
     EntityKey, GraphValue, RemoveEntity, SetEntity, SetFailureStage, StoreDisposition,
@@ -32,6 +33,7 @@ pub struct BlockChangesCompatibility {
     id: [u8; COMPATIBILITY_ID_LEN],
     deterministic_error_policy: DeterministicErrorPolicy,
     expected_poi_causality_region: String,
+    capabilities: Option<DescriptorCapabilities>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -43,6 +45,7 @@ pub enum CompatibilityDescriptorError {
     Network,
     ExpectedPoiCausalityRegion,
     PoiCausalityRegionNetworkMismatch,
+    Capabilities(String),
 }
 
 impl BlockChangesCompatibility {
@@ -59,13 +62,21 @@ impl BlockChangesCompatibility {
         {
             return Err(CompatibilityDescriptorError::Contract);
         }
-        if object
+        let capabilities = match object
             .get("descriptor_version")
             .and_then(serde_json::Value::as_u64)
-            != Some(1)
         {
-            return Err(CompatibilityDescriptorError::DescriptorVersion);
-        }
+            Some(1) => None,
+            Some(2) => {
+                crate::descriptor::validate_unique_json(descriptor_bytes)
+                    .map_err(CompatibilityDescriptorError::Json)?;
+                Some(
+                    DescriptorCapabilities::from_descriptor(&descriptor)
+                        .map_err(CompatibilityDescriptorError::Capabilities)?,
+                )
+            }
+            _ => return Err(CompatibilityDescriptorError::DescriptorVersion),
+        };
         let deterministic_error_policy = match object
             .get("deterministic_error_policy")
             .and_then(serde_json::Value::as_str)
@@ -95,6 +106,7 @@ impl BlockChangesCompatibility {
             id,
             deterministic_error_policy,
             expected_poi_causality_region: expected_poi_causality_region.to_owned(),
+            capabilities,
         })
     }
 
@@ -113,6 +125,11 @@ impl BlockChangesCompatibility {
     pub fn to_vec(&self) -> Vec<u8> {
         self.id.to_vec()
     }
+
+    /// Absent for v1 descriptors, whose validation and raw-byte identity are unchanged.
+    pub fn capabilities(&self) -> Option<&DescriptorCapabilities> {
+        self.capabilities.as_ref()
+    }
 }
 
 impl AsRef<[u8]> for BlockChangesCompatibility {
@@ -129,7 +146,7 @@ impl fmt::Display for CompatibilityDescriptorError {
             }
             Self::Contract => write!(formatter, "compatibility descriptor contract drift"),
             Self::DescriptorVersion => {
-                write!(formatter, "compatibility descriptor version is not 1")
+                write!(formatter, "compatibility descriptor version is not 1 or 2")
             }
             Self::DeterministicErrorPolicy => write!(
                 formatter,
@@ -147,6 +164,9 @@ impl fmt::Display for CompatibilityDescriptorError {
                 formatter,
                 "compatibility descriptor PoI causality region does not match its network"
             ),
+            Self::Capabilities(error) => {
+                write!(formatter, "invalid descriptor v2 capabilities: {error}")
+            }
         }
     }
 }
@@ -1613,6 +1633,19 @@ fn validate_disposition(
             })
         }
     }
+}
+
+/// Validate a snapshot/seed entity with the same scalar, field-order and ID
+/// rules as a materialized BlockChanges save. The index identifies the record
+/// in diagnostics; this does not invent a mapping operation or a PoI event.
+pub fn validate_materialized_entity(
+    record_index: u64,
+    key: &EntityKey,
+    fields: &[EntityField],
+) -> Result<(), ValidationError> {
+    let id = validate_key(record_index, Some(key))?;
+    validate_fields(record_index, "materialized", fields)?;
+    validate_id_field(record_index, "materialized", id, fields)
 }
 
 fn validate_key(

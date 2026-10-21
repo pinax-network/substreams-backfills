@@ -353,3 +353,41 @@ triggers, unsupported Swap, both error policies, true empty frames, producer
 failure/cancellation, read failure, missing/extra range frames and budgets.
 Failed Factory creation is a clearly labeled scheduler fault-injection test;
 it is not presented as a naturally reachable or oracle-proven Factory abort.
+
+## Independent Swap oracle corpus
+
+`graph-node-swap-handlers.json` contains 18 synthetic Swap cases executed by the
+original deployed Pool WASM inside pinned Graph Node, with no native reducer
+import. Each starts from the actual first-pool Graph Node checkpoint, changes
+explicit seed rows and one receipt log, and supplies retained raw call answers
+at the synthetic next block/hash. The fixture retains every seed row, raw log,
+raw call, complete BlockChanges envelope, tick-save order, handler report, and
+actual Fast PoI report; it also records the original seed's PoI.
+
+Coverage includes upward/downward duplicate endpoint saves, negative remainder,
+fee-derived spacing 1/10/60/200, the inclusive 100-step walk and 101-step cutoff,
+both negative amounts, token-version upgrades and the lost getter-copy pushes,
+all four whitelist tracking branches with nonzero price state, absent pool tick,
+invalid fee tier, timestamp overflow after Pool/Bundle/Transaction saves, and
+unsigned global fee growth with bit 255 set. Generator assertions check those
+branches actually execute: Tick save sequences are exact, tracked USD is
+102/68/85/0 for token0-only/token1-only/both/neither, four nonzero getPool answers
+leave the original whitelist unchanged, and the high-bit global value stays
+positive. Invalid fee tier produces the deployed abort at tick.ts:57:3 with no
+message, after its preceding saves; the envelope preserves their discard/PoI
+semantics. The timestamp overflow likewise preserves three discarded saves.
+
+This corpus supplies independent expectations for the separate native Swap
+implementation. It is not an actual historical Swap or a complete live range;
+the locked block fixtures contain the first-pool block and block 52,800,000,
+without the state chain needed to qualify a real Swap from an empty root.
+Synthetic call values and seeded prices are test inputs, never archive evidence.
+
+```console
+UPDATE_AERODROME_SWAP_CORPUS=1 cargo +1.98.0 test \
+  --manifest-path mapping-host/Cargo.toml --locked --test mapping_host aerodrome_swap_corpus
+```
+
+Without the update variable the original WASM executes again and the entire
+fixture must match byte for byte. The generator runs with recording disabled;
+no sockets or live RPC are needed after the existing first-block asset is hydrated.

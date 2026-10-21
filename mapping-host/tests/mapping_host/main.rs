@@ -58,3 +58,5 @@ mod aerodrome_handlers_corpus;
 
 mod aerodrome_npm_corpus;
 mod aerodrome_pool_corpus;
+
+mod aerodrome_swap_corpus;

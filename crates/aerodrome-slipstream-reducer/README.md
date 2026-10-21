@@ -194,8 +194,8 @@ The independent handler corpus runs the locked Factory/Pool WASM through actual
 Graph Node. It has no native reducer dependency and compares all fields of every
 operation, including materialized images, dispositions, ordering, and in-band
 sources. The original first-pool case checks real groups 0 and 3, renumbering only
-the dense operation/group indices after excluding NPM/Mint from this focused test
-groups; it is not complete-block parity. The other 17 cases are explicitly
+the dense operation/group indices after excluding NPM/Mint groups from this focused
+test; it is not complete-block parity. The other 17 cases are explicitly
 synthetic mutations: isolated Factory/Initialize, four fee spacings, excluded
 pool, four metadata fallbacks, integer wrapping/overflow, timestamp wrapping/
 overflow, cached-token creation, and repeated Initialize with modified seed price.
@@ -392,3 +392,55 @@ UPDATE_AERODROME_SWAP_CORPUS=1 cargo +1.98.0 test \
 Without the update variable the original WASM executes again and the entire
 fixture must match byte for byte. The generator runs with recording disabled;
 no sockets or live RPC are needed after the existing first-block asset is hydrated.
+
+## Offline root replay and frame comparison
+
+Two development binaries consume retained artifacts. They do not implement the
+live producer protocol, snapshot import, durable checkpoints or recovery.
+
+`aerodrome-replay-fixture` executes a complete range from the deployment root
+using the bounded memory runner. The input must be a regular file with an
+explicit SHA-256. The digest is checked over the exact bytes consumed, after
+complete observed EOF. The descriptor also has an explicit digest; extractor
+identity must come from the package verifier or an explicitly labelled reference
+fixture. This tool does not authenticate the extractor identity itself.
+
+```console
+cargo run -p aerodrome-slipstream-reducer --locked --bin aerodrome-replay-fixture -- \
+  --input extractor.bcf1 --input-sha256 INPUT_SHA256 \
+  --descriptor descriptor.json --descriptor-sha256 DESCRIPTOR_SHA256 \
+  --extractor-identity verified-extractor-identity.json \
+  --from 13843704 --stop-exclusive 13919663 \
+  --expected-parent-hash ROOT_PARENT_HASH --output new-attempt-directory
+```
+
+The output directory must not exist, including after a failed attempt. Failures
+retain `attempt.json` and `failure.json`; they cannot publish a completion receipt.
+Only after the full range and input hash pass does the tool write `frames.bcf1`
+and `block-outcomes.jsonl`, sync both, and write `complete.json` with their hashes.
+It defaults to fail-closed aborts. `--error-mode emit-non-fatal` is available for
+diagnostic parity only and requires a matching descriptor. Explicit limits are
+`--max-blocks` (default 100000), `--max-candidates` (2000000), and
+`--max-output-bytes` (268435456). This is a bounded artifact tool, not a disk-backed
+backfill. Its completion is not a producer exit receipt or production certificate.
+
+`aerodrome-diff-frames` requires the entire nonempty range on both sides, including
+actual EOF. Each canonical payload is validated against its own pinned descriptor
+and checked against its observed frame header. It masks only `compatibility_id`;
+all operations, materialized fields, dispositions, groups, error markers and
+in-band source creations must be equal. It does not filter, sort or renumber.
+
+```console
+cargo run -p aerodrome-slipstream-reducer --locked --bin aerodrome-diff-frames -- \
+  --expected oracle.bcf1 --expected-descriptor oracle-descriptor.json \
+  --expected-descriptor-sha256 ORACLE_DESCRIPTOR_SHA256 \
+  --actual native.bcf1 --actual-descriptor native-descriptor.json \
+  --actual-descriptor-sha256 NATIVE_DESCRIPTOR_SHA256 \
+  --from 13843704 --stop-exclusive 13919663
+```
+
+Success prints a JSON equality report with both frame/descriptor hashes, counts
+and closing block hash. Short equal prefixes, extra frames, synthetic frames,
+unknown/noncanonical protobuf fields and terminal read failures refuse. Six
+focused tests exercise these mutations and offline output lifecycle, including
+actual Factory execution, bad input digests and no-clobber behavior.

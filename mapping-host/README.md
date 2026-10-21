@@ -1543,6 +1543,19 @@ cargo xtask evidence fetch --lock mapping-host/evidence/aerodrome-root-window-ar
 The prefix's sparse file is empty and is not published: its digest is the empty
 string's, which the summary proves without the file.
 
+All three immutable evidence releases were published and independently verified
+on 2026-10-21. Each release's exact remote asset set passed
+`cargo xtask evidence audit-release --lock <lock>`, then `evidence fetch` into a
+new empty root with a new empty cache downloaded and hash-checked every asset;
+`evidence check` passed on those downloaded files. The 13 assets total
+320,344,516 bytes. Release tags target main commit
+`bbe37830857c627561e13882119f5a40e0eed090`; the assets are the exact locked bytes
+from oracle source `a64a146`, not a fresh replay or executable runtime release.
+
+- [Base fixture blocks](https://github.com/pinax-network/substreams-backfills/releases/tag/aerodrome-base-block-fixtures-v1): 2 assets, 7,358,526 bytes.
+- [Root-window reports and cassette](https://github.com/pinax-network/substreams-backfills/releases/tag/aerodrome-root-window-evidence-v1): 6 assets, 143,757,163 bytes.
+- [Root-window BCF1 and state archive](https://github.com/pinax-network/substreams-backfills/releases/tag/aerodrome-root-window-archive-v1): 5 assets, 169,228,827 bytes.
+
 ### Fixtures
 
 `fixtures/cassettes/QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV.json` answers
@@ -1606,12 +1619,6 @@ regeneration) need nothing fetched.
   but only because its two-block store lacks rows the handlers read, so the
   non-fatal path is exercised on a synthetic gap and has not been shown on
   deployed behaviour.
-* **Publishing the three Aerodrome releases.** The locks are committed and the
-  tests are not ignored, so `ci-mapping-host` fails at its fetch step until
-  `aerodrome-base-block-fixtures-v1` and `aerodrome-root-window-evidence-v1`
-  exist (the archive release is not fetched in CI). Publication follows
-  `docs/evidence-assets.md`, "Round trip proof", then
-  `cargo xtask evidence audit-release --lock <lock>` for each.
 * **Aerodrome parity with an indexer.** "Exact oracle" is still a claim about
   this host alone. No Aerodrome PoI here has been compared with a production
   Base indexer's `proofOfIndexing` (public, `indexer: null`); the first

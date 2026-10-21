@@ -7,12 +7,15 @@ use std::collections::BTreeMap;
 /// Locked Factory.wasm UTF-16 constant at address3168: this pool returns before
 /// dataSource.create. The unrelated Pool swap guard is not a missing-host rule.
 pub const FACTORY_EXCLUDED_POOL: &str = "8fe8d9bb8eeba3ed688069c3d6b556c9ca258248";
-#[derive(Default, Debug)]
+#[derive(Clone, Default, Debug)]
 pub struct HostSet {
     committed: BTreeMap<Address, u64>,
     aborted: BTreeMap<Address, u64>,
 }
 impl HostSet {
+    pub(crate) fn contains(&self, pool: &Address) -> bool {
+        self.committed.contains_key(pool)
+    }
     pub fn seed(&mut self, pool: Address, created_block: u64, boundary: u64) -> Result<()> {
         require(
             created_block >= INITIAL_BLOCK && created_block <= boundary && pool != [0; 20],

@@ -8,8 +8,8 @@
 mod factory;
 mod flash;
 mod initialize;
-mod npm;
 mod interval;
+mod npm;
 mod pool;
 mod pricing;
 pub(super) mod transaction;

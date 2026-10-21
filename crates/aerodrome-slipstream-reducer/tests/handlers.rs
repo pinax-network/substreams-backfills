@@ -242,7 +242,7 @@ fn first_handlers_match_every_graph_node_operation_and_source() {
     }
 }
 #[test]
-fn unknown_hosts_and_unsupported_handlers_cannot_execute() {
+fn unknown_hosts_refuse_and_reviewed_mint_is_supported() {
     let b = original();
     let input = validate(&b);
     let hosts = HostSet::default();

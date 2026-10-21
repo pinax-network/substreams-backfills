@@ -4,9 +4,10 @@ This crate implements the S-R2 input layer, S-R3 entity/state primitives, and
 the Factory/Initialize, NPM/Flash and Mint/Burn handler checkpoints for
 the locked Base deployment `QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV`.
 The library executes these handlers, journals their operations and seals
-canonical in-band BlockChanges. It does **not** run all mapping handlers or a
-complete reducer, import verified snapshots, provide durable checkpoints, or
-qualify a backfill. Those stages remain to be implemented and compared with
+canonical in-band BlockChanges. The in-memory runner schedules every candidate
+and refuses unsupported matched handlers. It does **not** implement Swap, import
+verified snapshots, provide durable checkpoints or production output, or qualify
+a backfill. Those stages remain to be implemented and compared with
 mapping-host.
 
 The protobuf types and gas-price function come from the extractor's shared
@@ -134,8 +135,7 @@ seed, not authenticated snapshot import.
 The entity class labels describe the mapping design. They do not enable eviction:
 all rows remain persistent, including BlockLocal rows, until retention has
 independent evidence. Collect, Flash and TickHourData writes/removes are refused
-because the deployed handlers never write them. Complete handler scheduling,
-Swap logic, redb, rewind and the production output CLI are absent.
+because the deployed handlers never write them. Swap logic, redb, rewind and the production output CLI are absent.
 
 Regenerate typed declarations with:
 
@@ -169,9 +169,9 @@ Node dependencies.
 `handlers::SupportedHandler::match_candidate` requires authoritative `HostSet`
 matching. It returns no trigger for an ABI mismatch or a justified absent host,
 and refuses every unsupported matched event. Its `run` method belongs inside
-`BlockStore::run_handler`. The caller owns complete scheduling and must install
-a returned Pool source only after handler commit, then persist hosts only after
-block commit. This primitive is not permission to skip unsupported handlers and
+`BlockStore::run_handler`. The primitive caller must install a returned Pool source only after handler
+commit, then persist hosts only after block commit; `MemoryRunner` supplies this
+complete scheduling boundary. This primitive is not permission to skip unsupported handlers and
 publish a complete block. The existing CLI remains validation-only.
 
 Factory preserves the deployed exclusion, fee-tier lookup, both token loads
@@ -242,9 +242,9 @@ PoI operation stream. Flash saves only Pool with both fee-growth values; it neve
 constructs a Flash entity. Retention/burn hints and durable persistence are later
 work; the current backend keeps these entities persistent.
 
-The real first-pool differential now covers complete groups 0–3 in original
-order: Factory, NPM Transfer, NPM IncreaseLiquidity, Initialize. Group 4 Mint is
-still outside this checkpoint, so this is not full-block certification.
+The isolated NPM differential covers groups 0–3 in original order: Factory,
+NPM Transfer, NPM IncreaseLiquidity, Initialize. The runner test below combines
+this with Mint and checks the whole original block.
 `graph-node-npm-flash.json` adds 14 synthetic full-WASM probes: baseline;
 Decrease; Collect; negative collected fees; burn Transfer; positions revert;
 zero getPool; pool guard; new-position Increase; historical block guard; Flash;
@@ -298,5 +298,58 @@ UPDATE_AERODROME_POOL_CORPUS=1 cargo +1.98.0 test \
 cargo test -p aerodrome-slipstream-reducer --locked --test pool_handlers
 ```
 
-Swap, full block scheduling, durable state and production output
-remain separate checkpoints. The existing CLI still only validates inputs.
+Swap, durable state and production output remain separate checkpoints. The existing CLI still only validates inputs.
+
+
+## In-memory block and range execution
+
+`MemoryRunner` derives authoritative Pool hosts from its memory backend and
+executes every validated candidate in `(wave, source_trigger_order)` order.
+Unmatched candidates remain in its report. Successful empty handlers still
+advance handler groups and set `mapping_triggered`; actual empty blocks produce
+Observed frames with `mapping_triggered = false`. Unsupported matched handlers
+currently include Swap and refuse the complete block.
+
+Host outcomes are staged with the block. Successful Factory handlers enable
+wave-1 candidates, including Initialize before PoolCreated in receipt order.
+A nonfatal failed Factory records an explicit non-host outcome so later
+extractor-superset candidates can be skipped. Neither successful nor failed
+outcomes publish until the backend commit succeeds. Any fatal error, caught
+handler panic or fail-closed mapping abort poisons the runner, preserving its
+previous block boundary. Default `FailClosed` refuses every mapping abort even
+with a nonfatal descriptor. Explicit diagnostic `EmitNonFatal` requires the
+nonfatal descriptor, retains exact discarded PoI operations and commits other
+successful handlers. This diagnostic mode is not production qualification.
+
+`run_stream` consumes its runner and buffers the complete bounded range in
+memory. It returns `CompletedMemoryRun` only after exact contiguous input,
+actual EOF and a supervisor callback proving producer success. The callback is
+also called on input/execution refusal and receives `InputCompletion::Refused`,
+so a real supervisor can cancel or drain an unread pipe before waiting for the
+producer. Cancellation, nonzero exit, read failure, missing/extra blocks and
+resource-budget failures return no completed run. Explicit budgets cover block
+count, candidate count and retained output payload bytes. They are workload
+bounds, not an allocator-level memory cap. The callback is a driver obligation;
+this library does not spawn or supervise a process itself.
+
+`CompletedMemoryRun::into_runner` preserves failed-creation history for another
+range. Reconstructing a runner from only rows and accepted sources loses that
+history and is not checkpoint/resume support. `MemoryBackend::from_images`
+remains a structural test seed with no authenticated chain-state provenance.
+This all-in-memory adapter is not the durable streaming producer CLI and does
+not write a producer/v1 completion marker, database or checkpoint.
+
+The scheduler test compares the **entire** original first-pool Graph Node
+BlockChanges envelope for block 13,899,663: all five handlers, every operation,
+original dense indices, PoI dispositions and in-band source creations. Only the
+producer-specific compatibility ID is masked. No candidate or operation is
+filtered or renumbered. Another whole-envelope test uses the actual WASM
+Initialize-overflow corpus in diagnostic nonfatal mode. These bounded proofs
+do not establish a complete historical range or final-SPKG parity.
+
+The other runner tests cover atomic rollback after a later missing answer,
+failed-creation history, malformed ABI candidates, the excluded pool, no-save
+triggers, unsupported Swap, both error policies, true empty frames, producer
+failure/cancellation, read failure, missing/extra range frames and budgets.
+Failed Factory creation is a clearly labeled scheduler fault-injection test;
+it is not presented as a naturally reachable or oracle-proven Factory abort.

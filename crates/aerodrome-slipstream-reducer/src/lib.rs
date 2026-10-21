@@ -1,5 +1,6 @@
 //! Aerodrome input, typed entity and transactional state foundations.
-//! Factory, Initialize, NPM and Flash handlers; no complete production reducer.
+//! Bounded in-memory scheduling with Factory, Initialize, NPM, Flash, Mint and
+//! Burn handlers. Swap and the durable production driver remain unsupported.
 //! Input validation and synthetic operation sealing do not certify a backfill.
 pub mod abi;
 pub mod calls;
@@ -8,6 +9,7 @@ pub mod handlers;
 pub mod hosts;
 pub mod identity;
 pub mod input;
+pub mod runner;
 pub mod state;
 pub use aerodrome_extractor_core::{Address, Word};
 pub use aerodrome_extractor_pb::v1 as pb;

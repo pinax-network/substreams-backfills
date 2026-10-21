@@ -145,7 +145,7 @@ impl<S: BlockSource> CheckedSource<S> {
                 .and_then(|hash| hex::decode(hash.trim_start_matches("0x")).ok())
                 .is_some_and(|bytes| bytes.len() == 32 && bytes.iter().any(|byte| *byte != 0));
             if !valid {
-                bail!("v2 source chunk block {number} has no valid parent hash");
+                bail!("observed source block {number} has no valid parent hash");
             }
         }
         if let Some(previous) = self.previous {

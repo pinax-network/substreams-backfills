@@ -294,6 +294,11 @@ pub enum TemplateParameter {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum ProducerContract {
+    MappingHostOracle {
+        repository: String,
+        source_closure_sha256: String,
+        bundle_lock_sha256: String,
+    },
     NativeBlockChangesReducer {
         reducer: ReducerIdentity,
         extractor: ExtractorIdentity,
@@ -371,8 +376,25 @@ impl DescriptorCapabilities {
         if self.data_sources.transport == DataSourceTransport::None && !names.is_empty() {
             return Err("data-source templates require in_band_v1 transport".to_owned());
         }
-        let ProducerContract::NativeBlockChangesReducer { reducer, extractor } =
-            &self.producer_contract;
+        let (reducer, extractor) = match &self.producer_contract {
+            ProducerContract::NativeBlockChangesReducer { reducer, extractor } => {
+                (reducer, extractor)
+            }
+            ProducerContract::MappingHostOracle {
+                repository,
+                source_closure_sha256,
+                bundle_lock_sha256,
+            } => {
+                nonempty_token(repository, "mapping-host repository")?;
+                require_hex(
+                    source_closure_sha256,
+                    64,
+                    "mapping-host source closure sha256",
+                )?;
+                require_hex(bundle_lock_sha256, 64, "mapping-host bundle lock sha256")?;
+                return Ok(());
+            }
+        };
         nonempty_token(&reducer.repository, "reducer repository")?;
         require_hex(&reducer.commit, 40, "reducer commit")?;
         require_hex(&extractor.spkg_sha256, 64, "extractor SPKG sha256")?;

@@ -36,17 +36,59 @@ use crate::runner::GRAPH_NODE_REV;
 
 pub const DESCRIPTOR_FILE: &str = "block-changes-descriptor.json";
 pub const DESCRIPTOR_SIDECAR: &str = "block-changes-descriptor.json.sha256";
+pub const IN_BAND_DESCRIPTOR_FILE: &str = "block-changes-in-band-descriptor.json";
+pub const IN_BAND_DESCRIPTOR_SIDECAR: &str = "block-changes-in-band-descriptor.json.sha256";
+pub const SOURCE_CLOSURE_SHA256: &str = env!("MAPPING_HOST_SOURCE_CLOSURE_SHA256");
+pub const SOURCE_CLOSURE_INVENTORY: &str =
+    include_str!(concat!(env!("OUT_DIR"), "/source-closure.txt"));
 const GRAPH_NODE_VERSION: &str = "0.44.0";
 
 /// Read a segment's descriptor, verify its sidecar, and derive the
 /// compatibility identity the frames must carry.
 pub fn load(segment_dir: &Path) -> Result<(BlockChangesCompatibility, String)> {
-    let path = segment_dir.join(DESCRIPTOR_FILE);
+    load_named(segment_dir, DESCRIPTOR_FILE, DESCRIPTOR_SIDECAR)
+}
+
+pub fn load_in_band(segment_dir: &Path) -> Result<(BlockChangesCompatibility, String)> {
+    let (compatibility, digest) = load_named(
+        segment_dir,
+        IN_BAND_DESCRIPTOR_FILE,
+        IN_BAND_DESCRIPTOR_SIDECAR,
+    )?;
+    let capabilities = compatibility
+        .capabilities()
+        .context("in-band mode requires descriptor v2")?;
+    if capabilities.data_sources.transport
+        != backfill_common::descriptor::DataSourceTransport::InBandV1
+    {
+        anyhow::bail!("in-band descriptor does not enable in_band_v1");
+    }
+    match &capabilities.producer_contract {
+        backfill_common::descriptor::ProducerContract::MappingHostOracle {
+            repository,
+            source_closure_sha256,
+            bundle_lock_sha256,
+        } if repository == "pinax-network/substreams-backfills"
+            && source_closure_sha256 == SOURCE_CLOSURE_SHA256
+            && bundle_lock_sha256 == SegmentBundle::load(segment_dir)?.lock_sha256() => {}
+        _ => anyhow::bail!(
+            "in-band descriptor does not bind this mapping-host source closure and bundle"
+        ),
+    }
+    Ok((compatibility, digest))
+}
+
+fn load_named(
+    segment_dir: &Path,
+    file: &str,
+    sidecar: &str,
+) -> Result<(BlockChangesCompatibility, String)> {
+    let path = segment_dir.join(file);
     let bytes = std::fs::read(&path)
         .with_context(|| format!("reading BlockChanges descriptor {}", path.display()))?;
     let digest = sha256_hex(&bytes);
 
-    let sidecar_path = segment_dir.join(DESCRIPTOR_SIDECAR);
+    let sidecar_path = segment_dir.join(sidecar);
     let sidecar = std::fs::read_to_string(&sidecar_path)
         .with_context(|| format!("reading descriptor sidecar {}", sidecar_path.display()))?;
     let sidecar = sidecar.trim();
@@ -66,11 +108,38 @@ pub fn load(segment_dir: &Path) -> Result<(BlockChangesCompatibility, String)> {
 
     let compatibility = BlockChangesCompatibility::from_descriptor(&bytes)
         .map_err(|error| anyhow!("{}: {error}", path.display()))?;
+    if file == IN_BAND_DESCRIPTOR_FILE {
+        let descriptor: Value = serde_json::from_slice(&bytes)?;
+        anyhow::ensure!(
+            descriptor["message_type"] == "proto:pinax.graph.backfill.v2.BlockChanges",
+            "in-band descriptor message_type differs from extended envelope"
+        );
+    }
     Ok((compatibility, digest))
 }
 
 /// Build the descriptor for one bundle and write it with its sidecar.
 pub async fn write(segment_dir: &Path, repo_root: &Path, logger: &Logger) -> Result<String> {
+    write_mode(segment_dir, repo_root, logger, false).await
+}
+
+pub async fn write_in_band(
+    segment_dir: &Path,
+    repo_root: &Path,
+    logger: &Logger,
+) -> Result<String> {
+    write_mode(segment_dir, repo_root, logger, true).await
+}
+
+async fn write_mode(
+    segment_dir: &Path,
+    repo_root: &Path,
+    logger: &Logger,
+    in_band: bool,
+) -> Result<String> {
+    if in_band {
+        verify_compiled_source_closure(repo_root)?;
+    }
     let bundle = SegmentBundle::load(segment_dir)?;
     let manifest = bundle.manifest(logger).await?;
     let lock = bundle.lock();
@@ -176,18 +245,70 @@ pub async fn write(segment_dir: &Path, repo_root: &Path, logger: &Logger) -> Res
         }),
     );
 
+    let (file, sidecar) = if in_band {
+        root.insert("descriptor_version".into(), json!(2));
+        root.insert(
+            "message_type".into(),
+            json!("proto:pinax.graph.backfill.v2.BlockChanges"),
+        );
+        let start = manifest
+            .start_blocks()
+            .into_iter()
+            .min()
+            .context("manifest has no start block")?;
+        if start < 0 {
+            anyhow::bail!("negative manifest start block");
+        }
+        root.insert("start_block".into(), json!(start));
+        root.insert(
+            "storage_profile".into(),
+            json!({"entity_types": root["storage_profile"]["entity_types"].clone()}),
+        );
+        let mut templates = Vec::new();
+        for template in &manifest.templates {
+            templates.push(json!({"name": template.name(), "manifest_idx": template.manifest_idx(), "param": "address20"}));
+        }
+        templates.sort_by_key(|t| t["manifest_idx"].as_u64());
+        root.insert(
+            "data_sources".into(),
+            json!({"transport":"in_band_v1", "templates": templates}),
+        );
+        root.insert(
+            "entity_retention".into(),
+            serde_json::to_value(backfill_common::descriptor::RetentionPolicy::default())?,
+        );
+        root.insert("producer_contract".into(), json!({"kind":"mapping_host_oracle", "repository":"pinax-network/substreams-backfills", "source_closure_sha256":SOURCE_CLOSURE_SHA256, "bundle_lock_sha256":bundle.lock_sha256()}));
+        let artifacts = root.get_mut("artifacts").unwrap().as_object_mut().unwrap();
+        artifacts.insert(
+            "in_band_proto".into(),
+            digest_of(
+                &repo_root.join("common/proto/block_changes_in_band.proto"),
+                "common/proto/block_changes_in_band.proto",
+            )?,
+        );
+        artifacts.insert(
+            "in_band_binding".into(),
+            digest_of(
+                &repo_root.join("common/src/pb/pinax.graph.backfill.v2.rs"),
+                "common/src/pb/pinax.graph.backfill.v2.rs",
+            )?,
+        );
+        (IN_BAND_DESCRIPTOR_FILE, IN_BAND_DESCRIPTOR_SIDECAR)
+    } else {
+        (DESCRIPTOR_FILE, DESCRIPTOR_SIDECAR)
+    };
+
     // `serde_json::Map` is a `BTreeMap` here, so keys serialise sorted and the
     // digest is stable.
     let mut json_text = serde_json::to_string_pretty(&Value::Object(root))?;
     json_text.push('\n');
     let digest = sha256_hex(json_text.as_bytes());
 
-    std::fs::write(segment_dir.join(DESCRIPTOR_FILE), &json_text)?;
-    std::fs::write(segment_dir.join(DESCRIPTOR_SIDECAR), format!("{digest}\n"))?;
-
-    // Prove the descriptor we just wrote parses as a compatibility identity.
+    // Refuse an invalid descriptor before replacing either output.
     BlockChangesCompatibility::from_descriptor(json_text.as_bytes())
         .map_err(|error| anyhow!("generated descriptor is invalid: {error}"))?;
+    std::fs::write(segment_dir.join(file), &json_text)?;
+    std::fs::write(segment_dir.join(sidecar), format!("{digest}\n"))?;
     Ok(digest)
 }
 
@@ -199,4 +320,68 @@ fn digest_of(path: &Path, label: &str) -> Result<Value> {
         "sha256": sha256_hex(&bytes),
         "bytes": bytes.len(),
     }))
+}
+
+/// Refuse mixing a compiled producer identity with artifacts from a different
+/// checkout. Descriptor generation is a source operation; image loading does
+/// not need the source tree and checks the compiled closure plus bundle lock.
+pub fn verify_compiled_source_closure(repo_root: &Path) -> Result<()> {
+    use std::collections::BTreeSet;
+    fn collect(root: &Path, path: &Path, names: &mut BTreeSet<String>) -> Result<()> {
+        let meta = std::fs::symlink_metadata(path)?;
+        anyhow::ensure!(
+            !meta.file_type().is_symlink(),
+            "source closure refuses symlinks"
+        );
+        if meta.is_dir() {
+            for entry in std::fs::read_dir(path)? {
+                collect(root, &entry?.path(), names)?;
+            }
+        } else {
+            anyhow::ensure!(meta.is_file(), "source closure requires regular files");
+            names.insert(
+                path.strip_prefix(root)?
+                    .to_str()
+                    .context("non-UTF-8 source path")?
+                    .to_string(),
+            );
+        }
+        Ok(())
+    }
+    let mut expected = BTreeSet::new();
+    for line in SOURCE_CLOSURE_INVENTORY.lines() {
+        let mut parts = line.splitn(3, "  ");
+        let digest = parts.next().context("compiled source inventory digest")?;
+        let size: usize = parts
+            .next()
+            .context("compiled source inventory size")?
+            .parse()?;
+        let path = parts.next().context("compiled source inventory path")?;
+        let bytes = std::fs::read(repo_root.join(path))
+            .with_context(|| format!("reading compiled source closure input {path}"))?;
+        anyhow::ensure!(
+            bytes.len() == size && sha256_hex(&bytes) == digest,
+            "source closure differs from compiled producer at {path}"
+        );
+        expected.insert(path.to_owned());
+    }
+    let mut actual = BTreeSet::new();
+    for path in [
+        "Cargo.toml",
+        "common/Cargo.toml",
+        "common/src",
+        "common/proto",
+        "mapping-host/Cargo.toml",
+        "mapping-host/Cargo.lock",
+        "mapping-host/build.rs",
+        "mapping-host/src",
+        "mapping-host/vendor",
+    ] {
+        collect(repo_root, &repo_root.join(path), &mut actual)?;
+    }
+    anyhow::ensure!(
+        actual == expected,
+        "source closure file set differs from compiled producer"
+    );
+    Ok(())
 }

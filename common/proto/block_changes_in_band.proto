@@ -1,0 +1,28 @@
+syntax = "proto3";
+package pinax.graph.backfill.v2;
+import "block_changes.proto";
+
+// Extended envelope. Fields 1..8 retain the exact v1 wire tags and semantics.
+// The v1 schema and binding remain frozen, preserving historical source pins.
+// Empty creations encode identically to the v1 envelope. Field 9 is enabled
+// only by the descriptor's in_band_v1 capability.
+message BlockChanges {
+  string contract = 1;
+  bytes compatibility_id = 2;
+  uint64 block_number = 3;
+  bytes block_hash = 4;
+  bool mapping_triggered = 5;
+  repeated string triggered_poi_causality_regions = 6;
+  repeated pinax.graph.backfill.v1.EntityOperation operations = 7;
+  pinax.graph.backfill.v1.DeterministicErrorPolicy deterministic_error_policy = 8;
+  repeated CreatedDataSource created_data_sources = 9;
+}
+message CreatedDataSource {
+  uint32 ordinal = 1;
+  uint32 manifest_idx = 2;
+  string template = 3;
+  uint64 handler_group_order = 4;
+  bytes param = 5;
+  // Reserved: in_band_v1 requires absent, including empty strings.
+  optional string context_json = 6;
+}

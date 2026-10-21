@@ -35,7 +35,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
-use backfill_common::pb::pinax::graph::backfill::v1 as pb;
+use backfill_common::pb::pinax::graph::backfill::v2 as pb;
 use graph::data::subgraph::SubgraphFeature;
 use graph::prelude::{o, slog, Logger};
 use graph_mapping_host::bundle::{sha256_hex, SegmentBundle};
@@ -613,4 +613,425 @@ fn the_dense_block_pins_the_non_fatal_path_on_a_synthetic_store_gap() {
             ("set_discarded", 38),
         ])
     );
+}
+
+#[test]
+fn in_band_first_pool_matches_legacy_entities_poi_and_accepted_inventory() {
+    let temp = tempfile::tempdir().unwrap();
+    let copy = temp.path().join(SEGMENT);
+    copy_dir(&segment_dir(), &copy).unwrap();
+    runtime().block_on(async {
+        descriptor::write_in_band(&copy, &repo_root(), &logger())
+            .await
+            .unwrap();
+        let cassette = crate_dir().join(format!("fixtures/cassettes/{SEGMENT}.json"));
+        let mut host = SegmentHost::load_in_band(SegmentHostConfig {
+            bundle_dir: &copy,
+            cassette_path: &cassette,
+            record: false,
+        })
+        .await
+        .unwrap();
+        let mut legacy = SegmentHost::load(SegmentHostConfig {
+            bundle_dir: &copy,
+            cassette_path: &cassette,
+            record: false,
+        })
+        .await
+        .unwrap();
+        let path = repo_root().join("aerodrome-slipstream-base/fixtures/blocks/base/13899663.pb");
+        let extended = host
+            .process_block(block::load_block(&path).unwrap())
+            .await
+            .unwrap();
+        let old = legacy
+            .process_block(block::load_block(&path).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(extended.changes.created_data_sources.len(), 1);
+        let creation = &extended.changes.created_data_sources[0];
+        assert_eq!(creation.ordinal, 0);
+        assert_eq!(creation.manifest_idx, 2);
+        assert_eq!(creation.template, "Pool");
+        assert_eq!(creation.handler_group_order, 0);
+        let inventory = host.stored_dynamic_data_sources().unwrap();
+        assert_eq!(inventory.len(), 1);
+        assert_eq!(hex::encode(&creation.param), inventory[0].param);
+        assert_eq!(inventory[0].creation_block, 13899663);
+        assert_eq!(
+            extended.report.poi.as_ref().unwrap().public_digest,
+            old.report.poi.as_ref().unwrap().public_digest
+        );
+        assert_eq!(extended.report.store_counts, old.report.store_counts);
+        let bytes = blockchanges::seal(&extended.changes, host.compatibility()).unwrap();
+        assert!(
+            backfill_common::decode_canonical_block_changes(&bytes, host.compatibility()).is_err()
+        );
+        let mut projected = extended.changes.clone();
+        projected.created_data_sources.clear();
+        projected.compatibility_id = old.changes.compatibility_id.clone();
+        assert_eq!(
+            blockchanges::seal(&projected, legacy.compatibility()).unwrap(),
+            blockchanges::seal(&old.changes, legacy.compatibility()).unwrap()
+        );
+        assert_ne!(host.descriptor_sha256(), legacy.descriptor_sha256());
+    });
+}
+
+#[test]
+fn in_band_descriptor_refuses_another_compiled_source_closure() {
+    let temp = tempfile::tempdir().unwrap();
+    let copy = temp.path().join(SEGMENT);
+    copy_dir(&segment_dir(), &copy).unwrap();
+    runtime()
+        .block_on(descriptor::write_in_band(&copy, &repo_root(), &logger()))
+        .unwrap();
+    let path = copy.join(descriptor::IN_BAND_DESCRIPTOR_FILE);
+    let mut value: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
+    value["producer_contract"]["source_closure_sha256"] = serde_json::json!("ff".repeat(32));
+    let bytes = serde_json::to_vec(&value).unwrap();
+    std::fs::write(&path, &bytes).unwrap();
+    std::fs::write(
+        copy.join(descriptor::IN_BAND_DESCRIPTOR_SIDECAR),
+        sha256_hex(&bytes),
+    )
+    .unwrap();
+    assert!(descriptor::load_in_band(&copy)
+        .unwrap_err()
+        .to_string()
+        .contains("source closure"));
+}
+
+#[test]
+fn in_band_generation_refuses_artifacts_from_a_stale_repo_root() {
+    let temp = tempfile::tempdir().unwrap();
+    let source = temp.path().join("source");
+    for line in descriptor::SOURCE_CLOSURE_INVENTORY.lines() {
+        let name = line.splitn(3, "  ").nth(2).unwrap();
+        let target = source.join(name);
+        std::fs::create_dir_all(target.parent().unwrap()).unwrap();
+        std::fs::copy(repo_root().join(name), target).unwrap();
+    }
+    descriptor::verify_compiled_source_closure(&source).unwrap();
+    let copy = temp.path().join(SEGMENT);
+    copy_dir(&segment_dir(), &copy).unwrap();
+    for file in [
+        descriptor::IN_BAND_DESCRIPTOR_FILE,
+        descriptor::IN_BAND_DESCRIPTOR_SIDECAR,
+    ] {
+        let _ = std::fs::remove_file(copy.join(file));
+    }
+    std::fs::write(
+        source.join("common/proto/block_changes.proto"),
+        b"stale schema",
+    )
+    .unwrap();
+    let error = runtime()
+        .block_on(descriptor::write_in_band(&copy, &source, &logger()))
+        .unwrap_err();
+    assert!(
+        error.to_string().contains("source closure differs"),
+        "{error}"
+    );
+    assert!(!copy.join(descriptor::IN_BAND_DESCRIPTOR_FILE).exists());
+}
+
+// Synthetic manifest/block mutations exercise queue acceptance and rollback.
+// The deployed bundle and recorded blocks on disk are never changed, and these
+// are scheduling regressions, not deployed mapping evidence.
+fn synthetic_bundle(target: &Path, mode: &str) {
+    copy_dir(&segment_dir(), target).unwrap();
+    // A committed in-band descriptor is tied to the original bundle.
+    for file in [
+        descriptor::IN_BAND_DESCRIPTOR_FILE,
+        descriptor::IN_BAND_DESCRIPTOR_SIDECAR,
+    ] {
+        let _ = std::fs::remove_file(target.join(file));
+    }
+    let manifest_path = target.join("manifest.yaml");
+    let mut manifest: serde_yaml::Value =
+        serde_yaml::from_slice(&std::fs::read(&manifest_path).unwrap()).unwrap();
+    let factory = manifest["dataSources"][0].clone();
+    match mode {
+        "failed_creator" => {
+            let mut broken = factory.clone();
+            broken["name"] = serde_yaml::Value::String("FailingFactory".into());
+            broken["mapping"]["file"] = manifest["dataSources"][1]["mapping"]["file"].clone();
+            broken["mapping"]["eventHandlers"][0]["handler"] =
+                serde_yaml::Value::String("handleDecreaseLiquidity".into());
+            manifest["dataSources"]
+                .as_sequence_mut()
+                .unwrap()
+                .push(broken);
+        }
+        "fatal_later" => {
+            manifest["features"]
+                .as_sequence_mut()
+                .unwrap()
+                .retain(|v| v.as_str() != Some("nonFatalErrors"));
+            for handler in manifest["dataSources"][1]["mapping"]["eventHandlers"]
+                .as_sequence_mut()
+                .unwrap()
+            {
+                if handler["handler"].as_str() == Some("handleTransfer") {
+                    handler["handler"] =
+                        serde_yaml::Value::String("handleDecreaseLiquidity".into());
+                }
+            }
+        }
+        "duplicate_waves" => {
+            let mut duplicate = factory.clone();
+            duplicate["name"] = serde_yaml::Value::String("DuplicateFactory".into());
+            manifest["dataSources"]
+                .as_sequence_mut()
+                .unwrap()
+                .push(duplicate);
+            manifest["templates"][0]["mapping"] = factory["mapping"].clone();
+            manifest["templates"][0]["source"]["abi"] = serde_yaml::Value::String("Factory".into());
+        }
+        _ => panic!("unknown synthetic mode"),
+    }
+    std::fs::write(&manifest_path, serde_yaml::to_string(&manifest).unwrap()).unwrap();
+    let lock_path = target.join("bundle.lock.json");
+    let mut lock: graph_mapping_host::bundle::BundleLock =
+        serde_json::from_slice(&std::fs::read(&lock_path).unwrap()).unwrap();
+    lock.features = manifest["features"]
+        .as_sequence()
+        .unwrap()
+        .iter()
+        .map(|s| s.as_str().unwrap().to_owned())
+        .collect();
+    let bytes = std::fs::read(&manifest_path).unwrap();
+    let file = lock
+        .files
+        .iter_mut()
+        .find(|f| f.path == "manifest.yaml")
+        .unwrap();
+    file.bytes = bytes.len() as u64;
+    file.sha256 = sha256_hex(&bytes);
+    std::fs::write(lock_path, serde_json::to_vec_pretty(&lock).unwrap()).unwrap();
+}
+
+#[test]
+fn in_band_failed_creator_group_adds_no_dynamic_inventory() {
+    let temp = tempfile::tempdir().unwrap();
+    let copy = temp.path().join(SEGMENT);
+    synthetic_bundle(&copy, "failed_creator");
+    runtime().block_on(async {
+        descriptor::write_in_band(&copy, &repo_root(), &logger())
+            .await
+            .unwrap();
+        let cassette = crate_dir().join(format!("fixtures/cassettes/{SEGMENT}.json"));
+        let mut host = SegmentHost::load_in_band(SegmentHostConfig {
+            bundle_dir: &copy,
+            cassette_path: &cassette,
+            record: false,
+        })
+        .await
+        .unwrap();
+        let result = host
+            .process_block(
+                block::load_block(
+                    &repo_root().join("aerodrome-slipstream-base/fixtures/blocks/base/13899663.pb"),
+                )
+                .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert!(!result.report.block_discarded);
+        assert!(
+            !result.report.handler_groups[0].handlers[0]
+                .created_data_sources
+                .is_empty(),
+            "creator actually requested a source"
+        );
+        assert_eq!(
+            result.report.handler_groups[0].handlers[1].outcome,
+            "deterministic_error"
+        );
+        assert!(result.changes.created_data_sources.is_empty());
+        assert!(host.stored_dynamic_data_sources().unwrap().is_empty());
+        blockchanges::seal(&result.changes, host.compatibility()).unwrap();
+    });
+}
+
+#[test]
+fn in_band_fatal_later_group_rolls_back_new_hosts_and_inventory() {
+    let temp = tempfile::tempdir().unwrap();
+    let copy = temp.path().join(SEGMENT);
+    synthetic_bundle(&copy, "fatal_later");
+    runtime().block_on(async {
+        descriptor::write_in_band(&copy, &repo_root(), &logger())
+            .await
+            .unwrap();
+        let cassette = crate_dir().join(format!("fixtures/cassettes/{SEGMENT}.json"));
+        let mut host = SegmentHost::load_in_band(SegmentHostConfig {
+            bundle_dir: &copy,
+            cassette_path: &cassette,
+            record: false,
+        })
+        .await
+        .unwrap();
+        let result = host
+            .process_block(
+                block::load_block(
+                    &repo_root().join("aerodrome-slipstream-base/fixtures/blocks/base/13899663.pb"),
+                )
+                .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert!(result.report.block_discarded);
+        assert!(!result.report.handler_groups[0].handlers[0]
+            .created_data_sources
+            .is_empty());
+        assert_eq!(
+            result.report.handler_groups[1].handlers[0].outcome,
+            "deterministic_error"
+        );
+        assert_eq!(
+            result.report.hosts_per_stage,
+            vec![2, 1],
+            "new host actually instantiated and ran before fatal rollback"
+        );
+        assert!(result.changes.created_data_sources.is_empty());
+        assert!(host.stored_dynamic_data_sources().unwrap().is_empty());
+        blockchanges::seal(&result.changes, host.compatibility()).unwrap();
+        // A subsequent no-log block begins with just the two static hosts.
+        use graph::prelude::prost::Message;
+        let mut raw = graph_chain_ethereum::codec::Block::decode(
+            std::fs::read(
+                repo_root().join("aerodrome-slipstream-base/fixtures/blocks/base/13899663.pb"),
+            )
+            .unwrap()
+            .as_slice(),
+        )
+        .unwrap();
+        raw.number += 1;
+        raw.transaction_traces.clear();
+        let next = host
+            .process_block((&raw).try_into().unwrap())
+            .await
+            .unwrap();
+        assert_eq!(next.report.hosts_per_stage, vec![2]);
+    });
+}
+
+#[test]
+fn in_band_duplicates_across_hosts_and_waves_keep_dense_accepted_ordinals() {
+    use graph::prelude::prost::Message;
+    let temp = tempfile::tempdir().unwrap();
+    let copy = temp.path().join(SEGMENT);
+    synthetic_bundle(&copy, "duplicate_waves");
+    runtime().block_on(async {
+        descriptor::write_in_band(&copy, &repo_root(), &logger())
+            .await
+            .unwrap();
+        let cassette = crate_dir().join(format!("fixtures/cassettes/{SEGMENT}.json"));
+        let mut host = SegmentHost::load_in_band(SegmentHostConfig {
+            bundle_dir: &copy,
+            cassette_path: &cassette,
+            record: false,
+        })
+        .await
+        .unwrap();
+        let mut raw = graph_chain_ethereum::codec::Block::decode(
+            std::fs::read(
+                repo_root().join("aerodrome-slipstream-base/fixtures/blocks/base/13899663.pb"),
+            )
+            .unwrap()
+            .as_slice(),
+        )
+        .unwrap();
+        let factory_address = hex::decode(FACTORY.trim_start_matches("0x")).unwrap();
+        let receipt = raw
+            .transaction_traces
+            .iter_mut()
+            .filter_map(|t| t.receipt.as_mut())
+            .find(|r| r.logs.iter().any(|l| l.address == factory_address))
+            .unwrap();
+        let original = receipt
+            .logs
+            .iter()
+            .find(|l| l.address == factory_address)
+            .unwrap()
+            .clone();
+        assert_eq!(original.data.len(), 32);
+        // A second source is requested twice by the two static factory hosts.
+        let mut second = original.clone();
+        second.block_index = 209;
+        second.index = 1000;
+        second.data[12..].fill(0xab);
+        receipt.logs.push(second);
+        // The first dynamic host runs Factory code only in this synthetic
+        // manifest. Its later wave requests its own already accepted source.
+        let mut duplicate = original.clone();
+        duplicate.address = original.data[12..].to_vec();
+        duplicate.block_index = 210;
+        duplicate.index = 1001;
+        receipt.logs.push(duplicate);
+        let result = host
+            .process_block((&raw).try_into().unwrap())
+            .await
+            .unwrap();
+        assert_eq!(result.report.hosts_per_stage, vec![3, 2]);
+        assert!(
+            result.report.created_data_sources.len() >= 5,
+            "actual duplicate requests must occur in both waves"
+        );
+        assert!(result.report.handler_groups.iter().any(|g| g.stage == 1
+            && g.handlers
+                .iter()
+                .any(|h| !h.created_data_sources.is_empty())));
+        assert_eq!(
+            result
+                .changes
+                .created_data_sources
+                .iter()
+                .map(|c| c.ordinal)
+                .collect::<Vec<_>>(),
+            vec![0, 1]
+        );
+        assert_eq!(host.stored_dynamic_data_sources().unwrap().len(), 2);
+        for creation in &result.changes.created_data_sources {
+            assert_eq!(
+                result.report.handler_groups[creation.handler_group_order as usize].stage,
+                0
+            );
+        }
+        blockchanges::seal(&result.changes, host.compatibility()).unwrap();
+    });
+}
+
+#[test]
+fn in_band_descriptor_refuses_wrong_or_missing_output_message_type() {
+    let temp = tempfile::tempdir().unwrap();
+    let copy = temp.path().join(SEGMENT);
+    copy_dir(&segment_dir(), &copy).unwrap();
+    runtime()
+        .block_on(descriptor::write_in_band(&copy, &repo_root(), &logger()))
+        .unwrap();
+    let path = copy.join(descriptor::IN_BAND_DESCRIPTOR_FILE);
+    let original: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
+    for replacement in [Some("proto:pinax.graph.backfill.v1.BlockChanges"), None] {
+        let mut value = original.clone();
+        if let Some(replacement) = replacement {
+            value["message_type"] = serde_json::json!(replacement);
+        } else {
+            value.as_object_mut().unwrap().remove("message_type");
+        }
+        let bytes = serde_json::to_vec(&value).unwrap();
+        std::fs::write(&path, &bytes).unwrap();
+        std::fs::write(
+            copy.join(descriptor::IN_BAND_DESCRIPTOR_SIDECAR),
+            sha256_hex(&bytes),
+        )
+        .unwrap();
+        assert!(descriptor::load_in_band(&copy)
+            .unwrap_err()
+            .to_string()
+            .contains("message_type"));
+    }
 }

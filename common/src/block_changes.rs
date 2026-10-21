@@ -255,6 +255,7 @@ struct HistoryStates {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ValidationError {
     Decode(String),
+    CreatedDataSource(String),
     NonCanonicalEncoding,
     Contract,
     CompatibilityIdLength {
@@ -458,6 +459,7 @@ impl fmt::Display for ValidationError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Decode(error) => write!(formatter, "invalid BlockChanges protobuf: {error}"),
+            Self::CreatedDataSource(error) => write!(formatter, "invalid created data source: {error}"),
             Self::NonCanonicalEncoding => write!(formatter, "noncanonical BlockChanges protobuf"),
             Self::Contract => write!(formatter, "BlockChanges contract identifier drift"),
             Self::CompatibilityIdLength { actual } => write!(
@@ -796,6 +798,77 @@ pub fn decode_canonical_block_changes(
 
 pub fn validate_block_changes(
     changes: &BlockChanges,
+    compatibility: &BlockChangesCompatibility,
+) -> Result<(), ValidationError> {
+    validate_block_changes_view(&BlockChangesView::from(changes), compatibility)
+}
+
+pub fn validate_in_band_block_changes(
+    changes: &crate::pb::pinax::graph::backfill::v2::BlockChanges,
+    compatibility: &BlockChangesCompatibility,
+) -> Result<(), ValidationError> {
+    validate_block_changes_view(&BlockChangesView::from(changes), compatibility)
+}
+
+pub fn encode_canonical_in_band_block_changes(
+    changes: &crate::pb::pinax::graph::backfill::v2::BlockChanges,
+    compatibility: &BlockChangesCompatibility,
+) -> Result<Vec<u8>, ValidationError> {
+    validate_in_band_block_changes(changes, compatibility)?;
+    Ok(changes.encode_to_vec())
+}
+
+pub fn decode_canonical_in_band_block_changes(
+    bytes: &[u8],
+    compatibility: &BlockChangesCompatibility,
+) -> Result<crate::pb::pinax::graph::backfill::v2::BlockChanges, ValidationError> {
+    let changes = crate::pb::pinax::graph::backfill::v2::BlockChanges::decode(bytes)
+        .map_err(|e| ValidationError::Decode(e.to_string()))?;
+    validate_in_band_block_changes(&changes, compatibility)?;
+    if changes.encode_to_vec() != bytes {
+        return Err(ValidationError::NonCanonicalEncoding);
+    }
+    Ok(changes)
+}
+
+struct BlockChangesView<'a> {
+    contract: &'a str,
+    compatibility_id: &'a [u8],
+    block_number: u64,
+    block_hash: &'a [u8],
+    mapping_triggered: bool,
+    triggered_poi_causality_regions: &'a [String],
+    operations: &'a [crate::pb::pinax::graph::backfill::v1::EntityOperation],
+    deterministic_error_policy: i32,
+    created_data_sources: &'a [crate::pb::pinax::graph::backfill::v2::CreatedDataSource],
+}
+macro_rules! changes_view {
+    ($ty:path, $sources:expr) => {
+        impl<'a> From<&'a $ty> for BlockChangesView<'a> {
+            fn from(c: &'a $ty) -> Self {
+                Self {
+                    contract: &c.contract,
+                    compatibility_id: &c.compatibility_id,
+                    block_number: c.block_number,
+                    block_hash: &c.block_hash,
+                    mapping_triggered: c.mapping_triggered,
+                    triggered_poi_causality_regions: &c.triggered_poi_causality_regions,
+                    operations: &c.operations,
+                    deterministic_error_policy: c.deterministic_error_policy,
+                    created_data_sources: ($sources)(c),
+                }
+            }
+        }
+    };
+}
+changes_view!(BlockChanges, |_| &[]);
+changes_view!(
+    crate::pb::pinax::graph::backfill::v2::BlockChanges,
+    |c: &'a crate::pb::pinax::graph::backfill::v2::BlockChanges| c.created_data_sources.as_slice()
+);
+
+fn validate_block_changes_view(
+    changes: &BlockChangesView<'_>,
     expected_compatibility: &BlockChangesCompatibility,
 ) -> Result<(), ValidationError> {
     if changes.contract != BLOCK_CHANGES_V1_CONTRACT {
@@ -809,7 +882,7 @@ pub fn validate_block_changes(
     if changes.compatibility_id.iter().all(|byte| *byte == 0) {
         return Err(ValidationError::ZeroCompatibilityId);
     }
-    if changes.compatibility_id.as_slice() != expected_compatibility.id() {
+    if changes.compatibility_id != expected_compatibility.id() {
         return Err(ValidationError::CompatibilityIdMismatch);
     }
     let deterministic_error_policy =
@@ -1074,6 +1147,72 @@ pub fn validate_block_changes(
         }
     }
 
+    validate_created_data_sources(changes, expected_compatibility, &deterministic_errors)?;
+    Ok(())
+}
+
+fn validate_created_data_sources(
+    changes: &BlockChangesView<'_>,
+    compatibility: &BlockChangesCompatibility,
+    failed_groups: &HashMap<u64, u64>,
+) -> Result<(), ValidationError> {
+    use crate::descriptor::{DataSourceTransport, TemplateParameter};
+    let capability = compatibility
+        .capabilities()
+        .filter(|c| c.data_sources.transport == DataSourceTransport::InBandV1);
+    let refuse = |message: &str| ValidationError::CreatedDataSource(message.to_owned());
+    if capability.is_some() && changes.block_hash.iter().all(|b| *b == 0) {
+        return Err(refuse("in_band_v1 requires an observed nonzero block hash"));
+    }
+    if changes.created_data_sources.is_empty() {
+        return Ok(());
+    }
+    let capability = capability.ok_or_else(|| refuse("descriptor lacks in_band_v1 capability"))?;
+    if !changes.mapping_triggered || changes.triggered_poi_causality_regions.is_empty() {
+        return Err(refuse(
+            "onchain creation requires a triggered mapping and PoI region",
+        ));
+    }
+    if compatibility.deterministic_error_policy() == DeterministicErrorPolicy::Fatal
+        && !failed_groups.is_empty()
+    {
+        return Err(refuse("fatal discarded block cannot persist data sources"));
+    }
+    let mut identities = std::collections::BTreeSet::new();
+    let mut previous_group = None;
+    for (ordinal, creation) in changes.created_data_sources.iter().enumerate() {
+        if creation.ordinal as usize != ordinal {
+            return Err(refuse("creation ordinals must be dense and zero-based"));
+        }
+        if previous_group.is_some_and(|g| creation.handler_group_order < g) {
+            return Err(refuse(
+                "creation handler groups are not in persistence order",
+            ));
+        }
+        previous_group = Some(creation.handler_group_order);
+        if failed_groups.contains_key(&creation.handler_group_order) {
+            return Err(refuse(
+                "creation belongs to a deterministically failed group",
+            ));
+        }
+        let template = capability
+            .data_sources
+            .templates
+            .iter()
+            .find(|t| t.manifest_idx == creation.manifest_idx)
+            .ok_or_else(|| refuse("undeclared template manifest index"))?;
+        if creation.template != template.name
+            || creation.context_json.is_some()
+            || matches!(template.param, TemplateParameter::Address20) && creation.param.len() != 20
+        {
+            return Err(refuse(
+                "template, address20 param or reserved context mismatch",
+            ));
+        }
+        if !identities.insert((creation.manifest_idx, &creation.param)) {
+            return Err(refuse("duplicate template/address identity"));
+        }
+    }
     Ok(())
 }
 
@@ -1094,7 +1233,7 @@ fn validate_handler_order(
     Ok(())
 }
 
-fn validate_triggered_regions(changes: &BlockChanges) -> Result<(), ValidationError> {
+fn validate_triggered_regions(changes: &BlockChangesView<'_>) -> Result<(), ValidationError> {
     if !changes.mapping_triggered
         && (!changes.triggered_poi_causality_regions.is_empty() || !changes.operations.is_empty())
     {

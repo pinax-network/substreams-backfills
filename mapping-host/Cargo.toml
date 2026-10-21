@@ -47,6 +47,9 @@ ureq = { version = "2", default-features = false, features = ["tls", "json"] }
 [dev-dependencies]
 tempfile = "3"
 
+[build-dependencies]
+sha2 = "0.10"
+
 # Debug info is the bulk of a test binary here, and there is a lot of test
 # binary: this crate links `graph`, `graph-chain-ethereum`,
 # `graph-runtime-wasm` and wasmtime, 577 crates, into every target. With debug

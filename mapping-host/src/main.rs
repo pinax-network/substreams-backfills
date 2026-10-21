@@ -104,6 +104,9 @@ struct SummarizeArgs {
 
 #[derive(clap::Args)]
 struct BuildDescriptorsArgs {
+    /// Generate a separate v2 in-band oracle descriptor, retaining frozen v1 descriptors.
+    #[arg(long)]
+    data_sources_in_band: bool,
     /// Directory holding one subdirectory per deployment.
     #[arg(long, default_value = "segments")]
     segments: PathBuf,
@@ -154,6 +157,10 @@ struct RunArgs {
     /// Bounded to 10000 blocks; refuses checkpoints, grafts and indexing errors.
     #[arg(long, requires = "bcf1_out", conflicts_with_all = ["checkpoint_in", "continue_outputs"])]
     data_sources_out: Option<PathBuf>,
+    /// Emit accepted dynamic-source creations in field 9 of the extended envelope.
+    /// Requires a separately generated descriptor bound to this compiled source closure.
+    #[arg(long, requires = "bcf1_out", conflicts_with_all = ["data_sources_out", "source_chunk_out"])]
+    data_sources_in_band: bool,
     /// Seal one immutable v2 source/checkpoint chunk. Owns all output files;
     /// reports stream to stdout. Does not support grafts or partial appends.
     #[arg(long, conflicts_with_all = ["data_sources_out", "bcf1_out", "checkpoint_in", "checkpoint_out", "checkpoint_every", "continue_outputs", "block_changes_out", "store_out", "out"])]
@@ -396,12 +403,16 @@ async fn run(mut args: RunArgs) -> Result<()> {
     // and a checkpoint being *loaded* can be checked against either.
     let cassette_before = replay::file_sha256(&args.cassette)?;
 
-    let mut host = SegmentHost::load(SegmentHostConfig {
+    let config = SegmentHostConfig {
         bundle_dir: &args.segment,
         cassette_path: &args.cassette,
         record: args.record,
-    })
-    .await?;
+    };
+    let mut host = if args.data_sources_in_band {
+        SegmentHost::load_in_band(config).await?
+    } else {
+        SegmentHost::load(config).await?
+    };
 
     if args.data_sources_out.is_some() {
         let bundle = graph_mapping_host::SegmentBundle::load(&args.segment)?;
@@ -486,7 +497,7 @@ async fn run(mut args: RunArgs) -> Result<()> {
                     stop: to,
                 },
             );
-            Box::new(if chunk_plan.is_some() {
+            Box::new(if chunk_plan.is_some() || args.data_sources_in_band {
                 checked.require_parent_hashes()
             } else {
                 checked
@@ -506,7 +517,7 @@ async fn run(mut args: RunArgs) -> Result<()> {
                 Ordering::Sampled
             };
             let checked = CheckedSource::new(fixtures, ordering);
-            Box::new(if chunk_plan.is_some() {
+            Box::new(if chunk_plan.is_some() || args.data_sources_in_band {
                 checked.require_parent_hashes()
             } else {
                 checked
@@ -760,9 +771,12 @@ async fn build_descriptors(args: BuildDescriptorsArgs) -> Result<()> {
         .collect();
     segments.sort();
     for segment in segments {
-        let digest = descriptor::write(&segment, &args.repo_root, &logger)
-            .await
-            .with_context(|| format!("building the descriptor for {}", segment.display()))?;
+        let digest = if args.data_sources_in_band {
+            descriptor::write_in_band(&segment, &args.repo_root, &logger).await
+        } else {
+            descriptor::write(&segment, &args.repo_root, &logger).await
+        }
+        .with_context(|| format!("building the descriptor for {}", segment.display()))?;
         println!("{} {digest}", segment.display());
     }
     Ok(())

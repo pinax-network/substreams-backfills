@@ -1,4 +1,4 @@
-//! `pinax.graph.backfill.v1.BlockChanges` emission.
+//! Frozen v1 and capability-gated v2 BlockChanges envelope emission.
 //!
 //! Phase 1 could report one modification set per handler, sorted by key, because
 //! `EntityCache` collapses writes into a `HashMap`. Phase 2 records the ordered
@@ -6,11 +6,9 @@
 //! `vendor/graph-runtime-wasm` beside the proof-of-indexing writes, and projects
 //! it onto the canonical frame.
 //!
-//! Every frame is validated with `backfill_common::validate_block_changes` and
-//! round-tripped through `encode_canonical_block_changes` and
-//! `decode_canonical_block_changes` before it is written, so a frame that leaves
-//! this crate has already been refused-or-accepted by the same code the engine
-//! runs on the read side.
+//! Every frame uses the shared canonical in-band codec. Empty creation lists
+//! preserve the exact frozen v1 encoding; field 9 requires the v2 descriptor
+//! capability and an engine consumer that explicitly supports that envelope.
 //!
 //! ## The merge algebra is imported, not restated
 //!
@@ -30,14 +28,14 @@
 //! where the second nulls a field the first set produce a *retained* Null over an
 //! absent baseline, and a *removed* field if each save is merged in turn.
 
-use std::collections::BTreeMap;
 use std::sync::Mutex;
 
 use anyhow::{anyhow, bail, Context, Result};
-use backfill_common::pb::pinax::graph::backfill::v1 as pb;
+use backfill_common::pb::pinax::graph::backfill::v2 as pb;
 use backfill_common::{
-    decode_canonical_block_changes, encode_canonical_block_changes, BlockChangesCompatibility,
-    CacheOperation,
+    decode_canonical_in_band_block_changes as decode_canonical_block_changes,
+    encode_canonical_in_band_block_changes as encode_canonical_block_changes,
+    BlockChangesCompatibility,
 };
 use graph::data::store::{Entity, Id, Value};
 use graph::schema::{EntityKey, InputSchema};
@@ -45,33 +43,10 @@ use graph_runtime_wasm::op_recorder::EntityOpRecorder;
 
 /// The `BCF1` clock-v1 frame header is fixed width; see `header` below.
 pub const BCF1_MAGIC: &[u8; 4] = b"BCF1";
-const BCF1_VERSION: u8 = 1;
 
-/// One store effect, in the order the mapping asked for it.
-#[derive(Clone, Debug)]
-pub enum RecordedOp {
-    Set {
-        /// The graph-native key, so the runner can read the entity visible
-        /// before this handler ran straight out of its store.
-        native_key: EntityKey,
-        key: pb::EntityKey,
-        poi_entity_type: String,
-        poi_entity_id: String,
-        written_fields: Vec<pb::EntityField>,
-        source_causality_region: i32,
-        poi_causality_region: String,
-    },
-    Remove {
-        native_key: Option<EntityKey>,
-        /// Absent when the typed key never parsed, which Graph Node hashes
-        /// before it resolves the schema.
-        key: Option<pb::EntityKey>,
-        poi_entity_type: String,
-        poi_entity_id: String,
-        source_causality_region: i32,
-        poi_causality_region: String,
-    },
-}
+/// Exact shared ordered builder; Graph Node keys are only the lookup adapter.
+pub use backfill_common::block_ops::BlockOpsBuilder;
+pub type RecordedOp = backfill_common::block_ops::RecordedOp<EntityKey>;
 
 /// The recorder installed on every runtime host.
 ///
@@ -351,264 +326,6 @@ pub fn entity_from_wire(schema: &InputSchema, fields: &[pb::EntityField]) -> Res
         .map_err(|error| anyhow!("rebuilding a stored entity: {error}"))
 }
 
-/// Storage identity, matching `backfill_common::materialized_key` without
-/// needing a validated frame.
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-struct LocalKey {
-    entity_type: String,
-    id: String,
-    storage_causality_region: i32,
-}
-
-fn local_key(key: &pb::EntityKey) -> LocalKey {
-    let id = match key.id.as_ref().and_then(|id| id.value.as_ref()) {
-        Some(pb::entity_id::Value::String(value)) => format!("s:{value}"),
-        Some(pb::entity_id::Value::Bytes(value)) => format!("b:{}", hex::encode(value)),
-        Some(pb::entity_id::Value::Int8(value)) => format!("i:{value}"),
-        None => "?".to_string(),
-    };
-    LocalKey {
-        entity_type: key.entity_type.clone(),
-        id,
-        storage_causality_region: key.storage_causality_region,
-    }
-}
-
-/// The running `EntityCache` effect for one entity within one handler.
-struct LocalEffect {
-    baseline: Option<Vec<pb::EntityField>>,
-    operation: CacheOperation,
-}
-
-/// Accumulates one block's operations across handlers.
-pub struct BlockOpsBuilder {
-    operations: Vec<pb::EntityOperation>,
-    /// The handler that failed in each handler group, if any did.
-    ///
-    /// A block may hold several: Graph Node keeps processing triggers after a
-    /// deterministic error and only discards effects at `transact_block_state`,
-    /// so each failing group writes its own `DeterministicError` PoI event. Two
-    /// errors in one group is the case Graph Node itself asserts against.
-    failures: BTreeMap<u64, u64>,
-    /// Ops emitted so far per handler group, for `redacted_events`.
-    group_event_counts: BTreeMap<u64, u64>,
-}
-
-impl Default for BlockOpsBuilder {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl BlockOpsBuilder {
-    pub fn new() -> Self {
-        BlockOpsBuilder {
-            operations: Vec::new(),
-            failures: BTreeMap::new(),
-            group_event_counts: BTreeMap::new(),
-        }
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.operations.is_empty()
-    }
-
-    /// Append one handler's recorded saves.
-    ///
-    /// `visible_before` reads the get-visible entity for a key as it stood
-    /// before this handler ran; the runner backs it with the in-memory store,
-    /// which already carries every earlier handler's committed effect.
-    pub fn push_handler<F>(
-        &mut self,
-        handler_group_order: u64,
-        source_trigger_order: u64,
-        handler_order: u64,
-        ops: Vec<RecordedOp>,
-        mut visible_before: F,
-    ) -> Result<()>
-    where
-        F: FnMut(&EntityKey) -> Option<Vec<pb::EntityField>>,
-    {
-        let mut locals: BTreeMap<LocalKey, LocalEffect> = BTreeMap::new();
-
-        for op in ops {
-            let index = self.operations.len() as u64;
-            let operation = match op {
-                RecordedOp::Set {
-                    native_key,
-                    key,
-                    poi_entity_type,
-                    poi_entity_id,
-                    written_fields,
-                    source_causality_region,
-                    poi_causality_region,
-                } => {
-                    let identity = local_key(&key);
-                    let effect = locals.entry(identity).or_insert_with(|| LocalEffect {
-                        baseline: visible_before(&native_key),
-                        operation: CacheOperation::Update(Vec::new()),
-                    });
-                    // `accumulate` on a fresh `Update(vec![])` is the identity,
-                    // so the first save initialises and later saves fold in.
-                    effect
-                        .operation
-                        .accumulate(CacheOperation::Update(written_fields.clone()));
-                    let materialized = effect
-                        .operation
-                        .apply_to(&effect.baseline)
-                        .ok_or_else(|| anyhow!("a set must leave the entity visible"))?;
-
-                    pb::EntityOperation {
-                        operation_index: index,
-                        handler_group_order,
-                        source_trigger_order,
-                        poi_causality_region: Some(poi_causality_region),
-                        handler_order,
-                        source_causality_region,
-                        operation: Some(pb::entity_operation::Operation::Set(pb::SetEntity {
-                            key: Some(key),
-                            poi_entity_type,
-                            poi_entity_id,
-                            written_fields,
-                            materialized: Some(pb::EntityFields {
-                                fields: materialized,
-                            }),
-                            // Filled in by `finish`, once the block's error
-                            // state is known.
-                            store_disposition: pb::StoreDisposition::Unspecified as i32,
-                            failure_stage: pb::SetFailureStage::Unspecified as i32,
-                        })),
-                    }
-                }
-                RecordedOp::Remove {
-                    native_key,
-                    key,
-                    poi_entity_type,
-                    poi_entity_id,
-                    source_causality_region,
-                    poi_causality_region,
-                } => {
-                    if let (Some(key), Some(native_key)) = (key.as_ref(), native_key.as_ref()) {
-                        let identity = local_key(key);
-                        let effect = locals.entry(identity).or_insert_with(|| LocalEffect {
-                            baseline: visible_before(native_key),
-                            operation: CacheOperation::Update(Vec::new()),
-                        });
-                        effect.operation.accumulate(CacheOperation::Remove);
-                    }
-                    pb::EntityOperation {
-                        operation_index: index,
-                        handler_group_order,
-                        source_trigger_order,
-                        poi_causality_region: Some(poi_causality_region),
-                        handler_order,
-                        source_causality_region,
-                        operation: Some(pb::entity_operation::Operation::Remove(
-                            pb::RemoveEntity {
-                                key,
-                                poi_entity_type,
-                                poi_entity_id,
-                                store_disposition: pb::StoreDisposition::Unspecified as i32,
-                            },
-                        )),
-                    }
-                }
-            };
-            self.operations.push(operation);
-            *self
-                .group_event_counts
-                .entry(handler_group_order)
-                .or_default() += 1;
-        }
-        Ok(())
-    }
-
-    /// Close a handler group whose handler failed deterministically.
-    ///
-    /// Graph Node appends one `DeterministicError` PoI event after the whole
-    /// group, counting every event since that group's `start_handler` — not only
-    /// the discarded ones.
-    pub fn push_deterministic_error(
-        &mut self,
-        handler_group_order: u64,
-        source_trigger_order: u64,
-        handler_order: u64,
-        poi_causality_region: String,
-    ) -> Result<()> {
-        if self.failures.contains_key(&handler_group_order) {
-            bail!("handler group {handler_group_order} already carries a deterministic error");
-        }
-        let redacted_events = self
-            .group_event_counts
-            .get(&handler_group_order)
-            .copied()
-            .unwrap_or(0);
-        self.operations.push(pb::EntityOperation {
-            operation_index: self.operations.len() as u64,
-            handler_group_order,
-            source_trigger_order,
-            poi_causality_region: Some(poi_causality_region),
-            handler_order,
-            source_causality_region: 0,
-            operation: Some(pb::entity_operation::Operation::DeterministicError(
-                pb::DeterministicError { redacted_events },
-            )),
-        });
-        self.failures.insert(handler_group_order, handler_order);
-        Ok(())
-    }
-
-    /// Assign dispositions and build the frame.
-    #[allow(clippy::too_many_arguments)]
-    pub fn finish(
-        mut self,
-        compatibility: &BlockChangesCompatibility,
-        block_number: u64,
-        block_hash: Vec<u8>,
-        mapping_triggered: bool,
-        triggered_regions: Vec<String>,
-        policy: pb::DeterministicErrorPolicy,
-    ) -> Result<pb::BlockChanges> {
-        let has_error = !self.failures.is_empty();
-        let block_discarded = has_error && policy == pb::DeterministicErrorPolicy::Fatal;
-
-        for operation in &mut self.operations {
-            let failed_here = self
-                .failures
-                .get(&operation.handler_group_order)
-                .is_some_and(|handler| *handler == operation.handler_order);
-            let disposition = if failed_here {
-                pb::StoreDisposition::Discarded
-            } else if block_discarded {
-                pb::StoreDisposition::BlockDiscarded
-            } else {
-                pb::StoreDisposition::Committed
-            } as i32;
-            match operation.operation.as_mut() {
-                Some(pb::entity_operation::Operation::Set(set)) => {
-                    set.store_disposition = disposition;
-                }
-                Some(pb::entity_operation::Operation::Remove(remove)) => {
-                    remove.store_disposition = disposition;
-                }
-                Some(pb::entity_operation::Operation::DeterministicError(_)) | None => {}
-            }
-        }
-
-        let changes = pb::BlockChanges {
-            contract: backfill_common::BLOCK_CHANGES_V1_CONTRACT.to_string(),
-            compatibility_id: compatibility.to_vec(),
-            block_number,
-            block_hash,
-            mapping_triggered,
-            triggered_poi_causality_regions: triggered_regions,
-            operations: self.operations,
-            deterministic_error_policy: policy as i32,
-        };
-        Ok(changes)
-    }
-}
-
 /// Count a frame's operations for the human-readable report.
 pub fn summarize(changes: &pb::BlockChanges, bytes: &[u8]) -> crate::report::BlockChangesSummary {
     let mut sets = 0;
@@ -668,16 +385,17 @@ pub fn bcf1_frame(block_number: u64, block_hash: &[u8], payload: &[u8]) -> Resul
             block_hash.len()
         );
     }
-    let length = u32::try_from(payload.len()).context("payload exceeds a BCF1 frame")?;
-    let mut frame = Vec::with_capacity(52 + payload.len());
-    frame.extend_from_slice(BCF1_MAGIC);
-    frame.push(BCF1_VERSION);
-    frame.extend_from_slice(&[0, 0, 0]);
-    frame.extend_from_slice(&block_number.to_be_bytes());
-    frame.extend_from_slice(block_hash);
-    frame.extend_from_slice(&length.to_be_bytes());
-    frame.extend_from_slice(payload);
-    Ok(frame)
+    let mut bytes = Vec::with_capacity(52 + payload.len());
+    backfill_common::clock::write_frame(
+        &mut bytes,
+        &backfill_common::clock::Frame {
+            kind: backfill_common::clock::FrameKind::Observed,
+            block_number,
+            block_hash: block_hash.try_into().expect("length checked"),
+            payload: payload.to_vec(),
+        },
+    )?;
+    Ok(bytes)
 }
 
 #[cfg(test)]
@@ -821,6 +539,7 @@ mod graph_decimal_domain_tests {
                 })),
             }],
             deterministic_error_policy: pb::DeterministicErrorPolicy::NonFatal as i32,
+            created_data_sources: Vec::new(),
         };
         seal(&changes, compatibility).map(|_| ())
     }

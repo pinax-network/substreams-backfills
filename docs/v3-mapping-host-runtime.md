@@ -9,12 +9,14 @@ ancestry, a graft transition, production loading, or memory-bounded operation.
 
 `mapping-host/runtime/package.py context` exports an allowlist of **committed Git
 objects**, not the working directory: root workspace declarations, `common`, the
-mapping-host sources/lockfile/toolchain/vendored Graph Node patch, all eight
-deployed bundles, and the runtime packaging implementation. Untracked files,
-dirty edits, `.git`, local build caches, credentials and recorded cassettes cannot
-enter that build. Only this exported directory is a supported Docker context.
-The builder verifies the complete input inventory before compiling with the
-pinned Rust 1.98.0 toolchain and locked dependency graph.
+mapping-host sources/lockfile/toolchain/vendored Graph Node patch, every
+deployed bundle under `mapping-host/segments/` (the eight Uniswap V3 deployments
+and the Aerodrome Slipstream Base oracle segment), and the runtime packaging
+implementation. Untracked files, dirty edits, `.git`, local build caches,
+credentials and recorded cassettes cannot enter that build. Only this exported
+directory is a supported Docker context. The builder verifies the complete input
+inventory before compiling with the pinned Rust 1.98.0 toolchain and locked
+dependency graph.
 
 The Rust builder and Debian runtime bases are pinned to their Linux/amd64
 manifest digests. OS packages are installed from Debian repositories at build
@@ -24,8 +26,9 @@ pins the resulting OS dependencies, as well as the executable and bundles.
 Inside the image:
 
 - `/usr/local/bin/graph-mapping-host`: the execution binary.
-- `/opt/mapping-host/segments/<deployment>/`: eight original bundles, descriptors
-  and checksum sidecars; every byte matches the exact build commit.
+- `/opt/mapping-host/segments/<deployment>/`: nine original bundles (eight
+  Uniswap V3 deployments and Aerodrome Slipstream Base), descriptors and
+  checksum sidecars; every byte matches the exact build commit.
 - `/opt/mapping-host/source.json`: committed source input inventory.
 - `/opt/mapping-host/runtime.json`: source commit, source-input set hash, binary
   digest, and complete application-payload inventory. This deliberately contains

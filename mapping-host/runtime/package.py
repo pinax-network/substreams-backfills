@@ -23,7 +23,7 @@ ARTIFACT_TYPE = "application/vnd.pinax.mapping-host.runtime.v1"
 OCI_MANIFEST = "application/vnd.oci.image.manifest.v1+json"
 RUNTIME_ENV = ["PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"]
 EXACT = {
-    "Cargo.toml", "mapping-host/Cargo.toml", "mapping-host/Cargo.lock",
+    "Cargo.toml", "mapping-host/Cargo.toml", "mapping-host/Cargo.lock", "mapping-host/build.rs",
     "mapping-host/rust-toolchain.toml", "mapping-host/runtime/Dockerfile",
     "mapping-host/runtime/package.py",
 }
@@ -132,6 +132,17 @@ def verify_bundles(root, source):
         if lock["deployment"] != segment.name:
             raise ValueError("bundle deployment mismatch")
         expected = {"bundle.lock.json", "block-changes-descriptor.json", "block-changes-descriptor.json.sha256"}
+        in_band = segment / "block-changes-in-band-descriptor.json"
+        in_band_pin = in_band.with_suffix(".json.sha256")
+        if in_band.exists() != in_band_pin.exists():
+            raise ValueError("in-band descriptor requires its sidecar")
+        if in_band.exists():
+            expected.update((in_band.name, in_band_pin.name))
+            if in_band_pin.read_text().strip() != digest(in_band):
+                raise ValueError("in-band descriptor sidecar mismatch")
+            descriptor = read_json(in_band)
+            if descriptor.get("descriptor_version") != 2 or descriptor.get("message_type") != "proto:pinax.graph.backfill.v2.BlockChanges":
+                raise ValueError("in-band descriptor version/message type mismatch")
         for item in lock["files"]:
             name = safe_path(item["path"])
             if name in expected:

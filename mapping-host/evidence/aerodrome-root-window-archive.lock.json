@@ -1,0 +1,37 @@
+{
+  "schema": "pinax.substreams-backfills.evidence-assets/v1",
+  "repository": "pinax-network/substreams-backfills",
+  "release_tag": "aerodrome-root-window-archive-v1",
+  "assets": [
+    {
+      "path": "mapping-host/evidence/aerodrome-first-pools-13899663-13919663.bcf1",
+      "asset": "sha256-d5ab1d907f2a992385a765bbef114852af9f827767221d9cbebd4fee7d72a59e.bcf1",
+      "bytes": 109285006,
+      "sha256": "d5ab1d907f2a992385a765bbef114852af9f827767221d9cbebd4fee7d72a59e"
+    },
+    {
+      "path": "mapping-host/evidence/aerodrome-first-pools-13899663-13919663.checkpoint.jsonl",
+      "asset": "sha256-1c536c2566caf9248fd937f56cfee465f2ed0c80783759c1e7c8c445a7279f78.jsonl",
+      "bytes": 14747071,
+      "sha256": "1c536c2566caf9248fd937f56cfee465f2ed0c80783759c1e7c8c445a7279f78"
+    },
+    {
+      "path": "mapping-host/evidence/aerodrome-first-pools-13899663-13919663.store.json",
+      "asset": "sha256-8318a8342dcc2f8bd48fc7793b304085b15216b60a3d74b687819a6a77f3d8b0.json",
+      "bytes": 35906547,
+      "sha256": "8318a8342dcc2f8bd48fc7793b304085b15216b60a3d74b687819a6a77f3d8b0"
+    },
+    {
+      "path": "mapping-host/evidence/aerodrome-root-prefix-13843704-13899663.bcf1",
+      "asset": "sha256-87ad11fb710f89364ef8c7f2ac282642fd6a3fc710d001af6c53c82ab383447b.bcf1",
+      "bytes": 9289194,
+      "sha256": "87ad11fb710f89364ef8c7f2ac282642fd6a3fc710d001af6c53c82ab383447b"
+    },
+    {
+      "path": "mapping-host/evidence/aerodrome-root-prefix-13843704-13899663.checkpoint.jsonl",
+      "asset": "sha256-97def80808e5378f6d74f7d7e95298a7cee38646683fb3f4c91753bf93e0bb80.jsonl",
+      "bytes": 1009,
+      "sha256": "97def80808e5378f6d74f7d7e95298a7cee38646683fb3f4c91753bf93e0bb80"
+    }
+  ]
+}

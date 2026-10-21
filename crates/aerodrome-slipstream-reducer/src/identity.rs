@@ -86,7 +86,10 @@ impl InputBinding {
             "wrong Pool template contract",
         )?;
         let ProducerContract::NativeBlockChangesReducer { reducer, extractor } =
-            &cap.producer_contract;
+            &cap.producer_contract
+        else {
+            return Err(refuse("reducer input requires a native reducer producer contract"));
+        };
         require(
             reducer.repository == "pinax-network/substreams-backfills",
             "wrong reducer repository",

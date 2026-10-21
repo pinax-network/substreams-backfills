@@ -33,6 +33,15 @@ The same format and commands serve other content-addressed sets through
 names keep the `.pb` extension). Each lock maps to exactly one immutable
 release tag.
 
+The Aerodrome Slipstream Base oracle adds three (`mapping-host/README.md`,
+"Aerodrome Slipstream Base: the oracle segment"):
+
+| Lock | Release | Contents | Fetched in CI |
+|---|---|---|---|
+| `aerodrome-slipstream-base/fixtures/blocks.lock.json` | `aerodrome-base-block-fixtures-v1` | two Base block protobufs, 7.4 MB | yes, `ci-mapping-host` |
+| `mapping-host/evidence/aerodrome-root-window.lock.json` | `aerodrome-root-window-evidence-v1` | both root-window streamed reports, the window's cassette, and the per-block files the two summaries pin, 143.8 MB | yes, `ci-mapping-host` |
+| `mapping-host/evidence/aerodrome-root-window-archive.lock.json` | `aerodrome-root-window-archive-v1` | both runs' `BCF1` frame streams and closing checkpoints and the window's final store, 169.2 MB | no; fetch it to continue the chain past 13,919,662 |
+
 ## Tracked in-tree pins
 
 Besides the externalized `assets`, the lock may carry a `tracked` list: in-tree

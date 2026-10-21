@@ -50,6 +50,9 @@ wasmtime = "=38.0.4"
 wasmparser = "=0.239.0"
 wasm-encoder = "=0.239.0"
 
+[build-dependencies]
+sha2 = "0.10"
+
 # Debug info is the bulk of a test binary here, and there is a lot of test
 # binary: this crate links `graph`, `graph-chain-ethereum`,
 # `graph-runtime-wasm` and wasmtime, 577 crates, into every target. With debug

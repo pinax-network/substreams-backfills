@@ -9,6 +9,8 @@ pub mod handlers;
 pub mod hosts;
 pub mod identity;
 pub mod input;
+#[cfg(feature = "reference-extractor")]
+pub mod reference;
 pub mod runner;
 pub mod state;
 pub use aerodrome_extractor_core::{Address, Word};

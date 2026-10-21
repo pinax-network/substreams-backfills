@@ -40,6 +40,8 @@ jobs:
       - name: Install protobuf compiler
         run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
       - name: Fetch digest-locked Base block fixtures
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: cargo xtask evidence fetch --lock aerodrome-slipstream-base/fixtures/blocks.lock.json
       - name: Check generated types, native core, candidates, and strict lints
         run: cargo xtask aerodrome-substreams check

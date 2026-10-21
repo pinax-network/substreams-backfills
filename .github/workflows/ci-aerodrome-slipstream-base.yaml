@@ -1,0 +1,58 @@
+name: ci-aerodrome-slipstream-base
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    outputs:
+      run: ${{ steps.filter.outputs.run }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        id: filter
+        with:
+          filters: |
+            run:
+              - '.github/workflows/ci-aerodrome-slipstream-base.yaml'
+              - 'aerodrome-slipstream-base/**'
+              - 'xtask/**'
+              - 'Cargo.toml'
+              - 'Cargo.lock'
+  extractor:
+    needs: changes
+    if: ${{ !cancelled() && (github.event_name != 'pull_request' || needs.changes.outputs.run == 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.90.0
+        with:
+          components: clippy, rustfmt
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@49a0bdc70d2e1b713ca9e2869b211fcce03d3c1c # v2.9.2
+        with:
+          workspaces: |
+            .
+            aerodrome-slipstream-base/substreams
+      - name: Install protobuf compiler
+        run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
+      - name: Check generated types, native core, candidates, and strict lints
+        run: cargo xtask aerodrome-substreams check
+      - name: Build WASM from two independent roots
+        run: cargo xtask aerodrome-substreams build --twice
+      - name: Build local development artifacts for pack validation
+        run: cargo xtask aerodrome-substreams build
+      - name: Install checksum-pinned Substreams CLI
+        run: |
+          archive="$RUNNER_TEMP/substreams-v1.20.3.tar.gz"
+          curl -fsSL https://github.com/streamingfast/substreams/releases/download/v1.20.3/substreams_linux_x86_64.tar.gz -o "$archive"
+          echo "90c71d04a75490efdf0493254a8563c3555690e622b3c6ade5100c0c773f8675  $archive" | sha256sum -c -
+          sudo tar -xzf "$archive" -C /usr/local/bin substreams
+      - name: Validate the candidate-only development module graph
+        working-directory: aerodrome-slipstream-base/substreams
+        run: |
+          substreams pack substreams.yaml -o "$RUNNER_TEMP/aerodrome-candidates.spkg"
+          substreams info "$RUNNER_TEMP/aerodrome-candidates.spkg"

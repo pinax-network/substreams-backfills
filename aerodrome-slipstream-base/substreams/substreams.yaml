@@ -1,0 +1,54 @@
+# Development candidate extraction only. No complete map_extractor_block yet.
+specVersion: v0.1.0
+package:
+  name: aerodrome_slipstream_base_extractor
+  version: v0.1.0
+  url: https://github.com/pinax-network/substreams-backfills
+  description: Non-final Aerodrome candidate and registry stages; call answers are not implemented
+network: base
+protobuf:
+  files:
+    - pinax/aerodrome/slipstream/base/v1/extractor.proto
+    - pinax/aerodrome/slipstream/base/internal/v1/internal.proto
+  importPaths: [./proto]
+  excludePaths: [sf/substreams, google]
+binaries:
+  extract:
+    type: wasm/rust-v1
+    file: ./target/wasm32-unknown-unknown/release/aerodrome_extractor_extract.wasm
+  stores:
+    type: wasm/rust-v1
+    file: ./target/wasm32-unknown-unknown/release/aerodrome_extractor_stores.wasm
+modules:
+  - name: map_pools_created
+    kind: map
+    binary: extract
+    initialBlock: 13843704
+    inputs:
+      - params: string
+      - source: sf.ethereum.type.v2.Block
+    output:
+      type: proto:pinax.aerodrome.slipstream.base.internal.v1.PoolsCreated
+  - name: store_pools
+    kind: store
+    binary: stores
+    initialBlock: 13843704
+    updatePolicy: set_if_not_exists
+    valueType: bytes
+    inputs:
+      - map: map_pools_created
+      - source: sf.substreams.v1.Clock
+  - name: map_candidates
+    kind: map
+    binary: extract
+    initialBlock: 13843704
+    inputs:
+      - params: string
+      - source: sf.ethereum.type.v2.Block
+      - store: store_pools
+        mode: get
+    output:
+      type: proto:pinax.aerodrome.slipstream.base.v1.ExtractorBlock
+params:
+  map_pools_created: "network=base;deployment=QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV;factory=0x5e7bb104d84c7cb9b682aac2f3d509f5f406809a;factory_start=13843704;npm=0x827922686190790b37229fd06084350e74485b72;npm_start=13843719;pool_implementation=0xec8e5342b19977b4ef8892e02d8daecfa1315831;storage_layout=slipstream@37eead2c7e5302a204dec78bfa0775bbb8ff48a2;walk_spacing=1:1,50:10,100:10,200:60,*:200"
+  map_candidates: "network=base;deployment=QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV;factory=0x5e7bb104d84c7cb9b682aac2f3d509f5f406809a;factory_start=13843704;npm=0x827922686190790b37229fd06084350e74485b72;npm_start=13843719;pool_implementation=0xec8e5342b19977b4ef8892e02d8daecfa1315831;storage_layout=slipstream@37eead2c7e5302a204dec78bfa0775bbb8ff48a2;walk_spacing=1:1,50:10,100:10,200:60,*:200"

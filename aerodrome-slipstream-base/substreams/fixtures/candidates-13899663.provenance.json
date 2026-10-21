@@ -1,0 +1,32 @@
+{
+  "kind": "candidate-field projection; not a full Firehose fixture",
+  "block": 13899663,
+  "block_hash": "d83042b6a32dc9b18d4c7c9819b914bc04470f77458e7276cb72f3d8fde5eb3d",
+  "observed_at": "2026-10-20",
+  "source_capture_sha256": "ce986208471614e26d710de6677599ef087230f6d9af09c33fde1f6675f235f4",
+  "projection": "all transaction identity/gas/status fields; every receipt log; contract creation code changes; header parent/time/baseFee",
+  "expected_receipt_logs": 209,
+  "expected_order": [
+    [
+      0,
+      172
+    ],
+    [
+      0,
+      177
+    ],
+    [
+      0,
+      178
+    ],
+    [
+      1,
+      171
+    ],
+    [
+      1,
+      176
+    ]
+  ],
+  "calls_answered": false
+}

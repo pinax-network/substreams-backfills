@@ -1,0 +1,49 @@
+syntax = "proto3";
+package pinax.aerodrome.slipstream.base.internal.v1;
+import "pinax/aerodrome/slipstream/base/v1/extractor.proto";
+
+message PoolsCreated { repeated PoolCreatedRecord pools = 1; }
+message PoolCreatedRecord {
+  bytes pool = 1; bytes token0 = 2; bytes token1 = 3; sint32 tick_spacing = 4;
+  uint32 log_index = 5; uint64 log_ordinal = 6; uint32 tx_index = 7;
+  bytes clone_implementation = 8;           // empty when the CREATE2 code change is absent/unexpected
+}
+
+// store_pools values (raw bytes = prost encoding)
+message PoolRecord { bytes token0 = 1; bytes token1 = 2; sint32 tick_spacing = 3;
+                     uint64 created_block = 4; uint32 created_log_index = 5; }
+message PoolRef { bytes pool = 1; uint64 created_block = 2; }   // value of getPool keys
+
+// map_storage_deltas output: ONE entry per (address, slot) = the end-of-block value (§8.3)
+message StorageDeltas {
+  repeated FeeGrowthWrite fee_growth = 1;
+  repeated TickWrite ticks = 2;
+  repeated PositionWrite positions = 3;
+  repeated PoolKeyWrite pool_keys = 4;
+  uint32 relevant_writes = 5;
+  uint32 reverted_writes_skipped = 6;
+  repeated pinax.aerodrome.slipstream.base.v1.Anomaly anomalies = 7;
+}
+message SlotWrite { bytes word = 1;        // 32-byte end-of-block word
+                    uint64 ordinal = 2; uint32 tx_index = 3; uint32 reverted_skipped = 4; }
+message FeeGrowthWrite { bytes pool = 1; uint32 which = 2; SlotWrite write = 3; }      // which ∈ {0,1}
+message TickWrite { bytes pool = 1; sint32 tick = 2; uint32 member = 3; SlotWrite write = 4; }
+                    // member 0 = initialization marker (§8.4), 1 = staked word, 2 = fgo0 word
+message PositionWrite { bytes token_id = 1; uint32 member = 2; SlotWrite write = 3; }
+                    // member 1 = key fragment changed (poolId|tickLower|tickUpper), 2/3 = fgi words
+message PoolKeyWrite { uint64 pool_id = 1; uint32 member = 2; SlotWrite write = 3; }   // member ∈ {0,1}
+
+// carry store values
+message SlotWord { bytes word = 1;         // minimal BE of the 32-byte word (never empty: zero ⇒ key deleted)
+                   uint64 block = 2; uint64 ordinal = 3; }
+message TickMarker { uint64 block = 1; uint64 ordinal = 2; }
+message PositionKeyFragment { uint64 pool_id = 1; sint32 tick_lower = 2; sint32 tick_upper = 3;
+                              uint64 block = 4; uint64 ordinal = 5; }
+
+message TokenMetadataAnswers { repeated pinax.aerodrome.slipstream.base.v1.Erc20Answer erc20 = 1; }
+message TickAnswers { repeated pinax.aerodrome.slipstream.base.v1.TickAnswer ticks = 1;
+                      uint32 swap_walk_probes = 2;
+                      repeated pinax.aerodrome.slipstream.base.v1.Anomaly anomalies = 3; }
+message PositionAnswers { repeated pinax.aerodrome.slipstream.base.v1.PositionAnswer positions = 1;
+                          repeated pinax.aerodrome.slipstream.base.v1.GetPoolAnswer get_pool = 2;
+                          repeated pinax.aerodrome.slipstream.base.v1.Anomaly anomalies = 3; }

@@ -1,0 +1,9 @@
+[package]
+name = "aerodrome-extractor-pb"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+[dependencies]
+prost = "=0.13.5"
+prost-types = "=0.13.5"

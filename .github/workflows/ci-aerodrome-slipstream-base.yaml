@@ -38,7 +38,11 @@ jobs:
             .
             aerodrome-slipstream-base/substreams
       - name: Install protobuf compiler
-        run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
+        run: sudo apt-get update && sudo apt-get install -y protobuf-compiler wabt
+      - name: Fetch digest-locked Base block fixtures
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: cargo xtask evidence fetch --lock aerodrome-slipstream-base/fixtures/blocks.lock.json
       - name: Check generated types, native core, candidates, and strict lints
         run: cargo xtask aerodrome-substreams check
       - name: Build WASM from two independent roots
@@ -51,8 +55,10 @@ jobs:
           curl -fsSL https://github.com/streamingfast/substreams/releases/download/v1.20.3/substreams_linux_x86_64.tar.gz -o "$archive"
           echo "90c71d04a75490efdf0493254a8563c3555690e622b3c6ade5100c0c773f8675  $archive" | sha256sum -c -
           sudo tar -xzf "$archive" -C /usr/local/bin substreams
-      - name: Validate the candidate-only development module graph
+      - name: Validate the non-final development module graph
         working-directory: aerodrome-slipstream-base/substreams
         run: |
           substreams pack substreams.yaml -o "$RUNNER_TEMP/aerodrome-candidates.spkg"
           substreams info "$RUNNER_TEMP/aerodrome-candidates.spkg"
+      - name: Prove RPC imports and transitive cache boundaries
+        run: cargo xtask aerodrome-substreams cache-boundary

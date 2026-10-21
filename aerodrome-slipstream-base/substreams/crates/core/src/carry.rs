@@ -99,6 +99,7 @@ pub fn registry_ops(created: &i::PoolsCreated, block: u64) -> Result<Vec<StoreOp
     Ok(out)
 }
 pub fn pool_slot_ops(d: &i::StorageDeltas, block: u64) -> Result<Vec<StoreOp>, &'static str> {
+    clean_deltas(d)?;
     let mut out = vec![];
     for w in &d.fee_growth {
         if w.pool.len() != 20 || w.which > 1 {
@@ -128,6 +129,7 @@ pub fn tick_slot_ops(
     block: u64,
     partition: u8,
 ) -> Result<Vec<StoreOp>, &'static str> {
+    clean_deltas(d)?;
     if partition >= shard::TICK_SHARDS {
         return Err("invalid tick shard");
     }
@@ -167,6 +169,7 @@ pub fn position_slot_ops(
     block: u64,
     partition: u8,
 ) -> Result<Vec<StoreOp>, &'static str> {
+    clean_deltas(d)?;
     if partition >= shard::POSITION_SHARDS {
         return Err("invalid position shard");
     }
@@ -209,6 +212,43 @@ pub fn position_slot_ops(
     }
     out.sort_by_key(StoreOp::ordinal);
     Ok(out)
+}
+fn clean_deltas(d: &i::StorageDeltas) -> Result<(), &'static str> {
+    if !d.anomalies.is_empty() {
+        return Err("refusing anomalous storage deltas before carry writes");
+    }
+    Ok(())
+}
+
+/// Carry ticks using Graph Node's exact ABI decoder. The extractor's Abigen
+/// flag is diagnostic: it can disagree on trailing data and must not suppress
+/// a tick that Graph Node would accept.
+pub fn last_tick_ops(
+    block: &crate::pb::v1::ExtractorBlock,
+) -> Result<Vec<(String, i64, u64)>, &'static str> {
+    if block
+        .audit
+        .as_ref()
+        .is_none_or(|audit| !audit.anomalies.is_empty())
+    {
+        return Err("refusing unaudited or anomalous candidates before tick carry writes");
+    }
+    let mut ops = Vec::new();
+    for candidate in &block.candidates {
+        let tick = match crate::events::decode(candidate)? {
+            Some(
+                crate::events::Event::Initialize { tick } | crate::events::Event::Swap { tick },
+            ) => tick,
+            _ => continue,
+        };
+        ops.push((
+            format!("t:{};", hex::encode(&candidate.address)),
+            i64::from(tick),
+            candidate.log_ordinal,
+        ));
+    }
+    ops.sort_by_key(|(_, _, ordinal)| *ordinal);
+    Ok(ops)
 }
 /// Decimal u256 key without a big-integer/runtime dependency.
 pub fn decimal(value: &[u8; 32]) -> String {

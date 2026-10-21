@@ -152,6 +152,44 @@ fn actual_first_pool_wave_order_and_gas() {
         output
     );
 }
+
+#[test]
+fn factory_trailing_data_keeps_registry_metadata_and_precreation_pool_logs() {
+    let cfg = Config::parse(PARAMS).unwrap();
+    let mut b = fixture();
+    for tx in &mut b.transaction_traces {
+        for log in &mut tx.receipt.as_mut().unwrap().logs {
+            if log.address == cfg.factory {
+                log.data.extend([0; 32]);
+            }
+        }
+    }
+    let created = pools_created(&cfg, &b, &Decoder);
+    assert_eq!(created.pools.len(), 1);
+    assert_eq!(
+        aerodrome_extractor_core::metadata::tokens(&created)
+            .unwrap()
+            .len(),
+        2
+    );
+    let output = build_candidates(&cfg, &b, &registry(&b), &Decoder).unwrap();
+    assert!(output.audit.as_ref().unwrap().anomalies.is_empty());
+    assert_eq!(output.pools_created.len(), 1);
+    let factory = output
+        .candidates
+        .iter()
+        .find(|c| c.source == p::DataSourceKind::Factory as i32)
+        .unwrap();
+    assert!(!factory.abi_decoded, "Abigen flag is diagnostic only");
+    assert_eq!(
+        output
+            .candidates
+            .iter()
+            .map(|c| (c.wave, c.source_trigger_order))
+            .collect::<Vec<_>>(),
+        vec![(0, 172), (0, 177), (0, 178), (1, 171), (1, 176)]
+    );
+}
 #[test]
 fn start_gates_and_prior_host() {
     let mut b = fixture();

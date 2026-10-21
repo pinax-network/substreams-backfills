@@ -27,7 +27,7 @@ use std::process::ExitCode;
 use evidence::{DirectoryFetcher, FetchOptions, Fetcher, Lock, Outcome, Status, DEFAULT_LOCK_PATH};
 
 const USAGE: &str = "usage: cargo xtask <evidence|verify-all|verify-targets|eligibility> ...
-  aerodrome-substreams <check|protogen [--check]|build [--twice]> [--root DIR]   offline Aerodrome extractor tooling
+  aerodrome-substreams <check|protogen [--check]|build [--twice]|cache-boundary> [--root DIR]   offline Aerodrome extractor tooling
   eligibility capture --binding FILE --measurements FILE --output FILE [--policy PATH] [--root DIR]
   eligibility check --binding FILE --purpose implementation-start|compute-or-load-start [--now RFC3339] [--json] [--policy PATH] [--root DIR]
   verify-targets [--root DIR] [--policy PATH]   validate every target binding and pinned evidence (offline)

@@ -269,7 +269,7 @@ fn malformed_candidates_and_excluded_hosts_remain_accounted_for() {
 }
 
 #[test]
-fn unsupported_matched_swap_refuses_every_prior_effect() {
+fn missing_swap_call_answer_refuses_every_prior_effect() {
     let mut b = original();
     let swap = &mut b.candidates[4];
     swap.topics[0] =
@@ -278,11 +278,12 @@ fn unsupported_matched_swap_refuses_every_prior_effect() {
     swap.topics.truncate(3);
     swap.data = vec![0; 160];
     let mut r = runner(&b, AbortMode::FailClosed);
-    assert!(r
-        .process(&validate(&b))
-        .unwrap_err()
-        .0
-        .contains("UnsupportedHandler: Swap"));
+    let error = r.process(&validate(&b)).unwrap_err();
+    assert!(
+        error.0.contains("MissingCallAnswer { kind: fee_growth"),
+        "{}",
+        error.0
+    );
     assert!(r.backend.rows().is_empty());
     assert!(r.backend.sources().is_empty());
 }

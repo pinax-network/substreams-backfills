@@ -255,7 +255,7 @@ fn create_tick(
     })
 }
 
-fn update_tick<B: EntityBackend>(
+pub(super) fn update_tick<B: EntityBackend>(
     handler: &SupportedHandler<'_>,
     journal: &mut HandlerJournal<'_, B>,
     tick: &mut Tick,

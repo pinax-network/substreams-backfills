@@ -1,11 +1,11 @@
 # Aerodrome reducer foundations
 
 This crate implements the S-R2 input layer, S-R3 entity/state primitives, and
-the Factory/Initialize, NPM/Flash and Mint/Burn handler checkpoints for
+all deployed Factory, Pool and NPM handlers for
 the locked Base deployment `QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV`.
 The library executes these handlers, journals their operations and seals
 canonical in-band BlockChanges. The in-memory runner schedules every candidate
-and refuses unsupported matched handlers. It does **not** implement Swap, import
+and refuses unknown matched handlers. It does **not** import
 verified snapshots, provide durable checkpoints or production output, or qualify
 a backfill. Those stages remain to be implemented and compared with
 mapping-host.
@@ -135,7 +135,7 @@ seed, not authenticated snapshot import.
 The entity class labels describe the mapping design. They do not enable eviction:
 all rows remain persistent, including BlockLocal rows, until retention has
 independent evidence. Collect, Flash and TickHourData writes/removes are refused
-because the deployed handlers never write them. Swap logic, redb, rewind and the production output CLI are absent.
+because the deployed handlers never write them. Redb, rewind and the production output CLI are absent.
 
 Regenerate typed declarations with:
 
@@ -194,7 +194,7 @@ The independent handler corpus runs the locked Factory/Pool WASM through actual
 Graph Node. It has no native reducer dependency and compares all fields of every
 operation, including materialized images, dispositions, ordering, and in-band
 sources. The original first-pool case checks real groups 0 and 3, renumbering only
-the dense operation/group indices after excluding the still-unsupported NPM/Mint
+the dense operation/group indices after excluding NPM/Mint from this focused test
 groups; it is not complete-block parity. The other 17 cases are explicitly
 synthetic mutations: isolated Factory/Initialize, four fee spacings, excluded
 pool, four metadata fallbacks, integer wrapping/overflow, timestamp wrapping/
@@ -221,7 +221,7 @@ byte-identical committed results. It runs with recording disabled and no sockets
 ## Position manager and Flash checkpoint
 
 The dispatcher also supports NPM Transfer, IncreaseLiquidity, DecreaseLiquidity,
-Collect, and Pool Flash. Swap remains an explicit unsupported-handler error.
+Collect, and Pool Flash. Swap is implemented in its own module.
 A new Position reads the end-of-block positions/getPool answers, initializes
 liquidity and counters to zero, and saves Transaction during construction.
 An existing Position bypasses that construction call. Increase/Decrease/Collect
@@ -298,7 +298,7 @@ UPDATE_AERODROME_POOL_CORPUS=1 cargo +1.98.0 test \
 cargo test -p aerodrome-slipstream-reducer --locked --test pool_handlers
 ```
 
-Swap, durable state and production output remain separate checkpoints. The existing CLI still only validates inputs.
+Durable state and production output remain separate checkpoints. The existing CLI still only validates inputs.
 
 
 ## In-memory block and range execution
@@ -308,7 +308,7 @@ executes every validated candidate in `(wave, source_trigger_order)` order.
 Unmatched candidates remain in its report. Successful empty handlers still
 advance handler groups and set `mapping_triggered`; actual empty blocks produce
 Observed frames with `mapping_triggered = false`. Unsupported matched handlers
-currently include Swap and refuse the complete block.
+refuse the complete block.
 
 Host outcomes are staged with the block. Successful Factory handlers enable
 wave-1 candidates, including Initialize before PoolCreated in receipt order.
@@ -349,7 +349,7 @@ do not establish a complete historical range or final-SPKG parity.
 
 The other runner tests cover atomic rollback after a later missing answer,
 failed-creation history, malformed ABI candidates, the excluded pool, no-save
-triggers, unsupported Swap, both error policies, true empty frames, producer
+triggers, missing Swap call answers, both error policies, true empty frames, producer
 failure/cancellation, read failure, missing/extra range frames and budgets.
 Failed Factory creation is a clearly labeled scheduler fault-injection test;
 it is not presented as a naturally reachable or oracle-proven Factory abort.
@@ -377,8 +377,9 @@ positive. Invalid fee tier produces the deployed abort at tick.ts:57:3 with no
 message, after its preceding saves; the envelope preserves their discard/PoI
 semantics. The timestamp overflow likewise preserves three discarded saves.
 
-This corpus supplies independent expectations for the separate native Swap
-implementation. It is not an actual historical Swap or a complete live range;
+The native Swap implementation matches every operation and complete envelope
+in all 18 cases. Its arithmetic order, intermediate Pool save/reloads, interval
+quirks and fee-derived tick walk were also independently reviewed. It is not an actual historical Swap or a complete live range;
 the locked block fixtures contain the first-pool block and block 52,800,000,
 without the state chain needed to qualify a real Swap from an empty root.
 Synthetic call values and seeded prices are test inputs, never archive evidence.

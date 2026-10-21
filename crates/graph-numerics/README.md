@@ -51,7 +51,12 @@ Integer operations use the pinned num-bigint arithmetic, including truncating
 division and the sign of the remainder. The Graph Node bound includes a sign
 bit: magnitude bit length + 1 <= 435412. Arithmetic methods represent the result
 after its next checked crossing. Power and shifts take Graph Node's u8 count.
-`to_i32_checked` refuses overflow. Protobuf integers use minimal signed
+`to_i32_checked` enforces mathematical i32 bounds for transport validation.
+`to_i32_mapping` reproduces the deployed graph-ts byte-array conversion: it
+checks only sign-extension bytes beyond the first four and returns the low word.
+Consequently +2147483648 becomes -2147483648, -2147483649 becomes 2147483647,
+and -4294967296 becomes 0. The mapping conversion refuses values outside
+-4294967296..=4294967295. Protobuf integers use minimal signed
 big-endian bytes and empty bytes for zero.
 
 The separate `mapping` module implements token conversion, safe division,
@@ -72,6 +77,13 @@ arrays and decimal decoding remain Graph Node code. The raw threshold and both
 neighbors are exercised through that decoder. This is an actual ABI conversion
 test, not execution of an Aerodrome handler or a PostgreSQL `store.set` test.
 
+For integer `toI32`, the oracle executes the **original deployed Pool.wasm
+function body**, pinned by SHA-256. It adds one test export without changing
+code, data, or globals. The original allocator and typed-array operations run
+under Wasmtime. Only abort-message formatting is mocked; the original assertion
+must reach `env.abort` for an overflow result. No handler or mapping initialization
+is run. The portable crate has neither Wasmtime nor a WASM parser dependency.
+
 The only shared code is the input-vector/PRNG generator. Evidence includes:
 
 - Individual boundary vectors and 2048 seeded operation vectors, with exact
@@ -84,6 +96,9 @@ The only shared code is the input-vector/PRNG generator. Evidence includes:
 - All token decimal counts, Q192, the production negative TVL calculation,
   association differences, ±1/3, 2^116 boundaries, the raw Swap threshold,
   exponent boundaries, integer signs, zero division and overflow refusals.
+- Decimal strings with 132,000 coefficient digits and a compensating exponent:
+  string parsing normalizes before an integer ever crosses the WASM boundary,
+  so a raw-coefficient BigInt bit limit would incorrectly refuse these values.
 
 Regenerate deliberately, from the repository root:
 

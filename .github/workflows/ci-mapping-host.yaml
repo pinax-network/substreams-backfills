@@ -28,6 +28,9 @@ jobs:
               - 'mapping-host/**'
               - 'common/**'
               - 'crates/graph-numerics/**'
+              - 'crates/aerodrome-slipstream-reducer/**'
+              - 'aerodrome-slipstream-base/reference/**'
+              - 'aerodrome-slipstream-base/substreams/fixtures/**'
               - 'uniswap-v3/fixtures/blocks.lock.json'
               - 'Cargo.toml'
   mapping-host:

@@ -1,0 +1,22 @@
+[package]
+name = "aerodrome-slipstream-reducer"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+[dependencies]
+backfill-common = { path = "../../common" }
+graph-numerics = { path = "../graph-numerics" }
+aerodrome-extractor-pb = { path = "../../aerodrome-slipstream-base/substreams/crates/pb" }
+aerodrome-extractor-core = { path = "../../aerodrome-slipstream-base/substreams/crates/core" }
+prost = "=0.13.5"
+alloy-dyn-abi = "=1.7.2"
+alloy-json-abi = "=1.7.2"
+alloy-primitives = "=1.7.2"
+hex.workspace = true
+sha2.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+[dev-dependencies]
+tempfile.workspace = true

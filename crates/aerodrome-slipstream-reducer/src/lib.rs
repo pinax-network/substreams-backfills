@@ -1,6 +1,6 @@
 //! Aerodrome input, typed entity and transactional state foundations.
-//! Bounded in-memory scheduling with Factory, Initialize, NPM, Flash, Mint and
-//! Burn handlers. Swap and the durable production driver remain unsupported.
+//! Bounded in-memory scheduling for every deployed mapping handler.
+//! Durable state and the production driver remain unsupported.
 //! Input validation and synthetic operation sealing do not certify a backfill.
 pub mod abi;
 pub mod calls;

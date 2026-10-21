@@ -1,4 +1,4 @@
-//! Mapping checkpoints: Factory, Initialize, all four NPM handlers, Flash, Mint and Burn.
+//! Deployed mapping handlers, preserving save order and abort boundaries.
 //!
 //! This is a handler primitive, not a complete block reducer. Match every
 //! candidate against authoritative hosts; unsupported matched handlers are
@@ -12,6 +12,7 @@ mod interval;
 mod npm;
 mod pool;
 mod pricing;
+mod swap;
 pub(super) mod transaction;
 
 use crate::{
@@ -34,8 +35,7 @@ pub const AERO: &str = "0x940181a94a35a4569e4529a3cdfb74e38fd98631";
 pub const ETH_USD_POOL: &str = "0xb2cc224c1c9fee385f8ad6a55b4d94e92359dc59";
 const WHITELIST: [&str; 3] = [WETH, USDC, AERO];
 
-/// A validated, host-matched trigger. Construction refuses every handler not
-/// implemented by this checkpoint, including Swap.
+/// A validated, host-matched trigger. Unknown handlers fail closed.
 pub struct SupportedHandler<'a> {
     input: &'a BlockInput,
     index: usize,
@@ -54,7 +54,7 @@ impl<'a> SupportedHandler<'a> {
         if !matches!(
             (source, event.name.as_str()),
             (1, "PoolCreated")
-                | (3, "Initialize" | "Flash" | "Mint" | "Burn")
+                | (3, "Initialize" | "Flash" | "Mint" | "Burn" | "Swap")
                 | (
                     2,
                     "Transfer" | "IncreaseLiquidity" | "DecreaseLiquidity" | "Collect"
@@ -86,6 +86,7 @@ impl<'a> SupportedHandler<'a> {
             "Transfer" | "IncreaseLiquidity" | "DecreaseLiquidity" | "Collect" => {
                 npm::run(self, journal).map(|()| None)
             }
+            "Swap" => swap::swap(self, journal).map(|()| None),
             _ => unreachable!("constructor matches the supported source and handler"),
         }
     }

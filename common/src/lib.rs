@@ -13,6 +13,7 @@ pub mod descriptor;
 pub mod dynamic_sources;
 pub mod dynamic_sources_v2;
 pub mod pb;
+pub mod producer_checkpoint;
 pub mod state_snapshot;
 
 pub use block_changes::{

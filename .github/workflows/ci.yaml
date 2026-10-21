@@ -382,6 +382,10 @@ jobs:
             --writer-runtime "$RUNNER_TEMP/uniswap-v3-writer-runtime" \
             --mainnet-spkg "$RUNNER_TEMP/uniswap-v3-mainnet-position-reducer-diagnostic.spkg" \
             --base-spkg "$RUNNER_TEMP/uniswap-v3-base-position-reducer-diagnostic.spkg"
+      - name: Release completed Position build cache before Flash validation
+        run: |
+          cargo +1.79.0 clean --manifest-path "$RUNNER_TEMP/uniswap-v3-position-reducer/Cargo.toml"
+          test ! -e "$RUNNER_TEMP/uniswap-v3-position-reducer/target"
       - name: Materialize the host-only Pool Flash reducer after the writer
         run: >-
           cargo +stable run --quiet --package xtask --
@@ -422,7 +426,6 @@ jobs:
       - name: Release completed reducer build caches before Transaction validation
         run: |
           cargo +1.79.0 clean --manifest-path "$RUNNER_TEMP/uniswap-v3-configured/Cargo.toml"
-          cargo +1.79.0 clean --manifest-path "$RUNNER_TEMP/uniswap-v3-position-reducer/Cargo.toml"
           cargo +1.79.0 clean --manifest-path "$RUNNER_TEMP/uniswap-v3-flash-reducer/Cargo.toml"
           test ! -e "$RUNNER_TEMP/uniswap-v3-configured/target"
           test ! -e "$RUNNER_TEMP/uniswap-v3-position-reducer/target"

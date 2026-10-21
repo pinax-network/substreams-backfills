@@ -1,0 +1,49 @@
+{
+  "observed_at": "2026-10-21T18:06:39.933611+00:00",
+  "tag": "aerodrome-in-band-oracle-v1",
+  "lock_sha256": "71d8f03379e9fa6a15a697d1eada49998cb468a5f488271173be9fd83a007069",
+  "fresh_cache": true,
+  "assets": [
+    {
+      "asset": "sha256-0446bc0c3e9862621de2e62c3a9d80067fc2483eeab89329bc8c41a553dec149.gz",
+      "bytes": 8861699,
+      "sha256": "0446bc0c3e9862621de2e62c3a9d80067fc2483eeab89329bc8c41a553dec149"
+    },
+    {
+      "asset": "sha256-23d6151f892626e0ba11c141e937beb44da048b6c94fa1bf5cf0f0dcb50c91b1.bcf1",
+      "bytes": 9289194,
+      "sha256": "23d6151f892626e0ba11c141e937beb44da048b6c94fa1bf5cf0f0dcb50c91b1"
+    },
+    {
+      "asset": "sha256-e10ddb633ba47add9d888b6b6ca07d485b0f4f9089559a1a1a908d6cd73de0fc.jsonl",
+      "bytes": 1061,
+      "sha256": "e10ddb633ba47add9d888b6b6ca07d485b0f4f9089559a1a1a908d6cd73de0fc"
+    },
+    {
+      "asset": "sha256-acff3061add1f1ee1b9000c65a459aee0be322e7f9e9eb6ac1ef62019ee21f89.jsonl",
+      "bytes": 35477901,
+      "sha256": "acff3061add1f1ee1b9000c65a459aee0be322e7f9e9eb6ac1ef62019ee21f89"
+    },
+    {
+      "asset": "sha256-f5d57de9e023165fb8cc08adab89ae294fb0777bff3bbed518ecd8c3604137f8.bcf1",
+      "bytes": 109285422,
+      "sha256": "f5d57de9e023165fb8cc08adab89ae294fb0777bff3bbed518ecd8c3604137f8"
+    },
+    {
+      "asset": "sha256-dfdc9dbec7b4434a709b394f7de076200c3f5559148bc908e9098baec5ee8941.jsonl",
+      "bytes": 12858950,
+      "sha256": "dfdc9dbec7b4434a709b394f7de076200c3f5559148bc908e9098baec5ee8941"
+    },
+    {
+      "asset": "sha256-21b29cd6b092e48cf80b93a5fe6be2825e182c56d2a0ea78ea8c9f5c960e8f91.jsonl",
+      "bytes": 90163952,
+      "sha256": "21b29cd6b092e48cf80b93a5fe6be2825e182c56d2a0ea78ea8c9f5c960e8f91"
+    },
+    {
+      "asset": "sha256-8318a8342dcc2f8bd48fc7793b304085b15216b60a3d74b687819a6a77f3d8b0.json",
+      "bytes": 35906547,
+      "sha256": "8318a8342dcc2f8bd48fc7793b304085b15216b60a3d74b687819a6a77f3d8b0"
+    }
+  ],
+  "verified_bytes": 301844726
+}

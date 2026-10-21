@@ -115,7 +115,13 @@
     },
     "limitation": "20 observed blocks prove this bounded continuation; arbitrary future checkpoint equivalence is not claimed"
   },
-  "publication": "pending; new immutable release required; v1 releases unchanged",
+  "publication": {
+    "release_url": "https://github.com/pinax-network/substreams-backfills/releases/tag/aerodrome-in-band-oracle-v1",
+    "tag_target": "251f63c4e7d1e30b22a4e341462621dac77b3675",
+    "fresh_download_verified_assets": 8,
+    "fresh_download_verified_bytes": 301844726,
+    "roundtrip_receipt": "aerodrome-in-band-publication-roundtrip-v1.json"
+  },
   "candidate_oci": "not built; local Docker daemon info returned HTTP 500",
   "artifact_lock": "mapping-host/evidence/aerodrome-in-band-oracle-v1.lock.json"
 }

@@ -91,8 +91,11 @@ comparisons retain the source order and checkpoint bindings. The
 [evidence lock](../evidence/aerodrome-in-band-oracle-v1.lock.json) contains seven
 main replay assets and one deterministic continuation archive containing raw
 frames, reports, checkpoints, stores, the extended cassette, descriptors and a
-per-file manifest. Publication to the new immutable `aerodrome-in-band-oracle-v1`
-release is pending; the existing v1 releases are unchanged.
+per-file manifest. All eight assets are published in the immutable
+[`aerodrome-in-band-oracle-v1` release](https://github.com/pinax-network/substreams-backfills/releases/tag/aerodrome-in-band-oracle-v1),
+which targets frozen producer `251f63c`. A fresh-cache download verified all
+301,844,726 bytes against the lock; the committed round-trip receipt retains
+every asset hash. The existing v1 releases are unchanged.
 
 For offline verification after hydrating the old and new evidence locks, run
 `cargo run --release --manifest-path mapping-host/Cargo.toml --locked --offline

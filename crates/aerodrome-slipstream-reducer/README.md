@@ -1,9 +1,9 @@
 # Aerodrome reducer foundations
 
 This crate implements the S-R2 input layer, S-R3 entity/state primitives, and
-the first S-R4 Factory/Initialize handler checkpoint for
+the Factory/Initialize and NPM/Flash handler checkpoints for
 the locked Base deployment `QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV`.
-The library executes these two handlers, journals their operations and seals
+The library executes these handlers, journals their operations and seals
 canonical in-band BlockChanges. It does **not** run all mapping handlers or a
 complete reducer, import verified snapshots, provide durable checkpoints, or
 qualify a backfill. Those stages remain to be implemented and compared with
@@ -135,7 +135,7 @@ The entity class labels describe the mapping design. They do not enable eviction
 all rows remain persistent, including BlockLocal rows, until retention has
 independent evidence. Collect, Flash and TickHourData writes/removes are refused
 because the deployed handlers never write them. Complete handler scheduling,
-Swap/Mint/Burn/NPM logic, redb, rewind and the production output CLI are absent.
+Swap/Mint/Burn logic, redb, rewind and the production output CLI are absent.
 
 Regenerate typed declarations with:
 
@@ -216,3 +216,50 @@ cargo test -p aerodrome-slipstream-reducer --locked --test handlers
 
 Without the environment variable the oracle regenerates in memory and requires
 byte-identical committed results. It runs with recording disabled and no sockets.
+
+
+## Position manager and Flash checkpoint
+
+The dispatcher also supports NPM Transfer, IncreaseLiquidity, DecreaseLiquidity,
+Collect, and Pool Flash. Mint/Burn/Swap remain explicit unsupported-handler errors.
+A new Position reads the end-of-block positions/getPool answers, initializes
+liquidity and counters to zero, and saves Transaction during construction.
+An existing Position bypasses that construction call. Increase/Decrease/Collect
+refresh fee growth via positions; explicit revert preserves the prior values.
+Transfer has no fee refresh and a burn transfer persists the zero owner rather
+than removing the Position. Missing answers remain fatal contract failures.
+
+The historical Increase/Decrease block guard executes before loading Position.
+Their pool guard and Collect's pool guard execute after construction, so an
+unsaved new Position can still leave its construction Transaction save. Transfer
+has neither guard. Collected fees preserve `collected - withdrawn`, including
+negative results. Decimal transport refusals remain unchanged.
+
+Every snapshot saves Transaction first, with gasLimit in gasUsed and Graph Node's
+effective gas price. PositionSnapshot ID is position ID plus block number, so
+later events in the same block overwrite the same row. Each save stays in the
+PoI operation stream. Flash saves only Pool with both fee-growth values; it never
+constructs a Flash entity. Retention/burn hints and durable persistence are later
+work; the current backend keeps these entities persistent.
+
+The real first-pool differential now covers complete groups 0–3 in original
+order: Factory, NPM Transfer, NPM IncreaseLiquidity, Initialize. Group 4 Mint is
+still outside this checkpoint, so this is not full-block certification.
+`graph-node-npm-flash.json` adds 14 synthetic full-WASM probes: baseline;
+Decrease; Collect; negative collected fees; burn Transfer; positions revert;
+zero getPool; pool guard; new-position Increase; historical block guard; Flash;
+missing-token abort; existing-position Transfer without any answers; and an
+existing-position fee refresh that explicitly reverts. The last two continue an
+actual Graph Node host into another synthetic block; its captured checkpoint
+rows initialize the native differential. Independent tests prove missing
+positions and fee-growth answers poison the native block instead of committing
+previous successful handlers.
+
+```console
+UPDATE_AERODROME_NPM_CORPUS=1 cargo +1.98.0 test \
+  --manifest-path mapping-host/Cargo.toml --locked --test mapping_host aerodrome_npm_corpus
+cargo test -p aerodrome-slipstream-reducer --locked --test handlers
+```
+
+The generator imports no native reducer code, runs without recording/network,
+and byte-checks the committed corpus when the environment variable is absent.

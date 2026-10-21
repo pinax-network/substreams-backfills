@@ -251,16 +251,19 @@ fn unknown_hosts_and_unsupported_handlers_cannot_execute() {
         .unwrap()
         .0
         .contains("UnknownPoolHost"));
-    assert!(SupportedHandler::match_candidate(&input, &hosts, 1)
+    let mut hosts = HostSet::default();
+    hosts
+        .record_creation_outcome(
+            &input,
+            original().pools_created[0].pool.clone().try_into().unwrap(),
+            true,
+        )
+        .unwrap();
+    assert!(SupportedHandler::match_candidate(&input, &hosts, 4)
         .err()
         .unwrap()
         .0
-        .contains("UnsupportedHandler: Transfer"));
-    assert!(SupportedHandler::match_candidate(&input, &hosts, 2)
-        .err()
-        .unwrap()
-        .0
-        .contains("UnsupportedHandler: IncreaseLiquidity"));
+        .contains("UnsupportedHandler: Mint"));
 }
 #[test]
 fn missing_metadata_answer_poison_prevents_sealing_even_after_bundle_save() {
@@ -283,4 +286,227 @@ fn missing_metadata_answer_poison_prevents_sealing_even_after_bundle_save() {
     assert!(store.seal().is_err());
     assert!(backend.rows().is_empty());
     assert!(backend.sources().is_empty());
+}
+
+#[test]
+fn first_pool_npm_handlers_match_real_graph_node_before_initialize() {
+    let corpus: Value =
+        serde_json::from_slice(include_bytes!("../fixtures/graph-node-first-handlers.json"))
+            .unwrap();
+    let case = corpus["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| c["name"] == "real_first_pool")
+        .unwrap();
+    let bytes = hex::decode(case["changes_hex"].as_str().unwrap()).unwrap();
+    let mut expected = output::BlockChanges::decode(bytes.as_slice()).unwrap();
+    expected.operations.retain(|op| op.handler_group_order <= 3);
+    assert_eq!(run(&original(), &[0, 1, 2, 3]), expected);
+}
+
+fn npm_probe(name: &str) -> pb::ExtractorBlock {
+    let mut b = original();
+    let signature = |s: &str| alloy_primitives::keccak256(s).to_vec();
+    let increase = b.candidates[2].clone();
+    for c in &mut b.candidates {
+        if c.log_index == 176 && name == "flash" {
+            c.topics = vec![
+                signature("Flash(address,address,uint256,uint256,uint256,uint256)"),
+                word(7),
+                word(8),
+            ];
+            c.data = vec![0; 128];
+        }
+        if c.log_index == 178 {
+            if name == "decrease" {
+                c.topics[0] = signature("DecreaseLiquidity(uint256,uint128,uint256,uint256)");
+            }
+            if matches!(name, "collect" | "negative_collect_fees") {
+                c.topics[0] = signature("Collect(uint256,address,uint256,uint256)");
+                c.data[..32].copy_from_slice(&word(9));
+                if name == "negative_collect_fees" {
+                    c.data[32..].fill(0);
+                }
+            }
+        }
+        if c.log_index == 177 {
+            if name == "transfer_burn" {
+                c.topics[2] = word(0);
+            }
+            if name == "negative_collect_fees" {
+                c.topics = increase.topics.clone();
+                c.topics[0] = signature("DecreaseLiquidity(uint256,uint128,uint256,uint256)");
+                c.data = increase.data.clone();
+            }
+        }
+    }
+    b.candidates.retain(|c| {
+        (c.log_index != 176 || name == "flash")
+            && (c.log_index != 177 || name != "new_increase")
+            && (name != "missing_tokens" || c.source == pb::DataSourceKind::PositionManager as i32)
+    });
+    if name == "missing_tokens" {
+        b.pools_created.clear();
+    }
+    if name == "positions_reverted" {
+        for p in &mut b.calls.as_mut().unwrap().positions {
+            p.result = Some(pb::position_answer::Result::Reverted(
+                pb::raw_retval::Null {},
+            ));
+        }
+    }
+    if matches!(name, "get_pool_zero" | "pool_guard") {
+        for a in &mut b.calls.as_mut().unwrap().get_pool {
+            if name == "get_pool_zero" {
+                a.pool = vec![0; 20];
+                a.created_block = 0;
+            } else {
+                a.pool = hex::decode("8fe8d9bb8eeba3ed688069c3d6b556c9ca258248").unwrap();
+            }
+        }
+    }
+    if name == "block_guard" {
+        b.number = 14_317_993;
+        for c in &mut b.candidates {
+            if c.wave == 1 {
+                c.host_order_key = 2 + b.number * (1 << 24) + 172;
+            }
+        }
+        // These immutable synthetic answers are now carried from the original
+        // creation block; zero provenance remains zero.
+        let carry = |p: &mut Option<pb::SlotProvenance>| {
+            if let Some(p) = p {
+                if p.source == pb::SlotSource::InBlock as i32 {
+                    p.source = pb::SlotSource::Carried as i32;
+                }
+            }
+        };
+        let calls = b.calls.as_mut().unwrap();
+        for p in &mut calls.positions {
+            if let Some(pb::position_answer::Result::Value(v)) = &mut p.result {
+                carry(&mut v.p_key);
+                carry(&mut v.p_fee0);
+                carry(&mut v.p_fee1);
+            }
+        }
+        for t in &mut calls.ticks {
+            carry(&mut t.p_staked);
+            carry(&mut t.p_fee0);
+        }
+    }
+    if name == "flash" {
+        let p = Some(pb::SlotProvenance {
+            source: pb::SlotSource::InBlock as i32,
+            last_change_block: b.number,
+            last_change_ordinal: 1,
+        });
+        b.calls.as_mut().unwrap().fee_growth = vec![pb::FeeGrowthGlobalAnswer {
+            pool: b.pools_created[0].pool.clone(),
+            fee_growth_global0_x128: word(123),
+            fee_growth_global1_x128: vec![255; 32],
+            p0: p,
+            p1: p,
+        }];
+    }
+    if name.starts_with("existing_") {
+        let keep = if name == "existing_transfer_no_calls" {
+            177
+        } else {
+            178
+        };
+        b.candidates.retain(|c| c.log_index == keep);
+        b.pools_created.clear();
+        b.parent_hash = b.hash.clone();
+        b.number += 1;
+        b.hash = vec![68; 32];
+        b.timestamp += 1;
+        let mut calls = pb::CallAnswers::default();
+        if name == "existing_fee_reverted" {
+            calls.positions = vec![pb::PositionAnswer {
+                token_id: original().calls.unwrap().positions[0].token_id.clone(),
+                result: Some(pb::position_answer::Result::Reverted(
+                    pb::raw_retval::Null {},
+                )),
+            }];
+        }
+        b.calls = Some(calls);
+    }
+
+    b
+}
+#[test]
+fn npm_and_flash_match_every_operation_of_synthetic_graph_node_probes() {
+    let corpus: Value =
+        serde_json::from_slice(include_bytes!("../fixtures/graph-node-npm-flash.json")).unwrap();
+    assert_eq!(corpus["cases"].as_array().unwrap().len(), 14);
+    for case in corpus["cases"].as_array().unwrap() {
+        let name = case["name"].as_str().unwrap();
+        let b = npm_probe(name);
+        let bytes = hex::decode(case["changes_hex"].as_str().unwrap()).unwrap();
+        let expected = output::BlockChanges::decode(bytes.as_slice()).unwrap();
+        assert_eq!(
+            run_seeded(
+                &b,
+                &(0..b.candidates.len()).collect::<Vec<_>>(),
+                case["seed_rows"].as_array().unwrap()
+            ),
+            expected,
+            "{name}"
+        );
+    }
+}
+#[test]
+fn absent_position_answer_is_fatal_even_for_try_positions() {
+    let mut b = npm_probe("missing_tokens");
+    b.calls.as_mut().unwrap().positions.clear();
+    let binding = binding();
+    let input = validate(&b);
+    let backend = backend(&b, &binding);
+    let mut store = BlockStore::begin(&backend, &binding, &input).unwrap();
+    let h = SupportedHandler::match_candidate(&input, &HostSet::default(), 0)
+        .unwrap()
+        .unwrap();
+    assert!(store
+        .run_handler(h.source_trigger_order(), |j| h.run(j).map(|_| ()))
+        .unwrap_err()
+        .0
+        .contains("MissingCallAnswer"));
+    assert!(store.seal().is_err());
+}
+
+#[test]
+fn missing_flash_answer_poisons_the_block_after_earlier_successful_handlers() {
+    let mut b = npm_probe("flash");
+    b.calls.as_mut().unwrap().fee_growth.clear();
+    let binding = binding();
+    let input = validate(&b);
+    let backend = backend(&b, &binding);
+    let mut store = BlockStore::begin(&backend, &binding, &input).unwrap();
+    let mut hosts = HostSet::default();
+    for index in 0..b.candidates.len() - 1 {
+        let h = SupportedHandler::match_candidate(&input, &hosts, index)
+            .unwrap()
+            .unwrap();
+        let mut created = None;
+        store
+            .run_handler(h.source_trigger_order(), |j| {
+                created = h.run(j)?;
+                Ok(())
+            })
+            .unwrap();
+        if let Some(pool) = created {
+            hosts.record_creation_outcome(&input, pool, true).unwrap();
+        }
+    }
+    let h = SupportedHandler::match_candidate(&input, &hosts, b.candidates.len() - 1)
+        .unwrap()
+        .unwrap();
+    assert!(store
+        .run_handler(h.source_trigger_order(), |j| h.run(j).map(|_| ()))
+        .unwrap_err()
+        .0
+        .contains("MissingCallAnswer"));
+    assert!(store.seal().is_err());
+    assert!(backend.rows().is_empty());
 }

@@ -1,5 +1,5 @@
 //! Aerodrome input, typed entity and transactional state foundations.
-//! Only Factory/Initialize handlers exist; no durable checkpoint or production reducer.
+//! Factory, Initialize, NPM and Flash handlers; no complete production reducer.
 //! Input validation and synthetic operation sealing do not certify a backfill.
 pub mod abi;
 pub mod calls;

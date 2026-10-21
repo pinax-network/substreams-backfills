@@ -1,4 +1,4 @@
-//! First mapping checkpoint: Factory.PoolCreated and Pool.Initialize only.
+//! Mapping checkpoints: Factory, Initialize, all four NPM handlers and Flash.
 //!
 //! This is a handler primitive, not a complete block reducer. Match every
 //! candidate against authoritative hosts; unsupported matched handlers are
@@ -6,8 +6,11 @@
 //! record a returned source only after the handler commits (or its failed
 //! creation after abort), and persist hosts only after the block commits.
 mod factory;
+mod flash;
 mod initialize;
+mod npm;
 mod pricing;
+pub(super) mod transaction;
 
 use crate::{
     abi::DecodedEvent,
@@ -30,7 +33,7 @@ pub const ETH_USD_POOL: &str = "0xb2cc224c1c9fee385f8ad6a55b4d94e92359dc59";
 const WHITELIST: [&str; 3] = [WETH, USDC, AERO];
 
 /// A validated, host-matched trigger. Construction refuses every handler not
-/// implemented by this checkpoint, including Mint, Swap and all NPM events.
+/// implemented by this checkpoint, including Mint, Burn and Swap.
 pub struct SupportedHandler<'a> {
     input: &'a BlockInput,
     index: usize,
@@ -48,7 +51,12 @@ impl<'a> SupportedHandler<'a> {
         let source = input.block().candidates[index].source;
         if !matches!(
             (source, event.name.as_str()),
-            (1, "PoolCreated") | (3, "Initialize")
+            (1, "PoolCreated")
+                | (3, "Initialize" | "Flash")
+                | (
+                    2,
+                    "Transfer" | "IncreaseLiquidity" | "DecreaseLiquidity" | "Collect"
+                )
         ) {
             return Err(refuse(format!("UnsupportedHandler: {}", event.name)));
         }
@@ -70,6 +78,10 @@ impl<'a> SupportedHandler<'a> {
         match self.event.name.as_str() {
             "PoolCreated" => factory::pool_created(self, journal),
             "Initialize" => initialize::initialize(self, journal).map(|()| None),
+            "Flash" => flash::flash(self, journal).map(|()| None),
+            "Transfer" | "IncreaseLiquidity" | "DecreaseLiquidity" | "Collect" => {
+                npm::run(self, journal).map(|()| None)
+            }
             _ => unreachable!("constructor matches the supported source and handler"),
         }
     }
@@ -80,6 +92,12 @@ impl<'a> SupportedHandler<'a> {
         match self.event.param(name) {
             Some(DynSolValue::Address(value)) => Ok(value.0 .0),
             _ => Err(refuse(format!("validated ABI lost address {name}"))),
+        }
+    }
+    fn word_parameter(&self, name: &str) -> Result<crate::Word> {
+        match self.event.param(name) {
+            Some(DynSolValue::Uint(value, _)) => Ok(value.to_be_bytes::<32>()),
+            _ => Err(refuse(format!("validated ABI lost uint256 {name}"))),
         }
     }
     fn integer(&self, name: &str) -> Result<BigInt> {
@@ -143,4 +161,11 @@ fn required<B: EntityBackend, E: Entity>(
             message: format!("unexpected null at {site}"),
         },
     )
+}
+
+fn unsigned_integer(bytes: &[u8]) -> BigInt {
+    let mut signed = Vec::with_capacity(bytes.len() + 1);
+    signed.push(0);
+    signed.extend_from_slice(bytes);
+    BigInt::from_signed_bytes_be(&signed)
 }

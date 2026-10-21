@@ -81,12 +81,29 @@ impl EventDecoder for Decoder {
         }
     }
     fn pool_created(&self, l: &eth::Log) -> Option<i::PoolCreatedRecord> {
-        let event = factory::events::PoolCreated::match_and_decode(log(l))?;
+        // Registration and metadata coverage must use Graph Node's decoder;
+        // Abigen's diagnostic flag can reject trailing data that it accepts.
+        let candidate = p::CandidateLog {
+            address: l.address.clone(),
+            topics: l.topics.clone(),
+            data: l.data.clone(),
+            source: p::DataSourceKind::Factory as i32,
+            ..Default::default()
+        };
+        let Some(aerodrome_extractor_core::events::Event::PoolCreated {
+            pool,
+            token0,
+            token1,
+            spacing,
+        }) = aerodrome_extractor_core::events::decode(&candidate).ok()?
+        else {
+            return None;
+        };
         Some(i::PoolCreatedRecord {
-            pool: event.pool,
-            token0: event.token0,
-            token1: event.token1,
-            tick_spacing: event.tick_spacing.to_string().parse().ok()?,
+            pool: pool.to_vec(),
+            token0: token0.to_vec(),
+            token1: token1.to_vec(),
+            tick_spacing: spacing,
             ..Default::default()
         })
     }

@@ -1,19 +1,22 @@
 # Aerodrome Slipstream Base extractor
 
 This contains the S-X1 foundation, S-X2 candidate/registry implementation, and
-initial S-X3 storage-delta/carry implementation for
+initial S-X3 storage-delta/carry and S-X4 call-answer implementations for
 `QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV`. It is an independent Cargo
 workspace pinned to Rust 1.90.0, Substreams 0.7.6, Ethereum 0.11.1 and prost 0.13.5.
 
 The development manifest exposes `map_pools_created`, `store_pools`,
 `map_candidates`, `map_storage_deltas`, and the pool, tick, and position carry
-stores. `map_candidates` produces the shared `ExtractorBlock` shape, with
-`calls` absent. **It is not the completed extractor.** The final output module
-will be `map_extractor_block`, after storage derivation and all call-answer stages
-are implemented. No release, full noop or backfill may use this candidate output.
+stores. `map_candidates` is an internal stage with `calls` absent.
+`map_extractor_block` assembles candidates, storage-derived call answers, raw
+ERC20 metadata, and combined anomaly counts into the public output. **This is
+still an unqualified development package.** No release, full noop or backfill
+may use it before the remaining gates below pass.
 
-The generated ABI decoder selects the exact locked deployment events. Candidates
-retain malformed payloads for the reducer's Graph Node decoder. Receipt
+Generated ABI signatures select the exact locked deployment events, with an
+Abigen decode flag retained for diagnostics. Registration, last-tick carry and
+answer selection use Graph Node's exact alloy decoder, including accepted trailing
+ABI words. Candidates retain malformed payloads for the reducer's decoder. Receipt
 `block_index` determines trigger order, while logs for newly created pools enter
 wave 1 even when emitted before their `PoolCreated`. The registry reads
 end-of-block state. `store_pools` takes the Substreams clock as a second input to
@@ -47,7 +50,20 @@ decoder and the locked Pool ABI. The candidate `abi_decoded` flag is diagnostic
 and cannot suppress a Graph Node-accepted tick. Graph Node accepts some values
 outside the ABI's int24 domain; this implementation explicitly refuses those
 values because the storage layout and tick walk require int24. It does not
-silently truncate them. Answer generation is not implemented yet.
+silently truncate them.
+
+Pool fee growth, tick boundary and swap-walk answers, position fragments and fee
+growth, and factory getPool answers read end-of-block carry values. Swap walks
+start from the previous block's tick using `get_first`, then follow this block's
+Initialize/Swap order. Missing prior ticks and missing NPM pool keys are explicit
+anomalies; absent position fragments are explicit reverts. Every emitted slot
+answer distinguishes in-block, carried, and absent/zero provenance.
+
+`map_token_metadata` is the only module whose WASM imports `rpc.eth_call`. It
+batches the four raw ERC20 selectors for the deduplicated tokens of every
+PoolCreated. Failed or empty returns remain explicit reverts; string, bytes32,
+numeric, and unknown-value fallbacks belong to the reducer. This module has not
+yet passed the independent live archive audit required before release.
 
 From the repository root:
 
@@ -57,13 +73,21 @@ cargo xtask aerodrome-substreams protogen --check
 cargo xtask aerodrome-substreams check
 cargo xtask aerodrome-substreams build
 cargo xtask aerodrome-substreams build --twice
+cargo xtask aerodrome-substreams cache-boundary
 ```
 
-`protoc` must be installed. `protogen` without `--check` updates checked-in output.
+`protoc` must be installed. `cache-boundary` also requires `substreams` and
+`wasm-objdump` from WABT, with WASMs built first.
+`protogen` without `--check` updates checked-in output.
 All builds/tests use the locked workspace. `build --twice` compares the two WASM
 hashes from independent source and target roots with source/toolchain paths
-remapped. Only the two implemented WASM crates are built, not the native generator.
-CI also packs the development graph with checksum-pinned Substreams CLI v1.20.3.
+remapped. All four WASM crates are built, excluding the native generator.
+CI packs the development graph with checksum-pinned Substreams CLI v1.20.3.
+The cache-boundary check inspects actual WASM imports and mutates valid custom
+sections in a temporary package. An RPC binary change must affect only metadata
+and final-output hashes; an answers binary change must affect only the three
+answer modules. It also verifies the 34-module inventory, initial blocks and
+final protobuf output type.
 
 The checked-in `fixtures/candidates-13899663.json` is a **field projection** from the
 October 20 Firehose capture, with original capture hash and projection provenance.
@@ -81,11 +105,15 @@ records its source cassette digest. The tick-decoder fixture projects 30 cases
 from the independently generated Graph Node ABI corpus, with source commit,
 path, and digest. Synthetic tests cover rollback, ordinal ties, delegate calls,
 zero/burn deletion, fragment changes, and all carry shards. These are bounded
-regressions, not the complete G2 storage qualification.
+regressions, not the complete G2 storage qualification. A second raw-block test
+compares those same four independent returns with the assembled public call
+answers. Synthetic answer tests cover mixed provenance, swap marker windows,
+in-block initialization, missing history, zero/reverted positions, missing pool
+keys, corrupt/future carry, and the raw ERC20 batch boundary.
 
 Still required: S-X2 X-START/X-NPM-START/X-GUARD real goldens; the S-X3 capture
 utility and dense v5, reverted-write, Flash, and seeded-carry oracle fixtures;
-S-X4 storage answers and ERC20-only RPC module; final aggregation;
+the broader S-X4 answer goldens and live metadata audit;
 root-oracle differential and seeded
 archive audits; measured store sizes; frozen package bytes and release locks.
 No `packages/` or `release/` artifact is created until those gates pass. Changes

@@ -3,6 +3,16 @@
 version = 4
 
 [[package]]
+name = "aerodrome-extractor-answers"
+version = "0.1.0"
+dependencies = [
+ "aerodrome-extractor-core",
+ "aerodrome-extractor-pb",
+ "getrandom 0.2.16",
+ "substreams",
+]
+
+[[package]]
 name = "aerodrome-extractor-core"
 version = "0.1.0"
 dependencies = [
@@ -52,6 +62,17 @@ dependencies = [
  "serde_json",
  "sha2",
  "tempfile",
+]
+
+[[package]]
+name = "aerodrome-extractor-rpc"
+version = "0.1.0"
+dependencies = [
+ "aerodrome-extractor-core",
+ "aerodrome-extractor-pb",
+ "getrandom 0.2.16",
+ "substreams",
+ "substreams-ethereum",
 ]
 
 [[package]]

@@ -1,11 +1,14 @@
 //! Deterministic extraction primitives, shared by native reducers and WASM adapters.
+pub mod answers;
 pub mod calls;
 pub mod candidates;
 pub mod carry;
 pub mod classify;
 pub mod config;
+pub mod events;
 pub mod gas;
 pub mod layout;
+pub mod metadata;
 pub mod shard;
 pub mod storage;
 pub mod walk;

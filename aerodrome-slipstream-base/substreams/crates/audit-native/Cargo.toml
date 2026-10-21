@@ -1,0 +1,20 @@
+[package]
+name = "aerodrome-extractor-audit"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+
+[dependencies]
+aerodrome-extractor-core = { path = "../core" }
+aerodrome-extractor-pb = { path = "../pb" }
+prost = "=0.13.5"
+hex = "=0.4.3"
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = "=1.0.142"
+sha2 = "=0.10.9"
+ureq = { version = "=2.12.1", default-features = false, features = ["tls", "json"] }
+
+[dev-dependencies]
+tempfile = "=3.20.0"
+aerodrome-extractor-extract = { path = "../extract" }

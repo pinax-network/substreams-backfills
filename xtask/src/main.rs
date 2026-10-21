@@ -28,6 +28,7 @@ use evidence::{DirectoryFetcher, FetchOptions, Fetcher, Lock, Outcome, Status, D
 
 const USAGE: &str = "usage: cargo xtask <evidence|verify-all|verify-targets|eligibility> ...
   aerodrome-substreams <check|protogen [--check]|build [--twice]|cache-boundary> [--root DIR]   offline Aerodrome extractor tooling
+  aerodrome-substreams <audit-calls|audit-erc20> --input EXTRACTOR.pb --output NEW_DIR [--root DIR]
   eligibility capture --binding FILE --measurements FILE --output FILE [--policy PATH] [--root DIR]
   eligibility check --binding FILE --purpose implementation-start|compute-or-load-start [--now RFC3339] [--json] [--policy PATH] [--root DIR]
   verify-targets [--root DIR] [--policy PATH]   validate every target binding and pinned evidence (offline)
@@ -100,6 +101,7 @@ fn parse_args(raw: Vec<String>) -> Result<Args, String> {
                 | "binding"
                 | "measurements"
                 | "output"
+                | "input"
                 | "purpose"
                 | "now"
                 | "exact-source-root"
@@ -150,6 +152,14 @@ fn run() -> Result<(), String> {
     ) {
         (Some("aerodrome-substreams"), Some(command)) => {
             let root = PathBuf::from(args.value("root").unwrap_or("."));
+            if matches!(command, "audit-calls" | "audit-erc20") {
+                return aerodrome_substreams::audit(
+                    &root,
+                    args.value("input").ok_or("--input is required")?,
+                    args.value("output").ok_or("--output is required")?,
+                    command == "audit-erc20",
+                );
+            }
             aerodrome_substreams::run(&root, command, args.has("check"), args.has("twice"))
         }
         (Some("verify-all"), _) => verify_all_command(&args),

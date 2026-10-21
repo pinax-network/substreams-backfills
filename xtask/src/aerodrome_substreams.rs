@@ -24,6 +24,35 @@ fn cargo(root: &Path, args: &[&str]) -> Result<(), String> {
     }
     Ok(())
 }
+pub fn audit(repo: &Path, input: &str, output: &str, erc20_only: bool) -> Result<(), String> {
+    // Resolve user paths before changing the child working directory.
+    let cwd = env::current_dir().map_err(|e| e.to_string())?;
+    let input = cwd.join(input);
+    let output = cwd.join(output);
+    let mut command = Command::new("cargo");
+    command
+        .args([
+            "+1.90.0",
+            "run",
+            "--locked",
+            "-p",
+            "aerodrome-extractor-audit",
+            "--",
+            "--input",
+        ])
+        .arg(input)
+        .arg("--output")
+        .arg(output)
+        .current_dir(repo.join(FAMILY));
+    if erc20_only {
+        command.arg("--erc20-only");
+    }
+    let status = command.status().map_err(|e| e.to_string())?;
+    if !status.success() {
+        return Err(format!("archive call audit refused: {status}"));
+    }
+    Ok(())
+}
 pub fn run(repo: &Path, command: &str, check: bool, twice: bool) -> Result<(), String> {
     let repo = repo.canonicalize().map_err(|e| e.to_string())?;
     let root = repo.join(FAMILY);

@@ -1,0 +1,12 @@
+{
+  "auditor_binary_sha256": "93f9d440cbc65aa190e9bc08fe384b3bc33733bb01674303dca83b8a994a604c",
+  "block_hash": "d83042b6a32dc9b18d4c7c9819b914bc04470f77458e7276cb72f3d8fde5eb3d",
+  "block_number": 13899663,
+  "expected_calls": 12,
+  "input_sha256": "e4cd95b41894ac5a84bb3fd36da75791d58686612fa9b9a4e9efeb1d04e3adb4",
+  "production_qualified": false,
+  "proves_completeness": false,
+  "schema": "pinax.aerodrome.archive-call-audit/v1",
+  "scope": "all_supplied_answers",
+  "status": "incomplete"
+}

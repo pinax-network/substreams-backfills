@@ -1,4 +1,4 @@
-//! First mapping checkpoint: Factory.PoolCreated and Pool.Initialize only.
+//! Mapping primitives for Factory, Initialize and pool liquidity changes.
 //!
 //! This is a handler primitive, not a complete block reducer. Match every
 //! candidate against authoritative hosts; unsupported matched handlers are
@@ -7,7 +7,10 @@
 //! creation after abort), and persist hosts only after the block commits.
 mod factory;
 mod initialize;
+mod interval;
+mod pool;
 mod pricing;
+mod transaction;
 
 use crate::{
     abi::DecodedEvent,
@@ -30,7 +33,7 @@ pub const ETH_USD_POOL: &str = "0xb2cc224c1c9fee385f8ad6a55b4d94e92359dc59";
 const WHITELIST: [&str; 3] = [WETH, USDC, AERO];
 
 /// A validated, host-matched trigger. Construction refuses every handler not
-/// implemented by this checkpoint, including Mint, Swap and all NPM events.
+/// implemented by this checkpoint, including Swap and all NPM events.
 pub struct SupportedHandler<'a> {
     input: &'a BlockInput,
     index: usize,
@@ -48,7 +51,7 @@ impl<'a> SupportedHandler<'a> {
         let source = input.block().candidates[index].source;
         if !matches!(
             (source, event.name.as_str()),
-            (1, "PoolCreated") | (3, "Initialize")
+            (1, "PoolCreated") | (3, "Initialize" | "Mint" | "Burn")
         ) {
             return Err(refuse(format!("UnsupportedHandler: {}", event.name)));
         }
@@ -70,6 +73,8 @@ impl<'a> SupportedHandler<'a> {
         match self.event.name.as_str() {
             "PoolCreated" => factory::pool_created(self, journal),
             "Initialize" => initialize::initialize(self, journal).map(|()| None),
+            "Mint" => pool::liquidity(self, journal, true).map(|()| None),
+            "Burn" => pool::liquidity(self, journal, false).map(|()| None),
             _ => unreachable!("constructor matches the supported source and handler"),
         }
     }

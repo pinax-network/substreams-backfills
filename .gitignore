@@ -25,3 +25,6 @@ uniswap-v3/segment-writer-matrix/v1/contract.json
 
 # Block fixtures (see uniswap-v3/fixtures/README.md); hydrated by `cargo xtask evidence fetch --lock uniswap-v3/fixtures/blocks.lock.json`
 uniswap-v3/fixtures/blocks/**/*.pb
+
+# Digest-locked Aerodrome Firehose fixtures, hydrated from evidence releases.
+aerodrome-slipstream-base/fixtures/blocks/**/*.pb

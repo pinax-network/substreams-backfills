@@ -4,7 +4,7 @@ package:
   name: aerodrome_slipstream_base_extractor
   version: v0.1.0
   url: https://github.com/pinax-network/substreams-backfills
-  description: Non-final Aerodrome candidate and registry stages; call answers are not implemented
+  description: Non-final Aerodrome candidate, registry and storage carry stages; call answers are not implemented
 network: base
 protobuf:
   files:
@@ -49,6 +49,251 @@ modules:
         mode: get
     output:
       type: proto:pinax.aerodrome.slipstream.base.v1.ExtractorBlock
+  - name: map_storage_deltas
+    kind: map
+    binary: extract
+    initialBlock: 13843704
+    inputs:
+      - params: string
+      - source: sf.ethereum.type.v2.Block
+      - store: store_pools
+        mode: get
+    output:
+      type: proto:pinax.aerodrome.slipstream.base.internal.v1.StorageDeltas
+  - name: store_pool_last_tick
+    kind: store
+    binary: stores
+    initialBlock: 13843704
+    updatePolicy: set
+    valueType: int64
+    inputs:
+      - map: map_candidates
+  - name: store_pool_slots
+    kind: store
+    binary: stores
+    initialBlock: 13843704
+    updatePolicy: set
+    valueType: bytes
+    inputs:
+      - map: map_storage_deltas
+      - source: sf.substreams.v1.Clock
+  - name: store_tick_slots_00
+    kind: store
+    binary: stores
+    initialBlock: 13843704
+    updatePolicy: set
+    valueType: bytes
+    inputs:
+      - map: map_storage_deltas
+      - source: sf.substreams.v1.Clock
+  - name: store_tick_slots_01
+    kind: store
+    binary: stores
+    initialBlock: 13843704
+    updatePolicy: set
+    valueType: bytes
+    inputs:
+      - map: map_storage_deltas
+      - source: sf.substreams.v1.Clock
+  - name: store_tick_slots_02
+    kind: store
+    binary: stores
+    initialBlock: 13843704
+    updatePolicy: set
+    valueType: bytes
+    inputs:
+      - map: map_storage_deltas
+      - source: sf.substreams.v1.Clock
+  - name: store_tick_slots_03
+    kind: store
+    binary: stores
+    initialBlock: 13843704
+    updatePolicy: set
+    valueType: bytes
+    inputs:
+      - map: map_storage_deltas
+      - source: sf.substreams.v1.Clock
+  - name: store_tick_slots_04
+    kind: store
+    binary: stores
+    initialBlock: 13843704
+    updatePolicy: set
+    valueType: bytes
+    inputs:
+      - map: map_storage_deltas
+      - source: sf.substreams.v1.Clock
+  - name: store_tick_slots_05
+    kind: store
+    binary: stores
+    initialBlock: 13843704
+    updatePolicy: set
+    valueType: bytes
+    inputs:
+      - map: map_storage_deltas
+      - source: sf.substreams.v1.Clock
+  - name: store_tick_slots_06
+    kind: store
+    binary: stores
+    initialBlock: 13843704
+    updatePolicy: set
+    valueType: bytes
+    inputs:
+      - map: map_storage_deltas
+      - source: sf.substreams.v1.Clock
+  - name: store_tick_slots_07
+    kind: store
+    binary: stores
+    initialBlock: 13843704
+    updatePolicy: set
+    valueType: bytes
+    inputs:
+      - map: map_storage_deltas
+      - source: sf.substreams.v1.Clock
+  - name: store_position_slots_00
+    kind: store
+    binary: stores
+    initialBlock: 13843704
+    updatePolicy: set
+    valueType: bytes
+    inputs:
+      - map: map_storage_deltas
+      - source: sf.substreams.v1.Clock
+  - name: store_position_slots_01
+    kind: store
+    binary: stores
+    initialBlock: 13843704
+    updatePolicy: set
+    valueType: bytes
+    inputs:
+      - map: map_storage_deltas
+      - source: sf.substreams.v1.Clock
+  - name: store_position_slots_02
+    kind: store
+    binary: stores
+    initialBlock: 13843704
+    updatePolicy: set
+    valueType: bytes
+    inputs:
+      - map: map_storage_deltas
+      - source: sf.substreams.v1.Clock
+  - name: store_position_slots_03
+    kind: store
+    binary: stores
+    initialBlock: 13843704
+    updatePolicy: set
+    valueType: bytes
+    inputs:
+      - map: map_storage_deltas
+      - source: sf.substreams.v1.Clock
+  - name: store_position_slots_04
+    kind: store
+    binary: stores
+    initialBlock: 13843704
+    updatePolicy: set
+    valueType: bytes
+    inputs:
+      - map: map_storage_deltas
+      - source: sf.substreams.v1.Clock
+  - name: store_position_slots_05
+    kind: store
+    binary: stores
+    initialBlock: 13843704
+    updatePolicy: set
+    valueType: bytes
+    inputs:
+      - map: map_storage_deltas
+      - source: sf.substreams.v1.Clock
+  - name: store_position_slots_06
+    kind: store
+    binary: stores
+    initialBlock: 13843704
+    updatePolicy: set
+    valueType: bytes
+    inputs:
+      - map: map_storage_deltas
+      - source: sf.substreams.v1.Clock
+  - name: store_position_slots_07
+    kind: store
+    binary: stores
+    initialBlock: 13843704
+    updatePolicy: set
+    valueType: bytes
+    inputs:
+      - map: map_storage_deltas
+      - source: sf.substreams.v1.Clock
+  - name: store_position_slots_08
+    kind: store
+    binary: stores
+    initialBlock: 13843704
+    updatePolicy: set
+    valueType: bytes
+    inputs:
+      - map: map_storage_deltas
+      - source: sf.substreams.v1.Clock
+  - name: store_position_slots_09
+    kind: store
+    binary: stores
+    initialBlock: 13843704
+    updatePolicy: set
+    valueType: bytes
+    inputs:
+      - map: map_storage_deltas
+      - source: sf.substreams.v1.Clock
+  - name: store_position_slots_10
+    kind: store
+    binary: stores
+    initialBlock: 13843704
+    updatePolicy: set
+    valueType: bytes
+    inputs:
+      - map: map_storage_deltas
+      - source: sf.substreams.v1.Clock
+  - name: store_position_slots_11
+    kind: store
+    binary: stores
+    initialBlock: 13843704
+    updatePolicy: set
+    valueType: bytes
+    inputs:
+      - map: map_storage_deltas
+      - source: sf.substreams.v1.Clock
+  - name: store_position_slots_12
+    kind: store
+    binary: stores
+    initialBlock: 13843704
+    updatePolicy: set
+    valueType: bytes
+    inputs:
+      - map: map_storage_deltas
+      - source: sf.substreams.v1.Clock
+  - name: store_position_slots_13
+    kind: store
+    binary: stores
+    initialBlock: 13843704
+    updatePolicy: set
+    valueType: bytes
+    inputs:
+      - map: map_storage_deltas
+      - source: sf.substreams.v1.Clock
+  - name: store_position_slots_14
+    kind: store
+    binary: stores
+    initialBlock: 13843704
+    updatePolicy: set
+    valueType: bytes
+    inputs:
+      - map: map_storage_deltas
+      - source: sf.substreams.v1.Clock
+  - name: store_position_slots_15
+    kind: store
+    binary: stores
+    initialBlock: 13843704
+    updatePolicy: set
+    valueType: bytes
+    inputs:
+      - map: map_storage_deltas
+      - source: sf.substreams.v1.Clock
 params:
   map_pools_created: "network=base;deployment=QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV;factory=0x5e7bb104d84c7cb9b682aac2f3d509f5f406809a;factory_start=13843704;npm=0x827922686190790b37229fd06084350e74485b72;npm_start=13843719;pool_implementation=0xec8e5342b19977b4ef8892e02d8daecfa1315831;storage_layout=slipstream@37eead2c7e5302a204dec78bfa0775bbb8ff48a2;walk_spacing=1:1,50:10,100:10,200:60,*:200"
   map_candidates: "network=base;deployment=QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV;factory=0x5e7bb104d84c7cb9b682aac2f3d509f5f406809a;factory_start=13843704;npm=0x827922686190790b37229fd06084350e74485b72;npm_start=13843719;pool_implementation=0xec8e5342b19977b4ef8892e02d8daecfa1315831;storage_layout=slipstream@37eead2c7e5302a204dec78bfa0775bbb8ff48a2;walk_spacing=1:1,50:10,100:10,200:60,*:200"
+  map_storage_deltas: "network=base;deployment=QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV;factory=0x5e7bb104d84c7cb9b682aac2f3d509f5f406809a;factory_start=13843704;npm=0x827922686190790b37229fd06084350e74485b72;npm_start=13843719;pool_implementation=0xec8e5342b19977b4ef8892e02d8daecfa1315831;storage_layout=slipstream@37eead2c7e5302a204dec78bfa0775bbb8ff48a2;walk_spacing=1:1,50:10,100:10,200:60,*:200"

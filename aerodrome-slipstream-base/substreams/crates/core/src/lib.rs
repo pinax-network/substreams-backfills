@@ -7,6 +7,7 @@ pub mod config;
 pub mod gas;
 pub mod layout;
 pub mod shard;
+pub mod storage;
 pub mod walk;
 pub use aerodrome_extractor_pb as pb;
 pub type Address = [u8; 20];

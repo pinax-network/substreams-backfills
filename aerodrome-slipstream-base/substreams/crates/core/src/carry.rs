@@ -99,6 +99,7 @@ pub fn registry_ops(created: &i::PoolsCreated, block: u64) -> Result<Vec<StoreOp
     Ok(out)
 }
 pub fn pool_slot_ops(d: &i::StorageDeltas, block: u64) -> Result<Vec<StoreOp>, &'static str> {
+    clean_deltas(d)?;
     let mut out = vec![];
     for w in &d.fee_growth {
         if w.pool.len() != 20 || w.which > 1 {
@@ -128,6 +129,7 @@ pub fn tick_slot_ops(
     block: u64,
     partition: u8,
 ) -> Result<Vec<StoreOp>, &'static str> {
+    clean_deltas(d)?;
     if partition >= shard::TICK_SHARDS {
         return Err("invalid tick shard");
     }
@@ -167,6 +169,7 @@ pub fn position_slot_ops(
     block: u64,
     partition: u8,
 ) -> Result<Vec<StoreOp>, &'static str> {
+    clean_deltas(d)?;
     if partition >= shard::POSITION_SHARDS {
         return Err("invalid position shard");
     }
@@ -209,6 +212,85 @@ pub fn position_slot_ops(
     }
     out.sort_by_key(StoreOp::ordinal);
     Ok(out)
+}
+fn clean_deltas(d: &i::StorageDeltas) -> Result<(), &'static str> {
+    if !d.anomalies.is_empty() {
+        return Err("refusing anomalous storage deltas before carry writes");
+    }
+    Ok(())
+}
+
+/// Carry ticks using Graph Node's exact ABI decoder. The extractor's Abigen
+/// flag is diagnostic: it can disagree on trailing data and must not suppress
+/// a tick that Graph Node would accept.
+pub fn last_tick_ops(
+    block: &crate::pb::v1::ExtractorBlock,
+) -> Result<Vec<(String, i64, u64)>, &'static str> {
+    use crate::pb::v1::DataSourceKind;
+    use alloy_dyn_abi::{DynSolValue, EventExt};
+    use alloy_json_abi::JsonAbi;
+    use alloy_primitives::B256;
+    use std::sync::OnceLock;
+    static ABI: OnceLock<JsonAbi> = OnceLock::new();
+    let abi = ABI.get_or_init(|| {
+        serde_json::from_slice(include_bytes!("../../../../reference/abis/Pool.json"))
+            .expect("locked Pool ABI")
+    });
+    if block
+        .audit
+        .as_ref()
+        .is_none_or(|audit| !audit.anomalies.is_empty())
+    {
+        return Err("refusing unaudited or anomalous candidates before tick carry writes");
+    }
+    let mut ops = Vec::new();
+    for candidate in &block.candidates {
+        if candidate.source != DataSourceKind::Pool as i32 {
+            continue;
+        }
+        let Some(topic) = candidate.topics.first() else {
+            continue;
+        };
+        let Some(event) = ["Initialize", "Swap"].iter().find_map(|name| {
+            abi.events[*name]
+                .iter()
+                .find(|event| event.selector().as_slice() == topic)
+        }) else {
+            continue;
+        };
+        if candidate.address.len() != 20 {
+            return Err("tick event address must be 20 bytes");
+        }
+        let topics = candidate
+            .topics
+            .iter()
+            .map(|t| {
+                <[u8; 32]>::try_from(t.as_slice())
+                    .map(B256::from)
+                    .map_err(|_| "tick event topic must be 32 bytes")
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        let Ok(decoded) = event.decode_log_parts(topics, &candidate.data) else {
+            continue;
+        };
+        let Some(DynSolValue::Int(tick, 24)) = decoded.body.last() else {
+            return Err("locked tick event ABI result drift");
+        };
+        let tick: i64 = tick
+            .to_string()
+            .parse()
+            .map_err(|_| "decoded int24 exceeds i64")?;
+        if !(-8_388_608..=8_388_607).contains(&tick) {
+            return Err("Graph Node accepted a tick outside the declared int24 domain");
+        }
+        ops.push((
+            format!("t:{};", hex::encode(&candidate.address)),
+            tick,
+            candidate.log_ordinal,
+        ));
+    }
+    ops.sort_by_key(|(_, _, ordinal)| *ordinal);
+    Ok(ops)
 }
 /// Decimal u256 key without a big-integer/runtime dependency.
 pub fn decimal(value: &[u8; 32]) -> String {

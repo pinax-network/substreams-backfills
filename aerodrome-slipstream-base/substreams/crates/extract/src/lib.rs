@@ -121,3 +121,14 @@ pub fn map_candidates(
     candidates::build_candidates(&cfg, &block, &Registry(pools), &Decoder)
         .map_err(substreams::errors::Error::msg)
 }
+
+#[substreams::handlers::map]
+pub fn map_storage_deltas(
+    params: String,
+    block: eth::Block,
+    pools: StoreGetRaw,
+) -> Result<i::StorageDeltas, substreams::errors::Error> {
+    let cfg = Config::parse(&params)?;
+    aerodrome_extractor_core::storage::storage_deltas(&cfg, &block, &Registry(pools))
+        .map_err(substreams::errors::Error::msg)
+}

@@ -118,3 +118,40 @@ root-oracle differential and seeded
 archive audits; measured store sizes; frozen package bytes and release locks.
 No `packages/` or `release/` artifact is created until those gates pass. Changes
 after any future noop require a new module-hash/cache identity.
+
+## Archive call audits
+
+The native `aerodrome-extractor-audit` tool checks supplied answers against an
+independent Base archive at the exact block hash. Configure
+`BASE_ARCHIVE_RPC_URL` locally, then run:
+
+```console
+cargo xtask aerodrome-substreams audit-calls --input extractor.pb --output new-audit-directory
+cargo xtask aerodrome-substreams audit-erc20 --input extractor.pb --output new-metadata-audit-directory
+```
+
+Inputs are canonical single-message `ExtractorBlock` protobufs. The tool checks
+chain ID, block identity, duplicate answers and raw ERC20 masks; each call uses
+EIP-1898 `blockHash` with `requireCanonical: true` and the frozen oracle's
+50,000,000 gas limit. Storage answers compare every
+field consumed by the deployed mapping. Only explicit execution-revert errors
+(code 3 and an `execution reverted` message) or empty successful returns count
+as reverts. Timeouts, missing archive state, generic errors and HTTP failures
+abort. URLs and provider error details are excluded from receipts.
+
+An audit creates a new output directory, retains normalized observations, and
+emits a digest-bound success receipt only after all comparisons pass. Failed
+attempts remain separate and exit 4; existing output directories are refused.
+An empty answer set is explicitly marked `nonempty: false`. This verifies the
+answers supplied, not missing-answer detection, extraction completeness,
+provenance, full handler behavior or production readiness.
+
+The `first_pool_input` example creates a bounded native fixture for block
+13,899,663 using raw Firehose storage and eight retained ERC20 calls. It does
+not capture a live WASM output or general seeded block. Its twelve calls are
+checked against the independent retained cassette in normal tests. A fresh
+archive audit also matched all twelve at block hash
+`d83042b6a32dc9b18d4c7c9819b914bc04470f77458e7276cb72f3d8fde5eb3d`;
+the input SHA-256 was
+`e4cd95b41894ac5a84bb3fd36da75791d58686612fa9b9a4e9efeb1d04e3adb4`.
+Dense, seeded, reverted-write and full-window metadata audits remain required.

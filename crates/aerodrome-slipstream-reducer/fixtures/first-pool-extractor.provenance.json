@@ -1,0 +1,16 @@
+{
+  "schema": "aerodrome-first-pool-extractor-fixture/v1",
+  "block_number": 13899663,
+  "sha256": "e4cd95b41894ac5a84bb3fd36da75791d58686612fa9b9a4e9efeb1d04e3adb4",
+  "source_repository": "pinax-network/substreams-backfills",
+  "source_commit": "cdd3583b20cfad2efae0c0abad015ab46b7be137",
+  "source_path": "aerodrome-slipstream-base/substreams/fixtures/archive-audit-13899663/extractor.pb",
+  "raw_block_path": "aerodrome-slipstream-base/fixtures/blocks/base/13899663.pb",
+  "raw_block_sha256": "5ac312712fef494a8c03f62c0987bba3339c5f693187e5f272467eee06af59ce",
+  "regenerate_from_source_commit": {
+    "working_directory": "aerodrome-slipstream-base/substreams",
+    "command": "cargo +1.90.0 run --locked -p aerodrome-extractor-audit --example first_pool_input -- NEW_OUTPUT.pb"
+  },
+  "method": "Extractor core storage pipeline from locked raw block plus eight retained raw ERC20 replies. Not produced by the native reducer or its handler oracle. The independent WASM corpus uses the raw block and mapping-host cassette directly.",
+  "archive_audit_receipts_at_source_commit": "aerodrome-slipstream-base/substreams/fixtures/archive-audit-13899663/"
+}

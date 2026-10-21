@@ -1,11 +1,13 @@
 # Aerodrome reducer foundations
 
-This crate implements the S-R2 input layer and S-R3 entity/state primitives for
+This crate implements the S-R2 input layer, S-R3 entity/state primitives, and
+the first S-R4 Factory/Initialize handler checkpoint for
 the locked Base deployment `QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV`.
-The library can journal synthetic handler operations and seal canonical in-band
-BlockChanges. It does **not** execute Aerodrome mapping handlers, run a complete
-reducer, import verified snapshots, provide durable checkpoints, or qualify a
-backfill. Those stages remain to be implemented and compared with mapping-host.
+The library executes these two handlers, journals their operations and seals
+canonical in-band BlockChanges. It does **not** run all mapping handlers or a
+complete reducer, import verified snapshots, provide durable checkpoints, or
+qualify a backfill. Those stages remain to be implemented and compared with
+mapping-host.
 
 The protobuf types and gas-price function come from the extractor's shared
 `pb`/`core` crates. There is no copied protobuf schema or Substreams runtime
@@ -132,8 +134,8 @@ seed, not authenticated snapshot import.
 The entity class labels describe the mapping design. They do not enable eviction:
 all rows remain persistent, including BlockLocal rows, until retention has
 independent evidence. Collect, Flash and TickHourData writes/removes are refused
-because the deployed handlers never write them. No handler dispatch, pricing,
-position logic, redb backend, rewind, or production output CLI is included.
+because the deployed handlers never write them. Complete handler scheduling,
+Swap/Mint/Burn/NPM logic, redb, rewind and the production output CLI are absent.
 
 Regenerate typed declarations with:
 
@@ -160,3 +162,57 @@ UPDATE_AERODROME_STATE_CORPUS=1 cargo +1.98.0 test \
 Without the environment variable, the command recomputes and byte-compares the
 committed corpus. The ordinary reducer tests consume that corpus without Graph
 Node dependencies.
+
+
+## First mapping checkpoint: Factory and Initialize
+
+`handlers::SupportedHandler::match_candidate` requires authoritative `HostSet`
+matching. It returns no trigger for an ABI mismatch or a justified absent host,
+and refuses every unsupported matched event. Its `run` method belongs inside
+`BlockStore::run_handler`. The caller owns complete scheduling and must install
+a returned Pool source only after handler commit, then persist hosts only after
+block commit. This primitive is not permission to skip unsupported handlers and
+publish a complete block. The existing CLI remains validation-only.
+
+Factory preserves the deployed exclusion, fee-tier lookup, both token loads
+before construction, metadata fallback behavior, whitelist append order, zero
+pool counts on tokens, and exact saves: Bundle on first factory creation, Pool,
+source creation, Token0, Token1, Factory. Existing tokens do not request metadata.
+Initialize saves Pool before loading its required dependencies, updates Bundle,
+PoolDayData and PoolHourData, then saves Token0 and Token1. It does not compute
+pool token prices. The daily close remains unchanged while hourly close updates.
+The two pricing helpers used here preserve strict thresholds and store reloads;
+full seeded pricing branch qualification belongs to the next checkpoint.
+
+Decimal comparisons perform the deployed `minus` followed by coefficient sign.
+Unqualified numeric failures refuse the block. Only the independently proven
+`ByteArray.toI32` overflow produces a numeric deterministic error, preserving
+already-recorded discarded saves and the error marker. Fixed-point transport
+limitations remain explicit refusals, including unsupported negative raw decimals.
+
+The independent handler corpus runs the locked Factory/Pool WASM through actual
+Graph Node. It has no native reducer dependency and compares all fields of every
+operation, including materialized images, dispositions, ordering, and in-band
+sources. The original first-pool case checks real groups 0 and 3, renumbering only
+the dense operation/group indices after excluding the still-unsupported NPM/Mint
+groups; it is not complete-block parity. The other 17 cases are explicitly
+synthetic mutations: isolated Factory/Initialize, four fee spacings, excluded
+pool, four metadata fallbacks, integer wrapping/overflow, timestamp wrapping/
+overflow, cached-token creation, and repeated Initialize with modified seed price.
+The last two seed from actual Graph Node checkpoint images; repeated Initialize
+changes only seed `Pool.token0Price` to 5 and proves daily/hourly close behavior.
+Cached-token replay has no metadata answers at the new block hash.
+
+The full first-pool extractor fixture and its upstream regeneration route are
+pinned in `fixtures/first-pool-extractor.provenance.json`. This evidence does not
+certify the final SPKG, a complete reduction range, or a production database.
+
+```console
+cargo xtask evidence fetch --lock aerodrome-slipstream-base/fixtures/blocks.lock.json
+UPDATE_AERODROME_HANDLER_CORPUS=1 cargo +1.98.0 test \
+  --manifest-path mapping-host/Cargo.toml --locked --test mapping_host aerodrome_handlers_corpus
+cargo test -p aerodrome-slipstream-reducer --locked --test handlers
+```
+
+Without the environment variable the oracle regenerates in memory and requires
+byte-identical committed results. It runs with recording disabled and no sockets.

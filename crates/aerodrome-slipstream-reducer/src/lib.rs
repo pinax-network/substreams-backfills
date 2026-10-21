@@ -1,9 +1,10 @@
 //! Aerodrome input, typed entity and transactional state foundations.
-//! No mapping handlers, durable checkpoints or production reducer are implemented.
+//! Only Factory/Initialize handlers exist; no durable checkpoint or production reducer.
 //! Input validation and synthetic operation sealing do not certify a backfill.
 pub mod abi;
 pub mod calls;
 pub mod entity;
+pub mod handlers;
 pub mod hosts;
 pub mod identity;
 pub mod input;

@@ -1,6 +1,23 @@
 use backfill_common::{pb::pinax::graph::backfill::v1 as pb, BlockChangesCompatibility};
 use graph_numerics::{bigint, mapping, BigInt, GraphDecimal, NumericError};
 
+#[test]
+fn mapping_i32_conversion_differs_from_mathematical_range_check() {
+    for (text, expected) in [
+        ("2147483648", i32::MIN),
+        ("-2147483649", i32::MAX),
+        ("4294967295", -1),
+        ("-4294967296", 0),
+    ] {
+        let value = bigint::parse(text).unwrap();
+        assert_eq!(bigint::to_i32_mapping(&value), Ok(expected));
+        assert!(bigint::to_i32_checked(&value).is_err());
+    }
+    for text in ["4294967296", "-4294967297"] {
+        assert!(bigint::to_i32_mapping(&bigint::parse(text).unwrap()).is_err());
+    }
+}
+
 fn seal(value: pb::BigDecimalValue) -> Result<Vec<u8>, backfill_common::ValidationError> {
     let descriptor = br#"{"contract":"pinax.graph.backfill.block-changes/v1","descriptor_version":1,"deterministic_error_policy":"non_fatal","network":"base","expected_poi_causality_region":"ethereum/base"}"#;
     let compatibility = BlockChangesCompatibility::from_descriptor(descriptor).unwrap();

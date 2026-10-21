@@ -1,6 +1,11 @@
 {
   "bigdecimal": "0.1.2",
   "graph_node_commit": "77823b5a7adc4eac4abf03202c8dd7cb00dea31d",
+  "mapping_i32": {
+    "function": "~lib/@graphprotocol/graph-ts/common/collections/ByteArray#toI32",
+    "method": "execute the original function body with one additional export; only error diagnostic imports are mocked",
+    "wasm_sha256": "778944cb5de130d35dd76718a2642a338e5637d1d3d58d5b64d7cdf096ed8272"
+  },
   "num_bigint": "0.2.6",
   "schema": "pinax.graph-numerics.corpus/v1",
   "sweep": {
@@ -15874,6 +15879,62 @@
   "vectors": [
     {
       "case": {
+        "a": "132000",
+        "b": "",
+        "op": "host_long_string"
+      },
+      "result": {
+        "coefficient": "1111111111111111111111111111111111",
+        "display_sha256": "b3f85afd28f218ae39db8d12028d6e12a83f5f2db1ba798c75bcc743e642735b",
+        "fixed": true,
+        "scale": 33,
+        "wire": "36c831a180dc77f348b5c71c71c7"
+      }
+    },
+    {
+      "case": {
+        "a": "132000",
+        "b": "",
+        "op": "db_long_string"
+      },
+      "result": {
+        "coefficient": "1111111111111111111111111111111111",
+        "display_sha256": "b3f85afd28f218ae39db8d12028d6e12a83f5f2db1ba798c75bcc743e642735b",
+        "fixed": true,
+        "scale": 33,
+        "wire": "36c831a180dc77f348b5c71c71c7"
+      }
+    },
+    {
+      "case": {
+        "a": "132000",
+        "b": "-",
+        "op": "host_long_string"
+      },
+      "result": {
+        "coefficient": "-11111111111111111111111111111111111",
+        "display_sha256": "543266b504759868819536df7e833e0ba10244d2fcb1922dd6be4cac53f7e756",
+        "fixed": true,
+        "scale": 34,
+        "wire": "fddc2e0fb0f763507f28e638e38e39"
+      }
+    },
+    {
+      "case": {
+        "a": "132000",
+        "b": "-",
+        "op": "db_long_string"
+      },
+      "result": {
+        "coefficient": "-11111111111111111111111111111111111",
+        "display_sha256": "543266b504759868819536df7e833e0ba10244d2fcb1922dd6be4cac53f7e756",
+        "fixed": true,
+        "scale": 34,
+        "wire": "fddc2e0fb0f763507f28e638e38e39"
+      }
+    },
+    {
+      "case": {
         "a": "0",
         "op": "host_string"
       },
@@ -18805,7 +18866,7 @@
         "op": "int_i32"
       },
       "result": {
-        "error": "i32_overflow"
+        "i32": -2147483648
       }
     },
     {
@@ -18889,7 +18950,7 @@
         "op": "int_i32"
       },
       "result": {
-        "error": "i32_overflow"
+        "i32": 2147483647
       }
     },
     {
@@ -18923,6 +18984,216 @@
       "result": {
         "integer": "-8388609",
         "wire": "ff7fffff"
+      }
+    },
+    {
+      "case": {
+        "a": "4294967295",
+        "op": "int_i32"
+      },
+      "result": {
+        "i32": -1
+      }
+    },
+    {
+      "case": {
+        "a": "4294967295",
+        "b": "8",
+        "op": "int_pow"
+      },
+      "result": {
+        "integer": "115792089021636622262124715160334756877804245386980633020041035952359812890625",
+        "wire": "00fffffff80000001bffffffc800000045ffffffc80000001bfffffff800000001"
+      }
+    },
+    {
+      "case": {
+        "a": "4294967295",
+        "b": "8",
+        "op": "int_shl"
+      },
+      "result": {
+        "integer": "1099511627520",
+        "wire": "00ffffffff00"
+      }
+    },
+    {
+      "case": {
+        "a": "4294967295",
+        "b": "8",
+        "op": "int_shr"
+      },
+      "result": {
+        "integer": "16777215",
+        "wire": "00ffffff"
+      }
+    },
+    {
+      "case": {
+        "a": "4294967296",
+        "op": "int_i32"
+      },
+      "result": {
+        "error": "i32_overflow"
+      }
+    },
+    {
+      "case": {
+        "a": "4294967296",
+        "b": "8",
+        "op": "int_pow"
+      },
+      "result": {
+        "integer": "115792089237316195423570985008687907853269984665640564039457584007913129639936",
+        "wire": "010000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "case": {
+        "a": "4294967296",
+        "b": "8",
+        "op": "int_shl"
+      },
+      "result": {
+        "integer": "1099511627776",
+        "wire": "010000000000"
+      }
+    },
+    {
+      "case": {
+        "a": "4294967296",
+        "b": "8",
+        "op": "int_shr"
+      },
+      "result": {
+        "integer": "16777216",
+        "wire": "01000000"
+      }
+    },
+    {
+      "case": {
+        "a": "-4294967295",
+        "op": "int_i32"
+      },
+      "result": {
+        "i32": 1
+      }
+    },
+    {
+      "case": {
+        "a": "-4294967295",
+        "b": "8",
+        "op": "int_pow"
+      },
+      "result": {
+        "integer": "115792089021636622262124715160334756877804245386980633020041035952359812890625",
+        "wire": "00fffffff80000001bffffffc800000045ffffffc80000001bfffffff800000001"
+      }
+    },
+    {
+      "case": {
+        "a": "-4294967295",
+        "b": "8",
+        "op": "int_shl"
+      },
+      "result": {
+        "integer": "-1099511627520",
+        "wire": "ff0000000100"
+      }
+    },
+    {
+      "case": {
+        "a": "-4294967295",
+        "b": "8",
+        "op": "int_shr"
+      },
+      "result": {
+        "integer": "-16777216",
+        "wire": "ff000000"
+      }
+    },
+    {
+      "case": {
+        "a": "-4294967296",
+        "op": "int_i32"
+      },
+      "result": {
+        "i32": 0
+      }
+    },
+    {
+      "case": {
+        "a": "-4294967296",
+        "b": "8",
+        "op": "int_pow"
+      },
+      "result": {
+        "integer": "115792089237316195423570985008687907853269984665640564039457584007913129639936",
+        "wire": "010000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "case": {
+        "a": "-4294967296",
+        "b": "8",
+        "op": "int_shl"
+      },
+      "result": {
+        "integer": "-1099511627776",
+        "wire": "ff0000000000"
+      }
+    },
+    {
+      "case": {
+        "a": "-4294967296",
+        "b": "8",
+        "op": "int_shr"
+      },
+      "result": {
+        "integer": "-16777216",
+        "wire": "ff000000"
+      }
+    },
+    {
+      "case": {
+        "a": "-4294967297",
+        "op": "int_i32"
+      },
+      "result": {
+        "error": "i32_overflow"
+      }
+    },
+    {
+      "case": {
+        "a": "-4294967297",
+        "b": "8",
+        "op": "int_pow"
+      },
+      "result": {
+        "integer": "115792089452995768936534952038695181651179463012861199246511499662027663605761",
+        "wire": "01000000080000001c0000003800000046000000380000001c0000000800000001"
+      }
+    },
+    {
+      "case": {
+        "a": "-4294967297",
+        "b": "8",
+        "op": "int_shl"
+      },
+      "result": {
+        "integer": "-1099511628032",
+        "wire": "feffffffff00"
+      }
+    },
+    {
+      "case": {
+        "a": "-4294967297",
+        "b": "8",
+        "op": "int_shr"
+      },
+      "result": {
+        "integer": "-16777217",
+        "wire": "feffffff"
       }
     },
     {

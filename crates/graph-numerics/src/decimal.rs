@@ -200,7 +200,8 @@ impl GraphDecimal {
             .ok_or(NumericError::ScaleOverflow)?;
         let parsed =
             BigDecimal::from_str(value).map_err(|_| NumericError::InvalidDecimal(value.into()))?;
-        bigint::check_bits(&parsed.as_bigint_and_exponent().0)?;
+        // Graph Node parses strings directly into BigDecimal, then normalizes.
+        // The unrounded coefficient never crosses the checked BigInt boundary.
         Ok(parsed)
     }
 

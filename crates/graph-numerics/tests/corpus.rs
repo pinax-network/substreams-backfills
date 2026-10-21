@@ -51,6 +51,15 @@ fn evaluate(case: &Case) -> Result<Value, NumericError> {
     let dec = match case.op.as_str() {
         "host_string" => host(a)?,
         "db_string" => GraphDecimal::from_db_text(a)?,
+        "host_long_string" | "db_long_string" => {
+            let count = a.parse::<usize>().unwrap();
+            let text = format!("{b}{}e-{}", "1".repeat(count), count - 1);
+            if case.op == "host_long_string" {
+                host(&text)?
+            } else {
+                GraphDecimal::from_db_text(&text)?
+            }
+        }
         "raw_int" => GraphDecimal::from_bigint(&bigint::parse(a)?)?,
         "add" => host(a)?.plus(&host(b)?)?,
         "sub" => host(a)?.minus(&host(b)?)?,
@@ -92,7 +101,7 @@ fn evaluate(case: &Case) -> Result<Value, NumericError> {
                 "int_pow" => bigint::pow(&lhs, b.parse().unwrap())?,
                 "int_shl" => bigint::left_shift(&lhs, b.parse().unwrap())?,
                 "int_shr" => bigint::right_shift(&lhs, b.parse().unwrap())?,
-                "int_i32" => return Ok(json!({"i32":bigint::to_i32_checked(&lhs)?})),
+                "int_i32" => return Ok(json!({"i32":bigint::to_i32_mapping(&lhs)?})),
                 _ => panic!("unknown integer op {op}"),
             };
             return Ok(integer_result(result));

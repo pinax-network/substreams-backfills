@@ -28,6 +28,11 @@ impl Case {
 
 pub fn edge_cases() -> Vec<Case> {
     let mut cases = Vec::new();
+    for sign in ["", "-"] {
+        for op in ["host_long_string", "db_long_string"] {
+            cases.push(Case::new(op, "132000", Some(sign)));
+        }
+    }
     for s in [
         "0",
         "-0",
@@ -145,6 +150,11 @@ pub fn edge_cases() -> Vec<Case> {
         "2147483648",
         "-2147483648",
         "-2147483649",
+        "4294967295",
+        "4294967296",
+        "-4294967295",
+        "-4294967296",
+        "-4294967297",
     ] {
         cases.push(Case::new("int_i32", a, None));
         for op in ["int_pow", "int_shl", "int_shr"] {

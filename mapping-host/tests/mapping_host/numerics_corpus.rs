@@ -10,6 +10,8 @@ use std::{path::PathBuf, str::FromStr};
 mod cases;
 use cases::{Case, Sweep, SWEEP_COUNT, SWEEP_SEED};
 
+mod deployed_i32;
+
 type OracleResult<T> = Result<T, &'static str>;
 
 fn range(value: BigDecimal) -> OracleResult<BigDecimal> {
@@ -81,6 +83,15 @@ fn evaluate(case: &Case) -> OracleResult<Value> {
     let dec = match case.op.as_str() {
         "host_string" => host(a)?,
         "db_string" => range(BigDecimal::from_str(a).map_err(|_| "invalid_decimal")?)?,
+        "host_long_string" | "db_long_string" => {
+            let count = a.parse::<usize>().unwrap();
+            let text = format!("{b}{}e-{}", "1".repeat(count), count - 1);
+            if case.op == "host_long_string" {
+                host(&text)?
+            } else {
+                range(BigDecimal::from_str(&text).map_err(|_| "invalid_decimal")?)?
+            }
+        }
         "raw_int" => raw(a)?,
         "add" => cross(host(a)? + host(b)?)?,
         "sub" => cross(host(a)? - host(b)?)?,
@@ -154,13 +165,10 @@ fn evaluate(case: &Case) -> OracleResult<Value> {
                 "int_pow" => lhs.pow(b.parse().unwrap()).map_err(|_| "integer_too_big")?,
                 "int_shl" => lhs << b.parse::<u8>().unwrap(),
                 "int_shr" => lhs >> b.parse::<u8>().unwrap(),
-                // graph-ts toI32 is an AssemblyScript checked conversion, not
-                // a Graph Node Rust scalar method. Its i32 range is explicit.
+                // Execute the deployed AssemblyScript method. Its sign-byte
+                // check differs from a mathematical signed i32 range check.
                 "int_i32" => {
-                    return a
-                        .parse::<i32>()
-                        .map(|n| json!({"i32":n}))
-                        .map_err(|_| "i32_overflow")
+                    return deployed_i32::convert(&lhs).map(|n| json!({"i32":n}));
                 }
                 _ => panic!("unknown integer op {op}"),
             };
@@ -222,6 +230,8 @@ fn graph_node_numerics_corpus() {
         "sweep":{"seed":format!("{SWEEP_SEED:016x}"),"count":SWEEP_COUNT,"sha256":hex::encode(digest.finalize())},
         "ticks":ticks,
         "wasm_boundary": {"api_version":"0.0.7","conversion":"FromAscObj<AscBigDecimal>","rows":wasm_boundary::rows()},
+        "mapping_i32": {"wasm_sha256":deployed_i32::POOL_SHA256,"function":deployed_i32::METHOD,
+            "method":"execute the original function body with one additional export; only error diagnostic imports are mocked"},
     });
     let bytes = format!("{}\n", serde_json::to_string_pretty(&fixture).unwrap());
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))

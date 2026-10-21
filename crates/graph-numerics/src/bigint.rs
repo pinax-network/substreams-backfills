@@ -81,11 +81,34 @@ pub fn right_shift(a: &BigInt, bits: u8) -> Result<BigInt, NumericError> {
     checked(a >> usize::from(bits))
 }
 
+/// Mathematical range check, suitable for transport/domain validation.
+/// This is deliberately stricter than the deployed mapping's `toI32()`.
 pub fn to_i32_checked(value: &BigInt) -> Result<i32, NumericError> {
     check_bits(value)?;
     value
         .to_i32()
         .ok_or_else(|| NumericError::I32Overflow(value.to_string()))
+}
+
+/// Deployed graph-ts `ByteArray.toI32()`, including its low-word wrapping.
+/// It checks only bytes beyond the first four against the sign extension;
+/// the sign of bit 31 is not checked. Thus +2^31 maps to i32::MIN and
+/// -(2^31+1) maps to i32::MAX. Use `to_i32_checked` for mathematical bounds.
+pub fn to_i32_mapping(value: &BigInt) -> Result<i32, NumericError> {
+    check_bits(value)?;
+    let bytes = value.to_signed_bytes_le();
+    let extension = if bytes.last().is_some_and(|byte| byte & 0x80 != 0) {
+        0xff
+    } else {
+        0
+    };
+    if bytes.iter().skip(4).any(|byte| *byte != extension) {
+        return Err(NumericError::I32Overflow(value.to_string()));
+    }
+    let mut low = [extension; 4];
+    let count = bytes.len().min(4);
+    low[..count].copy_from_slice(&bytes[..count]);
+    Ok(i32::from_le_bytes(low))
 }
 
 pub fn signed_bytes(value: &BigInt) -> Vec<u8> {

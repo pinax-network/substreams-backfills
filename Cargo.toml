@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
     "common",
+    "crates/graph-numerics",
     "crates/uniswap-v3-overlay-pb",
     "crates/uniswap-v3-reducers",
     "crates/uniswap-v3-runtime",

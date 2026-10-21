@@ -37,6 +37,7 @@ mod checkpoint_resume;
 mod dynamic_sources;
 mod live_cli;
 mod long_run;
+mod numerics_corpus;
 mod parity_window_evidence;
 mod segment_qme66zn;
 mod source_chunks;

@@ -50,7 +50,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "hex",
- "num-bigint",
+ "num-bigint 0.4.8",
  "prost 0.13.5",
  "rustix 1.1.4",
  "serde",
@@ -74,11 +74,22 @@ checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
 
 [[package]]
 name = "bigdecimal"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1374191e2dd25f9ae02e3aa95041ed5d747fc77b3c102b49fe2dd9a8117a6244"
+dependencies = [
+ "num-bigint 0.2.6",
+ "num-integer",
+ "num-traits",
+]
+
+[[package]]
+name = "bigdecimal"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a6773ddc0eafc0e509fb60e48dff7f450f8e674a0686ae8605e8d9901bd5eefa"
 dependencies = [
- "num-bigint",
+ "num-bigint 0.4.8",
  "num-integer",
  "num-traits",
 ]
@@ -440,6 +451,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "graph-numerics"
+version = "0.1.0"
+dependencies = [
+ "backfill-common",
+ "bigdecimal 0.1.2",
+ "hex",
+ "num-bigint 0.2.6",
+ "num-traits",
+ "serde",
+ "serde_json",
+ "sha2",
+]
+
+[[package]]
 name = "hashbrown"
 version = "0.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -776,6 +801,17 @@ name = "multimap"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1d87ecb2933e8aeadb3e3a02b828fed80a7528047e68b4f424523a0981a3a084"
+
+[[package]]
+name = "num-bigint"
+version = "0.2.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "090c7f9998ee0ff65aa5b723e4009f7b217707f1fb5ea551329cc4d6231fb304"
+dependencies = [
+ "autocfg",
+ "num-integer",
+ "num-traits",
+]
 
 [[package]]
 name = "num-bigint"
@@ -1411,10 +1447,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8e02e7abbbcbd809708634207bbe87f904db8696f5c148c6dd46cee5d7713d25"
 dependencies = [
  "anyhow",
- "bigdecimal",
+ "bigdecimal 0.3.1",
  "hex",
  "hex-literal",
- "num-bigint",
+ "num-bigint 0.4.8",
  "num-integer",
  "num-traits",
  "pad",
@@ -1446,7 +1482,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2fc683b368e317c60064267dbddc5d8ce290ef00170eb74df8cdde7cda939f3"
 dependencies = [
  "getrandom 0.2.17",
- "num-bigint",
+ "num-bigint 0.4.8",
  "substreams",
  "substreams-ethereum-abigen",
  "substreams-ethereum-core",
@@ -1476,10 +1512,10 @@ version = "0.10.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "533e22206a9709568ed829037ed49838d4c8c441b799f9c43a20c5a7d84027c9"
 dependencies = [
- "bigdecimal",
+ "bigdecimal 0.3.1",
  "ethabi",
  "getrandom 0.2.17",
- "num-bigint",
+ "num-bigint 0.4.8",
  "prost 0.13.5",
  "prost-build 0.11.9",
  "prost-types 0.13.5",
@@ -1495,7 +1531,7 @@ dependencies = [
  "ethabi",
  "heck 0.4.1",
  "hex",
- "num-bigint",
+ "num-bigint 0.4.8",
  "proc-macro2",
  "quote",
  "substreams-ethereum-abigen",
@@ -1719,7 +1755,7 @@ name = "uniswap-v3-reducers"
 version = "0.1.0"
 dependencies = [
  "hex",
- "num-bigint",
+ "num-bigint 0.4.8",
  "num-traits",
  "prost 0.13.5",
  "prost-types 0.13.5",

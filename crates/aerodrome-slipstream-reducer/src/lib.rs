@@ -1,10 +1,13 @@
-//! Aerodrome reducer input foundation. No handlers, state writer or production
-//! reducer are implemented here yet. Validation never certifies an extractor.
+//! Aerodrome input, typed entity and transactional state foundations.
+//! No mapping handlers, durable checkpoints or production reducer are implemented.
+//! Input validation and synthetic operation sealing do not certify a backfill.
 pub mod abi;
 pub mod calls;
+pub mod entity;
 pub mod hosts;
 pub mod identity;
 pub mod input;
+pub mod state;
 pub use aerodrome_extractor_core::{Address, Word};
 pub use aerodrome_extractor_pb::v1 as pb;
 

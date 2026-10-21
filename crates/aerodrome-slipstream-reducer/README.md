@@ -1,9 +1,11 @@
-# Aerodrome reducer input foundation
+# Aerodrome reducer foundations
 
-This crate implements the S-R2 input layer for the locked Base deployment
-`QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV`. It does **not** execute handlers,
-write state, produce BlockChanges, seed/rewind a reducer, or qualify a backfill.
-Those stages remain to be implemented and compared with the mapping-host oracle.
+This crate implements the S-R2 input layer and S-R3 entity/state primitives for
+the locked Base deployment `QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV`.
+The library can journal synthetic handler operations and seal canonical in-band
+BlockChanges. It does **not** execute Aerodrome mapping handlers, run a complete
+reducer, import verified snapshots, provide durable checkpoints, or qualify a
+backfill. Those stages remain to be implemented and compared with mapping-host.
 
 The protobuf types and gas-price function come from the extractor's shared
 `pb`/`core` crates. There is no copied protobuf schema or Substreams runtime
@@ -33,7 +35,7 @@ ABI decoding uses Graph Node's exact locked alloy 1.7.2 versions and the locked
 ABI files. A matching log with malformed payload becomes no trigger. The
 extractor's `abi_decoded` flag is diagnostic and never chooses a handler.
 `HostSet` separately enforces the reducer's committed host set. It does not
-install hosts from decoded Factory events. The future handler journal records
+install hosts from decoded Factory events. The handler journal records
 committed or aborted creation outcomes explicitly. An unknown host is refused
 unless the exact deployed Factory exclusion or a recorded aborted creation
 explains it. Pool logs before their creation event remain eligible in wave 1.
@@ -92,5 +94,69 @@ UPDATE_AERODROME_INPUT_CORPUS=1 cargo +1.98.0 test \
 Without the environment variable this command recomputes and compares the
 committed corpus exactly. Mapping-host CI watches the reducer, reference ABIs,
 and extractor fixture projection. Release locks, real call-answer coverage,
-full mapping-host frame parity, state/checkpoint semantics, error/PoI emission,
-and end-to-end negative raw decimal support remain later gates.
+full mapping-host frame parity, durable checkpoint semantics, executed-handler
+error/PoI parity, and end-to-end negative raw decimal support remain later gates.
+
+
+## Typed entities, handler journals and sealing
+
+`entity` provides all 20 typed mapping objects, exactly 289 stored fields from
+302 schema fields; 13 derived fields are excluded. A separate GraphQL parser
+checks every generated field and its nullability against the locked schema.
+Optional values preserve `Presence::{Absent, Null, Set}`. Loaded objects are
+owned copies; only a save changes the journal. String normalization happens at
+the store boundary, and decimals must satisfy the current fixed-point transport
+contract. Once-normalized negative decimals outside that domain are explicitly
+refused, even though Graph Node arithmetic can produce them.
+
+`BlockStore` overlays handler-local operations on prior committed handlers and
+backend images. A successful handler publishes its operations and source
+creations together; a deterministic abort drops both while retaining its PoI
+operations/error marker. A fatal API error or caught panic poisons the block.
+Partial writes are schema-checked against their complete post-merge image, and
+operations retain save/remove order through the shared `BlockOpsBuilder`.
+An existing entity removed then recreated can retain explicit Null in its LFU
+image. `MemoryBackend::database_rows` exposes the distinct physical reload image
+without those Null fields. Inserts strip Null at block finalization.
+
+`seal()` produces the extended v2 BlockChanges payload, runs the common canonical
+encoder/decoder, and wraps it in an Observed BCF1 frame. Only committed Pool
+creations appear in-band, with dense creation ordinals and handler-group order.
+Fatal deterministic-error policy seals a discarded, noncommittable block.
+Backend commit checks predecessor, descriptor, observed rows and source reads
+before atomically installing the patch and boundary. Writing a frame and
+committing memory are separate actions; a later driver must supply crash-safe
+output/checkpoint ordering. `from_images` is a structurally checked test/oracle
+seed, not authenticated snapshot import.
+
+The entity class labels describe the mapping design. They do not enable eviction:
+all rows remain persistent, including BlockLocal rows, until retention has
+independent evidence. Collect, Flash and TickHourData writes/removes are refused
+because the deployed handlers never write them. No handler dispatch, pricing,
+position logic, redb backend, rewind, or production output CLI is included.
+
+Regenerate typed declarations with:
+
+```console
+python3 crates/aerodrome-slipstream-reducer/scripts/generate_entities.py
+cargo fmt --all
+```
+
+The independent state corpus generator uses actual Graph Node v0.44.0
+`BlockState` and `EntityCache` from commit
+`77823b5a7adc4eac4abf03202c8dd7cb00dea31d`, including real handler enter/exit/discard
+and `as_modifications`. It does not use the reducer or shared cache algebra to
+compute expectations. Its 64 scenarios cover initially present/absent entities,
+partial/full saves, Null, removes, recreations and aborted handlers across three
+blocks each. The native differential checks all 4,800 reads and boundaries.
+This is entity-cache API evidence; it does not execute deployed WASM handlers
+or certify Postgres persistence, complete frame/PoI parity or dynamic hosts.
+
+```console
+UPDATE_AERODROME_STATE_CORPUS=1 cargo +1.98.0 test \
+  --manifest-path mapping-host/Cargo.toml --locked --test mapping_host aerodrome_state_corpus
+```
+
+Without the environment variable, the command recomputes and byte-compares the
+committed corpus. The ordinary reducer tests consume that corpus without Graph
+Node dependencies.

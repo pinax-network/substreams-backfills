@@ -7,9 +7,12 @@
 //! saves and empty-but-triggered proof-of-indexing streams.
 
 pub mod block_changes;
+pub mod clock;
+pub mod descriptor;
 pub mod dynamic_sources;
 pub mod dynamic_sources_v2;
 pub mod pb;
+pub mod state_snapshot;
 
 pub use block_changes::{
     apply_written_fields, decode_canonical_block_changes, encode_canonical_block_changes,

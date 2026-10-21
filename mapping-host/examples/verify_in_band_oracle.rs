@@ -1,7 +1,8 @@
 //! Compare a fresh in-band oracle range with retained v1 oracle evidence.
 //! Usage: legacy-descriptor in-band-descriptor old.bcf1 new.bcf1
 //!        old.report.jsonl new.report.jsonl new.checkpoint.jsonl [old.checkpoint.jsonl]
-//! The range must begin with an empty dynamic-source inventory (R0 and R1 do).
+//!        [initial-in-band.checkpoint.jsonl]
+//! Without an initial checkpoint the range must begin with no dynamic sources.
 use anyhow::{ensure, Context, Result};
 use backfill_common::{
     clock::{read_frame, ObservedRange, MAX_PAYLOAD_LEN},
@@ -10,7 +11,10 @@ use backfill_common::{
     dynamic_sources_v2::{Creation, FilePin, SourceOrder},
     encode_canonical_in_band_block_changes, BlockChangesCompatibility,
 };
-use graph_mapping_host::{checkpoint::HostCheckpoint, report::RunHeader};
+use graph_mapping_host::{
+    checkpoint::{CheckpointRow, HostCheckpoint},
+    report::RunHeader,
+};
 use serde_json::{json, Value};
 use std::{
     fs::File,
@@ -27,11 +31,44 @@ fn line(reader: &mut impl BufRead) -> Result<Option<Value>> {
     Ok(Some(serde_json::from_str(&s)?))
 }
 
+/// Cache residency is not materialized store state. Preserve and report its
+/// differences, while comparing every row identity, VID and field exactly.
+/// This does not certify arbitrary continuation equivalence: immutable entity
+/// updates can make cache membership observable in Graph Node.
+fn compare_materialized_rows(old: &[CheckpointRow], new: &[CheckpointRow]) -> Result<Value> {
+    ensure!(
+        old.len() == new.len(),
+        "closing materialized row count differs"
+    );
+    let mut old_only = 0u64;
+    let mut new_only = 0u64;
+    for (old, new) in old.iter().zip(new) {
+        ensure!(
+            old.entity_type == new.entity_type
+                && old.id == new.id
+                && old.storage_causality_region == new.storage_causality_region
+                && old.vid == new.vid
+                && old.fields == new.fields,
+            "closing materialized entity/PoI row differs: {} {:?}",
+            old.entity_type,
+            old.id
+        );
+        old_only += u64::from(old.cached && !new.cached);
+        new_only += u64::from(new.cached && !old.cached);
+    }
+    Ok(json!({
+        "differing_rows": old_only + new_only,
+        "cached_only_in_legacy": old_only,
+        "cached_only_in_in_band": new_only,
+        "classification": "cache residency differs independently of identical materialized rows; full continuation checkpoint equality is not claimed"
+    }))
+}
+
 fn main() -> Result<()> {
     let paths = std::env::args().skip(1).collect::<Vec<_>>();
     ensure!(
-        (7..=8).contains(&paths.len()),
-        "expected seven or eight paths; see example source usage"
+        (7..=9).contains(&paths.len()),
+        "expected seven to nine paths; see example source usage"
     );
     let legacy = BlockChangesCompatibility::from_descriptor(&std::fs::read(&paths[0])?)?;
     let extended = BlockChangesCompatibility::from_descriptor(&std::fs::read(&paths[1])?)?;
@@ -58,8 +95,44 @@ fn main() -> Result<()> {
     let to = u64::try_from(new_header.to.context("missing to")?)?;
     let mut old_range = ObservedRange::new(from, to)?;
     let mut new_range = ObservedRange::new(from, to)?;
+    let initial = paths
+        .get(8)
+        .map(|path| HostCheckpoint::read(Path::new(path)))
+        .transpose()?;
     let mut creations = Vec::new();
     let mut order = SourceOrder::empty();
+    if let Some((checkpoint, _)) = &initial {
+        ensure!(
+            checkpoint.header.boundary.block as u64 + 1 == from
+                && checkpoint.header.identity.descriptor_sha256 == hex::encode(extended.to_vec()),
+            "initial checkpoint boundary/descriptor differs"
+        );
+        for stored in &checkpoint.data_sources {
+            ensure!(
+                stored.params.len() == 1 && stored.context.is_none(),
+                "unsupported initial source"
+            );
+            let source = DataSource {
+                creation_block: stored.creation_block,
+                manifest_idx: i32::try_from(stored.manifest_idx)?,
+                causality_region: 0,
+                param: stored.params[0]
+                    .strip_prefix("0x")
+                    .context("initial source has no 0x prefix")?
+                    .to_string(),
+                context: None,
+                done_at: None,
+            };
+            order
+                .append(&Creation {
+                    ordinal: order.count,
+                    source: source.clone(),
+                })
+                .map_err(anyhow::Error::msg)?;
+            creations.push((stored.template.clone(), source));
+        }
+    }
+    let initial_source_count = creations.len();
     let mut count = 0u64;
     let mut last_hash = None;
     let mut last_poi = None;
@@ -110,6 +183,14 @@ fn main() -> Result<()> {
         );
         let mut old_report = line(&mut old_reports)?.context("legacy report ended early")?;
         let mut new_report = line(&mut new_reports)?.context("in-band report ended early")?;
+        if count == 0 {
+            if let Some((checkpoint, _)) = &initial {
+                ensure!(
+                    new_report["parent_hash"] == checkpoint.header.boundary.block_hash,
+                    "first report parent differs from initial checkpoint"
+                );
+            }
+        }
         ensure!(
             old_report["number"] == new_frame.block_number
                 && new_report["number"] == new_frame.block_number,
@@ -173,9 +254,20 @@ fn main() -> Result<()> {
         checkpoint.header.identity.descriptor_sha256 == hex::encode(extended.to_vec()),
         "checkpoint descriptor differs"
     );
+    if let Some((_, initial_sha256)) = &initial {
+        ensure!(
+            checkpoint
+                .header
+                .boundary
+                .previous_checkpoint_sha256
+                .as_ref()
+                == Some(initial_sha256),
+            "closing checkpoint does not chain from initial checkpoint"
+        );
+    }
     ensure!(
         checkpoint.data_sources.len() == creations.len(),
-        "checkpoint source inventory differs (range must start with empty source inventory)"
+        "checkpoint source inventory differs"
     );
     for (stored, (template, source)) in checkpoint.data_sources.iter().zip(&creations) {
         ensure!(
@@ -187,12 +279,13 @@ fn main() -> Result<()> {
             "checkpoint source order/content differs"
         );
     }
+    let mut cache_residency = None;
     if let Some(path) = paths.get(7) {
         let (old_checkpoint, _) = HostCheckpoint::read(Path::new(path))?;
-        ensure!(
-            old_checkpoint.rows == checkpoint.rows,
-            "closing materialized entity/PoI rows differ"
-        );
+        cache_residency = Some(compare_materialized_rows(
+            &old_checkpoint.rows,
+            &checkpoint.rows,
+        )?);
         ensure!(
             old_checkpoint.cached_absent == checkpoint.cached_absent,
             "closing absent cache differs"
@@ -214,8 +307,69 @@ fn main() -> Result<()> {
     println!(
         "{}",
         serde_json::to_string_pretty(
-            &json!({"schema":"pinax.mapping-host.in-band-oracle-comparison/v1", "claim":"oracle v1 projection and semantic replay equivalence; no deployed indexer parity claim", "range":{"from":from,"to":to,"blocks":count}, "compatibility_id":hex::encode(extended.to_vec()), "producer_contract":descriptor["producer_contract"], "source_order":order, "legacy_checkpoint_state_compared":paths.len() == 8, "accepted_creations":creations.iter().map(|(template,source)| json!({"template":template,"source":source})).collect::<Vec<_>>(), "last_poi":last_poi, "checkpoint_sha256":checkpoint_sha256, "input_pins_in_argument_order":pins})
+            &json!({"schema":"pinax.mapping-host.in-band-oracle-comparison/v1", "claim":"oracle v1 projection and semantic replay equivalence; no deployed indexer parity claim", "range":{"from":from,"to":to,"blocks":count}, "compatibility_id":hex::encode(extended.to_vec()), "producer_contract":descriptor["producer_contract"], "source_order":order, "legacy_checkpoint_state_compared":paths.len() >= 8, "initial_source_count":initial_source_count, "initial_checkpoint_sha256":initial.as_ref().map(|(_, sha)|sha), "cache_residency":cache_residency, "accepted_creations":creations[initial_source_count..].iter().map(|(template,source)| json!({"template":template,"source":source})).collect::<Vec<_>>(), "last_poi":last_poi, "checkpoint_sha256":checkpoint_sha256, "input_pins_in_argument_order":pins})
         )?
     );
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use graph_mapping_host::store_state::{StoreEntityId, StoreValue};
+
+    fn row() -> CheckpointRow {
+        CheckpointRow {
+            entity_type: "Pool".into(),
+            id: StoreEntityId::String("p".into()),
+            storage_causality_region: 0,
+            vid: 42,
+            cached: true,
+            fields: vec![
+                ("id".into(), StoreValue::String("p".into())),
+                ("optional".into(), StoreValue::Null),
+            ],
+        }
+    }
+
+    #[test]
+    fn residency_is_reported_without_changing_materialized_comparison() {
+        let original = row();
+        let mut changed = original.clone();
+        changed.cached = false;
+        let report = compare_materialized_rows(&[original], &[changed]).unwrap();
+        assert_eq!(report["differing_rows"], 1);
+        assert_eq!(report["cached_only_in_legacy"], 1);
+        assert_eq!(report["cached_only_in_in_band"], 0);
+    }
+
+    #[test]
+    fn materialized_identity_vid_value_and_explicit_null_mutations_are_refused() {
+        let original = row();
+        let mut mutations = Vec::new();
+        let mut changed = original.clone();
+        changed.entity_type = "Token".into();
+        mutations.push(changed);
+        let mut changed = original.clone();
+        changed.id = StoreEntityId::String("q".into());
+        mutations.push(changed);
+        let mut changed = original.clone();
+        changed.storage_causality_region = 1;
+        mutations.push(changed);
+        let mut changed = original.clone();
+        changed.vid += 1;
+        mutations.push(changed);
+        let mut changed = original.clone();
+        changed.fields[0].1 = StoreValue::String("q".into());
+        mutations.push(changed);
+        let mut changed = original.clone();
+        changed.fields.pop(); // explicit Null is different from an absent field
+        mutations.push(changed);
+        for changed in mutations {
+            assert!(
+                compare_materialized_rows(std::slice::from_ref(&original), &[changed]).is_err()
+            );
+        }
+        assert!(compare_materialized_rows(&[original], &[]).is_err());
+    }
 }

@@ -1,0 +1,121 @@
+{
+  "schema": "pinax.mapping-host.in-band-oracle-evidence/v1",
+  "observed_at": "2026-10-21T17:59:33.625115+00:00",
+  "claim": "Fresh oracle replay matches retained v1 per-block payload projection, semantic reports, PoI and materialized state; cache residency is classified separately; no deployed indexer parity claim",
+  "source": {
+    "source_commit": "251f63c4e7d1e30b22a4e341462621dac77b3675",
+    "build_input_set_sha256": "6f6bd844d7720a676ed95e4ba479741edc0977b4a92de75e60f4e92dc9881483",
+    "descriptor_sha256": "2567c0bb63a8b09df4b8943ab4eae3fd6ae2e9592caa64faa722a37decd74357",
+    "compiled_source_closure_sha256": "f3edab9536ae8cd3e75e66c786cfc3d7f7935a38e3b1bf50e17ca05574f1ff32",
+    "source_context_verification": "exact committed inputs exported, verified, then frozen binary regenerated identical descriptor"
+  },
+  "producer_binary": {
+    "sha256": "3a6dda2fdaa1960caa7cf68232cd523627305e52a3ef55f4eb1739e9363caea9",
+    "host": "aarch64-apple-darwin",
+    "rustc": "1.98.0 (88d9e12ae 2026-08-18)",
+    "profile": "dev"
+  },
+  "verifier": {
+    "exit_codes": {
+      "r0": 0,
+      "r1": 0,
+      "continuation": 0
+    },
+    "verifier_source_commit": "836b5d0929e2ec33ff6b0153a574f99d9cb51652",
+    "verifier_source_sha256": "0572d9cff8c71f7f35be588ea49f15948c1103d3eff385ce6b1c3e167fb082e9",
+    "verifier_binary_sha256": "8ac27db8e0cb1c301ebc1b9e0f778941c5fc2ef87336d9068d027c7aa561f491",
+    "original_r1_comparison_exit_code": 1
+  },
+  "firehose_endpoint": "base.firehose.pinax.network:443",
+  "credential_environment_names": [
+    "SUBSTREAMS_API_TOKEN"
+  ],
+  "recording": false,
+  "cassette": {
+    "bytes": 6451176,
+    "sha256": "1dabafa49d6c0e7725fd0a0a76975c22db183931cf56a2c76f12b35060fc61e3"
+  },
+  "range": {
+    "from": 13843704,
+    "to": 13919663,
+    "blocks": 75959
+  },
+  "process_exit_codes": {
+    "r0": 0,
+    "r0_comparison_original": 0,
+    "r1": 0,
+    "r1_comparison_original": 1,
+    "r0_revalidation": 0,
+    "r1_revalidation": 0
+  },
+  "original_comparison_failure": {
+    "error": "Error: closing materialized entity/PoI rows differ",
+    "verifier_binary_sha256": "cc965c44213c28f4d961dd1041b227ad4fab9a0091462d93d452d4ee70aac398",
+    "error_pin": {
+      "bytes": 51,
+      "sha256": "bb4434a4fbea0d2d900fd4febdbe88e2ca19adfb2fc0789f38f902dd9f52205c"
+    },
+    "cause": "779 cache-residency flags differ; all identities, VIDs, fields, absent-cache entries, sources and PoI match"
+  },
+  "comparisons": {
+    "r0": {
+      "bytes": 2274,
+      "sha256": "ac0035bb7725afc5a1f196047f52d483deb467fd5f1d9c6ad6dc9732ed5d4592"
+    },
+    "r1": {
+      "bytes": 6028,
+      "sha256": "a395cce14f007743421bf53820f2f324f295d6db048e8bcafb6543632e610078"
+    },
+    "continuation": {
+      "bytes": 2700,
+      "sha256": "a04227da070c4ab340e07b613078e6656a96608831d6bd41c1d75832d3b377e8"
+    }
+  },
+  "closing_source_order": {
+    "count": 13,
+    "sha256": "4cbe5492b944cf3b9e56484fe56abbd99e3af3bee846f171c03559fc011af03c"
+  },
+  "closing_store_byte_identical_to_retained_v1": {
+    "bytes": 35906547,
+    "sha256": "8318a8342dcc2f8bd48fc7793b304085b15216b60a3d74b687819a6a77f3d8b0"
+  },
+  "checkpoint_chain_verified": true,
+  "cache_residency": {
+    "cached_only_in_in_band": 392,
+    "cached_only_in_legacy": 387,
+    "classification": "cache residency differs independently of identical materialized rows; full continuation checkpoint equality is not claimed",
+    "differing_rows": 779
+  },
+  "bounded_continuation": {
+    "range": {
+      "blocks": 20,
+      "from": 13919663,
+      "to": 13919683
+    },
+    "handler_groups": 11,
+    "new_call_rows": 18,
+    "recording": true,
+    "rpc_origin": "https://base.rpc.pinax.network",
+    "producer_exit_codes": {
+      "legacy": 0,
+      "in_band": 0
+    },
+    "comparison_exit_code": 0,
+    "identical_store": {
+      "bytes": 35975550,
+      "sha256": "d461ac80445763e03c18dc2e0b35a0707a492d308d431fe47fbf3faf0c8e7611"
+    },
+    "identical_cassette": {
+      "bytes": 6459024,
+      "sha256": "9b1c6179964833f50d2ead34141f311e75893d8c4dd3c4be88552472dbd7e4b8"
+    },
+    "archive": {
+      "bytes": 8861699,
+      "sha256": "0446bc0c3e9862621de2e62c3a9d80067fc2483eeab89329bc8c41a553dec149"
+    },
+    "limitation": "20 observed blocks prove this bounded continuation; arbitrary future checkpoint equivalence is not claimed"
+  },
+  "publication": "pending; new immutable release required; v1 releases unchanged",
+  "candidate_oci": "not built; local Docker daemon info returned HTTP 500",
+  "artifact_lock": "mapping-host/evidence/aerodrome-in-band-oracle-v1.lock.json"
+}

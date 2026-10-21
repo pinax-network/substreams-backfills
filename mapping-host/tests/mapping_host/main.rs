@@ -57,3 +57,4 @@ mod aerodrome_state_corpus;
 mod aerodrome_handlers_corpus;
 
 mod aerodrome_npm_corpus;
+mod aerodrome_pool_corpus;

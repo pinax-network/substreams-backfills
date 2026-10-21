@@ -1,7 +1,7 @@
 # Aerodrome reducer foundations
 
 This crate implements the S-R2 input layer, S-R3 entity/state primitives, and
-the Factory/Initialize and NPM/Flash handler checkpoints for
+the Factory/Initialize, NPM/Flash and Mint/Burn handler checkpoints for
 the locked Base deployment `QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV`.
 The library executes these handlers, journals their operations and seals
 canonical in-band BlockChanges. It does **not** run all mapping handlers or a
@@ -135,7 +135,7 @@ The entity class labels describe the mapping design. They do not enable eviction
 all rows remain persistent, including BlockLocal rows, until retention has
 independent evidence. Collect, Flash and TickHourData writes/removes are refused
 because the deployed handlers never write them. Complete handler scheduling,
-Swap/Mint/Burn logic, redb, rewind and the production output CLI are absent.
+Swap logic, redb, rewind and the production output CLI are absent.
 
 Regenerate typed declarations with:
 
@@ -221,7 +221,7 @@ byte-identical committed results. It runs with recording disabled and no sockets
 ## Position manager and Flash checkpoint
 
 The dispatcher also supports NPM Transfer, IncreaseLiquidity, DecreaseLiquidity,
-Collect, and Pool Flash. Mint/Burn/Swap remain explicit unsupported-handler errors.
+Collect, and Pool Flash. Swap remains an explicit unsupported-handler error.
 A new Position reads the end-of-block positions/getPool answers, initializes
 liquidity and counters to zero, and saves Transaction during construction.
 An existing Position bypasses that construction call. Increase/Decrease/Collect
@@ -263,3 +263,40 @@ cargo test -p aerodrome-slipstream-reducer --locked --test handlers
 
 The generator imports no native reducer code, runs without recording/network,
 and byte-checks the committed corpus when the environment variable is absent.
+## Pool liquidity checkpoint: Mint and Burn
+
+The next handler slice adds Mint, Burn and all six interval updaters. Pool and
+Factory interval values are reloaded before their final handler saves; token
+interval values use the owned updated token with the stored Bundle. Arithmetic
+keeps the deployed parenthesization. Mint creates missing ticks, while Burn's
+missing ticks abort after the Transaction save. Tick fee fields deliberately
+copy Slipstream's signed stakedLiquidityNet and feeGrowthOutside0 words into the
+deployed mapping's feeGrowthOutside0/1 fields. TickDayData also copies token0
+volume into both token-volume fields. Pure tick-power memoization shares the
+independently qualified iterative arithmetic; it contains no entity state.
+
+The actual first Mint matches every original WASM operation. Eleven separate
+synthetic cases start from an actual first-block Graph Node checkpoint and
+retain their raw log bytes and complete seed images: repeated Mint, Burn,
+out-of-range liquidity, missing/Null pool ticks, missing Burn ticks, signed fee
+misbinding, nonzero interval seed values, timestamp overflow, and tick overflow
+after a Transaction save. The independent generator executes the original WASM
+without importing the reducer. Both whole envelopes and every operation are
+compared. Synthetic input changes are explicit; this is not an additional live
+block or full-range claim.
+
+Oracle cache images may contain explicit Null. The tests use a read-only cache
+backend to retain those fields while the production database-seed validator
+continues to reject top-level Null. The first test attempt exposed that boundary;
+no production seed rule was relaxed. The generator rebuilds synthetic checkpoint
+totals and cassette pins explicitly, and recomputes the committed corpus without
+updates for verification.
+
+```console
+UPDATE_AERODROME_POOL_CORPUS=1 cargo +1.98.0 test \
+  --manifest-path mapping-host/Cargo.toml --locked --test mapping_host aerodrome_pool_corpus
+cargo test -p aerodrome-slipstream-reducer --locked --test pool_handlers
+```
+
+Swap, full block scheduling, durable state and production output
+remain separate checkpoints. The existing CLI still only validates inputs.

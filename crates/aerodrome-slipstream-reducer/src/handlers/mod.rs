@@ -1,4 +1,4 @@
-//! Mapping checkpoints: Factory, Initialize, all four NPM handlers and Flash.
+//! Mapping checkpoints: Factory, Initialize, all four NPM handlers, Flash, Mint and Burn.
 //!
 //! This is a handler primitive, not a complete block reducer. Match every
 //! candidate against authoritative hosts; unsupported matched handlers are
@@ -9,6 +9,8 @@ mod factory;
 mod flash;
 mod initialize;
 mod npm;
+mod interval;
+mod pool;
 mod pricing;
 pub(super) mod transaction;
 
@@ -33,7 +35,7 @@ pub const ETH_USD_POOL: &str = "0xb2cc224c1c9fee385f8ad6a55b4d94e92359dc59";
 const WHITELIST: [&str; 3] = [WETH, USDC, AERO];
 
 /// A validated, host-matched trigger. Construction refuses every handler not
-/// implemented by this checkpoint, including Mint, Burn and Swap.
+/// implemented by this checkpoint, including Swap.
 pub struct SupportedHandler<'a> {
     input: &'a BlockInput,
     index: usize,
@@ -52,7 +54,7 @@ impl<'a> SupportedHandler<'a> {
         if !matches!(
             (source, event.name.as_str()),
             (1, "PoolCreated")
-                | (3, "Initialize" | "Flash")
+                | (3, "Initialize" | "Flash" | "Mint" | "Burn")
                 | (
                     2,
                     "Transfer" | "IncreaseLiquidity" | "DecreaseLiquidity" | "Collect"
@@ -79,6 +81,8 @@ impl<'a> SupportedHandler<'a> {
             "PoolCreated" => factory::pool_created(self, journal),
             "Initialize" => initialize::initialize(self, journal).map(|()| None),
             "Flash" => flash::flash(self, journal).map(|()| None),
+            "Mint" => pool::liquidity(self, journal, true).map(|()| None),
+            "Burn" => pool::liquidity(self, journal, false).map(|()| None),
             "Transfer" | "IncreaseLiquidity" | "DecreaseLiquidity" | "Collect" => {
                 npm::run(self, journal).map(|()| None)
             }

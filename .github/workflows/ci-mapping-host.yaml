@@ -27,6 +27,7 @@ jobs:
               - '.github/workflows/ci-mapping-host.yaml'
               - 'mapping-host/**'
               - 'common/**'
+              - 'crates/graph-numerics/**'
               - 'uniswap-v3/fixtures/blocks.lock.json'
               - 'Cargo.toml'
   mapping-host:

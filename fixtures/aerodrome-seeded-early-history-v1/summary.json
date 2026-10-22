@@ -658,5 +658,29 @@
     "reviewed_windows": 20,
     "production_qualified": false,
     "linux_image_qualified": false
+  },
+  "reviewed_archive": {
+    "path": "/private/tmp/aerodrome-seeded-early-history-reviewed-v1.tar.gz",
+    "bytes": 69968965,
+    "sha256": "1d6b788546285adc4a61f7c6a89df3da93e32431a4ebe56604dbe0540116997c",
+    "regular_files": 1062,
+    "excluded_owned_postgres_data": true,
+    "special_files_retained_locally_only": [
+      {
+        "path": "refusal-probes/symlink_input/seed",
+        "kind": "symlink"
+      },
+      {
+        "path": "refusal-probes-reviewed/fifo_input/fifo",
+        "kind": "special"
+      },
+      {
+        "path": "refusal-probes-reviewed/symlink_input/seed",
+        "kind": "symlink"
+      }
+    ],
+    "production_qualified": false,
+    "all_regular_file_payloads_rehashed": true,
+    "hardlink_members": 21
   }
 }

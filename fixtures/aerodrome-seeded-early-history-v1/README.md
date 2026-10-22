@@ -45,7 +45,8 @@ per-window receipts and helper source. The full retained evidence is under
 `/private/tmp/aerodrome-seeded-early-history-v2`. Inputs were pinned before
 creating the owned database. Original files/database were untouched. The helper
 source lives in the separately reviewed engine change
-`examples/aerodrome-oracle-comparison.rs`, based on engine commit `e458044`.
+`examples/aerodrome-oracle-comparison.rs`, engine commit
+`4998678e7e57a4ece476e42c05b26ec9249bda1d` (based on `e458044`).
 The source-side harness is `scripts/aerodrome-seeded-oracle.py`.
 
 Three failed attempts remain in the evidence:
@@ -73,3 +74,9 @@ missing success/scope fields. The final reviewed comparison outputs and source
 identities are retained separately from the initial successful runs and initial
 input-manifest script pin. The native requests are not repeated for this
 read-only review pass.
+
+The reviewed archive is `/private/tmp/aerodrome-seeded-early-history-reviewed-v1.tar.gz`;
+its digest and complete regular-file inventory are pinned by `summary.json`.
+Every archived payload was rehashed, including the retained undo hardlinks.
+The stopped owned PostgreSQL data directory and deliberate negative-test
+FIFO/symlinks remain local and are excluded.

@@ -625,17 +625,14 @@ impl SplitByte for [u8] {
 pub fn run(args: &[String]) -> Result<()> {
     let command=args.first().ok_or("producer-runtime requires context|verify-source|build-bundle|smoke|archive|verify-discovery")?;
     let mut opts = BTreeMap::new();
-    let mut pairs = args[1..].chunks_exact(2);
-    for pair in &mut pairs {
+    let (pairs, remainder) = args[1..].as_chunks::<2>();
+    for pair in pairs {
         need(
             pair[0].starts_with("--") && opts.insert(pair[0].as_str(), pair[1].as_str()).is_none(),
             "invalid/duplicate packaging option",
         )?;
     }
-    need(
-        pairs.remainder().is_empty(),
-        "missing packaging option value",
-    )?;
+    need(remainder.is_empty(), "missing packaging option value")?;
     let allowed = match command.as_str() {
         "context" => vec!["--root", "--revision", "--output"],
         "verify-source" => vec!["--root", "--revision"],

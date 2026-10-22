@@ -57,7 +57,24 @@ pub(super) fn swap<B: EntityBackend>(
         ) {
             token.version = Presence::Set(2);
             // addMissingWhitelistedPools pushes into a discarded getter copy.
-            // The verified storage-backed getPool calls have no persisted effect.
+            // Its host calls still need complete extraction evidence. The
+            // public mapping getter is represented by a checked address answer;
+            // a missing answer remains fatal even though no push is persisted.
+            let token_address = crate::address(
+                &hex::decode(
+                    token
+                        .id
+                        .strip_prefix("0x")
+                        .ok_or_else(|| refuse("token ID lacks address prefix"))?,
+                )
+                .map_err(|_| refuse("invalid token address"))?,
+            )?;
+            let usdc = crate::address(&hex::decode(&USDC[2..]).expect("constant address"))?;
+            if token_address != usdc {
+                for spacing in [100, 500, 3000, 10000] {
+                    handler.input.calls().pool(&usdc, &token_address, spacing)?;
+                }
+            }
         }
     }
     let old_tick = match &pool.tick {

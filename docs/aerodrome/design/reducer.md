@@ -371,11 +371,14 @@ message PoolCreatedFact {                // Factory PoolCreated logs, in log ord
 }
 ```
 
-**Deliberately absent:** C10, the four `getPool(USDC, token, {100,500,3000,10000})` calls in `addMissingWhitelistedPools`.
+**C10 coverage correction (2026-10-22):** require the four
+`getPool(USDC, token, {100,500,3000,10000})` answers in
+`addMissingWhitelistedPools`, in that order, for each non-USDC token whose
+version getter is zero (Absent/Null also read as zero).
 - Their results are pushed into a getter copy and lost (D:Pool:6737-6810). VERIFIED: there is no `whitelistPools` setter in Pool.wasm (TARGET §5.3).
-- `getPool` is a public mapping getter that cannot revert (P8). The non-try call therefore never aborts.
-- The reducer needs no answers for these calls, and the extractor need not produce them.
-- This simplifies SYN Q2/C10 (VERIFIED).
+- `getPool` is a public mapping getter that cannot revert (P8), but a missing extractor answer is an extraction failure and must refuse replay.
+- The earlier design omitted these answers because they cannot change entity output. The first live M2 run matched all frames but missed 44 of 9,394 oracle call keys. M2 also requires full call coverage, so output parity alone did not pass that gate.
+- The extractor can emit a conservative superset for both registered tokens on every Swap; the reducer consumes answers only when the deployed handler calls the helper. No cassette-derived answer injection is permitted in the live extractor proof.
 
 ### 4.2 What a "candidate" is, and why the reducer re-matches
 
@@ -942,7 +945,7 @@ if num_iters <= 100 {
 `add_missing_whitelisted_pools(ctx, t)` (D:Pool:6737-6810):
 - If `t.id == USDC`, return. The comparison is on H160 bytes.
 - Otherwise there are four non-try `getPool` calls whose results are pushed to a getter copy that is lost.
-- **Reducer body: `Ok(())`** (VERIFIED, §4.1). The only persisted effect is the caller's `version = 2`, which is also applied to USDC (Q-W1).
+- The reducer checks all four answers and discards the returned addresses, preserving the lost getter-copy mutation. The only persisted effect is the caller's `version = 2`, which is also applied to USDC (Q-W1). Missing answers refuse the block (§4.1).
 
 ### 8.6 `Pool.handleFlash` (D:Pool:8544-8604)
 
@@ -1174,7 +1177,7 @@ Every row is VERIFIED from the decompile unless marked. "Test" names a fixture o
 | C6/C7 `ticks(i)` | `update_tick_fee_vars_and_save` (Mint/Burn ticks, swap walk ticks that exist as entities) | storage-derived | fatal | cannot revert (public mapping, P8) |
 | C8 `positions(tokenId)` | `get_position` (new) and `update_fee_vars` | storage-derived; `reverted` iff `poolId == 0` at block end | fatal | try call: `reverted` handled |
 | C9 `getPool(t0,t1,ts)` | `get_position` (new) | Factory PoolCreated store, post-block | fatal | cannot revert; a zero address yields `pool = "0x000…0"` |
-| C10 `getPool(USDC,token,{…})` | none (§4.1) | not requested | n/a | cannot revert |
+| C10 `getPool(USDC,token,{…})` | version-zero non-USDC token during Swap (§4.1) | Factory PoolCreated store, post-block | fatal | cannot revert; results discarded |
 
 **`CallBook` API** (one per block):
 
@@ -1585,7 +1588,7 @@ Estimates are engineer-days for one implementer at the intensity of the V4 lane 
 8. **The "hand port drifts" history** (V3 lane, backfills #116). The difference here is two full oracles plus literal object-lifetime porting. No slice may merge with a G2 diff.
 
 **Coordination items:**
-- extractor design: proto §4.1, the C10 drop, `receipt_log_count`;
+- extractor design: proto §4.1, C10 coverage correction (§4.1 above), `receipt_log_count`;
 - engine design: seeded v2 genesis, generic seed artifact ownership, PoI continuation, non-fatal writer not required while FailClosed;
 - mapping-host oracle agent: Aerodrome bundle, cassette recording for W1–W3, numerics corpus module, `BlockOpsBuilder` move.
 

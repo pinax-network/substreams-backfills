@@ -382,7 +382,15 @@ message, after its preceding saves; the envelope preserves their discard/PoI
 semantics. The timestamp overflow likewise preserves three discarded saves.
 
 The native Swap implementation matches every operation and complete envelope
-in all 18 cases. Its arithmetic order, intermediate Pool save/reloads, interval
+in all 18 cases. It requires the actual four Factory getPool answers for each
+version-zero non-USDC token before discarding the returned addresses, matching
+the deployed helper's call order. Removing any of the four answers refuses the
+block without changing the successful golden envelope. This closes the native
+coverage gap found when the first live M2 run matched frames despite 44 missing
+call answers; that run remains incomplete evidence until the live extractor is
+corrected and the full call audit passes.
+
+Its arithmetic order, intermediate Pool save/reloads, interval
 quirks and fee-derived tick walk were also independently reviewed. It is not an actual historical Swap or a complete live range;
 the locked block fixtures contain the first-pool block and block 52,800,000,
 without the state chain needed to qualify a real Swap from an empty root.

@@ -66,9 +66,17 @@ fn seeded_swaps_match_every_independent_wasm_operation_and_abort() {
                         reasons: 2,
                     });
                 }
-                // The deployed getPool getter-copy mutations are intentionally
-                // lost. Retain the actual calls in the independent oracle.
-                "getPool(address,address,int24)" => (),
+                "getPool(address,address,int24)" => {
+                    let argument = bytes(&call["calldata"]);
+                    let pool = result[12..32].to_vec();
+                    calls.get_pool.push(pb::GetPoolAnswer {
+                        token_a: argument[16..36].to_vec(),
+                        token_b: argument[48..68].to_vec(),
+                        tick_spacing: i32::from_be_bytes(argument[96..100].try_into().unwrap()),
+                        created_block: if pool == vec![0; 20] { 0 } else { b.number - 1 },
+                        pool,
+                    });
+                }
                 function => panic!("unexpected oracle function {function}"),
             }
         }
@@ -86,5 +94,22 @@ fn seeded_swaps_match_every_independent_wasm_operation_and_abort() {
             assert_eq!(a, b, "{name}: operation {index}");
         }
         assert_eq!(got, expected, "{name}: entire envelope");
+        if name == "version0_get_pool_copy_lost" {
+            assert_eq!(b.calls.as_ref().unwrap().get_pool.len(), 4);
+            for missing in 0..4 {
+                let mut incomplete = b.clone();
+                incomplete.calls.as_mut().unwrap().get_pool.remove(missing);
+                let error = oracle::try_run_seeded(
+                    &incomplete,
+                    &[0],
+                    case["seed_rows"].as_array().unwrap(),
+                )
+                .unwrap_err();
+                assert!(
+                    error.0.contains("MissingCallAnswer") && error.0.contains("get_pool"),
+                    "{error}"
+                );
+            }
+        }
     }
 }

@@ -71,6 +71,13 @@ pub fn run_seeded(
     indexes: &[usize],
     seed: &[Value],
 ) -> output::BlockChanges {
+    try_run_seeded(b, indexes, seed).unwrap()
+}
+pub fn try_run_seeded(
+    b: &pb::ExtractorBlock,
+    indexes: &[usize],
+    seed: &[Value],
+) -> aerodrome_slipstream_reducer::Result<output::BlockChanges> {
     let binding = binding();
     let input = validate_block(
         &Frame {
@@ -139,12 +146,10 @@ pub fn run_seeded(
             continue;
         };
         let mut created = None;
-        let status = store
-            .run_handler(handler.source_trigger_order(), |journal| {
-                created = handler.run(journal)?;
-                Ok(())
-            })
-            .unwrap();
+        let status = store.run_handler(handler.source_trigger_order(), |journal| {
+            created = handler.run(journal)?;
+            Ok(())
+        })?;
         if let Some(pool) = created {
             assert_eq!(status, HandlerStatus::Committed);
             hosts.record_creation_outcome(&input, pool, true).unwrap();
@@ -152,5 +157,5 @@ pub fn run_seeded(
     }
     let mut result = store.seal().unwrap().changes().clone();
     result.compatibility_id.clear();
-    result
+    Ok(result)
 }

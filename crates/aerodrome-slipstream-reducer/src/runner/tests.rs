@@ -280,6 +280,27 @@ fn missing_swap_call_answer_refuses_every_prior_effect() {
     let mut r = runner(&b, AbortMode::FailClosed);
     let error = r.process(&validate(&b)).unwrap_err();
     assert!(
+        error.0.contains("MissingCallAnswer { kind: get_pool"),
+        "{}",
+        error.0
+    );
+    assert!(r.backend.rows().is_empty());
+    assert!(r.backend.sources().is_empty());
+    // The first pool has USDC/USDbC at spacing 1. The synthetic Swap probes
+    // these four other spacings before its missing fee-growth answer.
+    let pool = &b.pools_created[0];
+    for tick_spacing in [100, 500, 3000, 10000] {
+        b.calls.as_mut().unwrap().get_pool.push(pb::GetPoolAnswer {
+            token_a: pool.token0.clone(),
+            token_b: pool.token1.clone(),
+            tick_spacing,
+            pool: vec![0; 20],
+            created_block: 0,
+        });
+    }
+    let mut r = runner(&b, AbortMode::FailClosed);
+    let error = r.process(&validate(&b)).unwrap_err();
+    assert!(
         error.0.contains("MissingCallAnswer { kind: fee_growth"),
         "{}",
         error.0

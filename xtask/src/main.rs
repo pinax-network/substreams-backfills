@@ -14,6 +14,7 @@ mod fixtures;
 mod github;
 mod import_verify;
 mod logical_oracle;
+mod producer_runtime;
 mod target_common;
 mod targets;
 mod v4_engine_reference;
@@ -26,7 +27,8 @@ use std::process::ExitCode;
 
 use evidence::{DirectoryFetcher, FetchOptions, Fetcher, Lock, Outcome, Status, DEFAULT_LOCK_PATH};
 
-const USAGE: &str = "usage: cargo xtask <evidence|verify-all|verify-targets|eligibility> ...
+const USAGE: &str = "usage: cargo xtask <evidence|verify-all|verify-targets|eligibility|producer-runtime> ...
+  producer-runtime <context|verify-source|build-bundle|smoke|archive|verify-discovery> [options]
   aerodrome-substreams <check|protogen [--check]|build [--twice]> [--root DIR]   offline Aerodrome extractor tooling
   eligibility capture --binding FILE --measurements FILE --output FILE [--policy PATH] [--root DIR]
   eligibility check --binding FILE --purpose implementation-start|compute-or-load-start [--now RFC3339] [--json] [--policy PATH] [--root DIR]
@@ -142,6 +144,9 @@ fn default_cache_dir() -> PathBuf {
 
 fn run() -> Result<(), String> {
     let raw: Vec<String> = std::env::args().skip(1).collect();
+    if raw.first().is_some_and(|s| s == "producer-runtime") {
+        return producer_runtime::run(&raw[1..]);
+    }
     let args = parse_args(raw)?;
     let mut positional = args.positional.iter();
     match (

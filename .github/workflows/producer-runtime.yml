@@ -1,0 +1,93 @@
+name: producer-runtime
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/producer-runtime.yml'
+      - 'crates/aerodrome-slipstream-reducer/**'
+      - 'crates/graph-numerics/**'
+      - 'common/**'
+      - 'xtask/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+  workflow_dispatch:
+    inputs:
+      extractor_release:
+        description: Existing development extractor release tag (no release is created)
+        required: true
+      extractor_asset:
+        description: Exact SPKG asset name in that release
+        required: true
+      extractor_lock_asset:
+        description: Exact canonical non-final ExtractorLock asset name
+        required: true
+      extractor_lock_sha256:
+        description: Independently pinned SHA-256 of the exact lock bytes
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: producer-runtime-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: dtolnay/rust-toolchain@1.90.0
+      - run: cargo test --locked -p aerodrome-slipstream-reducer --lib runtime
+      - run: cargo test --locked -p aerodrome-slipstream-reducer --test producer
+      - run: cargo test --locked -p xtask producer_runtime
+  candidate:
+    if: github.event_name == 'workflow_dispatch'
+    needs: contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.90.0
+      - name: Fetch only the explicitly pinned development extractor
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE: ${{ inputs.extractor_release }}
+          SPKG_ASSET: ${{ inputs.extractor_asset }}
+          LOCK_ASSET: ${{ inputs.extractor_lock_asset }}
+          LOCK_SHA: ${{ inputs.extractor_lock_sha256 }}
+        run: |
+          mkdir "$RUNNER_TEMP/extractor"
+          gh release download "$RELEASE" --repo "$GITHUB_REPOSITORY" --pattern "$SPKG_ASSET" --output "$RUNNER_TEMP/extractor/extractor.spkg"
+          gh release download "$RELEASE" --repo "$GITHUB_REPOSITORY" --pattern "$LOCK_ASSET" --output "$RUNNER_TEMP/extractor/extractor-lock.json"
+          test "$LOCK_SHA" = "$(sha256sum "$RUNNER_TEMP/extractor/extractor-lock.json" | cut -d' ' -f1)"
+      - name: Export exact committed source closure
+        run: |
+          cargo xtask producer-runtime context --root . --revision "$GITHUB_SHA" --output "$RUNNER_TEMP/producer-context"
+      - uses: docker/setup-buildx-action@v3
+      - name: Build candidate without publishing
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ runner.temp }}/producer-context
+          file: ${{ runner.temp }}/producer-context/crates/aerodrome-slipstream-reducer/runtime/Dockerfile
+          build-contexts: extractor=${{ runner.temp }}/extractor
+          build-args: SOURCE_COMMIT=${{ github.sha }}
+          platforms: linux/amd64
+          load: true
+          push: false
+          tags: aerodrome-producer:development
+      - name: Inspect and smoke the actual candidate image offline
+        run: |
+          mkdir "$RUNNER_TEMP/image-proof"
+          docker image inspect aerodrome-producer:development > "$RUNNER_TEMP/image-proof/image.json"
+          docker run --rm --network none aerodrome-producer:development version --json > "$RUNNER_TEMP/image-proof/runtime.json"
+          container_id=$(docker create aerodrome-producer:development)
+          docker cp "$container_id:/opt/producer" "$RUNNER_TEMP/image-proof/bundle"
+          docker rm "$container_id"
+          cargo xtask producer-runtime smoke --root "$RUNNER_TEMP/image-proof/bundle" --output "$RUNNER_TEMP/image-proof/smoke"
+          cargo xtask producer-runtime archive --root "$RUNNER_TEMP/image-proof/bundle" --smoke "$RUNNER_TEMP/image-proof/smoke/smoke.json" --output "$RUNNER_TEMP/image-proof/archive"
+          cargo xtask producer-runtime verify-discovery --root "$RUNNER_TEMP/image-proof/archive"
+          cmp "$RUNNER_TEMP/image-proof/runtime.json" "$RUNNER_TEMP/image-proof/bundle/runtime.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aerodrome-producer-nonfinal-${{ github.sha }}
+          path: ${{ runner.temp }}/image-proof
+          if-no-files-found: error

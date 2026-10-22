@@ -378,6 +378,12 @@ the history without allowing its old repository-local `Closes #…` commit messa
 unrelated roadmap issues here. Run `cargo xtask verify-import uniswap-v4` to prove the mirror,
 imported tree, file modes, frozen package bytes, and release lock are unchanged.
 
+Because the tree is frozen, its default endpoint
+`base-substreams-tier1-prod.kan-sst2.pinax.io:443` is stale (kan-sst2 was retired on
+2026-09-03) and cannot be edited in place without failing `verify-import`. Override it
+instead: `make ENDPOINT=base.substreams.pinax.network:443 run`, or set `ENDPOINT` for
+`scripts/verify-substreams-events.mjs`.
+
 The repository-only
 [`v0.5.0 reference evidence`](docs/provenance/uniswap-v4-engine-v0.5.0/README.md)
 keeps two ranges separate. The older root capsule pins the engine compatibility

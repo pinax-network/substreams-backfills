@@ -1,0 +1,27 @@
+{
+  "report": {
+    "decoded_swaps": 3014,
+    "format": "pinax.aerodrome.qn2-extractor-report/v1",
+    "full_range_qn2_closed": false,
+    "graph_node_commit": "77823b5a7adc4eac4abf03202c8dd7cb00dea31d",
+    "negative_amounts": 3014,
+    "observed_blocks": 75959,
+    "package_origin_verified": false,
+    "potential_zero_decimal_refusals": 0,
+    "producer_exit_verified": false,
+    "request": {
+      "format": "pinax.aerodrome.qn2-extractor-request/v1",
+      "from_block": 13843704,
+      "head_hash": "d54f7cb172111932e7232caccefa30194d2a17babf4af52e9df81486af1fec51",
+      "input": "/private/tmp/aerodrome-live-wasm-m2-upgrade-v1/full-root/extractor.bcf1",
+      "input_bytes": 18286956,
+      "input_sha256": "1444ef8a9ac545e7358d7b7b3396131783d221cf38936a407562828d55a98fde",
+      "parent_hash": "6c2f61721e0cab3cc3543828a6cf7bd0965d69bd974dccdec557007c97023d16",
+      "to_block": 13919662
+    },
+    "witness_inventory_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "witnesses": [],
+    "witnesses_omitted": 0
+  },
+  "request_sha256": "b4309d7be82835aa5d13add1c497a5ff99b89eb1cd7c898d9bca463c6066ac66"
+}

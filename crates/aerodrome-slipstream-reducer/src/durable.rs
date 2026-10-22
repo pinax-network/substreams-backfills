@@ -41,6 +41,9 @@ const MAX_RECORD: usize = 256 * 1024 * 1024;
 const UNDO_MAGIC: &[u8; 8] = b"ARUNDO1\0";
 const UNDO_END: &[u8; 8] = b"ARUEND1\0";
 
+mod seed;
+pub use seed::{SeedImportPins, SourceHistoryAssertion};
+
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct UndoHeader {
@@ -308,6 +311,7 @@ impl DurableStore {
             actual == bytes.value(),
             "committed checkpoint evidence differs from state",
         )?;
+        seed::verify_retained_evidence(&tx, &self.root, &manifest)?;
         Ok(manifest)
     }
     /// Exact requested predecessor is mandatory. At the root, the nonzero
@@ -320,6 +324,8 @@ impl DurableStore {
         engine_lineage_before: &str,
         observed_root_parent: Option<[u8; 32]>,
     ) -> Result<Segment> {
+        // Seed provenance is immutable across every continuation, not only open.
+        self.manifest()?;
         let tx = self.database.begin_write().map_err(error)?;
         let bytes = tx
             .open_table(META)
@@ -397,6 +403,7 @@ impl DurableStore {
     /// Rewind exactly one completed segment using its checksum-verified undo.
     /// Every after-image must still match. Failure drops the whole transaction.
     pub fn rewind_one(&self, expected: &Manifest) -> Result<Manifest> {
+        self.manifest()?;
         let mut tx = self.database.begin_write().map_err(error)?;
         let current_bytes = tx
             .open_table(META)
@@ -466,6 +473,23 @@ struct Source {
     // BCGSNAP1 seeds cannot supply one. Only failed outcomes retain this hash.
     failed_at_hash: Option<[u8; 32]>,
     ordinal: u64,
+}
+
+fn logical_state_digest(tx: &WriteTransaction) -> Result<String> {
+    let mut h = Sha256::new();
+    h.update(b"pinax.aerodrome.reducer-state/v1\0");
+    for kind in 0..3u8 {
+        h.update([kind]);
+        let t = tx.open_table(table(kind)?).map_err(error)?;
+        for row in t.iter().map_err(error)? {
+            let (k, v) = row.map_err(error)?;
+            h.update((k.value().len() as u64).to_be_bytes());
+            h.update(k.value());
+            h.update((v.value().len() as u64).to_be_bytes());
+            h.update(v.value());
+        }
+    }
+    Ok(hex::encode(h.finalize()))
 }
 
 pub struct Segment {
@@ -538,20 +562,7 @@ impl Segment {
     /// records. This scan is explicit, never silently performed each block.
     pub fn state_digest(&self) -> Result<String> {
         self.healthy()?;
-        let mut h = Sha256::new();
-        h.update(b"pinax.aerodrome.reducer-state/v1\0");
-        for kind in 0..3u8 {
-            h.update([kind]);
-            let t = self.io(self.tx().open_table(table(kind)?))?;
-            for row in self.io(t.iter())? {
-                let (k, v) = self.io(row)?;
-                h.update((k.value().len() as u64).to_be_bytes());
-                h.update(k.value());
-                h.update((v.value().len() as u64).to_be_bytes());
-                h.update(v.value());
-            }
-        }
-        Ok(hex::encode(h.finalize()))
+        self.io(logical_state_digest(self.tx()))
     }
     /// Private: only the full stream/producer-success gate below may commit a
     /// segment. Callers cannot turn a per-block commit into durable completion.

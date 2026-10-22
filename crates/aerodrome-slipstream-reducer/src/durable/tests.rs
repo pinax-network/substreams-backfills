@@ -13,6 +13,8 @@ use backfill_common::{
 };
 use std::{io::Cursor, process::Command};
 
+mod seed_import;
+
 fn bindings() -> (InputBinding, Binding) {
     let x = ExtractorIdentity {
         spkg_sha256: "11".repeat(32),

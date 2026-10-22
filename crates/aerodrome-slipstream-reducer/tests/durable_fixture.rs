@@ -282,3 +282,96 @@ fn supervised_stream_waits_for_real_upstream_exit_and_exact_private_control() {
         }
     }
 }
+
+#[test]
+fn seed_cli_requires_explicit_pins_and_marks_oracle_development_output() {
+    use aerodrome_slipstream_reducer::{
+        durable::{SeedImportPins, SourceHistoryAssertion},
+        identity::InputBinding,
+    };
+    use backfill_common::{producer_checkpoint::SnapshotPurpose, state_snapshot as snap};
+    let t = tempfile::tempdir().unwrap();
+    let root = t.path();
+    setup(root);
+    let descriptor = fs::read(root.join("descriptor")).unwrap();
+    let extractor = serde_json::from_slice(&fs::read(root.join("identity")).unwrap()).unwrap();
+    let binding =
+        InputBinding::new(&descriptor, Sha256::digest(&descriptor).into(), &extractor).unwrap();
+    let cap = binding.compatibility().capabilities().unwrap();
+    let boundary = snap::Boundary {
+        block_number: INITIAL_BLOCK,
+        block_hash: [9; 32],
+    };
+    let header = snap::SnapshotHeader {
+        format: snap::FORMAT.into(),
+        version: snap::VERSION,
+        binding: snap::SnapshotBinding {
+            deployment: cap.deployment.clone(),
+            network: "base".into(),
+            descriptor_sha256: hex::encode(binding.compatibility().id()),
+            retention_sha256: hex::encode(cap.retention_sha256()),
+            type_ordinals: cap.storage_profile.entity_types.clone(),
+            entity_id_policy: snap::EntityIdPolicy::StringOnly,
+        },
+        boundary: boundary.clone(),
+        origin: snap::SnapshotOrigin::Oracle {
+            seed: snap::SeedOrigin {
+                schema: "sgd_fixture".into(),
+                site_id: 1,
+                database: "fixture".into(),
+                system_identifier: "fixture-system".into(),
+                server_version_num: 170000,
+                capture_tool_sha256: "08".repeat(32),
+                profile_sha256: "07".repeat(32),
+                head: boundary.clone(),
+                health: "healthy".into(),
+                non_fatal_errors: vec![],
+            },
+        },
+        vid: None,
+        poi: Default::default(),
+        sources: snap::SourceSnapshot::from_rows(vec![]).unwrap(),
+        period_max: Default::default(),
+        entity_count: Some(0),
+        records: 0,
+    };
+    let (bytes, verified) = snap::SnapshotWriter::new(Vec::new(), header, snap::Limits::default())
+        .unwrap()
+        .finish()
+        .unwrap();
+    let evidence = b"opaque development fixture; no E5 certification";
+    let mut pins = SeedImportPins {
+        snapshot_sha256: verified.file_sha256(),
+        seed_manifest_sha256: [1; 32],
+        profile_sha256: [7; 32],
+        boundary,
+        purpose: SnapshotPurpose::Oracle,
+        source_history: SourceHistoryAssertion::CompleteSuccessfulSourcesNoFailedHosts,
+        engine_lineage: verified.lineage(),
+    };
+    fs::write(root.join("seed.bcgsnap"), bytes).unwrap();
+    fs::write(root.join("capture-manifest"), evidence).unwrap();
+    fs::write(root.join("seed-pins"), serde_json::to_vec(&pins).unwrap()).unwrap();
+    let opts = [
+        ("--from", root.join("seed.bcgsnap").display().to_string()),
+        (
+            "--seed-manifest",
+            root.join("capture-manifest").display().to_string(),
+        ),
+        ("--seed-pins", root.join("seed-pins").display().to_string()),
+    ];
+    assert!(!command(root, "seed", &opts).status.success());
+    assert!(!root.join("state").exists());
+    pins.seed_manifest_sha256 = Sha256::digest(evidence).into();
+    fs::write(root.join("seed-pins"), serde_json::to_vec(&pins).unwrap()).unwrap();
+    let report: serde_json::Value =
+        serde_json::from_slice(&success(command(root, "seed", &opts))).unwrap();
+    assert_eq!(report["production_selectable"], false);
+    assert_eq!(report["capture_manifest_verified"], false);
+    let manifest: Manifest = serde_json::from_value(report["checkpoint"].clone()).unwrap();
+    assert!(manifest.require_loadable().is_err());
+    let reopened: Manifest =
+        serde_json::from_slice(&success(command(root, "inspect", &[]))).unwrap();
+    assert_eq!(reopened, manifest);
+    assert!(!command(root, "seed", &opts).status.success());
+}

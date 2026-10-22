@@ -483,7 +483,7 @@ Factory hosts separately retain the observed failure block hash, which is part
 of the failed-host commitment and is checked when restoring the host set.
 
 `aerodrome-durable-fixture` is a **development** command, with
-`init`, `inspect`, offline `reduce`, supervised `stream` and `rewind` operations.
+`init`, `seed`, `inspect`, offline `reduce`, supervised `stream` and `rewind` operations.
 All require:
 
 ```console
@@ -567,3 +567,59 @@ truncated input, stale nonce/lineage, wrong digest, invalid control framing and
 regular-file refusal. Separate writer-failure tests prove rollback on both
 partial writes and flush errors. Runtime staging, the complete producer/v1 CLI
 and the live engine supervisor remain separate integration work.
+
+## Development snapshot import
+
+`DurableStore::import_snapshot` and the local `seed` command consume the shared
+BCGSNAP1 format. They bind the exact descriptor and retention digest, sorted
+entity inventory, string ID domain, independently supplied boundary and profile
+digest, and explicit landing/oracle purpose. Every row is checked against the
+locked Aerodrome schema. Nonzero storage causality regions, retained block-local
+rows, and period rows outside the snapshot's declared maximum are refused.
+
+```console
+aerodrome-durable-fixture seed \
+  --state-dir NEW_STATE --descriptor descriptor.json --descriptor-sha256 DESCRIPTOR_SHA256 \
+  --extractor-identity extractor-identity.json --producer-binding producer-binding.json \
+  --from seed.bcgsnap --seed-manifest capture-manifest.json --seed-pins seed-pins.json
+```
+
+`seed-pins.json` serializes `durable::SeedImportPins`: exact 32-byte snapshot,
+capture-manifest and profile digests; the expected block/hash boundary; explicit
+`landing` or `oracle` purpose; the engine's initial snapshot lineage; and the
+caller assertion `complete_successful_sources_no_failed_hosts`. The manifest
+and pins files are capped at 1 MiB. Capture-manifest bytes are retained verbatim
+and pinned, but their contents are **opaque** in this development importer.
+Both its retained evidence and command result set `production_selectable: false`
+and `capture_manifest_verified: false`. A typed E5 capture verifier is still
+required before production import. A valid hash and a header claiming healthy
+state do not authenticate historical error completeness or landing eligibility.
+
+Rows stream into one uncommitted redb transaction. The shared reader must finish
+the declared row count, trailer, checksum, true EOF and independently pinned
+full-file digest before an initialized state can commit. Truncation, extra bytes,
+terminal read errors, identity mismatches and invalid rows leave no initialized
+manifest; the new directory is retained for diagnosis and cannot be reused by
+silently overwriting it. No existing state directory is replaced.
+
+Imported values remain exact get-visible images, including explicit nullable
+fields. They are not normalized or converted into a SQL reload image. A database
+capture normally omits SQL NULL columns; an imported snapshot cannot reconstruct
+the original process's unexported LFU cache. Accepted Pool hosts preserve the
+complete creation order, creation block and address, without inventing creation
+hashes or assuming dense physical VIDs. A nonempty declared error inventory is
+refused because BCGSNAP1 contains no failed-host history. The explicit caller
+history assertion is recorded, not independently established by this API.
+
+The initial producer checkpoint records snapshot/manifest pins, source commitment,
+row counts and an exhaustive logical state digest. Retained evidence is checked
+again on open, segment continuation and rewind. Oracle origin remains immutable
+through replay and rewind, and `require_loadable` always refuses it. A landing
+origin passing that structural method does not make this development import a
+production-qualified seed.
+
+Tests cover exact state and Initialize-frame parity after seeding, two identical
+imports, restart/rewind/no-clobber behavior, sparse source VIDs, all 53 distinct
+committed cache images from the pinned real Graph Node corpus, explicit Null,
+header/schema/causality failures, digest/truncation/extra/terminal-read failures,
+sticky oracle ancestry, retained-evidence mutation and the actual seed CLI.

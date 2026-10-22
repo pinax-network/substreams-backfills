@@ -565,8 +565,8 @@ Black-box tests run a real upstream child and inherited control pipe, prove
 provisional output arrives before control, then exercise failed child exit,
 truncated input, stale nonce/lineage, wrong digest, invalid control framing and
 regular-file refusal. Separate writer-failure tests prove rollback on both
-partial writes and flush errors. Runtime staging, the complete producer/v1 CLI
-and the live engine supervisor remain separate integration work.
+partial writes and flush errors. The public producer entry below uses this same
+streaming implementation. The live engine supervisor remains separate integration work.
 
 ## Development snapshot import
 
@@ -653,3 +653,50 @@ Tests compare seeded Initialize output and logical state with uninterrupted
 execution for landing and oracle captures, preserve verification across restart
 and rewind, reject mutated retained evidence and corrupt/truncated/trailing input,
 and exercise the actual typed seed CLI with wrong and correct external pins.
+
+## Staged producer protocol
+
+The `producer` binary implements `pinax.backfill.producer/v1`. Its runtime root
+defaults to the parent of the installed `bin` directory. `--runtime-root DIR`
+overrides the directory; `--runtime-sha256 SHA256` pins the exact `runtime.json`
+bytes supplied independently by the driver. Runtime loading validates the closed
+file inventory, canonical JSON, descriptor sidecar, actual executable, package
+SHA-256, and the Substreams module hash computed from the package's executable
+graph. Unsupported module fields, network overrides, symlinks and extra files
+are refused. Package hashing follows the supported v1.18.4 map/store algorithm;
+the real strengthened M2 package was checked against the independent CLI hash.
+
+```console
+producer --runtime-sha256 RUNTIME_SHA256 version --json
+producer --runtime-sha256 RUNTIME_SHA256 stage --dest NEW_RUNTIME_DIR
+producer --runtime-sha256 RUNTIME_SHA256 --allow-non-final seed \
+  --empty --start-block 13843704 --out NEW_STATE --engine-lineage ENGINE_LINEAGE
+producer --runtime-sha256 RUNTIME_SHA256 --allow-non-final seed \
+  --from seed.bcgsnap --out NEW_STATE --seed-manifest capture.json --seed-pins pins.json
+```
+
+`stage` uses a new sibling directory, fsync and atomic no-replace promotion;
+an existing destination is never replaced. `version --json` returns the exact
+runtime manifest. The family contract is `aerodrome-slipstream-base`, with
+`producer_checkpoint_family: aerodrome-slipstream` preserving existing checkpoint
+bytes. Its required engine capabilities include in-band sources, receipt v2,
+fixed-point decimals, finalized blocks, deterministic-error handover and physical
+self-copy landing support. Physical profiles are supplied separately by the
+target, not bundled with the producer.
+
+`reduce` accepts the development `stream` parameters documented above, but
+identity parameters are forbidden: descriptor, extractor and producer bindings
+come only from the verified bundle. BCF1 is the only stdout output; the inherited
+private completion pipe and actual producer exit still govern commitment. There
+is no public offline-file shortcut or opaque seed import. `inspect --state-dir`
+and `rewind --state-dir --expected-checkpoint-sha256 --to-block --to-hash` use the
+same durable checkpoint implementation. Every state operation checks complete
+typed seed history; an imported development assertion cannot be upgraded by
+reopening it with the public binary.
+
+These bundles are explicitly non-final and `production_selectable: false`.
+Execution requires `--allow-non-final`; staging and version inspection do not.
+Exit 2 means invalid parameters, 4 means data/identity/execution refusal, and 5
+means the non-final execution guard. No command emits the engine's final producer
+receipt or certifies an OCI image. Source-built packaging and its artifact smoke
+are separate from the tiny synthetic package used in executable protocol tests.

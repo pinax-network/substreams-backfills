@@ -14,6 +14,7 @@ pub mod handlers;
 pub mod hosts;
 pub mod identity;
 pub mod input;
+pub mod producer_cli;
 pub mod runner;
 pub mod runtime;
 pub mod state;

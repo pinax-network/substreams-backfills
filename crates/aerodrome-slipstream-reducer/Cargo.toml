@@ -16,6 +16,7 @@ alloy-json-abi = "=1.7.2"
 alloy-primitives = "=1.7.2"
 hex.workspace = true
 sha2.workspace = true
+sha1.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 redb = "=4.3.0"

@@ -15,6 +15,7 @@ pub mod hosts;
 pub mod identity;
 pub mod input;
 pub mod runner;
+pub mod runtime;
 pub mod state;
 pub use aerodrome_extractor_core::{Address, Word};
 pub use aerodrome_extractor_pb::v1 as pb;

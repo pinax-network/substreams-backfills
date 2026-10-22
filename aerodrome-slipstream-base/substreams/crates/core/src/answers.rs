@@ -240,8 +240,18 @@ pub fn position_answers(
     let mut ids = BTreeSet::new();
     let mut pool_keys = BTreeSet::new();
     for candidate in &block.candidates {
-        if let Some(Event::Position { token_id }) = events::decode(candidate)? {
-            ids.insert(token_id);
+        match events::decode(candidate)? {
+            Some(Event::Position { token_id }) => {
+                ids.insert(token_id);
+            }
+            Some(Event::Swap { .. }) => {
+                let pool = address(&candidate.address)?;
+                let record = pool_record(stores, &pool, block.number)?;
+                for token in [address(&record.token0)?, address(&record.token1)?] {
+                    pool_keys.extend(crate::mapping_probes::missing_whitelist_pool_probes(token));
+                }
+            }
+            _ => {}
         }
     }
     for id in ids {

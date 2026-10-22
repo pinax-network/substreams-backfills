@@ -59,6 +59,18 @@ Initialize/Swap order. Missing prior ticks and missing NPM pool keys are explici
 anomalies; absent position fragments are explicit reverts. Every emitted slot
 answer distinguishes in-block, carried, and absent/zero provenance.
 
+Factory answers also include the deployed Swap version-upgrade helper: for each
+registered pool token other than USDC, `getPool(USDC, token, 100/500/3000/10000)`
+uses literal third arguments in mapping order. The extractor supplies this
+conservative superset on every Swap because entity version lives in the reducer.
+C9 and C10 keys are deduplicated together and read the end-of-block registry.
+The helper's discarded array-copy mutations do not make its host calls optional.
+`fixtures/swap-upgrade-calls.json` retains all 44 missing independent cassette
+calls from the original full live attempt and 13 actual PoolCreated candidates
+used to reconstruct registry state for the regression (including a nonzero result).
+The old attempt remains failed call-completeness evidence; new source, package
+identity, live capture and complete cassette verification are required.
+
 `map_token_metadata` is the only module whose WASM imports `rpc.eth_call`. It
 batches the four raw ERC20 selectors for the deduplicated tokens of every
 PoolCreated. Failed or empty returns remain explicit reverts; string, bytes32,

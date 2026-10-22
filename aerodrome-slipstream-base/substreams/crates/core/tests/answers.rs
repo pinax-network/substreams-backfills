@@ -257,6 +257,161 @@ fn position_absence_reverts_but_missing_pool_keys_are_not_invented() {
 }
 
 #[test]
+fn swap_supplies_version_upgrade_calls_once_from_end_of_block_registry() {
+    use aerodrome_extractor_core::mapping_probes::USDC;
+    let mut stores = Stores::default();
+    stores.pool(1);
+    let b = block(vec![event("Swap", 0), event("Swap", 1)]);
+    let keys = answers::position_answers(&b, &stores).unwrap();
+    assert!(keys.positions.is_empty());
+    assert_eq!(keys.get_pool.len(), 8);
+    assert!(keys.get_pool.iter().all(|answer| {
+        answer.token_a == USDC && answer.pool == [0; 20] && answer.created_block == 0
+    }));
+    let key = format!("g:{}:{}:100;", hex::encode(USDC), hex::encode([1; 20]));
+    stores.put(
+        Store::Pools,
+        key.clone(),
+        i::PoolRef {
+            pool: vec![9; 20],
+            created_block: b.number,
+        },
+    );
+    let calls = answers::position_answers(&b, &stores).unwrap().get_pool;
+    let found = calls
+        .iter()
+        .find(|a| a.token_b == [1; 20] && a.tick_spacing == 100)
+        .unwrap();
+    assert_eq!(
+        (found.pool.as_slice(), found.created_block),
+        ([9; 20].as_slice(), b.number)
+    );
+    stores.put(
+        Store::Pools,
+        key,
+        i::PoolRef {
+            pool: vec![9; 20],
+            created_block: b.number + 1,
+        },
+    );
+    assert!(answers::position_answers(&b, &stores)
+        .unwrap_err()
+        .contains("future"));
+
+    // USDC never probes itself; registry token argument order is not canonicalized.
+    stores.pool(1);
+    stores.put(
+        Store::Pools,
+        format!("p:{};", hex::encode(POOL)),
+        i::PoolRecord {
+            token0: USDC.to_vec(),
+            token1: vec![2; 20],
+            tick_spacing: 1,
+            created_block: 1,
+            created_log_index: 0,
+        },
+    );
+    let calls = answers::position_answers(&b, &stores).unwrap().get_pool;
+    assert_eq!(calls.len(), 4);
+    assert!(calls
+        .iter()
+        .all(|a| a.token_a == USDC && a.token_b == [2; 20]));
+    assert!(answers::position_answers(
+        &block(vec![event("Initialize", 0), event("Flash", 0)]),
+        &stores
+    )
+    .unwrap()
+    .get_pool
+    .is_empty());
+    assert!(answers::position_answers(&b, &Stores::default()).is_err());
+}
+
+#[test]
+fn all_44_missing_historical_wasm_calls_match_the_independent_cassette() {
+    let corpus: serde_json::Value =
+        serde_json::from_slice(include_bytes!("../../../fixtures/swap-upgrade-calls.json"))
+            .unwrap();
+    let entries = corpus["entries"].as_array().unwrap();
+    assert_eq!(entries.len(), 44);
+    for entry in entries {
+        let calldata =
+            hex::decode(entry["calldata"].as_str().unwrap().trim_start_matches("0x")).unwrap();
+        let a = calldata[16..36].to_vec();
+        let b = calldata[48..68].to_vec();
+        let spacing = i32::from_be_bytes(calldata[96..100].try_into().unwrap());
+        let mut stores = Stores::default();
+        let number = entry["block_number"].as_u64().unwrap();
+        for created in corpus["pool_created_candidates"].as_array().unwrap() {
+            let created_block = created["block_number"].as_u64().unwrap();
+            if created_block > number {
+                continue;
+            }
+            let raw = hex::decode(created["candidate_protobuf_hex"].as_str().unwrap()).unwrap();
+            let candidate = p::CandidateLog::decode(raw.as_slice()).unwrap();
+            let Some(aerodrome_extractor_core::events::Event::PoolCreated {
+                pool,
+                token0,
+                token1,
+                spacing,
+            }) = aerodrome_extractor_core::events::decode(&candidate).unwrap()
+            else {
+                panic!("expected actual PoolCreated")
+            };
+            let created = i::PoolsCreated {
+                pools: vec![i::PoolCreatedRecord {
+                    pool: pool.to_vec(),
+                    token0: token0.to_vec(),
+                    token1: token1.to_vec(),
+                    tick_spacing: spacing,
+                    log_index: candidate.log_index,
+                    log_ordinal: candidate.log_ordinal,
+                    ..Default::default()
+                }],
+            };
+            for op in
+                aerodrome_extractor_core::carry::registry_ops(&created, created_block).unwrap()
+            {
+                match op {
+                    aerodrome_extractor_core::carry::StoreOp::Set { key, value, .. } => {
+                        stores.values.insert((Store::Pools, key), value);
+                    }
+                    _ => panic!("registry must only set"),
+                }
+            }
+        }
+        stores.put(
+            Store::Pools,
+            format!("p:{};", hex::encode(POOL)),
+            i::PoolRecord {
+                token0: a.clone(),
+                token1: b.clone(),
+                tick_spacing: 1,
+                created_block: 1,
+                created_log_index: 0,
+            },
+        );
+        let mut block = block(vec![event("Swap", 0)]);
+        block.number = number;
+        let output = answers::position_answers(&block, &stores).unwrap();
+        let answer = output
+            .get_pool
+            .iter()
+            .find(|p| p.token_a == a && p.token_b == b && p.tick_spacing == spacing)
+            .expect("every independent mapping host call must have an answer");
+        assert_eq!(entry["retval"]["kind"], "value");
+        let expected = hex::decode(
+            entry["retval"]["data"]
+                .as_str()
+                .unwrap()
+                .trim_start_matches("0x"),
+        )
+        .unwrap();
+        assert_eq!(expected.len(), 32);
+        assert_eq!(answer.pool, expected[12..]);
+    }
+}
+
+#[test]
 fn future_or_noncanonical_carry_is_refused_and_anomalies_survive_assembly() {
     let mut stores = Stores::default();
     stores.pool(1);

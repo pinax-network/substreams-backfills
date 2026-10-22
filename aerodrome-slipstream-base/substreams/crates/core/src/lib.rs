@@ -8,6 +8,7 @@ pub mod config;
 pub mod events;
 pub mod gas;
 pub mod layout;
+pub mod mapping_probes;
 pub mod metadata;
 pub mod shard;
 pub mod storage;

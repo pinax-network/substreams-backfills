@@ -62,7 +62,7 @@ message CallAnswers {
   repeated FeeGrowthGlobalAnswer fee_growth = 2;   // C5
   repeated TickAnswer ticks = 3;                   // C6, C7
   repeated PositionAnswer positions = 4;           // C8
-  repeated GetPoolAnswer get_pool = 5;             // C9
+  repeated GetPoolAnswer get_pool = 5;             // C9 and C10
 }
 
 message RawRetval {                        // Graph Node Retval (ethereum_adapter.rs:1550-1566)

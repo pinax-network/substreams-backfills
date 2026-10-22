@@ -64,3 +64,28 @@ push or release. The image's no-network container check is limited to `version`;
 state and stream checks must not be described as container execution. An OCI
 attachment publication/independent registry retrieval gate remains future work
 until a real candidate image and release are authorized and available.
+
+## Retained local validation
+
+`host-smoke-v1.json` pins the actual Darwin arm64 bundle built from producer
+commit `bd9a88d120e9c846e583a81a257d988e6988aadf`, using the independently retained
+M2 extractor from `5e65aa2226dbcb42ae25e8784af989327967e1e6`. Packaging tool commit
+`911653033a38dab8ab9d78437a997165d9954616` verified the 1,048 committed source blobs,
+ran the real version/stage/seed subprocesses, and round-tripped the closed archive.
+`host-smoke-steps-v1.json` retains their actual exit codes. Full artifacts remain
+under `/private/tmp/aerodrome-producer-runtime-proof-v1`; they have not been
+published as release assets. No OCI digest is claimed for this host executable.
+
+Validation passed 480 other workspace tests, all 334 xtask tests, and one doctest.
+The fresh worktree initially lacked two ignored legacy Uniswap V3 fixtures;
+only their exact `evidence-assets.lock.json` hashes were restored before the
+334-test rerun. Public producer tests independently passed all three process
+scenarios. The six packaging tests cover source closure, path/symlink refusal,
+no-clobber publication, deterministic archive tampering and workflow scope.
+
+Strict reducer Clippy passed. Strict xtask Clippy encounters two pre-existing
+`clippy::nonminimal_bool` warnings in `xtask/src/logical_oracle.rs` at lines 697
+and 848. Those unrelated expressions remain unchanged. A separate xtask check
+passed with all other warnings denied and only that named lint allowed; this is
+not reported as a full strict xtask Clippy pass. No Linux image was built or
+smoked locally because the available Docker daemon was unavailable.

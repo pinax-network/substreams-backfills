@@ -32,6 +32,12 @@ impl HostSet {
         self.committed.insert(pool, created_block);
         Ok(())
     }
+    pub(crate) fn seed_aborted(&mut self, pool: Address, block: u64, boundary: u64) -> Result<()> {
+        self.seed(pool, block, boundary)?;
+        self.committed.remove(&pool);
+        self.aborted.insert(pool, block);
+        Ok(())
+    }
     pub fn record_creation_outcome(
         &mut self,
         block: &BlockInput,

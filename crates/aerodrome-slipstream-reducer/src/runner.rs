@@ -1,5 +1,6 @@
-//! Bounded in-memory execution. No files, subprocesses or durable checkpoints.
-//! The stream adapter retains every frame until EOF and supervisor success.
+//! Authoritative block execution over an atomic EntityBackend. The memory
+//! stream adapter retains every frame until EOF and supervisor success;
+//! the durable module supplies a separate streaming disk adapter.
 use crate::{
     address,
     handlers::SupportedHandler,
@@ -60,22 +61,19 @@ impl CommittedBlock {
 
 /// Owns state and matching outcomes together. A refused block poisons the
 /// runner: the caller cannot ignore its failure and continue at a later block.
-pub struct MemoryRunner {
+pub struct Runner<B: EntityBackend> {
     binding: InputBinding,
-    backend: MemoryBackend,
+    backend: B,
     hosts: HostSet,
     mode: AbortMode,
     failed: bool,
 }
-impl MemoryRunner {
-    pub fn new(binding: InputBinding, backend: MemoryBackend) -> Result<Self> {
+pub type MemoryRunner = Runner<MemoryBackend>;
+impl<B: EntityBackend> Runner<B> {
+    pub fn new(binding: InputBinding, backend: B) -> Result<Self> {
         Self::with_abort_mode(binding, backend, AbortMode::FailClosed)
     }
-    pub fn with_abort_mode(
-        binding: InputBinding,
-        backend: MemoryBackend,
-        mode: AbortMode,
-    ) -> Result<Self> {
+    pub fn with_abort_mode(binding: InputBinding, backend: B, mode: AbortMode) -> Result<Self> {
         require(
             backend.compatibility_id() == *binding.compatibility().id(),
             "runner state/descriptor mismatch",
@@ -85,10 +83,7 @@ impl MemoryRunner {
                 == backfill_common::pb::pinax::graph::backfill::v1::DeterministicErrorPolicy::NonFatal,
             "EmitNonFatal requires a nonfatal descriptor",
         )?;
-        let mut hosts = HostSet::default();
-        for (pool, created) in backend.sources() {
-            hosts.seed(*pool, created.block_number, backend.boundary().block_number)?;
-        }
+        let hosts = backend.host_set()?;
         Ok(Self {
             binding,
             backend,
@@ -99,17 +94,25 @@ impl MemoryRunner {
     }
     /// Diagnostic state access; neither this nor a committed block proves range
     /// completion. Only run_stream checks the input and producer completion gates.
-    pub fn backend(&self) -> &MemoryBackend {
+    pub fn backend(&self) -> &B {
         &self.backend
+    }
+    pub fn into_backend(self) -> Result<B> {
+        require(!self.failed, "runner is poisoned")?;
+        Ok(self.backend)
     }
     pub fn process(&mut self, input: &BlockInput) -> Result<CommittedBlock> {
         self.process_with(input, |handler, journal| handler.run(journal))
     }
-    fn process_with<F>(&mut self, input: &BlockInput, mut run: F) -> Result<CommittedBlock>
+    pub(crate) fn process_with<F>(
+        &mut self,
+        input: &BlockInput,
+        mut run: F,
+    ) -> Result<CommittedBlock>
     where
         F: FnMut(
             &SupportedHandler<'_>,
-            &mut HandlerJournal<'_, MemoryBackend>,
+            &mut HandlerJournal<'_, B>,
         ) -> std::result::Result<Option<Address>, Step>,
     {
         require(!self.failed, "runner is poisoned")?;
@@ -118,6 +121,7 @@ impl MemoryRunner {
         let mut store = BlockStore::begin(&self.backend, &self.binding, input)?;
         let mut candidates = Vec::with_capacity(input.block().candidates.len());
         let mut group = 0;
+        let mut aborted_sources = Vec::new();
         // validate_block proved ascending (wave, source_trigger_order). No
         // filtering or re-sorting here: even unmatched candidates are reported.
         for (index, candidate) in input.block().candidates.iter().enumerate() {
@@ -176,6 +180,7 @@ impl MemoryRunner {
                             if !hosts.contains(&pool) && hex::encode(pool) != FACTORY_EXCLUDED_POOL
                             {
                                 hosts.record_creation_outcome(input, pool, false)?;
+                                aborted_sources.push(pool);
                             }
                         }
                         CandidateOutcome::Aborted {
@@ -197,10 +202,11 @@ impl MemoryRunner {
                 outcome,
             });
         }
-        let sealed = store.seal()?;
+        let mut sealed = store.seal()?;
+        sealed.aborted_sources = aborted_sources;
         require(sealed.committable(), "fatal discarded block cannot commit")?;
         let frame = sealed.frame().clone();
-        // MemoryBackend validates everything before mutation. Publishing staged
+        // The backend atomically installs the entire block. Publishing staged
         // hosts after this atomic commit is infallible; failed outcomes follow
         // the same block boundary, but never become in-band source creations.
         self.backend.commit(sealed)?;

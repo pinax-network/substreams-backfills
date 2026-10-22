@@ -1,10 +1,12 @@
 //! Aerodrome input, typed entity and transactional state foundations.
-//! Bounded in-memory scheduling for every deployed mapping handler.
-//! Durable state and the production driver remain unsupported.
+//! Authoritative scheduling for every deployed mapping handler, with bounded
+//! memory replay and local transactional disk state. The live supervisor,
+//! portable seed import and production qualification remain separate gates.
 //! Input validation and synthetic operation sealing do not certify a backfill.
 pub mod abi;
 pub mod calls;
 pub mod differential;
+pub mod durable;
 pub mod entity;
 pub mod handlers;
 pub mod hosts;

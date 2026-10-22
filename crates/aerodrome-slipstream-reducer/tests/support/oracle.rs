@@ -38,7 +38,10 @@ impl EntityBackend for OracleSeed {
     ) -> aerodrome_slipstream_reducer::Result<Option<Vec<output::EntityField>>> {
         Ok(self.cache.get(key).cloned())
     }
-    fn has_source(&self, pool: &aerodrome_slipstream_reducer::Address) -> bool {
+    fn has_source(
+        &self,
+        pool: &aerodrome_slipstream_reducer::Address,
+    ) -> aerodrome_slipstream_reducer::Result<bool> {
         self.database.has_source(pool)
     }
     fn commit(&mut self, _: SealedBlock) -> aerodrome_slipstream_reducer::Result<()> {

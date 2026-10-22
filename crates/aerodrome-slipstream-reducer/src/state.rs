@@ -38,7 +38,10 @@ pub trait EntityBackend {
     fn boundary(&self) -> &Boundary;
     fn compatibility_id(&self) -> [u8; 32];
     fn get(&self, key: &Key) -> Result<Option<Fields>>;
-    fn has_source(&self, pool: &Address) -> bool;
+    fn has_source(&self, pool: &Address) -> Result<bool>;
+    fn host_set(&self) -> Result<crate::hosts::HostSet> {
+        Err(refuse("backend does not support host restoration"))
+    }
     fn commit(&mut self, sealed: SealedBlock) -> Result<()>;
 }
 #[derive(Clone, Debug)]
@@ -47,6 +50,7 @@ pub struct MemoryBackend {
     boundary: Boundary,
     rows: BTreeMap<Key, Fields>,
     sources: BTreeMap<Address, Boundary>,
+    aborted_sources: BTreeMap<Address, Boundary>,
 }
 impl MemoryBackend {
     pub fn root(binding: &InputBinding, parent_hash: [u8; 32]) -> Result<Self> {
@@ -59,6 +63,7 @@ impl MemoryBackend {
             },
             rows: BTreeMap::new(),
             sources: BTreeMap::new(),
+            aborted_sources: BTreeMap::new(),
         })
     }
     /// Structurally checked in-memory seed for tests/oracles. This is not a
@@ -98,6 +103,7 @@ impl MemoryBackend {
             boundary,
             rows,
             sources,
+            aborted_sources: BTreeMap::new(),
         })
     }
     /// Get-visible cached images, including the existing-row overwrite Null quirk.
@@ -133,8 +139,18 @@ impl EntityBackend for MemoryBackend {
     fn get(&self, key: &Key) -> Result<Option<Fields>> {
         Ok(self.rows.get(key).cloned())
     }
-    fn has_source(&self, pool: &Address) -> bool {
-        self.sources.contains_key(pool)
+    fn has_source(&self, pool: &Address) -> Result<bool> {
+        Ok(self.sources.contains_key(pool))
+    }
+    fn host_set(&self) -> Result<crate::hosts::HostSet> {
+        let mut hosts = crate::hosts::HostSet::default();
+        for (pool, boundary) in &self.sources {
+            hosts.seed(*pool, boundary.block_number, self.boundary.block_number)?;
+        }
+        for (pool, boundary) in &self.aborted_sources {
+            hosts.seed_aborted(*pool, boundary.block_number, self.boundary.block_number)?;
+        }
+        Ok(hosts)
     }
     fn commit(&mut self, sealed: SealedBlock) -> Result<()> {
         require(
@@ -160,8 +176,15 @@ impl EntityBackend for MemoryBackend {
         for source in &sealed.changes.created_data_sources {
             let address: Address = source.param.as_slice().try_into().unwrap();
             require(
-                !self.sources.contains_key(&address),
+                !self.sources.contains_key(&address)
+                    && !self.aborted_sources.contains_key(&address),
                 "sealed source already exists",
+            )?;
+        }
+        for pool in &sealed.aborted_sources {
+            require(
+                !self.sources.contains_key(pool) && !self.aborted_sources.contains_key(pool),
+                "sealed failed source already exists",
             )?;
         }
         // All fallible validation happened before mutation. Private SealedBlock
@@ -181,6 +204,9 @@ impl EntityBackend for MemoryBackend {
                 source.param.as_slice().try_into().unwrap(),
                 sealed.boundary.clone(),
             );
+        }
+        for pool in sealed.aborted_sources {
+            self.aborted_sources.insert(pool, sealed.boundary.clone());
         }
         self.boundary = sealed.boundary;
         Ok(())
@@ -443,6 +469,7 @@ impl<'a, B: EntityBackend> BlockStore<'a, B> {
             observed: self.baselines,
             observed_sources: self.source_baselines,
             committable,
+            aborted_sources: Vec::new(),
         })
     }
 }
@@ -593,10 +620,14 @@ impl<B: EntityBackend> HandlerJournal<'_, B> {
         if pool == [0; 20] {
             return self.checked(Err(refuse("zero Pool source address")));
         }
-        let existed = *self
-            .source_baselines
-            .entry(pool)
-            .or_insert_with(|| self.backend.has_source(&pool));
+        let existed = match self.source_baselines.get(&pool) {
+            Some(value) => *value,
+            None => {
+                let value = self.backend.has_source(&pool)?;
+                self.source_baselines.insert(pool, value);
+                value
+            }
+        };
         if existed || self.known_created.contains(&pool) || self.created.contains(&pool) {
             return Ok(false);
         }
@@ -617,6 +648,7 @@ pub struct SealedBlock {
     observed: BTreeMap<Key, Option<Fields>>,
     observed_sources: BTreeMap<Address, bool>,
     committable: bool,
+    pub(crate) aborted_sources: Vec<Address>,
 }
 impl SealedBlock {
     pub fn expected_boundary(&self) -> &Boundary {
@@ -649,5 +681,8 @@ impl SealedBlock {
     }
     pub fn committable(&self) -> bool {
         self.committable
+    }
+    pub fn aborted_sources(&self) -> &[Address] {
+        &self.aborted_sources
     }
 }

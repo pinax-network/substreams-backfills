@@ -4,11 +4,11 @@ This crate implements the S-R2 input layer, S-R3 entity/state primitives, and
 all deployed Factory, Pool and NPM handlers for
 the locked Base deployment `QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV`.
 The library executes these handlers, journals their operations and seals
-canonical in-band BlockChanges. The in-memory runner schedules every candidate
-and refuses unknown matched handlers. It does **not** import
-verified snapshots, provide durable checkpoints or production output, or qualify
-a backfill. Those stages remain to be implemented and compared with
-mapping-host.
+canonical in-band BlockChanges. The runner schedules every candidate and refuses
+unknown matched handlers, using either memory or local transactional disk state.
+The offline durable runner provides segment checkpoints and immediate-predecessor
+rewind. Verified snapshot import, the live production supervisor and backfill
+qualification remain separate stages.
 
 The protobuf types and gas-price function come from the extractor's shared
 `pb`/`core` crates. There is no copied protobuf schema or Substreams runtime
@@ -97,8 +97,9 @@ UPDATE_AERODROME_INPUT_CORPUS=1 cargo +1.98.0 test \
 Without the environment variable this command recomputes and compares the
 committed corpus exactly. Mapping-host CI watches the reducer, reference ABIs,
 and extractor fixture projection. Release locks, real call-answer coverage,
-full mapping-host frame parity, durable checkpoint semantics, executed-handler
-error/PoI parity, and end-to-end negative raw decimal support remain later gates.
+full historical mapping-host frame parity, production checkpoint integration,
+executed-handler error/PoI parity, and end-to-end negative raw decimal support
+remain separate qualification gates.
 
 
 ## Typed entities, handler journals and sealing
@@ -135,7 +136,8 @@ seed, not authenticated snapshot import.
 The entity class labels describe the mapping design. They do not enable eviction:
 all rows remain persistent, including BlockLocal rows, until retention has
 independent evidence. Collect, Flash and TickHourData writes/removes are refused
-because the deployed handlers never write them. Redb, rewind and the production output CLI are absent.
+because the deployed handlers never write them. The local disk runner and rewind
+are described below; the live production output CLI remains separate work.
 
 Regenerate typed declarations with:
 
@@ -172,7 +174,8 @@ and refuses every unsupported matched event. Its `run` method belongs inside
 `BlockStore::run_handler`. The primitive caller must install a returned Pool source only after handler
 commit, then persist hosts only after block commit; `MemoryRunner` supplies this
 complete scheduling boundary. This primitive is not permission to skip unsupported handlers and
-publish a complete block. The existing CLI remains validation-only.
+publish a complete block. The `aerodrome-reducer` CLI validates inputs;
+the separate fixture commands execute bounded offline ranges.
 
 Factory preserves the deployed exclusion, fee-tier lookup, both token loads
 before construction, metadata fallback behavior, whitelist append order, zero
@@ -239,7 +242,7 @@ Every snapshot saves Transaction first, with gasLimit in gasUsed and Graph Node'
 effective gas price. PositionSnapshot ID is position ID plus block number, so
 later events in the same block overwrite the same row. Each save stays in the
 PoI operation stream. Flash saves only Pool with both fee-growth values; it never
-constructs a Flash entity. Retention/burn hints and durable persistence are later
+constructs a Flash entity. Retention/burn hints and production integration are later
 work; the current backend keeps these entities persistent.
 
 The isolated NPM differential covers groups 0–3 in original order: Factory,
@@ -298,7 +301,8 @@ UPDATE_AERODROME_POOL_CORPUS=1 cargo +1.98.0 test \
 cargo test -p aerodrome-slipstream-reducer --locked --test pool_handlers
 ```
 
-Durable state and production output remain separate checkpoints. The existing CLI still only validates inputs.
+Local durable state is described below. The live production supervisor remains
+separate work; `aerodrome-reducer` itself still only validates inputs.
 
 
 ## In-memory block and range execution
@@ -444,3 +448,77 @@ and closing block hash. Short equal prefixes, extra frames, synthetic frames,
 unknown/noncanonical protobuf fields and terminal read failures refuse. Six
 focused tests exercise these mutations and offline output lifecycle, including
 actual Factory execution, bad input digests and no-clobber behavior.
+
+## Local durable execution and rewind
+
+`durable::DurableStore` stores exact Graph Node cache images in redb, including
+explicit Null after an existing entity is removed and recreated. A segment owns
+one write transaction. Per-block commits change that transaction's visible state;
+only complete input EOF and a successful producer callback allow the transaction
+to commit durably. A logical refusal or storage failure cannot be ignored to
+continue a poisoned runner. Storage failures poison the whole transaction, and
+dropping it rolls back every block since the preceding segment boundary.
+
+The first touch of each entity, accepted source and failed Factory host retains
+its before-image. `ARUNDO1` streams sorted before/after records with bounded
+lengths, a trailer count, checksum and mandatory EOF. Undo evidence and the
+canonical producer checkpoint are synced before an Immediate redb commit.
+Checkpoints use the shared producer-checkpoint contract, exact source ordering,
+failed-host commitments and optional full logical state digest. Physical redb
+file hashes are not logical state evidence. Every entity is retained
+conservatively; retention eviction, decoded LRUs and snapshot compaction are
+future performance work, not silently assumed safety.
+
+Accepted hosts retain their creation block and global creation ordinal. Their
+historical creation hash is not required by BCGSNAP1 and is not invented. Failed
+Factory hosts separately retain the observed failure block hash, which is part
+of the failed-host commitment and is checked when restoring the host set.
+
+`aerodrome-durable-fixture` is an **offline development** command, with
+`init`, `inspect`, `reduce` and `rewind` operations. All require:
+
+```console
+--state-dir STATE --descriptor descriptor.json --descriptor-sha256 DESCRIPTOR_SHA256
+--extractor-identity verified-extractor-identity.json --producer-binding producer-binding.json
+```
+
+The producer binding has the exact fields in `common::producer_checkpoint::Binding`.
+Its executable digest must match this actual binary. Descriptor/package/source
+pins must come from the independent build/package evidence; the command verifies
+their agreement, not the authenticity of their origin. `--cache-mib` defaults to
+64 and configures redb's bounded page cache. `init` creates an empty root only and
+requires `--engine-lineage`; it never overwrites a state directory. The initial
+head is the shared `(13843703, zero hash)` sentinel.
+
+`reduce` additionally requires a regular `--input` file, `--input-sha256`,
+`--from`, `--stop-exclusive`, `--expected-parent-hash`, `--expected-head-block`,
+`--expected-head-hash`, `--expected-reducer-lineage`, `--engine-lineage` and a
+new `--output` directory. It refuses more than 50,000 blocks per segment. The
+input hash is checked over the exact consumed bytes after EOF and before durable
+commit. The first root transition separately records the actual observed parent.
+Later parent hashes must equal the committed predecessor. `--full-state-digest true`
+requests a complete logical scan; the default is false. Abort handling defaults
+to fail-closed; `--error-mode emit-non-fatal` retains diagnostic mapping aborts
+and requires the nonfatal descriptor.
+
+The output contains framed changes, the actual producer checkpoint, undo bytes
+and a final local `complete.json`. It explicitly does not claim a live subprocess
+receipt or production qualification. If a failure occurs after the redb commit
+but before the final marker, inspect the exact committed manifest; do not assume
+the old head or relabel partial output as complete. A fresh attempt can rewind
+and reproduce it. Immutable content-addressed evidence can be reused only if its
+bytes verify. Output and state directories must support hard links on the same
+filesystem; cross-filesystem publication fails before state commit.
+
+`rewind` requires `--expected-checkpoint-sha256`, `--to-block` and `--to-hash`,
+which must name the exact immediate predecessor. Every after-image must match
+the current state, and the complete undo checksum, pin and predecessor manifest
+must verify before a single atomic rewind commits. This local command knows no
+database loader and is not an operational rewind interface for a deployed lane.
+
+Tests cover segmentation/restart equality against both uninterrupted disk and
+memory execution, real process exit without destructors, EOF/producer refusal,
+injected partial storage failure, corrupt undo, failed Factory host history,
+missing/relabelled host inventories, explicit Null persistence and executable /
+input / head / rewind pin checks. Production seed import, crash roll-forward,
+live receipt supervision and end-to-end engine loading remain separate work.

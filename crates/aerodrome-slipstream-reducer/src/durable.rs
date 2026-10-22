@@ -42,7 +42,7 @@ const UNDO_MAGIC: &[u8; 8] = b"ARUNDO1\0";
 const UNDO_END: &[u8; 8] = b"ARUEND1\0";
 
 mod seed;
-pub use seed::{SeedImportPins, SourceHistoryAssertion};
+pub use seed::{CapturedSeedPins, SeedImportPins, SourceHistoryAssertion};
 
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

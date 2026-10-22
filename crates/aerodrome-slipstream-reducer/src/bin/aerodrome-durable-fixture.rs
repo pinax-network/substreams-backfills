@@ -1,7 +1,7 @@
 //! Digest-pinned durable development replay, including a supervised stream.
 //! This does not implement runtime staging or manufacture the engine receipt.
 use aerodrome_slipstream_reducer::{
-    durable::{run_segment, run_segment_streaming, DurableStore, SeedImportPins},
+    durable::{run_segment, run_segment_streaming, CapturedSeedPins, DurableStore, SeedImportPins},
     identity::InputBinding,
     input::InputStream,
     runner::{AbortMode, InputCompletion, Runner},
@@ -65,7 +65,7 @@ fn run() -> Result<()> {
     let mut args = std::env::args().skip(1);
     let command = args
         .next()
-        .ok_or("expected init|seed|inspect|reduce|stream|rewind")?;
+        .ok_or("expected init|seed|seed-captured|inspect|reduce|stream|rewind")?;
     let common = [
         "--state-dir",
         "--descriptor",
@@ -76,7 +76,7 @@ fn run() -> Result<()> {
     ];
     let specific: &[&str] = match command.as_str() {
         "init" => &["--engine-lineage"],
-        "seed" => &["--from", "--seed-manifest", "--seed-pins"],
+        "seed" | "seed-captured" => &["--from", "--seed-manifest", "--seed-pins"],
         "inspect" => &[],
         "reduce" => &[
             "--input",
@@ -108,7 +108,7 @@ fn run() -> Result<()> {
             "--substreams-native-sha256",
             "--upstream-completion-fd",
         ],
-        _ => return Err("expected init|seed|inspect|reduce|stream|rewind".into()),
+        _ => return Err("expected init|seed|seed-captured|inspect|reduce|stream|rewind".into()),
     };
     let mut options = BTreeMap::new();
     while let Some(key) = args.next() {
@@ -151,46 +151,69 @@ fn run() -> Result<()> {
     let state = Path::new(option("--state-dir")?);
     let store = if command == "init" {
         DurableStore::init_empty(state, &binding, pin, option("--engine-lineage")?, cache)?
-    } else if command == "seed" {
+    } else if command == "seed" || command == "seed-captured" {
+        let max = if command == "seed-captured" {
+            backfill_common::seed_manifest::MAX_BYTES
+        } else {
+            1024 * 1024
+        };
         let read_small = |path: &str| -> Result<Vec<u8>> {
             let mut f = fs::File::open(path)?;
-            if !f.metadata()?.is_file() || f.metadata()?.len() > 1024 * 1024 {
-                return Err("seed pins/manifest must be regular files at most 1 MiB".into());
+            if !f.metadata()?.is_file() || f.metadata()?.len() > max as u64 {
+                return Err(
+                    "seed pins/manifest must be regular files within the command limit".into(),
+                );
             }
             let mut bytes = Vec::new();
-            f.by_ref().take(1024 * 1024 + 1).read_to_end(&mut bytes)?;
-            if bytes.len() > 1024 * 1024 {
-                return Err("seed pins/manifest grew beyond 1 MiB".into());
+            Read::by_ref(&mut f)
+                .take(max as u64 + 1)
+                .read_to_end(&mut bytes)?;
+            if bytes.len() > max {
+                return Err("seed pins/manifest grew beyond the command limit".into());
             }
             Ok(bytes)
         };
-        let pins: SeedImportPins = serde_json::from_slice(&read_small(option("--seed-pins")?)?)?;
+        let pins = read_small(option("--seed-pins")?)?;
         let manifest = read_small(option("--seed-manifest")?)?;
         let snapshot = fs::File::open(option("--from")?)?;
         if !snapshot.metadata()?.is_file() {
             return Err("seed snapshot must be a regular file".into());
         }
-        DurableStore::import_snapshot(
-            state,
-            &binding,
-            pin,
-            BufReader::new(snapshot),
-            &manifest,
-            pins,
-            cache,
-        )?
+        if command == "seed-captured" {
+            let pins: CapturedSeedPins = serde_json::from_slice(&pins)?;
+            DurableStore::import_captured_snapshot(
+                state,
+                &binding,
+                pin,
+                BufReader::new(snapshot),
+                &manifest,
+                pins,
+                cache,
+            )?
+        } else {
+            let pins: SeedImportPins = serde_json::from_slice(&pins)?;
+            DurableStore::import_snapshot(
+                state,
+                &binding,
+                pin,
+                BufReader::new(snapshot),
+                &manifest,
+                pins,
+                cache,
+            )?
+        }
     } else {
         DurableStore::open(state, &binding, pin, cache)?
     };
     match command.as_str() {
         "stream" => stream_reduce(binding, &store, &options)?,
         "init" | "inspect" => println!("{}", String::from_utf8(store.manifest()?.encode()?)?),
-        "seed" => println!(
+        "seed" | "seed-captured" => println!(
             "{}",
             serde_json::json!({
-                "format":"pinax.aerodrome.development-seed-import-result/v1",
+                "format":if command == "seed-captured" {"pinax.aerodrome.verified-seed-import-result/v1"} else {"pinax.aerodrome.development-seed-import-result/v1"},
                 "production_selectable":false,
-                "capture_manifest_verified":false,
+                "capture_manifest_verified":command == "seed-captured",
                 "checkpoint":store.manifest()?,
             })
         ),

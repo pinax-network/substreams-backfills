@@ -1,4 +1,5 @@
 use super::*;
+mod captured;
 use backfill_common::{
     pb::pinax::graph::backfill::v1::{graph_value::Kind, EntityField, GraphValue, NullValue},
     producer_checkpoint::SnapshotPurpose,

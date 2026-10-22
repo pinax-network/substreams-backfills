@@ -285,14 +285,57 @@ fn supervised_stream_waits_for_real_upstream_exit_and_exact_private_control() {
 
 #[test]
 fn seed_cli_requires_explicit_pins_and_marks_oracle_development_output() {
-    use aerodrome_slipstream_reducer::{
-        durable::{SeedImportPins, SourceHistoryAssertion},
-        identity::InputBinding,
-    };
+    use aerodrome_slipstream_reducer::durable::{SeedImportPins, SourceHistoryAssertion};
     use backfill_common::{producer_checkpoint::SnapshotPurpose, state_snapshot as snap};
     let t = tempfile::tempdir().unwrap();
     let root = t.path();
     setup(root);
+    let header = seed_cli_header(root);
+    let boundary = header.boundary.clone();
+    let (bytes, verified) = snap::SnapshotWriter::new(Vec::new(), header, snap::Limits::default())
+        .unwrap()
+        .finish()
+        .unwrap();
+    let evidence = b"opaque development fixture; no E5 certification";
+    let mut pins = SeedImportPins {
+        snapshot_sha256: verified.file_sha256(),
+        seed_manifest_sha256: [1; 32],
+        profile_sha256: [7; 32],
+        boundary,
+        purpose: SnapshotPurpose::Oracle,
+        source_history: SourceHistoryAssertion::CompleteSuccessfulSourcesNoFailedHosts,
+        engine_lineage: verified.lineage(),
+    };
+    fs::write(root.join("seed.bcgsnap"), bytes).unwrap();
+    fs::write(root.join("capture-manifest"), evidence).unwrap();
+    fs::write(root.join("seed-pins"), serde_json::to_vec(&pins).unwrap()).unwrap();
+    let opts = [
+        ("--from", root.join("seed.bcgsnap").display().to_string()),
+        (
+            "--seed-manifest",
+            root.join("capture-manifest").display().to_string(),
+        ),
+        ("--seed-pins", root.join("seed-pins").display().to_string()),
+    ];
+    assert!(!command(root, "seed", &opts).status.success());
+    assert!(!root.join("state").exists());
+    pins.seed_manifest_sha256 = Sha256::digest(evidence).into();
+    fs::write(root.join("seed-pins"), serde_json::to_vec(&pins).unwrap()).unwrap();
+    let report: serde_json::Value =
+        serde_json::from_slice(&success(command(root, "seed", &opts))).unwrap();
+    assert_eq!(report["production_selectable"], false);
+    assert_eq!(report["capture_manifest_verified"], false);
+    let manifest: Manifest = serde_json::from_value(report["checkpoint"].clone()).unwrap();
+    assert!(manifest.require_loadable().is_err());
+    let reopened: Manifest =
+        serde_json::from_slice(&success(command(root, "inspect", &[]))).unwrap();
+    assert_eq!(reopened, manifest);
+    assert!(!command(root, "seed", &opts).status.success());
+}
+
+fn seed_cli_header(root: &Path) -> backfill_common::state_snapshot::SnapshotHeader {
+    use aerodrome_slipstream_reducer::identity::InputBinding;
+    use backfill_common::state_snapshot as snap;
     let descriptor = fs::read(root.join("descriptor")).unwrap();
     let extractor = serde_json::from_slice(&fs::read(root.join("identity")).unwrap()).unwrap();
     let binding =
@@ -335,22 +378,125 @@ fn seed_cli_requires_explicit_pins_and_marks_oracle_development_output() {
         entity_count: Some(0),
         records: 0,
     };
-    let (bytes, verified) = snap::SnapshotWriter::new(Vec::new(), header, snap::Limits::default())
-        .unwrap()
-        .finish()
-        .unwrap();
-    let evidence = b"opaque development fixture; no E5 certification";
-    let mut pins = SeedImportPins {
-        snapshot_sha256: verified.file_sha256(),
-        seed_manifest_sha256: [1; 32],
-        profile_sha256: [7; 32],
-        boundary,
+    header
+}
+
+#[test]
+fn captured_seed_cli_verifies_manifest_and_keeps_oracle_non_loadable() {
+    use aerodrome_slipstream_reducer::durable::CapturedSeedPins;
+    use backfill_common::{
+        producer_checkpoint::SnapshotPurpose, seed_manifest as capture, state_snapshot as snap,
+    };
+    let t = tempfile::tempdir().unwrap();
+    let root = t.path();
+    setup(root);
+    let mut header = seed_cli_header(root);
+    let snap::SnapshotOrigin::Oracle { seed } = &mut header.origin else {
+        unreachable!()
+    };
+    seed.schema = "sgd1".into();
+    seed.system_identifier = "123456789".into();
+    let seed = seed.clone();
+    let graph_node = capture::GraphNode {
+        version: "0.44.0".into(),
+        commit: graph_numerics::GRAPH_NODE_COMMIT.into(),
+    };
+    let binding = capture::Binding {
+        snapshot: header.binding.clone(),
         purpose: SnapshotPurpose::Oracle,
-        source_history: SourceHistoryAssertion::CompleteSuccessfulSourcesNoFailedHosts,
+        boundary: header.boundary.clone(),
+        start_block: INITIAL_BLOCK,
+        target: capture::Target {
+            schema: seed.schema.clone(),
+            site_id: seed.site_id,
+            database: seed.database.clone(),
+            system_identifier: seed.system_identifier.clone(),
+        },
+        profile_sha256: seed.profile_sha256.clone(),
+        catalog_sha256: "ab".repeat(32),
+        schema_sha256: hex::encode(Sha256::digest(include_bytes!(
+            "../../../aerodrome-slipstream-base/reference/schema.graphql"
+        ))),
+        raw_manifest_sha256: "12".repeat(32),
+        capture_binary_sha256: seed.capture_tool_sha256.clone(),
+        creating_graph_node: graph_node.clone(),
+        spec_version: "1.2.0".into(),
+        manifest_graft: None,
+        landing_graft: None,
+    };
+    let (bytes, verified) =
+        snap::SnapshotWriter::new(Vec::new(), header.clone(), snap::Limits::default())
+            .unwrap()
+            .finish()
+            .unwrap();
+    let manifest = capture::Manifest {
+        format: capture::FORMAT.into(),
+        binding: binding.clone(),
+        snapshot: backfill_common::producer_checkpoint::FilePin {
+            path: "seed.bcgsnap".into(),
+            bytes: bytes.len() as u64,
+            sha256: hex::encode(verified.file_sha256()),
+        },
+        lineage: hex::encode(verified.lineage()),
+        capture: seed,
+        deployment: capture::DeploymentObservation {
+            deployment: binding.snapshot.deployment.clone(),
+            spec_version: binding.spec_version.clone(),
+            start_parent: snap::Boundary {
+                block_number: INITIAL_BLOCK - 1,
+                block_hash: [8; 32],
+            },
+            graft: None,
+            schema_sha256: binding.schema_sha256.clone(),
+            raw_manifest_sha256: binding.raw_manifest_sha256.clone(),
+            creating_graph_node: graph_node,
+            failed: false,
+            fatal_error: None,
+            retained_error_count: 0,
+            current_reorg_depth: 0,
+            postponed_indexes_created: true,
+            namespace_count: 1,
+        },
+        transaction: capture::TransactionObservation {
+            isolation: "repeatable read".into(),
+            read_only: true,
+            backend_pid: 42,
+            write_lock: true,
+            copy_lock: true,
+            prune_lock: true,
+        },
+        history: capture::History::UnprunedFromDeploymentStart {
+            history_blocks: i32::MAX as u64,
+            earliest_block: INITIAL_BLOCK - 1,
+            table_last_pruned_block: binding
+                .snapshot
+                .type_ordinals
+                .iter()
+                .map(|n| (n.clone(), None))
+                .collect(),
+        },
+        catalog_sha256: binding.catalog_sha256.clone(),
+        sources: capture::SourceCommitment {
+            count: header.sources.count,
+            max_vid: header.sources.max_vid,
+            order_sha256: header.sources.order_sha256.clone(),
+        },
+        captured_rows: binding
+            .snapshot
+            .type_ordinals
+            .iter()
+            .map(|n| (n.clone(), 0))
+            .collect(),
+    }
+    .encode()
+    .unwrap();
+    let mut pins = CapturedSeedPins {
+        seed_manifest_sha256: [0; 32],
+        capture_binding: binding,
         engine_lineage: verified.lineage(),
     };
     fs::write(root.join("seed.bcgsnap"), bytes).unwrap();
-    fs::write(root.join("capture-manifest"), evidence).unwrap();
+    fs::write(root.join("capture-manifest"), &manifest).unwrap();
     fs::write(root.join("seed-pins"), serde_json::to_vec(&pins).unwrap()).unwrap();
     let opts = [
         ("--from", root.join("seed.bcgsnap").display().to_string()),
@@ -360,18 +506,17 @@ fn seed_cli_requires_explicit_pins_and_marks_oracle_development_output() {
         ),
         ("--seed-pins", root.join("seed-pins").display().to_string()),
     ];
-    assert!(!command(root, "seed", &opts).status.success());
+    assert!(!command(root, "seed-captured", &opts).status.success());
     assert!(!root.join("state").exists());
-    pins.seed_manifest_sha256 = Sha256::digest(evidence).into();
+    pins.seed_manifest_sha256 = Sha256::digest(&manifest).into();
     fs::write(root.join("seed-pins"), serde_json::to_vec(&pins).unwrap()).unwrap();
     let report: serde_json::Value =
-        serde_json::from_slice(&success(command(root, "seed", &opts))).unwrap();
+        serde_json::from_slice(&success(command(root, "seed-captured", &opts))).unwrap();
+    assert_eq!(report["capture_manifest_verified"], true);
     assert_eq!(report["production_selectable"], false);
-    assert_eq!(report["capture_manifest_verified"], false);
     let manifest: Manifest = serde_json::from_value(report["checkpoint"].clone()).unwrap();
     assert!(manifest.require_loadable().is_err());
     let reopened: Manifest =
         serde_json::from_slice(&success(command(root, "inspect", &[]))).unwrap();
     assert_eq!(reopened, manifest);
-    assert!(!command(root, "seed", &opts).status.success());
 }

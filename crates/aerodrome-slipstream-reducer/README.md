@@ -483,7 +483,7 @@ Factory hosts separately retain the observed failure block hash, which is part
 of the failed-host commitment and is checked when restoring the host set.
 
 `aerodrome-durable-fixture` is a **development** command, with
-`init`, `seed`, `inspect`, offline `reduce`, supervised `stream` and `rewind` operations.
+`init`, `seed`, `seed-captured`, `inspect`, offline `reduce`, supervised `stream` and `rewind` operations.
 All require:
 
 ```console
@@ -623,3 +623,33 @@ imports, restart/rewind/no-clobber behavior, sparse source VIDs, all 53 distinct
 committed cache images from the pinned real Graph Node corpus, explicit Null,
 header/schema/causality failures, digest/truncation/extra/terminal-read failures,
 sticky oracle ancestry, retained-evidence mutation and the actual seed CLI.
+
+### Verified capture import
+
+`DurableStore::import_captured_snapshot` and `seed-captured` use the E5
+`SeedSnapshotReader` rather than accepting a caller's history assertion. The
+external `CapturedSeedPins` contains the exact capture-manifest digest, complete
+capture binding and expected engine lineage. The capture binding must also match
+the locked Aerodrome descriptor, start, spec, entity inventory and schema bytes.
+The deployment manifest remains ungrafted; the capture contract independently
+checks a physical self-copy tuple when present.
+
+Use the same `--from`, `--seed-manifest` and `--seed-pins` options as `seed`, with
+`seed-pins.json` serializing `CapturedSeedPins`. This path accepts the shared
+manifest's 4 MiB ceiling. It stages imported rows in one transaction and requires
+the opaque `VerifiedSeed` from the exact fully consumed stream before commit.
+Unproven source/error history, a wrong capture pin, incomplete input or mismatched
+row inventory cannot commit an initialized state.
+
+Retained evidence records `capture_manifest_verified: true` and is rechecked on
+open, continuation and rewind. `require_complete_seed_history` admits empty-root
+or typed captured state and refuses a development import's history assertion.
+Runtime consumers must call that gate before using seeded state. Oracle imports
+remain non-loadable through replay and rewind. `production_selectable` remains
+false: verified capture evidence does not certify a runtime/profile, establish
+stopped-writer authority or authorize database loading.
+
+Tests compare seeded Initialize output and logical state with uninterrupted
+execution for landing and oracle captures, preserve verification across restart
+and rewind, reject mutated retained evidence and corrupt/truncated/trailing input,
+and exercise the actual typed seed CLI with wrong and correct external pins.

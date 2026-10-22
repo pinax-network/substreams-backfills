@@ -1,8 +1,8 @@
 //! Aerodrome input, typed entity and transactional state foundations.
 //! Authoritative scheduling for every deployed mapping handler, with bounded
 //! memory replay and local transactional disk state. The live supervisor,
-//! typed production seed verification and production qualification remain
-//! separate gates; local BCGSNAP1 import is explicitly development-only.
+//! runtime/profile production qualification remain separate gates. BCGSNAP1
+//! import has distinct development and typed capture-evidence paths.
 //! Input validation and synthetic operation sealing do not certify a backfill.
 pub mod abi;
 pub mod calls;

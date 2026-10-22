@@ -14,6 +14,7 @@ pub mod dynamic_sources;
 pub mod dynamic_sources_v2;
 pub mod pb;
 pub mod producer_checkpoint;
+pub mod seed_manifest;
 pub mod state_snapshot;
 pub mod upstream_completion;
 

@@ -6,6 +6,7 @@
 //! Input validation and synthetic operation sealing do not certify a backfill.
 pub mod abi;
 pub mod calls;
+pub mod cli;
 pub mod differential;
 pub mod durable;
 pub mod entity;

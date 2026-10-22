@@ -1,0 +1,22 @@
+[package]
+name = "aerodrome-decimal-audit"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[dependencies]
+aerodrome-slipstream-reducer = { path = "../aerodrome-slipstream-reducer" }
+graph-numerics = { path = "../graph-numerics" }
+backfill-common = { path = "../../common" }
+alloy-dyn-abi = "=1.7.2"
+hex.workspace = true
+sha2.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+libc = "=0.2.189"
+
+[dev-dependencies]
+prost = "=0.13.5"
+tempfile.workspace = true

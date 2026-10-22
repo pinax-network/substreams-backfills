@@ -1,0 +1,296 @@
+{
+  "contract": "pinax.aerodrome.development-live-proof-record/v1",
+  "scope": "Bounded historical live WASM extraction, complete independent cassette coverage, and native reducer whole-envelope differential; no durable restart, engine landing, or production qualification",
+  "production_qualified": false,
+  "observed_at": "2026-10-22T19:27:01.334942+00:00",
+  "from": 13843704,
+  "stop_exclusive": 13919663,
+  "blocks": 75959,
+  "runtime": {
+    "transport_source": "76a60595fffecf45a4a4af6d11234706fd732b6d",
+    "extractor_source": "5e65aa2226dbcb42ae25e8784af989327967e1e6",
+    "native_reducer_source": "3ae00fe968a99339aa680eed5ef7d39d78c99638",
+    "spkg_sha256": "7df52603a63b261ed27faf5f27a0b178b2004e156829c6c0edc1b3d605b4ff59",
+    "module": "map_extractor_block",
+    "module_hash": "5b880ad140246ec1bc3eefdd64c287769deac4f8",
+    "production_qualified": false,
+    "descriptor_sha256": "74c95d25fb353ccd632ce04183645e6657eef146d43c5f231e323232931d4cd0",
+    "audit_binary_sha256": "4a30f7238b4fbffd1fd28d71dec1d7844b33223ee3f3558fccd1b01b31460800",
+    "audit_source_sha256": "a79b061900cdfea57c780f55868647a5f2d276c3acd2216aa4cd54fa9eb0b815",
+    "audit_library_source_commit": "5e65aa2226dbcb42ae25e8784af989327967e1e6",
+    "descriptor_builder_note": "identity.rs is byte-identical in5e65 and native3ae; serialized descriptor pins actual3ae native reducer"
+  },
+  "native_tools": {
+    "aerodrome-replay-fixture": {
+      "sha256": "88aff9ac1136f5f8ce260ad25d6472194cdcf918c2b9e70b71e71ac58ce8ab84",
+      "source_commit": "3ae00fe968a99339aa680eed5ef7d39d78c99638"
+    },
+    "aerodrome-diff-frames": {
+      "sha256": "2feeb5aeff8fed50f98b170a2e8f6c2266919b928741c5d19833b7321262fbf6",
+      "source_commit": "3ae00fe968a99339aa680eed5ef7d39d78c99638"
+    }
+  },
+  "observations": {
+    "capture_exit": 0,
+    "capture_observed_frames": 75959,
+    "synthetic_frames": 0,
+    "extractor_sha256": "1444ef8a9ac545e7358d7b7b3396131783d221cf38936a407562828d55a98fde",
+    "cassette": {
+      "cassette_sha256": "1dabafa49d6c0e7725fd0a0a76975c22db183931cf56a2c76f12b35060fc61e3",
+      "expected_calls": 9394,
+      "matched_calls": 9394,
+      "missing_calls": 0,
+      "mismatched_calls": 0,
+      "canonical_frames_and_eof_verified": true,
+      "functions": {
+        "ERC20.decimals()": 14,
+        "ERC20.name()": 14,
+        "ERC20.symbol()": 14,
+        "ERC20.totalSupply()": 14,
+        "Factory.getPool(address,address,int24)": 479,
+        "NonfungiblePositionManager.positions(uint256)": 1011,
+        "Pool.feeGrowthGlobal0X128()": 2736,
+        "Pool.feeGrowthGlobal1X128()": 2736,
+        "Pool.ticks(int24)": 2376
+      },
+      "comparison_masks": "unchanged existing archive auditor consumed fields; no supplemental answers"
+    },
+    "native": {
+      "blocks": 75959,
+      "contract": "pinax.aerodrome.fixture-replay/v1",
+      "descriptor_sha256": "74c95d25fb353ccd632ce04183645e6657eef146d43c5f231e323232931d4cd0",
+      "durable_checkpoint": false,
+      "entities": 10213,
+      "error_mode": "FailClosed",
+      "extractor_identity": {
+        "initial_block": 13843704,
+        "module": "map_extractor_block",
+        "module_hash": "5b880ad140246ec1bc3eefdd64c287769deac4f8",
+        "output_type": "proto:pinax.aerodrome.slipstream.base.v1.ExtractorBlock",
+        "spkg_sha256": "7df52603a63b261ed27faf5f27a0b178b2004e156829c6c0edc1b3d605b4ff59"
+      },
+      "frames_sha256": "c02895a54189f979f5e136e1e5d450ba444600cb7f24ad3a6dfc26a408583ffd",
+      "from": 13843704,
+      "handlers": 6089,
+      "head_hash": "d54f7cb172111932e7232caccefa30194d2a17babf4af52e9df81486af1fec51",
+      "input_sha256": "1444ef8a9ac545e7358d7b7b3396131783d221cf38936a407562828d55a98fde",
+      "outcomes_sha256": "50c6d26e3549581bb052d14893883cd998720a9ea64b7ef03e58f7b8a9cd6dad",
+      "producer_receipt": false,
+      "production_qualified": false,
+      "sources": 13,
+      "stop_exclusive": 13919663
+    },
+    "comparison": {
+      "contract": "pinax.aerodrome.frame-equality/v1",
+      "from": 13843704,
+      "stop_exclusive": 13919663,
+      "blocks": 75959,
+      "triggered_blocks": 3276,
+      "operations": 90966,
+      "created_sources": 13,
+      "head_hash": "d54f7cb172111932e7232caccefa30194d2a17babf4af52e9df81486af1fec51",
+      "expected_descriptor_sha256": "2567c0bb63a8b09df4b8943ab4eae3fd6ae2e9592caa64faa722a37decd74357",
+      "actual_descriptor_sha256": "74c95d25fb353ccd632ce04183645e6657eef146d43c5f231e323232931d4cd0",
+      "expected_frames_sha256": "6bd01a3fcafc9e20fd418d4c12a118d89439271981f3daa324ad7fe34ac985ec",
+      "actual_frames_sha256": "c02895a54189f979f5e136e1e5d450ba444600cb7f24ad3a6dfc26a408583ffd",
+      "masked_fields": [
+        "compatibility_id"
+      ],
+      "production_qualified": false
+    },
+    "handlers": {
+      "PoolCreated": 13,
+      "Transfer": 941,
+      "IncreaseLiquidity": 475,
+      "Initialize": 13,
+      "Mint": 475,
+      "Swap": 3014,
+      "Burn": 536,
+      "Collect": 536,
+      "DecreaseLiquidity": 86
+    },
+    "candidate_outcomes": {
+      "committed": 6089
+    },
+    "all_three_check_stage_exit_codes": [
+      0,
+      0,
+      0
+    ]
+  },
+  "superseded_failed_attempt": {
+    "package_sha256": "29562139f970f1629af398dbc31ddd70df7c9786af6594518e11409b1b761a57",
+    "module_hash": "8537b9e5b06250aceaa8efc4078a6b538189273b",
+    "input_sha256": "8f3f99770ce342808f71e62602503b246d491cbcf8494ff6f5ac84afd480ed0c",
+    "all_frames_matched_oracle": true,
+    "cassette_matched": 9350,
+    "cassette_missing": 44,
+    "cassette_wrong": 0,
+    "audit_exit_code": 4,
+    "missing_function": "Factory.getPool(address,address,int24)",
+    "reason": "discarded whitelist getter-copy effects incorrectly treated as permission to omit host-call evidence",
+    "retained_local_root": "/private/tmp/aerodrome-m2-cassette-audit-v1",
+    "report_sha256": "ebb20300a83556057512a40783e1e53ca5877e5e5940d13521a812243856655d"
+  },
+  "separate_native_M1": {
+    "runtime": {
+      "scope": "M1 native reference execution; package identity binding is not live WASM execution evidence",
+      "extractor_runtime_commit": "343ceebe2903322d4524a96610f0fad25ecdb792",
+      "native_reducer_commit": "0041bf97e1e47a01104a6008249972f0effc81bb",
+      "reference_extractor_commit": "a4aa4cb701e6334c7e765c9b10a93dd465b53570",
+      "descriptor_sha256": "5b4a8cb8d05ef37f41d51bef36fcb707acad59786b18a29e40ca884a6f80aaab",
+      "extractor_identity": {
+        "spkg_sha256": "29562139f970f1629af398dbc31ddd70df7c9786af6594518e11409b1b761a57",
+        "module": "map_extractor_block",
+        "module_hash": "8537b9e5b06250aceaa8efc4078a6b538189273b",
+        "output_type": "proto:pinax.aerodrome.slipstream.base.v1.ExtractorBlock",
+        "initial_block": 13843704
+      }
+    },
+    "blocks": 75959,
+    "calls": 9394,
+    "input_sha256": "10f41d32725cb549ec864d305684192c1753dc0e024adaf9d8b3091b0de6a7e3",
+    "frames_sha256": "a4c855f487444033258f0ecaa1e9be0c8394db183579e991aa1e4c9c4a6d41b4",
+    "scope": "Independent raw Firehose archive reference path; reference explicitly supplements getPool query keys, so its success did not clear old live WASM call coverage",
+    "receipt_sha256": "b8cd67c020f94d84a71e0c104a9678c3729bba0eb1533bfc4b5ea1381b99480b"
+  },
+  "retained_local_root": "/private/tmp/aerodrome-live-wasm-m2-upgrade-v1",
+  "archive_publication": "Not published as a release; this small record binds retained local evidence only. Artifact inventory hashes must be checked before reuse.",
+  "artifacts": [
+    {
+      "path": "M2-success.json",
+      "bytes": 8323,
+      "sha256": "e858d76620df03cfb48af9300edc21f4ce42e60ec09130fa70e2ed56e07bbddb"
+    },
+    {
+      "path": "build-inputs.json",
+      "bytes": 420,
+      "sha256": "7b6e8f5ef01ad4ea48f6c72cb98e34e7bf384e3615182846b089568a69bd9995"
+    },
+    {
+      "path": "proof-inputs.json",
+      "bytes": 910,
+      "sha256": "f4355a3aba186b5cdd4e83087ae58dc8d842c564102913930e77b3eb52349185"
+    },
+    {
+      "path": "extractor-identity.json",
+      "bytes": 289,
+      "sha256": "6fe0d535d1f0097c156077d2040cd4b9705dfaf4a8cb821b8e68baa1c52c45b2"
+    },
+    {
+      "path": "block-changes-descriptor.json",
+      "bytes": 1850,
+      "sha256": "74c95d25fb353ccd632ce04183645e6657eef146d43c5f231e323232931d4cd0"
+    },
+    {
+      "path": "package-info.json",
+      "bytes": 307976,
+      "sha256": "a1ab6205f1360466820b1860e4f7c45b9f110a7d78ac03d13140b52346955589"
+    },
+    {
+      "path": "extractor.spkg",
+      "bytes": 1975771,
+      "sha256": "7df52603a63b261ed27faf5f27a0b178b2004e156829c6c0edc1b3d605b4ff59"
+    },
+    {
+      "path": "audit.rs",
+      "bytes": 5700,
+      "sha256": "a79b061900cdfea57c780f55868647a5f2d276c3acd2216aa4cd54fa9eb0b815"
+    },
+    {
+      "path": "capture.py",
+      "bytes": 3756,
+      "sha256": "668897a307a90e59cf2f460b765496848938220b949c9e98fab85a4b3757e898"
+    },
+    {
+      "path": "check.py",
+      "bytes": 4261,
+      "sha256": "7c62162ae982436baee4f57b19ceb76ec981909b4cf8af6f54073c0f339719be"
+    },
+    {
+      "path": "commands.json",
+      "bytes": 2632,
+      "sha256": "68a41585d04cd77f39177dbb313082e3b29e4705b0a422e590947ee3d8f0e305"
+    },
+    {
+      "path": "full-root/attempt.json",
+      "bytes": 1197,
+      "sha256": "a04a770ddcea32643e28967f79c608876ffba3cdfc4cd78e4494eaec816aeba3"
+    },
+    {
+      "path": "full-root/process-exit.json",
+      "bytes": 1215,
+      "sha256": "0167b7b2d7175036bb40698ec4dd3ec0548ed8733c894eaf45ba3d54c0fbe083"
+    },
+    {
+      "path": "full-root/capture-complete.json",
+      "bytes": 1568,
+      "sha256": "dd900c87526036fe1a9aa97cf0932185bb1bc2de68fdb9e6f241943bcdae2b60"
+    },
+    {
+      "path": "full-root/extractor.bcf1",
+      "bytes": 18286956,
+      "sha256": "1444ef8a9ac545e7358d7b7b3396131783d221cf38936a407562828d55a98fde"
+    },
+    {
+      "path": "cassette.stdout.log",
+      "bytes": 1592,
+      "sha256": "b2621882989dd9f52f61578151e790f4eb19bcfc7642737d8f3536de7c347edf"
+    },
+    {
+      "path": "cassette.exit.json",
+      "bytes": 74,
+      "sha256": "cf41066e715a9cde478a20915de1891c18caf6637020eac0b575fbcbd175bbdf"
+    },
+    {
+      "path": "native-replay/complete.json",
+      "bytes": 1066,
+      "sha256": "d98b5dfe2c77606f1a3b8ab90c48eb0d2c0e3cb41138b639321529031dd41c0f"
+    },
+    {
+      "path": "native-replay/frames.bcf1",
+      "bytes": 118574616,
+      "sha256": "c02895a54189f979f5e136e1e5d450ba444600cb7f24ad3a6dfc26a408583ffd"
+    },
+    {
+      "path": "native-replay/block-outcomes.jsonl",
+      "bytes": 9023132,
+      "sha256": "50c6d26e3549581bb052d14893883cd998720a9ea64b7ef03e58f7b8a9cd6dad"
+    },
+    {
+      "path": "native.exit.json",
+      "bytes": 74,
+      "sha256": "87d70aa841f5276bd977281b16e793fbcc9ab181d04998939ea786ae70b6874f"
+    },
+    {
+      "path": "compare.stdout.log",
+      "bytes": 687,
+      "sha256": "9e92681fec41df8ed428ad06492b52df4b518d0134141a41977b995161ec7d7c"
+    },
+    {
+      "path": "compare.exit.json",
+      "bytes": 74,
+      "sha256": "710c2da4809b2ab0bb1d256f8a6b43b5a85fbf9d40a9585c2b22ca634b359696"
+    },
+    {
+      "path": "extractor-tests.log",
+      "bytes": 9118,
+      "sha256": "67442771f95209ec4cde831e7346fbbcf6d9a373b4ed25b412741978db8e52b6"
+    },
+    {
+      "path": "extractor-clippy.log",
+      "bytes": 7005,
+      "sha256": "fcd037fdc0aad77ffb5be3dca32736084798ad053ea7ebf56d4ff725f9a44adf"
+    },
+    {
+      "path": "extractor-build-twice.log",
+      "bytes": 11558,
+      "sha256": "ca206755ceb4d8dfaa4836220e2c969178e5ac00280ceba86f60fa4cdd6c3869"
+    },
+    {
+      "path": "extractor-cache-boundary.log",
+      "bytes": 291,
+      "sha256": "b9007a5e002f7f3e720e86a5af109d3c436678b95cba65665346eef30fa7fc85"
+    }
+  ]
+}

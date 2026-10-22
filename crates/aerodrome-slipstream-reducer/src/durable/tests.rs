@@ -203,6 +203,62 @@ fn truncation_and_failed_producer_do_not_advance_state_or_publish_success() {
 }
 
 #[test]
+fn provisional_write_or_flush_failure_always_cancels_and_aborts_the_segment() {
+    struct FailingOutput {
+        flush_only: bool,
+        bytes: Vec<u8>,
+    }
+    impl Write for FailingOutput {
+        fn write(&mut self, b: &[u8]) -> std::io::Result<usize> {
+            if self.flush_only {
+                self.bytes.extend_from_slice(b);
+                Ok(b.len())
+            } else if self.bytes.is_empty() {
+                self.bytes.push(b[0]);
+                Ok(1)
+            } else {
+                Err(std::io::ErrorKind::BrokenPipe.into())
+            }
+        }
+        fn flush(&mut self) -> std::io::Result<()> {
+            Err(std::io::ErrorKind::BrokenPipe.into())
+        }
+    }
+    let t = tempfile::tempdir().unwrap();
+    let s = store(&t.path().join("state"));
+    let initial = s.manifest().unwrap();
+    let b = first();
+    let blocks = std::slice::from_ref(&b);
+    for flush_only in [false, true] {
+        let out = t.path().join(if flush_only { "flush" } else { "write" });
+        let runner = Runner::new(bindings().0, begin(&s, &b.parent_hash)).unwrap();
+        let mut writer = FailingOutput {
+            flush_only,
+            bytes: vec![],
+        };
+        let mut cancelled = false;
+        assert!(run_segment_streaming(
+            runner,
+            input(blocks, bytes(blocks)),
+            &out,
+            50_000,
+            false,
+            &mut writer,
+            |head| {
+                assert!(head.is_none());
+                cancelled = true;
+                Ok(())
+            }
+        )
+        .is_err());
+        assert!(cancelled);
+        assert!(!writer.bytes.is_empty());
+        assert_eq!(s.manifest().unwrap(), initial);
+        assert!(!out.join("complete.json").exists());
+    }
+}
+
+#[test]
 fn storage_failure_poison_and_drop_roll_back_every_partial_block_write() {
     let t = tempfile::tempdir().unwrap();
     let s = store(&t.path().join("state"));

@@ -15,6 +15,7 @@ pub mod dynamic_sources_v2;
 pub mod pb;
 pub mod producer_checkpoint;
 pub mod state_snapshot;
+pub mod upstream_completion;
 
 pub use block_changes::{
     apply_written_fields, decode_canonical_block_changes, decode_canonical_in_band_block_changes,

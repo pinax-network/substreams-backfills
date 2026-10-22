@@ -474,8 +474,9 @@ historical creation hash is not required by BCGSNAP1 and is not invented. Failed
 Factory hosts separately retain the observed failure block hash, which is part
 of the failed-host commitment and is checked when restoring the host set.
 
-`aerodrome-durable-fixture` is an **offline development** command, with
-`init`, `inspect`, `reduce` and `rewind` operations. All require:
+`aerodrome-durable-fixture` is a **development** command, with
+`init`, `inspect`, offline `reduce`, supervised `stream` and `rewind` operations.
+All require:
 
 ```console
 --state-dir STATE --descriptor descriptor.json --descriptor-sha256 DESCRIPTOR_SHA256
@@ -522,3 +523,39 @@ injected partial storage failure, corrupt undo, failed Factory host history,
 missing/relabelled host inventories, explicit Null persistence and executable /
 input / head / rewind pin checks. Production seed import, crash roll-forward,
 live receipt supervision and end-to-end engine loading remain separate work.
+
+### Supervised streaming boundary
+
+`stream` consumes extractor BCF1 on stdin and emits provisional BlockChanges BCF1
+on stdout while retaining the same bytes in its new output directory. These
+bytes must not be published until the supervisor has verified the actual
+producer exit and checkpoint. JSON diagnostics go to stderr.
+
+It takes the same boundary, lineage, output, error-policy and digest-scan options
+as `reduce`, replacing `--input` / `--input-sha256` with
+`--attempt-nonce`, `--substreams-native-sha256` and
+`--upstream-completion-fd`. The fd must be a private inherited Unix pipe, numbered
+at least 3; reusable files are refused. The supervisor supplies a fresh random
+32-byte nonce as lowercase hex at startup. After exact input EOF, the reducer
+reads the bounded canonical `common::upstream_completion::Completion` to control
+EOF and verifies the nonce, all request/binary/package/lineage pins, actual input
+SHA-256 and byte count, and observed ending block/hash. Only native exit code 0
+is accepted. Missing, malformed, stale or mismatched completion aborts the whole
+transaction. Broken output or input failure returns without waiting for control;
+the supervisor must cancel/reap the native process and close its pipes.
+
+The supervisor writes this completion only after actually reaping the native
+child successfully. The reducer saves its exact bytes as
+`upstream-completion.json` before sealing state, then exits. Only after that
+actual producer exit may the supervisor write the engine's separate final
+producer receipt v2. Waiting for that final receipt inside the reducer would
+deadlock. The engine must wait for the final receipt in its completion callback
+or retain an extra pipe writer until the receipt is published. Pipe EOF alone
+never authorizes publication. The supervisor owns timeouts and cancellation.
+
+Black-box tests run a real upstream child and inherited control pipe, prove
+provisional output arrives before control, then exercise failed child exit,
+truncated input, stale nonce/lineage, wrong digest, invalid control framing and
+regular-file refusal. Separate writer-failure tests prove rollback on both
+partial writes and flush errors. Runtime staging, the complete producer/v1 CLI
+and the live engine supervisor remain separate integration work.

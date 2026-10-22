@@ -1,7 +1,7 @@
-//! Local digest-pinned durable replay. This is not the live producer/v1 driver
-//! and never manufactures a successful subprocess receipt for the engine.
+//! Digest-pinned durable development replay, including a supervised stream.
+//! This does not implement runtime staging or manufacture the engine receipt.
 use aerodrome_slipstream_reducer::{
-    durable::{run_segment, DurableStore},
+    durable::{run_segment, run_segment_streaming, DurableStore},
     identity::InputBinding,
     input::InputStream,
     runner::{AbortMode, InputCompletion, Runner},
@@ -9,13 +9,14 @@ use aerodrome_slipstream_reducer::{
 };
 use backfill_common::{
     descriptor::ExtractorIdentity, producer_checkpoint::Binding, state_snapshot::Boundary,
+    upstream_completion,
 };
 use sha2::{Digest, Sha256};
 use std::{
-    cell::RefCell,
+    cell::{Cell, RefCell},
     collections::BTreeMap,
     fs,
-    io::{self, BufReader, Read},
+    io::{self, BufReader, Read, Write},
     path::Path,
     rc::Rc,
 };
@@ -45,17 +46,26 @@ fn file_hash(path: &Path) -> Result<String> {
 struct HashReader<R> {
     input: R,
     hash: Rc<RefCell<Sha256>>,
+    count: Rc<Cell<u64>>,
 }
 impl<R: Read> Read for HashReader<R> {
     fn read(&mut self, b: &mut [u8]) -> io::Result<usize> {
         let n = self.input.read(b)?;
+        self.count.set(
+            self.count
+                .get()
+                .checked_add(n as u64)
+                .ok_or_else(|| io::Error::other("input byte counter overflow"))?,
+        );
         self.hash.borrow_mut().update(&b[..n]);
         Ok(n)
     }
 }
 fn run() -> Result<()> {
     let mut args = std::env::args().skip(1);
-    let command = args.next().ok_or("expected init|inspect|reduce|rewind")?;
+    let command = args
+        .next()
+        .ok_or("expected init|inspect|reduce|stream|rewind")?;
     let common = [
         "--state-dir",
         "--descriptor",
@@ -82,7 +92,22 @@ fn run() -> Result<()> {
             "--full-state-digest",
         ],
         "rewind" => &["--expected-checkpoint-sha256", "--to-block", "--to-hash"],
-        _ => return Err("expected init|inspect|reduce|rewind".into()),
+        "stream" => &[
+            "--from",
+            "--stop-exclusive",
+            "--expected-parent-hash",
+            "--expected-head-block",
+            "--expected-head-hash",
+            "--expected-reducer-lineage",
+            "--engine-lineage",
+            "--output",
+            "--error-mode",
+            "--full-state-digest",
+            "--attempt-nonce",
+            "--substreams-native-sha256",
+            "--upstream-completion-fd",
+        ],
+        _ => return Err("expected init|inspect|reduce|stream|rewind".into()),
     };
     let mut options = BTreeMap::new();
     while let Some(key) = args.next() {
@@ -129,6 +154,7 @@ fn run() -> Result<()> {
         DurableStore::open(state, &binding, pin, cache)?
     };
     match command.as_str() {
+        "stream" => stream_reduce(binding, &store, &options)?,
         "init" | "inspect" => println!("{}", String::from_utf8(store.manifest()?.encode()?)?),
         "rewind" => {
             let current = store.manifest()?;
@@ -170,6 +196,7 @@ fn run() -> Result<()> {
                 HashReader {
                     input: BufReader::new(file),
                     hash: Rc::clone(&observed),
+                    count: Rc::default(),
                 },
                 binding.clone(),
                 from,
@@ -229,6 +256,140 @@ fn run() -> Result<()> {
         }
         _ => unreachable!(),
     }
+    Ok(())
+}
+
+#[cfg(unix)]
+fn control_pipe(fd: &str) -> Result<fs::File> {
+    use std::os::unix::fs::FileTypeExt;
+    let number = fd.parse::<u32>()?;
+    if number < 3 || number > i32::MAX as u32 {
+        return Err("completion fd must be a private inherited descriptor".into());
+    }
+    // /dev/fd duplicates the inherited handle using safe std APIs. Reusable
+    // regular files and sockets are not the private EOF-delimited pipe protocol.
+    let file = fs::File::open(format!("/dev/fd/{number}"))?;
+    if !file.metadata()?.file_type().is_fifo() {
+        return Err("upstream completion must use an inherited pipe".into());
+    }
+    Ok(file)
+}
+#[cfg(not(unix))]
+fn control_pipe(_: &str) -> Result<fs::File> {
+    Err("supervised streaming requires a Unix control pipe".into())
+}
+
+fn stream_reduce(
+    binding: InputBinding,
+    store: &DurableStore,
+    options: &BTreeMap<String, String>,
+) -> Result<()> {
+    let option = |key: &str| {
+        options
+            .get(key)
+            .map(String::as_str)
+            .ok_or_else(|| format!("missing {key}"))
+    };
+    let before = store.manifest()?;
+    let request = upstream_completion::Request {
+        binding: before.binding.clone(),
+        attempt_nonce: option("--attempt-nonce")?.into(),
+        substreams_native_sha256: option("--substreams-native-sha256")?.into(),
+        from: option("--from")?.parse()?,
+        stop_exclusive: option("--stop-exclusive")?.parse()?,
+        predecessor: Boundary {
+            block_number: option("--expected-head-block")?.parse()?,
+            block_hash: hash(option("--expected-head-hash")?)?,
+        },
+        observed_parent_hash: option("--expected-parent-hash")?.into(),
+        reducer_lineage_before: option("--expected-reducer-lineage")?.into(),
+        engine_lineage_before: option("--engine-lineage")?.into(),
+    };
+    request.validate()?;
+    let control = control_pipe(option("--upstream-completion-fd")?)?;
+    let parent = hash(&request.observed_parent_hash)?;
+    let segment = store.begin_segment(
+        &request.predecessor,
+        &request.reducer_lineage_before,
+        &request.engine_lineage_before,
+        (request.predecessor.block_hash == [0; 32]).then_some(parent),
+    )?;
+    let mode = match options
+        .get("--error-mode")
+        .map(String::as_str)
+        .unwrap_or("fail-closed")
+    {
+        "fail-closed" => AbortMode::FailClosed,
+        "emit-non-fatal" => AbortMode::EmitNonFatal,
+        _ => return Err("invalid error-mode".into()),
+    };
+    let full = match options
+        .get("--full-state-digest")
+        .map(String::as_str)
+        .unwrap_or("false")
+    {
+        "false" => false,
+        "true" => true,
+        _ => return Err("full-state-digest must be true|false".into()),
+    };
+    let observed = Rc::new(RefCell::new(Sha256::new()));
+    let count = Rc::new(Cell::new(0));
+    let input = InputStream::new(
+        HashReader {
+            input: io::stdin().lock(),
+            hash: Rc::clone(&observed),
+            count: Rc::clone(&count),
+        },
+        binding.clone(),
+        request.from,
+        request.stop_exclusive - 1,
+        parent,
+    )?;
+    let runner = Runner::with_abort_mode(binding, segment, mode)?;
+    let output = Path::new(option("--output")?);
+    let checkpoint = run_segment_streaming(
+        runner,
+        input,
+        output,
+        50_000,
+        full,
+        &mut io::stdout().lock(),
+        |head| {
+            let head = head.ok_or_else(|| {
+                ReducerError("input or output refused; supervisor must cancel upstream".into())
+            })?;
+            let digest = hex::encode(observed.borrow().clone().finalize());
+            let (_, bytes) = upstream_completion::Completion::read_verified(
+                control,
+                &request,
+                &digest,
+                count.get(),
+                head,
+            )
+            .map_err(ReducerError)?;
+            let mut file = fs::OpenOptions::new()
+                .write(true)
+                .create_new(true)
+                .open(output.join("upstream-completion.json"))
+                .map_err(|e| ReducerError(e.to_string()))?;
+            file.write_all(&bytes)
+                .and_then(|()| file.sync_all())
+                .map_err(|e| ReducerError(e.to_string()))?;
+            Ok(())
+        },
+    )?;
+    // stdout contains only provisional BCF1. Success still requires the actual
+    // process exit and this checkpoint; the supervisor builds receipt v2 later.
+    eprintln!(
+        "{}",
+        serde_json::json!({
+            "format":"pinax.aerodrome.supervised-stream-result/v1",
+            "from":request.from,"stop_exclusive":request.stop_exclusive,
+            "input_sha256":hex::encode(observed.borrow().clone().finalize()),"input_bytes":count.get(),
+            "checkpoint_sha256":hex::encode(Sha256::digest(checkpoint.encode()?)),
+            "boundary":checkpoint.boundary,"production_qualified":false,"producer_supervisor_receipt":false
+        })
+    );
     Ok(())
 }
 fn main() {

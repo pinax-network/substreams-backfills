@@ -758,14 +758,44 @@ fn read_undo(
 /// committed only after exact input EOF and callback success; a failed result
 /// can leave immutable evidence, but never a false completion marker.
 pub fn run_segment<R: Read>(
-    mut runner: crate::runner::Runner<Segment>,
-    mut input: crate::input::InputStream<R>,
+    runner: crate::runner::Runner<Segment>,
+    input: crate::input::InputStream<R>,
     output: &Path,
     max_blocks: u64,
     full_digest: bool,
     producer_success: impl FnOnce(crate::runner::InputCompletion) -> Result<()>,
 ) -> Result<Manifest> {
     use crate::runner::InputCompletion;
+    run_segment_streaming(
+        runner,
+        input,
+        output,
+        max_blocks,
+        full_digest,
+        &mut std::io::sink(),
+        |head| {
+            producer_success(if head.is_some() {
+                InputCompletion::Complete
+            } else {
+                InputCompletion::Refused
+            })
+        },
+    )
+}
+
+/// Emit provisional frames as they are executed. Consumers must not publish
+/// them without the actual successful producer exit and checkpoint. The
+/// callback receives a verified final boundary only after complete input EOF;
+/// `None` requires cancellation/refusal and cannot authorize a commit.
+pub fn run_segment_streaming<R: Read, W: Write>(
+    mut runner: crate::runner::Runner<Segment>,
+    mut input: crate::input::InputStream<R>,
+    output: &Path,
+    max_blocks: u64,
+    full_digest: bool,
+    provisional: &mut W,
+    producer_success: impl FnOnce(Option<&Boundary>) -> Result<()>,
+) -> Result<Manifest> {
     let result = (|| {
         require(
             max_blocks > 0 && max_blocks <= 50_000,
@@ -785,6 +815,7 @@ pub fn run_segment<R: Read>(
             let mut bytes = Vec::new();
             backfill_common::clock::write_frame(&mut bytes, block.frame()).map_err(error)?;
             writer.put(&bytes)?;
+            provisional.write_all(&bytes).map_err(error)?;
             blocks += 1;
         }
         let end = input.finish()?;
@@ -794,13 +825,10 @@ pub fn run_segment<R: Read>(
         )?;
         writer.output.flush().map_err(error)?;
         writer.output.get_ref().sync_all().map_err(error)?;
+        provisional.flush().map_err(error)?;
         Ok((blocks, writer.bytes, hex::encode(writer.hash.finalize())))
     })();
-    let producer = producer_success(if result.is_ok() {
-        InputCompletion::Complete
-    } else {
-        InputCompletion::Refused
-    });
+    let producer = producer_success(result.is_ok().then(|| runner.backend().boundary()));
     let (blocks, bytes, hash) = result?;
     producer?;
     fs::rename(

@@ -2,8 +2,9 @@
 
 This path builds and inspects `pinax.backfill.producer/v1` bundles. Every bundle,
 smoke receipt and discovery document remains `production_selectable: false`.
-It does not publish an image, create a release, authorize a database write or
-complete production qualification. The physical profile belongs to the target
+The offline xtask does not publish artifacts. An explicit manual workflow can
+publish a verified candidate from canonical main; that does not authorize a
+database write or complete production qualification. The physical profile belongs to the target
 configuration and is deliberately absent from this image (integrated K9).
 
 The closed runtime consists of `bin/producer`, `source.json`, the exact descriptor
@@ -56,14 +57,48 @@ checks, not evidence that Substreams ran, nor a receipt for an engine segment.
 The development tar and discovery JSON record exact bytes without inventing an
 OCI digest. Discovery validates file hashes and the unpacked closed bundle.
 
-`producer-runtime.yml` runs contract tests on PRs. Its manual candidate job
-requires an existing explicitly pinned extractor release, builds a native Linux
-image, records its real image inspection, checks `version` offline, and smokes
-the extracted same-host Linux binary. It uploads evidence only, with no registry
-push or release. The image's no-network container check is limited to `version`;
-state and stream checks must not be described as container execution. An OCI
-attachment publication/independent registry retrieval gate remains future work
-until a real candidate image and release are authorized and available.
+`producer-runtime.yml` runs contract and OCI evidence tests on PRs. Its manual
+candidate job requires an exact expected source commit and an existing explicitly
+pinned extractor release. It builds a native Linux image, records its real image
+inspection, checks `version` offline, and smokes the extracted same-host Linux
+binary. It retains an OCI archive and verifies every blob digest and size, every
+uncompressed filesystem layer, the inspected image configuration, executable
+identity and runtime/source pins. No source or binary is rebuilt for publication.
+
+`publish_candidate` defaults to false. The separate write-capable job runs only
+on an explicit manual request from main, after the candidate job succeeds. It
+requires the selected exact commit still be canonical main, downloads the
+immutable workflow artifact by ID, and revalidates its OCI identity. It publishes
+a run-specific candidate tag, independently retrieves the registry image by its
+exact manifest digest with digest preservation, and executes its `version` with
+network disabled. A prerelease then retains the OCI archive, closed runtime tar,
+discovery, smoke, registry comparison and digest-pinned publication receipt.
+That receipt binds the intended local release files; it does not itself prove
+upload success. The workflow then fetches all seven release assets without
+authentication and compares every byte pin. Only after all downloads pass does
+it retain `release-roundtrip/complete.json` in the workflow evidence. A missing,
+truncated or changed asset leaves partial evidence and a failed job, without a
+release-verification completion marker.
+Image tags are discovery aids; consumers must use the recorded `@sha256:` reference.
+Registry visibility is separate from source repository visibility and must be
+observed before unauthenticated use is claimed.
+
+The image's no-network container check is limited to `version`; state and stream
+checks must not be described as container execution. This workflow never changes
+`production_selectable`, grants live load admission, or certifies full-range
+numeric/handler coverage. OCI blob and image identity establish that the tested
+installed bytes were preserved; they are not a reproducible-compiler claim.
+
+Example manual inputs after review and canonical integration:
+
+```text
+expected_source_commit: <exact current main commit>
+publish_candidate: true
+extractor_release: aerodrome-slipstream-base-extractor-v0.1.0-candidate.1
+extractor_asset: aerodrome-slipstream-base-extractor-v0.1.0-candidate.1.spkg
+extractor_lock_asset: aerodrome-slipstream-base-extractor-v0.1.0-candidate.1.lock.json
+extractor_lock_sha256: 3d844e02d2de5017dce523e4f6c6365b566a2cd621bef431f5705fc7a0d622cd
+```
 
 ## Retained local validation
 

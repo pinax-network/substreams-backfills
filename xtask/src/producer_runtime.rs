@@ -850,7 +850,7 @@ mod tests {
             .contains("special entry"));
     }
     #[test]
-    fn workflow_is_read_only_and_separates_manual_image_build_from_pr_checks() {
+    fn workflow_separates_read_only_candidate_from_explicit_main_publication() {
         let value: serde_yaml::Value =
             serde_yaml::from_str(include_str!("../../.github/workflows/producer-runtime.yml"))
                 .unwrap();
@@ -868,6 +868,50 @@ mod tests {
         assert!(steps
             .iter()
             .all(|s| !s["run"].as_str().unwrap_or("").contains("docker push")));
+        assert!(value["jobs"]["candidate"]["permissions"].is_null());
+        assert_eq!(
+            value["on"]["workflow_dispatch"]["inputs"]["publish_candidate"]["default"].as_bool(),
+            Some(false)
+        );
+        let publish = &value["jobs"]["publish"];
+        assert_eq!(publish["if"].as_str(), Some("github.event_name == 'workflow_dispatch' && inputs.publish_candidate && github.ref == 'refs/heads/main'"));
+        assert_eq!(publish["needs"].as_str(), Some("candidate"));
+        assert_eq!(publish["permissions"]["contents"].as_str(), Some("write"));
+        assert_eq!(publish["permissions"]["packages"].as_str(), Some("write"));
+        let steps = publish["steps"].as_sequence().unwrap();
+        let checks = steps
+            .iter()
+            .position(|s| {
+                s["name"].as_str()
+                    == Some("Verify retained image and require unchanged canonical main")
+            })
+            .unwrap();
+        let registry = steps
+            .iter()
+            .position(|s| {
+                s["name"].as_str()
+                    == Some("Publish candidate and independently retrieve its exact OCI manifest")
+            })
+            .unwrap();
+        let release = steps
+            .iter()
+            .position(|s| {
+                s["name"].as_str() == Some("Publish retained non-final evidence as a prerelease")
+            })
+            .unwrap();
+        assert!(checks < registry && registry < release);
+        let check = steps[checks]["run"].as_str().unwrap();
+        assert!(check.contains("git ls-remote origin refs/heads/main"));
+        assert!(check.contains("EXPECTED_SOURCE") && check.contains("GITHUB_SHA"));
+        let registry = steps[registry]["run"].as_str().unwrap();
+        assert!(registry.contains("--preserve-digests"));
+        assert!(registry.contains("--expected-manifest"));
+        assert!(registry.contains("docker run --rm --network none"));
+        assert!(registry.contains("--password-stdin"));
+        assert!(steps[release]["run"]
+            .as_str()
+            .unwrap()
+            .contains("--prerelease --latest=false"));
     }
     #[test]
     fn parser_refuses_unknown_and_duplicate_options() {

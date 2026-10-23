@@ -64,7 +64,7 @@ Target:
    - The output is raw `Null | Value(bytes)` with Graph Node's revert rules.
    - Send `X-substreams-acknowledge-non-deterministic: true`.
    - Audit every answer against an independent archive before the backfill (G6).
-6. **C10 is not emitted.** That is `getPool(USDC, token, {100,500,3000,10000})` in `addMissingWhitelistedPools`. `getPool` is a public mapping getter, so it cannot revert (SLIP@37eead2c7e `CLFactory.sol:39`), and the mapping discards the results (TARGET §5.3). This agrees with RED §4.1. The audit module can still derive C10 from `store_pools` for cassette completeness.
+6. **C10 must be emitted.** The deployed `addMissingWhitelistedPools` calls `getPool(USDC, token, {100,500,3000,10000})` in that order for a zero-version token other than USDC. Although its getter-copy mutations are discarded, the host calls remain required input facts. The extractor supplies a conservative superset for both registered tokens on every decoded Swap, using end-of-block `store_pools`; only the reducer knows token version. Full M2 call coverage has no C10 exception. The old omission produced 44 missing calls in the retained 75,959-block live attempt despite frame parity, and is a qualification blocker.
 7. **Toolchain** (VERIFIED in V4):
    - Rust 1.90.0, `substreams =0.7.6`, `substreams-ethereum =0.11.1`, `prost =0.13.5`, `ethabi =17.2.0`;
    - `getrandom =0.2.16` with `custom`, Substreams CLI v1.20.3 with sha256 `90c71d04…f8675`;
@@ -934,7 +934,7 @@ All answers are **end-of-block**, so there is one answer per distinct key per bl
 | **C7** `ticks(i)` (swap walk) | §8.6 window ∩ markers | same | §8.6 |
 | **C8** `positions(tokenId)` | every NPM candidate's tokenId (`topics[1]`; Transfer `topics[3]`) | fragment `f:{id};` absent → `reverted`. Otherwise poolKey `k:{poolId}:{0,1};` gives token0, token1 and ts (absent → `MISSING_POOL_KEY`), and `w:{id}:{2,3};` gives fgi (absent → 0). | §2.5. `reverted` iff poolId == 0 at end of block (VERIFIED for mint+burn and burn-in-block cases, P8/P9). |
 | **C9** `getPool(t0,t1,ts)` | each non-reverted C8 answer's `(token0, token1, tick_spacing)` | `store_pools.get_last("g:{t0}:{t1}:{ts};")`; absent → zero address | Only `createPool` writes `getPool`, together with `PoolCreated` (§2.6). End-of-block includes this block's creations (VERIFIED P11). |
-| C10 | **not emitted** | — | `getPool` cannot revert; the results are discarded (TARGET §5.3, RED §4.1) |
+| **C10** `getPool(USDC,token,tier)` | each decoded Swap, both registered pool tokens except USDC, literal third arguments 100/500/3000/10000; union/deduplicate with C9 | same end-of-block registry lookup as C9; absent → zero address | Exact deployed helper call keys; conservative superset because token version is reducer state. Getter-copy side effects being discarded does not exempt host-call evidence. |
 
 - The answer value is computed with **`get_last`** on the carry store, which is the end-of-block state after this block's sets and deletes (`SS7:store.rs:886-890`).
 - Provenance: `IN_BLOCK` when the stored `block == number`, `CARRIED` otherwise, `ZERO` when the key is absent.
@@ -1113,7 +1113,7 @@ Each fixture has:
 | X-NPM-START | 13,843,719 | NPM deployment block; gating of `npm_start` |
 | **X-CREATE** (≙ RED F-W1) | 13,899,663 | first `PoolCreated`; Initialize(171) **before** PoolCreated(172); wave-0 = [172, 177 NPM Transfer, 178 IncreaseLiquidity], wave-1 = [171 Initialize, 176 Mint]; C9 same-block `getPool(USDC,USDbC,1)` = `0x98c7…`; C8 tokenId 1 from in-block writes; C1–C4 for USDC/USDbC; clone check; deposit tx at index 0; 4 failed txs with call logs but no receipt logs |
 | X-GUARD | 14,317,993 | NPM block-guard block: no NPM candidates (TARGET §5.6) |
-| X-FIRST-SWAP | 13,908,606 | first Swap of pool `0x98c7…` (tx `0xcf266230…ef82`, log 36): walk window from the Initialize tick via `get_first`; first-swap tokens (C10 audit-only) |
+| X-FIRST-SWAP | 13,908,606 | first Swap of pool `0x98c7…` (tx `0xcf266230…ef82`, log 36): walk window from the Initialize tick via `get_first`; first-swap tokens (C10 required answers) |
 | **X-REVERTED-WRITES** | 30,000,000 | reverted-call writes on pool `0x1d6aaa7a…f450` (tx `0x09d08c55…167c`, call 394) must not reach carry; fg0 carried (§8.3); tick m2 crossing on pool `0x3f0296bf…`; NPM tokenId 13220430 in-block |
 | **X-DENSE-FLASH** | 34,719,819 | 222 candidates (20 Swap, 59 Burn, 58 NPM Collect, 51 Transfer, 27 Decrease, 3 Mint, 3 Increase, **1 Flash** on `0x82321f3b…` ts=200, fg1 in-block / fg0 carried); mixed tick words; carried NPM fgi (23666543, 23372431, 22397417 ≈2^256); **burn-in-block revert** tokenId 23665747 (tx `0xa8926ee2…a6e3`) |
 | X-FLASH2 | 34,724,167 | second Flash, pool `0x0c1a09d5…8a3b` (Factory `0x5e7b…`, ts 1) |
@@ -1154,7 +1154,7 @@ Inputs:
 
 `cargo xtask aerodrome-substreams differential` checks:
 
-1. **Coverage.** Every cassette key `(block_hash, address, calldata)` maps through `core::calls::CallKey` to an extractor answer. The exception is C10 keys `getPool(USDC,·,{100,500,3000,10000})`; those are checked against `store_pools` through `map_slot_audit`.
+1. **Coverage.** Every cassette key `(block_hash, address, calldata)` maps through `core::calls::CallKey` to an extractor answer. This includes every C10 key `getPool(USDC,·,{100,500,3000,10000})`; no query-key injection or audit-only substitution may repair an incomplete live output.
 2. **Equality** on consumed fields:
    - ERC20: `Null ⇔ reverted`, `Value` bytes equal;
    - fee growth: full 32 bytes;
@@ -1248,7 +1248,7 @@ Inputs:
 | Typed event payloads instead of raw logs | rejected | Puts Graph Node ABI semantics into the extractor, against RED §0.2 |
 | `RpcBatch` decoded ERC20 values | rejected | `RpcBatch::decode` folds revert and decode failure into `None` (substreams-reuse §4.2.2); the raw form keeps Graph Node's rules in one place |
 | A storage-derived `getPool` (factory slot 6) | audit only | The event registry is exact and cheaper (§2.6) |
-| Emitting C10 | rejected | Non-reverting getter, results discarded (§0.6) |
+| Omitting C10 | rejected after actual M2 failure | Getter-copy mutations are discarded but host calls must be present (§0.6); all-cassette coverage is mandatory. |
 | Frame-based storage filter (delegatecall into the implementation) | rejected for correctness, allowed as a prefilter | §8.3 Step 2 |
 | `Log.index` / call-iteration log order | rejected | v5 counts reverted logs; call order ≠ receipt order (§2.7) |
 
@@ -1278,7 +1278,7 @@ Inputs:
 | **PR-X2** | Candidates + registry | `extract` crate: `build.rs` Abigen with sha256 pins, `map_pools_created` (clone check), `map_candidates`; `stores::store_pools`; fixture lock `block-fixtures-base-v1` (shared with PR-S2) + X-START, X-NPM-START, X-CREATE, X-GUARD; goldens; wave-order test | G0, G1 (candidate part) | PR-X1; RED proto sign-off |
 | **PR-X3** | Storage deltas + carry stores | `map_storage_deltas`, `store_pool_slots`, `store_tick_slots_00..07`, `store_position_slots_00..15`, `store_pool_last_tick`; `xtask … capture-fixture` (Firehose `.pb` + `carry/` + `oracle/` by block hash); fixtures X-REVERTED-WRITES, X-DENSE-FLASH, X-FLASH2, X-V4-SWAPS, X-V5-DENSE, X-V4-LAST/X-V5-FIRST | G1, **G2** | PR-X2 |
 | **PR-X4** | Answers + RPC | `rpc::map_token_metadata`; `answers::{map_tick_answers, map_position_answers, map_extractor_block}`; X-FIRST-SWAP; full goldens; `pack` + `info` graph checks; `cache-boundary` | G0–G2 | PR-X3 |
-| **PR-X5** | Live verify + differential tooling | `xtask … verify-live`, `differential` (cassette + reference extractor + order parity), `audit-erc20`, `find-fixtures`; `audit::map_slot_audit` (C10 + factory slot-6 cross-check); run G3 on non-final builds | G3 | PR-X4; PR-S2 bundle for differential runs |
+| **PR-X5** | Live verify + differential tooling | `xtask … verify-live`, `differential` (cassette + reference extractor + order parity), `audit-erc20`, `find-fixtures`; `audit::map_slot_audit` (factory slot-6 cross-check; C10 must already be in public answers); run G3 on non-final builds | G3 | PR-X4; PR-S2 bundle for differential runs |
 | **PR-X6** | Measurements (evidence only) | 1-block, then 100k-block noop smoke via the generic noop WorkflowTemplate (PR-K1) on kan/riv; G5 store sizes and timings; G6 ERC20 audit on smoke ranges; G4 on W1–W3; decide baseline vs Option R | G4, G5, G6 | PR-X5, PR-K1, PR-S2, RED R7 |
 | **PR-X7** | Freeze + release | lock JSON, committed certified bytes, `release.yml` per-tag policy, tag `aerodrome-slipstream-base-extractor-v0.1.0`; consumer pin snippet for the reducer descriptor and k8s | G7 | G4 + G5 green; user go-ahead for the full-range noop |
 

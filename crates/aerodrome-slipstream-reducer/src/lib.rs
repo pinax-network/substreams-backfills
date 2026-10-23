@@ -15,6 +15,8 @@ pub mod hosts;
 pub mod identity;
 pub mod input;
 pub mod producer_cli;
+#[cfg(feature = "reference-extractor")]
+pub mod reference;
 pub mod runner;
 pub mod runtime;
 pub mod state;

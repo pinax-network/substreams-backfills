@@ -405,6 +405,70 @@ Without the update variable the original WASM executes again and the entire
 fixture must match byte for byte. The generator runs with recording disabled;
 no sockets or live RPC are needed after the existing first-block asset is hydrated.
 
+### Development reference extractor (M1 input)
+
+The `reference-extractor` feature converts original Firehose protobufs into
+native `ExtractorBlock` BCF1. It reuses the development extractor's candidate,
+storage, carry, tick-walk and call-answer code, then compares **every retained
+mapping call** with the independent cassette. Tick comparisons consume words
+2 and 3 of the full ten-word return; positions consume the deployed fields of
+the twelve-word return. Extra derived answers are permitted. Missing metadata,
+hash disagreements, storage/RPC disagreements and anomalies refuse the range.
+No missing answer is filled with a fabricated zero or revert.
+
+This is native reference input, not proof that a live Substreams package
+executes correctly. Registration uses the Graph Node decoder, as does the
+reference-only diagnostic `decoded` flag. The real package's generated ABI
+flag remains a separate comparison. ERC20 values come directly from the
+cassette; ambiguous null metadata is refused because the old cassette cannot
+distinguish failed RPC from empty return. The retained 20,000-block cassette
+has no null ERC20 values. Null positions are checked against actual derived
+storage reverts. Additional getPool calls retained for the mapping's token
+version upgrades are answered from the real pool registry and compared.
+
+`mapping-host/examples/capture_firehose_raw.rs` preserves the original
+protobuf bytes under the existing Firehose finality, type, block-number and
+concatenation guards. It checks every parent hash, only reconnects classified
+transport failures, and writes `capture-success.json` after the requested
+range and actual clean server EOF. Interrupted attempts have no completion
+receipt. Its payload type is `sf.ethereum.type.v2.Block`, despite using BCF1
+framing; it is not reducer input by itself.
+
+`aerodrome-reference-input` admits one or more disjoint capture directories in
+ascending order, starting at 13,843,704. It validates each complete receipt,
+source/binary pins, every index entry, raw digest, every protobuf/header identity
+and the parent link across every boundary before extraction starts. It then
+rereads the same open files and checks their digests again. This virtual join
+avoids copying the entire raw archive; its receipt records the SHA-256 of the
+byte concatenation and all individual receipts. Output goes to a new directory
+and `complete.json` is written last, only after all frames and the exact range
+finish. Partial output is not a completed reference input.
+
+```console
+cargo +1.98.0 run --locked -p aerodrome-slipstream-reducer \
+  --features reference-extractor --bin aerodrome-reference-input -- \
+  NEW_OUTPUT_DIRECTORY CASSETTE_JSON CASSETTE_SHA256 \
+  CAPTURE_SOURCE_COMMIT CAPTURE_BINARY_SHA256 REFERENCE_SOURCE_COMMIT \
+  CAPTURE_DIRECTORY_0 CAPTURE_DIRECTORY_1
+```
+
+The committed first-pool cassette is an exact 12-entry projection of the
+retained independently recorded cassette, SHA-256
+`1dabafa49d6c0e7725fd0a0a76975c22db183931cf56a2c76f12b35060fc61e3`.
+The test independently checks all call values against raw block SHA-256
+`5ac312712fef494a8c03f62c0987bba3339c5f693187e5f272467eee06af59ce`
+and compares the complete resulting extractor message with the retained fixture.
+Negative tests cover receipt/stream mutation, missing EOF, discontinuity,
+concatenated protobuf messages, wrong hashes, poisoned state, ambiguous/partial
+metadata, and storage/cassette mismatch.
+
+An explicitly ignored diagnostic can replay an early R1 prefix against the
+retained complete Graph Node envelopes using test-only empty state at the first
+pool. It reports per-handler counts, masks only compatibility ID, and does not
+qualify the root prefix, raw-capture completion or the full M1 window. The public
+reference API accepts only the deployment root; it has no arbitrary-height
+empty-state entry point.
+
 ## Offline root replay and frame comparison
 
 Two development binaries consume retained artifacts. They do not implement the

@@ -86,6 +86,12 @@ jobs:
         run: |
           cargo xtask evidence fetch --lock aerodrome-slipstream-base/fixtures/blocks.lock.json --cache-dir ~/.cache/substreams-backfills/aerodrome-evidence
           cargo xtask evidence fetch --lock mapping-host/evidence/aerodrome-root-window.lock.json --cache-dir ~/.cache/substreams-backfills/aerodrome-evidence
+      - name: Verify native Aerodrome reference input
+        # Uses the hydrated raw Base block and committed cassette projection.
+        # The live R1 diagnostic is explicitly ignored; no sockets are opened.
+        run: |
+          cargo test -p aerodrome-slipstream-reducer --locked --features reference-extractor
+          cargo clippy -p aerodrome-slipstream-reducer --locked --features reference-extractor --all-targets -- -D warnings
       - name: Check formatting
         working-directory: mapping-host
         run: cargo fmt --all --check

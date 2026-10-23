@@ -131,7 +131,7 @@ pub struct CallAnswers {
     /// C8
     #[prost(message, repeated, tag = "4")]
     pub positions: ::prost::alloc::vec::Vec<PositionAnswer>,
-    /// C9
+    /// C9 and C10
     #[prost(message, repeated, tag = "5")]
     pub get_pool: ::prost::alloc::vec::Vec<GetPoolAnswer>,
 }

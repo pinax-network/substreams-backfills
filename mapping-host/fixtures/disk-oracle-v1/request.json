@@ -1,0 +1,130 @@
+{
+  "schema": "pinax.mapping-host.disk-oracle-request/v1",
+  "segment": "/opt/mapping-host/segments/QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV",
+  "output": "/output/disk-oracle",
+  "seed_binding": {
+    "snapshot": {
+      "deployment": "QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV",
+      "network": "base",
+      "descriptor_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "retention_sha256": "544b669a6edb276ccb420e9e2fc5115a2ce7eb61c03d7d3ff4c4f7c7ea4b6e18",
+      "type_ordinals": [
+        "Bundle",
+        "Burn",
+        "Collect",
+        "Factory",
+        "Flash",
+        "Mint",
+        "Pool",
+        "PoolDayData",
+        "PoolHourData",
+        "Position",
+        "PositionSnapshot",
+        "Swap",
+        "Tick",
+        "TickDayData",
+        "TickHourData",
+        "Token",
+        "TokenDayData",
+        "TokenHourData",
+        "Transaction",
+        "UniswapDayData"
+      ],
+      "entity_id_policy": "string-only"
+    },
+    "purpose": "oracle",
+    "boundary": {
+      "block_number": 13899663,
+      "block_hash": [
+        216,
+        48,
+        66,
+        182,
+        163,
+        45,
+        201,
+        177,
+        141,
+        76,
+        124,
+        152,
+        25,
+        185,
+        20,
+        188,
+        4,
+        71,
+        15,
+        119,
+        69,
+        142,
+        114,
+        118,
+        203,
+        114,
+        243,
+        216,
+        253,
+        229,
+        235,
+        61
+      ]
+    },
+    "start_block": 13843704,
+    "target": {
+      "schema": "sgd42",
+      "site_id": 42,
+      "database": "graph",
+      "system_identifier": "123456789"
+    },
+    "profile_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+    "catalog_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+    "schema_sha256": "09d7c40167fc27c3aa2de0ec003fe7b0b469e132943cc26dcd4db6064769d0e8",
+    "raw_manifest_sha256": "d93714e7ba268a91278f5c7c6a5b4ef71920d13b7e8d517f3542fb4a2edf6b20",
+    "capture_binary_sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+    "creating_graph_node": {
+      "version": "0.44.0",
+      "commit": "77823b5a7adc4eac4abf03202c8dd7cb00dea31d"
+    },
+    "spec_version": "1.2.0",
+    "manifest_graft": null,
+    "landing_graft": null
+  },
+  "seed_manifest": {
+    "path": "/fixtures/disk-seed/seed-manifest.json",
+    "bytes": 5934,
+    "sha256": "3ef151748abf437c5464427fd3b68c0636650ea0e7ea1f5f569c6e281b1df49a"
+  },
+  "seed_snapshot": {
+    "path": "/fixtures/disk-seed/seed.bcgsnap",
+    "bytes": 11426,
+    "sha256": "484b77fda65eb6a9d4a218fd47693c0827c64399ae343936de2f43feb216565b"
+  },
+  "rpc_cassette": {
+    "path": "/fixtures/disk-seed/rpc-cassette.json",
+    "bytes": 80886,
+    "sha256": "babb0c3118acad07222c3b16731f4fecd96752f69c962526df249286face590b"
+  },
+  "input": {
+    "kind": "fixtures",
+    "blocks": [
+      {
+        "path": "/fixtures/disk-seed/block-0.pb",
+        "bytes": 1065,
+        "sha256": "7fc07d64fff54bcacedae3b6ec9587366461deae5f0f8171ae19fdbcbc227b31"
+      },
+      {
+        "path": "/fixtures/disk-seed/block-1.pb",
+        "bytes": 1065,
+        "sha256": "4366249cf035a836ec30f288ee46ddb631d88c60793db49d2895192971408c5e"
+      }
+    ]
+  },
+  "to_exclusive": 13899666,
+  "partition_blocks": 1,
+  "timeout_seconds": 60,
+  "overlay_keys": 100000,
+  "overlay_bytes": 67108864,
+  "cache_keys": 100000,
+  "sources": 100
+}

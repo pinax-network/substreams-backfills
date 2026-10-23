@@ -77,12 +77,13 @@ use crate::checkpoint::{
     HostCheckpoint,
 };
 use crate::descriptor;
+mod disk_seed;
 use crate::poi;
 use crate::report::{
     BlockReport, CreatedDataSourceReport, HandlerGroupReport, HandlerReport, ModificationReport,
     PoiReport, RunReport, TriggerReport,
 };
-use crate::store::{MemoryStore, NoEnsLookup, StoreUndo};
+use crate::store::{HostStore, MemoryStore, NoEnsLookup, StoreUndo};
 use crate::store_state::{self, StoreEntityId, StorePoi, StoreValue};
 
 /// The graph-node revision every artifact in this crate is bound to.
@@ -103,6 +104,15 @@ pub struct SegmentHostConfig<'a> {
     pub record: bool,
 }
 
+/// Limits refuse the oracle attempt; they never evict state or synthesize a
+/// successful partial report. The pinned Graph Node LFU policy is unchanged.
+#[derive(Clone, Copy, Debug)]
+pub struct DiskRunLimits {
+    pub sources: usize,
+    pub cache_keys: usize,
+    pub blocks: usize,
+}
+
 /// One block's results: the human-readable report, and the canonical frame.
 pub struct BlockOutcome {
     pub report: BlockReport,
@@ -121,7 +131,7 @@ pub struct SegmentHost {
     builder: RuntimeHostBuilder<Chain>,
     metrics: Arc<HostMetrics>,
     stopwatch: StopwatchMetrics,
-    store: Arc<MemoryStore>,
+    store: Arc<HostStore>,
     cassette: Arc<Cassette>,
     hosts: Vec<Arc<Host>>,
     module_cache: HashMap<String, MappingSender>,
@@ -143,6 +153,10 @@ pub struct SegmentHost {
     /// Blocks replayed since this host was loaded or restored. A checkpoint may
     /// only be restored into a host that has replayed none.
     blocks_processed: usize,
+    disk_limits: Option<DiskRunLimits>,
+    disk_failed: bool,
+    disk_boundary: Option<(i32, String)>,
+    disk_cassette_sha256: Option<String>,
 }
 
 /// The block range this segment's own manifest claims.
@@ -192,14 +206,18 @@ impl SegmentHost {
     /// Load a bundle, resolve its manifest through graph-node, and instantiate a
     /// host for every manifest data source, in manifest order.
     pub async fn load(config: SegmentHostConfig<'_>) -> Result<Self> {
-        Self::load_mode(config, false).await
+        Self::load_mode(config, false, None).await
     }
 
     pub async fn load_in_band(config: SegmentHostConfig<'_>) -> Result<Self> {
-        Self::load_mode(config, true).await
+        Self::load_mode(config, true, None).await
     }
 
-    async fn load_mode(config: SegmentHostConfig<'_>, data_sources_in_band: bool) -> Result<Self> {
+    async fn load_mode(
+        config: SegmentHostConfig<'_>,
+        data_sources_in_band: bool,
+        supplied_cassette: Option<Arc<Cassette>>,
+    ) -> Result<Self> {
         crate::env_pin::pin();
 
         let logger = Logger::root(slog::Discard, o!());
@@ -214,7 +232,10 @@ impl SegmentHost {
         } else {
             CassetteMode::Replay
         };
-        let cassette = Arc::new(Cassette::load(config.cassette_path, mode)?);
+        let cassette = match supplied_cassette {
+            Some(cassette) => cassette,
+            None => Arc::new(Cassette::load(config.cassette_path, mode)?),
+        };
 
         let deployment = manifest.id.cheap_clone();
         let network = manifest.network_name();
@@ -240,7 +261,7 @@ impl SegmentHost {
         ));
 
         let schema = manifest.schema.cheap_clone();
-        let store = Arc::new(MemoryStore::new(schema));
+        let store = Arc::new(HostStore::Memory(MemoryStore::new(schema)));
 
         // The recorder is the whole point of the vendored graph-runtime-wasm: it
         // observes every store effect beside the PoI write that hashes it, in
@@ -381,6 +402,10 @@ impl SegmentHost {
             grafted: manifest.graft.is_some(),
             dynamic: Vec::new(),
             blocks_processed: 0,
+            disk_limits: None,
+            disk_failed: false,
+            disk_boundary: None,
+            disk_cassette_sha256: None,
         };
 
         // Manifest data sources first, in manifest order. That order feeds host
@@ -514,7 +539,7 @@ impl SegmentHost {
         boundary: CheckpointBoundary,
         poi: Option<StorePoi>,
     ) -> Result<HostCheckpoint> {
-        let stored = self.store.snapshot();
+        let stored = self.store.snapshot()?;
         let poi_type = self.store.poi_typename();
 
         let mut cached: BTreeSet<EntityKey> = BTreeSet::new();
@@ -635,7 +660,7 @@ impl SegmentHost {
                 cached_keys.push(key);
             }
         }
-        self.store.restore(rows);
+        self.store.restore(rows)?;
 
         // The cache is rehydrated from the store rather than from the file: the
         // store is the authority, and an entry that disagreed with it would be
@@ -644,14 +669,14 @@ impl SegmentHost {
         for key in cached_keys {
             let entity = self
                 .store
-                .lookup(&key)
+                .lookup(&key)?
                 .ok_or_else(|| anyhow!("a cached checkpoint row vanished from the store"))?;
             lfu.insert(key, Some(Arc::new(entity)));
         }
         for identity in &checkpoint.cached_absent {
             let key = blockchanges::key_from_wire(&schema, &identity.to_wire())
                 .context("restoring a cached absence")?;
-            if self.store.lookup(&key).is_some() {
+            if self.store.lookup(&key)?.is_some() {
                 bail!(
                     "the checkpoint records a `{}` row as a cached absence but also carries it as \
                      a live row",
@@ -666,8 +691,11 @@ impl SegmentHost {
         // earlier one is caught here rather than silently shortening the host
         // set. A recorded data source was added when it was recorded, so
         // replaying the list in order must add every one of them.
-        let recorded = checkpoint.data_sources.clone();
-        for data_source in &recorded {
+        self.restore_sources(&checkpoint.data_sources)
+    }
+
+    fn restore_sources(&mut self, recorded: &[CheckpointDataSource]) -> Result<()> {
+        for data_source in recorded {
             let template = self
                 .templates
                 .iter()
@@ -737,7 +765,7 @@ impl SegmentHost {
         range: Option<store_state::StoreRange>,
         poi: Option<store_state::StorePoi>,
     ) -> Result<store_state::StoreState> {
-        let rows = self.store.snapshot();
+        let rows = self.store.snapshot()?;
         let (entities, poi_entities) = store_state::split_rows(&rows, &self.store.poi_typename())?;
         let fields = entities.iter().map(|entity| entity.fields.len()).sum();
         Ok(store_state::StoreState {
@@ -863,6 +891,12 @@ impl SegmentHost {
             if self.hosts.contains(&host) {
                 continue;
             }
+            if self
+                .disk_limits
+                .is_some_and(|l| self.dynamic.len() >= l.sources)
+            {
+                bail!("disk oracle dynamic source budget exceeded");
+            }
             self.hosts.push(host.cheap_clone());
             self.dynamic.push(record);
             added.push(host);
@@ -872,6 +906,40 @@ impl SegmentHost {
 
     /// Replay one block.
     pub async fn process_block(&mut self, raw_block: BlockFinality) -> Result<BlockOutcome> {
+        if self.disk_failed {
+            bail!("disk oracle attempt is poisoned after a previous failure");
+        }
+        if let Some(limits) = self.disk_limits {
+            if self.blocks_processed >= limits.blocks {
+                bail!("disk oracle block budget exceeded");
+            }
+            let identity = block::identify(&raw_block);
+            let (number, hash) = self
+                .disk_boundary
+                .as_ref()
+                .ok_or_else(|| anyhow!("disk seed boundary missing"))?;
+            if number.checked_add(1) != Some(identity.number)
+                || identity.parent_hash.as_ref() != Some(hash)
+            {
+                self.disk_failed = true;
+                bail!("disk oracle block does not extend its exact seed/replay boundary");
+            }
+        }
+        let result = self.process_block_inner(raw_block).await;
+        if self.disk_limits.is_some() {
+            match &result {
+                Ok(outcome) => {
+                    self.disk_boundary = Some((outcome.report.number, outcome.report.hash.clone()));
+                }
+                Err(_) => {
+                    self.disk_failed = true;
+                }
+            }
+        }
+        result
+    }
+
+    async fn process_block_inner(&mut self, raw_block: BlockFinality) -> Result<BlockOutcome> {
         let identity = block::identify(&raw_block);
         let shared_block = Arc::new(raw_block);
         let block_ptr: BlockPtr = shared_block.ptr();
@@ -1012,7 +1080,7 @@ impl SegmentHost {
                 self.hosts.truncate(original_host_count);
                 self.dynamic.truncate(original_dynamic_count);
             }
-            self.store.rollback(pre_block);
+            self.store.rollback(pre_block)?;
             self.lfu_cache = EntityLfuCache::default();
         }
 
@@ -1035,7 +1103,7 @@ impl SegmentHost {
                 .as_modifications(block_ptr.number, &self.stopwatch)
                 .await?;
             self.lfu_cache = entity_lfu_cache;
-            self.store.apply(&modifications);
+            self.store.apply(&modifications)?;
 
             if !paused.is_empty() {
                 let finished = poi::finish(&block_ptr, &self.deployment, self.poi_version, &paused);
@@ -1071,6 +1139,12 @@ impl SegmentHost {
         let mut changes = pb::BlockChanges::from(changes);
         changes.created_data_sources = accepted_creations;
         self.blocks_processed += 1;
+        if self
+            .disk_limits
+            .is_some_and(|l| self.lfu_cache.iter().count() > l.cache_keys)
+        {
+            bail!("disk oracle LFU key budget exceeded; refusing without changing eviction policy");
+        }
         Ok(BlockOutcome { report, changes })
     }
 
@@ -1164,13 +1238,32 @@ impl SegmentHost {
             // modifications reach the store: `visible_before` must read the
             // entity as it stood when the handler started.
             let recorded = self.recorder.drain();
-            let store = self.store.cheap_clone();
+            // The shared builder's lookup callback is infallible. Read every
+            // baseline first so a disk failure aborts instead of becoming a
+            // fabricated absent entity. Multiple saves share one baseline.
+            let mut baselines = BTreeMap::new();
+            for op in &recorded {
+                let key = match op {
+                    blockchanges::RecordedOp::Set { native_key, .. } => Some(native_key),
+                    blockchanges::RecordedOp::Remove { native_key, .. } => native_key.as_ref(),
+                };
+                if let Some(key) = key {
+                    if !baselines.contains_key(key) {
+                        baselines.insert(
+                            key.clone(),
+                            self.store
+                                .lookup(key)?
+                                .map(|e| blockchanges::convert_entity(&e)),
+                        );
+                    }
+                }
+            }
             ops.push_handler(
                 u64::from(handler_group_order),
                 source_trigger_order as u64,
                 handler_order as u64,
                 recorded,
-                |key| store.lookup(key).map(|e| blockchanges::convert_entity(&e)),
+                |key| baselines.get(key).cloned().flatten(),
             )?;
 
             let created = state.drain_created_data_sources();
@@ -1184,7 +1277,7 @@ impl SegmentHost {
                 .as_modifications(block_number, &self.stopwatch)
                 .await?;
             self.lfu_cache = entity_lfu_cache;
-            self.store.apply_recording(&modifications, pre_block);
+            self.store.apply_recording(&modifications, pre_block)?;
 
             let created_reports: Vec<CreatedDataSourceReport> = created
                 .iter()

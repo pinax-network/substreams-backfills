@@ -129,7 +129,7 @@
     "bundle_lock_sha256": "d6f3dfe7f84145a5140d9c8f3e106f1ffbe74f05d02b29847917eeb2fa51725e",
     "kind": "mapping_host_oracle",
     "repository": "pinax-network/substreams-backfills",
-    "source_closure_sha256": "f3edab9536ae8cd3e75e66c786cfc3d7f7935a38e3b1bf50e17ca05574f1ff32"
+    "source_closure_sha256": "e744d322c196394a900ff3811cf036e9f49fe2d5e90ea9e3d44f1aa3f8991581"
   },
   "spec_version": "1.2.0",
   "start_block": 13843704,

@@ -1,0 +1,20 @@
+{
+  "format": "pinax.backfill.producer-smoke/v1",
+  "production_selectable": false,
+  "runtime_sha256": "5b976e577fd39b0c758c5ec155a768f2aac83e63a9a906de5251ca8f484487e9",
+  "source_commit": "bd9a88d120e9c846e583a81a257d988e6988aadf",
+  "checks": [
+    "version_identity",
+    "stage_identity",
+    "stage_no_clobber",
+    "non_final_refusal",
+    "empty_seed"
+  ],
+  "process_exits": {
+    "non_final_seed": 5,
+    "seed": 0,
+    "stage": 0,
+    "stage_existing": 4,
+    "version": 0
+  }
+}

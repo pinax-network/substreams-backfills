@@ -3666,6 +3666,8 @@ dependencies = [
 name = "xtask"
 version = "0.1.0"
 dependencies = [
+ "aerodrome-slipstream-reducer",
+ "backfill-common",
  "chrono",
  "flate2",
  "hex",

@@ -9,6 +9,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "320119579fcad9c21884f5c4861d16174d0e06250625266f50fe6898340abefa"
 
 [[package]]
+name = "aerodrome-call-cassette"
+version = "0.1.0"
+dependencies = [
+ "aerodrome-extractor-audit",
+ "aerodrome-extractor-core",
+ "aerodrome-slipstream-reducer",
+ "backfill-common",
+ "hex",
+ "libc",
+ "prost 0.13.5",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tempfile",
+ "ureq",
+]
+
+[[package]]
 name = "aerodrome-decimal-audit"
 version = "0.1.0"
 dependencies = [

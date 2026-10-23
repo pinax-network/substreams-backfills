@@ -5,6 +5,7 @@ members = [
     "crates/graph-numerics",
     "crates/aerodrome-slipstream-reducer",
     "crates/aerodrome-decimal-audit",
+    "crates/aerodrome-call-cassette",
     "crates/uniswap-v3-overlay-pb",
     "crates/uniswap-v3-reducers",
     "crates/uniswap-v3-runtime",

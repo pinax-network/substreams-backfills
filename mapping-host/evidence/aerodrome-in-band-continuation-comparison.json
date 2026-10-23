@@ -1,0 +1,76 @@
+{
+  "accepted_creations": [],
+  "cache_residency": {
+    "cached_only_in_in_band": 392,
+    "cached_only_in_legacy": 387,
+    "classification": "cache residency differs independently of identical materialized rows; full continuation checkpoint equality is not claimed",
+    "differing_rows": 779
+  },
+  "checkpoint_sha256": "8ce936c49894d226ee030caef4e394154f35fbcdfcba6a2d476ad4cb7142bad8",
+  "claim": "oracle v1 projection and semantic replay equivalence; no deployed indexer parity claim",
+  "compatibility_id": "2567c0bb63a8b09df4b8943ab4eae3fd6ae2e9592caa64faa722a37decd74357",
+  "initial_checkpoint_sha256": "dfdc9dbec7b4434a709b394f7de076200c3f5559148bc908e9098baec5ee8941",
+  "initial_source_count": 13,
+  "input_pins_in_argument_order": [
+    {
+      "bytes": 5066,
+      "sha256": "0d04fcf25b04430545ec8f4e7b995aadda4444f66eeeaf9f2ce6402c2332996d"
+    },
+    {
+      "bytes": 6028,
+      "sha256": "2567c0bb63a8b09df4b8943ab4eae3fd6ae2e9592caa64faa722a37decd74357"
+    },
+    {
+      "bytes": 287416,
+      "sha256": "d0f37e7123c550ed9c10e30b6d4070ca47e11e5ac55bbc3cd3e1299058bef468"
+    },
+    {
+      "bytes": 287416,
+      "sha256": "f76e13815594caf12cdb72b14d7917b47b14a99b1578d4620c134f517870e755"
+    },
+    {
+      "bytes": 193951,
+      "sha256": "c15ab295712887a57177e5f54cee304163ae752dbb0b9233e562431bb6af1865"
+    },
+    {
+      "bytes": 193951,
+      "sha256": "b1d2ac6d457181d37a993c2dc13d94f1618c6f52e64e78df892261ea47b53e54"
+    },
+    {
+      "bytes": 14775201,
+      "sha256": "8ce936c49894d226ee030caef4e394154f35fbcdfcba6a2d476ad4cb7142bad8"
+    },
+    {
+      "bytes": 14775206,
+      "sha256": "e035f36b08233f734a06b5649d96d30a12551800731a04f9a41304681fa7d3ae"
+    },
+    {
+      "bytes": 12858950,
+      "sha256": "dfdc9dbec7b4434a709b394f7de076200c3f5559148bc908e9098baec5ee8941"
+    }
+  ],
+  "last_poi": {
+    "causality_regions": {
+      "ethereum/base": "7d2f682724a03387eeb449c4fc22d353711759a0824d62b80f4f190000000000"
+    },
+    "public_digest": "c2be0581931b1c4163633c06cdc46589609eeb598347207cc9aadd4937199924",
+    "version": "fast"
+  },
+  "legacy_checkpoint_state_compared": true,
+  "producer_contract": {
+    "bundle_lock_sha256": "d6f3dfe7f84145a5140d9c8f3e106f1ffbe74f05d02b29847917eeb2fa51725e",
+    "kind": "mapping_host_oracle",
+    "repository": "pinax-network/substreams-backfills",
+    "source_closure_sha256": "f3edab9536ae8cd3e75e66c786cfc3d7f7935a38e3b1bf50e17ca05574f1ff32"
+  },
+  "range": {
+    "blocks": 20,
+    "from": 13919663,
+    "to": 13919683
+  },
+  "schema": "pinax.mapping-host.in-band-oracle-comparison/v1",
+  "source_order": {
+    "count": 13,
+    "sha256": "4cbe5492b944cf3b9e56484fe56abbd99e3af3bee846f171c03559fc011af03c"
+  }
+}

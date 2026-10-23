@@ -183,8 +183,8 @@ jobs:
             --bundle "$RUNNER_TEMP/candidate/bundle" --inspection "$RUNNER_TEMP/candidate/image.json" \
             --source "$GITHUB_SHA" --expected-manifest "$digest" --output "$RUNNER_TEMP/candidate/registry-roundtrip.json"
           docker load --input "$RUNNER_TEMP/candidate/registry-roundtrip.oci.tar"
-          config=$(python3 -c 'import json,os; print(json.load(open(os.environ["RUNNER_TEMP"]+"/candidate/registry-roundtrip.json"))["config_digest"])')
-          docker run --rm --network none "$config" version --json > "$RUNNER_TEMP/candidate/registry-version.json"
+          image_id=$(python3 -c 'import json,os; print(json.load(open(os.environ["RUNNER_TEMP"]+"/candidate/registry-roundtrip.json"))["image_id"])')
+          docker run --rm --network none "$image_id" version --json > "$RUNNER_TEMP/candidate/registry-version.json"
           cmp "$RUNNER_TEMP/candidate/runtime.json" "$RUNNER_TEMP/candidate/registry-version.json"
           printf '%s\n' "$repository@$digest" > "$RUNNER_TEMP/candidate/immutable-image.txt"
       - name: Publish retained non-final evidence as a prerelease

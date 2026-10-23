@@ -140,7 +140,19 @@ def verify(archive, bundle, inspection, source, expected_manifest=None):
                 and manifest["config"]["mediaType"] == "application/vnd.oci.image.config.v1+json", "OCI config type mismatch")
         config = blob(manifest["config"], True)
         require(config["architecture"] == "amd64" and config["os"] == "linux", "not Linux/amd64")
-        require(manifest["config"]["digest"] == inspected["Id"], "OCI differs from inspected image")
+        # The classic Docker store identifies images by raw config digest;
+        # the containerd store reports the selected OCI manifest instead.
+        # Both observations must resolve to these exact retained, hashed bytes.
+        observed_descriptor = inspected.get("Descriptor")
+        if observed_descriptor is not None:
+            require(type(observed_descriptor) is dict
+                    and all(observed_descriptor.get(key) == descriptor[key]
+                            for key in ("mediaType", "digest", "size"))
+                    and type(observed_descriptor.get("size")) is int,
+                    "inspected OCI descriptor differs from retained manifest")
+        require(inspected["Id"] == manifest["config"]["digest"]
+                or (observed_descriptor is not None and inspected["Id"] == descriptor["digest"]),
+                "OCI differs from inspected image")
         require(config["config"] == inspected["Config"], "image configuration mismatch")
         require(config["rootfs"]["type"] == "layers"
                 and config["rootfs"]["diff_ids"] == inspected["RootFS"]["Layers"], "root filesystem mismatch")
@@ -171,7 +183,7 @@ def verify(archive, bundle, inspection, source, expected_manifest=None):
     require(file_pin(archive) == archive_pin, "archive changed during verification")
     return {"format": "pinax.backfill.producer-oci-identity/v1", "production_selectable": False,
             "source_commit": source, "platform": "linux/amd64", "oci_manifest": descriptor["digest"],
-            "config_digest": manifest["config"]["digest"], "archive": archive_pin,
+            "config_digest": manifest["config"]["digest"], "image_id": inspected["Id"], "archive": archive_pin,
             "runtime_sha256": sha(raw_runtime), "producer": runtime["files"]["bin/producer"],
             "source_closure": runtime["files"]["source.json"]}
 

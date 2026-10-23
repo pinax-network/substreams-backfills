@@ -143,3 +143,12 @@ The runner configuration follows the [official Docker containerd image-store
 setup](https://docs.docker.com/build/ci/github-actions/multi-platform/) and pins
 [`docker/setup-docker-action` v5](https://github.com/docker/setup-docker-action/commit/7ec28a010822b4626af4874f9448a4b05ac6f3e5)
 to its verified commit, rather than changing the local developer Docker daemon.
+
+Run `39981538157` at `966afd2` loaded the retained OCI and passed the actual
+Linux version/stage/seed/archive smoke. Its final verifier exposed that Docker's
+containerd image store reports the selected manifest as `Id`, while the classic
+store reports its config digest. The receipt now retains both actual `image_id`
+and `config_digest`: manifest-ID admission additionally requires Docker's exact
+Descriptor media type, digest and size to match the independently hashed retained
+manifest. Raw config hashing, full Config equality and every RootFS diffID remain
+mandatory. The failed run and its complete artifact remain separate evidence.

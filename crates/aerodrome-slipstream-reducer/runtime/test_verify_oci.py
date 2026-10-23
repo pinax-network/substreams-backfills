@@ -85,6 +85,44 @@ class IdentityTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "registry changed"):
             f.verify("sha256:" + "00" * 32)
 
+    def test_containerd_id_requires_exact_retained_manifest_and_unchanged_config(self):
+        f = self.fixture()
+        f.inspection[0]["Id"] = f.descriptor["digest"]
+        f.inspection[0]["Descriptor"] = copy.deepcopy(f.descriptor)
+        receipt = f.verify()
+        self.assertEqual(receipt["image_id"], f.descriptor["digest"])
+        self.assertEqual(receipt["config_digest"], f.manifest["config"]["digest"])
+        for mutation in range(9):
+            changed = copy.deepcopy(f.inspection)
+            if mutation == 0:
+                del changed[0]["Descriptor"]
+            elif mutation == 1:
+                changed[0]["Descriptor"]["digest"] = "sha256:" + "00" * 32
+            elif mutation == 2:
+                changed[0]["Descriptor"]["size"] += 1
+            elif mutation == 3:
+                changed[0]["Descriptor"]["mediaType"] = "application/vnd.oci.image.index.v1+json"
+            elif mutation == 4:
+                changed[0]["Id"] = "sha256:" + "00" * 32
+            elif mutation == 5:
+                changed[0]["Config"]["User"] = "0"
+            elif mutation == 6:
+                changed[0]["RootFS"]["Layers"] = []
+            elif mutation == 7:
+                changed[0]["Descriptor"]["size"] = True
+            else:
+                changed[0]["Id"] = f.manifest["config"]["digest"]
+                changed[0]["Descriptor"]["digest"] = "sha256:" + "00" * 32
+            original = f.inspection
+            f.inspection = changed
+            with self.assertRaises(ValueError, msg=str(mutation)):
+                f.verify()
+            f.inspection = original
+        name = "blobs/sha256/" + f.manifest["config"]["digest"][7:]
+        f.entries[name] = f.entries[name].replace(b'10001:10001', b'00000:00000')
+        with self.assertRaisesRegex(ValueError, "blob digest mismatch"):
+            f.verify()
+
     def test_layer_change_fails_even_when_tar_is_well_formed(self):
         f = self.fixture()
         name = "blobs/sha256/" + f.manifest["layers"][0]["digest"][7:]

@@ -1,0 +1,120 @@
+{
+  "format": "pinax.aerodrome.qn2-swap-ddl-fixture/v1",
+  "origin": "Graph Node Layout::as_ddl and logical-physical mapping output; hermetic, not live catalog",
+  "repository": "pinax-network/substreams-graph-node-backfill",
+  "commit": "e4580444c56d6fcc778cb50394a9a693823457eb",
+  "graph_node_commit": "77823b5a7adc4eac4abf03202c8dd7cb00dea31d",
+  "schema_sha256": "09d7c40167fc27c3aa2de0ec003fe7b0b469e132943cc26dcd4db6064769d0e8",
+  "source_ddl": {
+    "path": "fixtures/physical-profiles/aerodrome-slipstream-base-layout.sql",
+    "sha256": "64b5983e2c43578d7c3b97e2156f01bb495e6f12686cc14deafa63a0b0b0f1d1",
+    "bytes": 55724
+  },
+  "source_columns": {
+    "path": "fixtures/physical-profiles/aerodrome-slipstream-base-layout-columns.json",
+    "sha256": "f3715ee2c8f71c58ce0185eb70a945b37d1dde6862bd5ef8a870ced0bec4ef0b",
+    "bytes": 52715
+  },
+  "slice": {
+    "start_byte": 28330,
+    "end_byte_exclusive": 29145,
+    "sha256": "ca02db9439114eb9b02892e2e8f7247cfb39c6e171f1f7c96b3bcbdb3a726d02",
+    "bytes": 815
+  },
+  "table": {
+    "fields": [
+      {
+        "column_type_debug": "String",
+        "graphql_field": "id",
+        "graphql_type": "ID!",
+        "physical_column": "id"
+      },
+      {
+        "column_type_debug": "String",
+        "graphql_field": "transaction",
+        "graphql_type": "Transaction!",
+        "physical_column": "transaction"
+      },
+      {
+        "column_type_debug": "BigInt",
+        "graphql_field": "timestamp",
+        "graphql_type": "BigInt!",
+        "physical_column": "timestamp"
+      },
+      {
+        "column_type_debug": "String",
+        "graphql_field": "pool",
+        "graphql_type": "Pool!",
+        "physical_column": "pool"
+      },
+      {
+        "column_type_debug": "String",
+        "graphql_field": "token0",
+        "graphql_type": "Token!",
+        "physical_column": "token_0"
+      },
+      {
+        "column_type_debug": "String",
+        "graphql_field": "token1",
+        "graphql_type": "Token!",
+        "physical_column": "token_1"
+      },
+      {
+        "column_type_debug": "Bytes",
+        "graphql_field": "sender",
+        "graphql_type": "Bytes!",
+        "physical_column": "sender"
+      },
+      {
+        "column_type_debug": "Bytes",
+        "graphql_field": "recipient",
+        "graphql_type": "Bytes!",
+        "physical_column": "recipient"
+      },
+      {
+        "column_type_debug": "Bytes",
+        "graphql_field": "origin",
+        "graphql_type": "Bytes!",
+        "physical_column": "origin"
+      },
+      {
+        "column_type_debug": "BigDecimal",
+        "graphql_field": "amount0",
+        "graphql_type": "BigDecimal!",
+        "physical_column": "amount_0"
+      },
+      {
+        "column_type_debug": "BigDecimal",
+        "graphql_field": "amount1",
+        "graphql_type": "BigDecimal!",
+        "physical_column": "amount_1"
+      },
+      {
+        "column_type_debug": "BigDecimal",
+        "graphql_field": "amountUSD",
+        "graphql_type": "BigDecimal!",
+        "physical_column": "amount_usd"
+      },
+      {
+        "column_type_debug": "BigInt",
+        "graphql_field": "sqrtPriceX96",
+        "graphql_type": "BigInt!",
+        "physical_column": "sqrt_price_x96"
+      },
+      {
+        "column_type_debug": "BigInt",
+        "graphql_field": "tick",
+        "graphql_type": "BigInt!",
+        "physical_column": "tick"
+      },
+      {
+        "column_type_debug": "BigInt",
+        "graphql_field": "logIndex",
+        "graphql_type": "BigInt",
+        "physical_column": "log_index"
+      }
+    ],
+    "logical_entity": "Swap",
+    "physical_table": "swap"
+  }
+}

@@ -116,6 +116,7 @@ impl Fixture {
 }
 struct Fake {
     block: pb::ExtractorBlock,
+    successor: Option<pb::ExtractorBlock>,
     answers: BTreeMap<(String, String), String>,
     seen: usize,
     headers: usize,
@@ -131,6 +132,7 @@ impl Fake {
         }
         Self {
             block,
+            successor: None,
             answers,
             seen: 0,
             headers: 0,
@@ -181,14 +183,22 @@ impl Rpc for Fake {
                     16,
                 )
                 .unwrap();
+                let block = if number == self.block.number {
+                    &self.block
+                } else {
+                    self.successor
+                        .as_ref()
+                        .filter(|b| b.number == number)
+                        .expect("unexpected archive height")
+                };
                 let hash = if self.fault == "wrong_header"
                     || (self.fault == "reorg_after" && self.headers == 2)
                 {
                     "ff".repeat(32)
                 } else {
-                    hex::encode(&self.block.hash)
+                    hex::encode(&block.hash)
                 };
-                json!({"hash":format!("0x{hash}"),"parentHash":format!("0x{}",hex::encode(&self.block.parent_hash)),"number":format!("0x{number:x}")})
+                json!({"hash":format!("0x{hash}"),"parentHash":format!("0x{}",hex::encode(&block.parent_hash)),"number":format!("0x{number:x}")})
             }
             "eth_call" => {
                 assert_eq!(body["params"][0]["gas"], "0x2faf080");
@@ -440,6 +450,34 @@ fn empty_observed_block_still_has_two_canonical_archive_identity_checks() {
     let cassette: Value =
         serde_json::from_slice(&fs::read(f.root.join("output/cassette.json")).unwrap()).unwrap();
     assert!(cassette["entries"].as_array().unwrap().is_empty());
+}
+#[test]
+fn nonempty_window_followed_by_empty_tail_keeps_exact_chain_and_range() {
+    let mut f = Fixture::new();
+    let successor = pb::ExtractorBlock {
+        contract: CONTRACT.into(),
+        number: f.block.number + 1,
+        hash: vec![0x42; 32],
+        parent_hash: f.block.hash.clone(),
+        timestamp: f.block.timestamp + 2,
+        firehose_block_version: 4,
+        audit: Some(pb::ExtractorAudit::default()),
+        calls: Some(pb::CallAnswers::default()),
+        ..Default::default()
+    };
+    f.replace(&[frame(&f.block.clone()), frame(&successor)]);
+    f.request.to_exclusive += 1;
+    f.request.head_hash = hex::encode(&successor.hash);
+    let mut rpc = Fake::new(f.block.clone());
+    rpc.successor = Some(successor);
+    f.run(&mut rpc).unwrap();
+    assert_eq!(rpc.headers, 4);
+    assert_eq!(rpc.seen, 17);
+    let complete: Value =
+        serde_json::from_slice(&fs::read(f.root.join("output/complete.json")).unwrap()).unwrap();
+    assert_eq!(complete["observed_blocks"], 2);
+    assert_eq!(complete["calls"], 12);
+    assert_eq!(complete["head_hash"], "42".repeat(32));
 }
 #[test]
 fn actual_cli_refuses_changed_request_without_leaking_endpoint() {

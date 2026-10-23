@@ -19,7 +19,7 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
-use backfill_common::pb::pinax::graph::backfill::v1 as pb;
+use backfill_common::pb::pinax::graph::backfill::v2 as pb;
 use graph_mapping_host::runner::{SegmentHost, SegmentHostConfig};
 use graph_mapping_host::store_state::{
     StoreEntity, StoreEntityId, StorePoi, StoreRange, StoreState, StoreValue, STORE_STATE_SCHEMA,

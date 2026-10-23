@@ -1,0 +1,151 @@
+dataSources:
+  - kind: ethereum/contract
+    mapping:
+      abis:
+        - file:
+            /: /ipfs/QmamyiWBuT1kyYy6r97DamQ7eowheMw7nfGZUFdAmaFRG8
+          name: Factory
+        - file:
+            /: /ipfs/QmXuTbDkNrN27VydxbS2huvKRk62PMgUTdPDWkxcr2w7j2
+          name: ERC20
+        - file:
+            /: /ipfs/QmbHnhUFZa6qqqRyubUYhXntox1TCBxqryaBM1iNGqVJzT
+          name: ERC20SymbolBytes
+        - file:
+            /: /ipfs/QmQCP6Pdp1MqpwRv2qoPHuUTwZGy7Q3eDHg4w5kzwE9mBj
+          name: ERC20NameBytes
+        - file:
+            /: /ipfs/QmVszVJj4c73MuQGv5Bi9Kje5tpGijPCDXie7fXTqGAFi9
+          name: Pool
+      apiVersion: 0.0.7
+      entities:
+        - Pool
+        - Token
+      eventHandlers:
+        - event: 'PoolCreated(indexed address,indexed address,indexed int24,address)'
+          handler: handlePoolCreated
+      file:
+        /: /ipfs/QmZQVsukQt6nXKctyy2WSMWN5grVXKph5fR7ahxS11Uebs
+      kind: ethereum/events
+      language: wasm/assemblyscript
+    name: Factory
+    network: base
+    source:
+      abi: Factory
+      address: '0x5e7bb104d84c7cb9b682aac2f3d509f5f406809a'
+      startBlock: 13843704
+  - kind: ethereum/contract
+    mapping:
+      abis:
+        - file:
+            /: /ipfs/QmdAXZw3wWJx7uRuzBmNPqgV6hqE3Cx3ZBvXEVRoThdPDL
+          name: NonfungiblePositionManager
+        - file:
+            /: /ipfs/QmVszVJj4c73MuQGv5Bi9Kje5tpGijPCDXie7fXTqGAFi9
+          name: Pool
+        - file:
+            /: /ipfs/QmamyiWBuT1kyYy6r97DamQ7eowheMw7nfGZUFdAmaFRG8
+          name: Factory
+        - file:
+            /: /ipfs/QmXuTbDkNrN27VydxbS2huvKRk62PMgUTdPDWkxcr2w7j2
+          name: ERC20
+      apiVersion: 0.0.7
+      entities:
+        - Pool
+        - Token
+      eventHandlers:
+        - calls:
+            positions: >-
+              NonfungiblePositionManager[event.address].positions(event.params.tokenId)
+          event: 'IncreaseLiquidity(indexed uint256,uint128,uint256,uint256)'
+          handler: handleIncreaseLiquidity
+        - calls:
+            positions: >-
+              NonfungiblePositionManager[event.address].positions(event.params.tokenId)
+          event: 'DecreaseLiquidity(indexed uint256,uint128,uint256,uint256)'
+          handler: handleDecreaseLiquidity
+        - calls:
+            positions: >-
+              NonfungiblePositionManager[event.address].positions(event.params.tokenId)
+          event: 'Collect(indexed uint256,address,uint256,uint256)'
+          handler: handleCollect
+        - calls:
+            positions: >-
+              NonfungiblePositionManager[event.address].positions(event.params.tokenId)
+          event: 'Transfer(indexed address,indexed address,indexed uint256)'
+          handler: handleTransfer
+      file:
+        /: /ipfs/QmcoeFHridxYBRFnrZ33v3PRAgvqunBfxe9gsCPhJQB4dy
+      kind: ethereum/events
+      language: wasm/assemblyscript
+    name: NonfungiblePositionManager
+    network: base
+    source:
+      abi: NonfungiblePositionManager
+      address: '0x827922686190790b37229fd06084350e74485b72'
+      startBlock: 13843719
+description: Uniswap is a decentralized protocol for automated token exchange on Ethereum.
+features:
+  - nonFatalErrors
+  - grafting
+repository: 'https://github.com/Uniswap/uniswap-v3-subgraph'
+schema:
+  file:
+    /: /ipfs/QmTiEqVtfjTDY8DRkj17eLKSAyajHNz8r7Yg9cRgXwrWfF
+specVersion: 1.2.0
+templates:
+  - kind: ethereum/contract
+    mapping:
+      abis:
+        - file:
+            /: /ipfs/QmVszVJj4c73MuQGv5Bi9Kje5tpGijPCDXie7fXTqGAFi9
+          name: Pool
+        - file:
+            /: /ipfs/QmamyiWBuT1kyYy6r97DamQ7eowheMw7nfGZUFdAmaFRG8
+          name: Factory
+        - file:
+            /: /ipfs/QmXuTbDkNrN27VydxbS2huvKRk62PMgUTdPDWkxcr2w7j2
+          name: ERC20
+      apiVersion: 0.0.7
+      entities:
+        - Pool
+        - Token
+      eventHandlers:
+        - event: 'Initialize(uint160,int24)'
+          handler: handleInitialize
+        - calls:
+            feeGrowthGlobal0X128: 'Pool[event.address].feeGrowthGlobal0X128()'
+            feeGrowthGlobal1X128: 'Pool[event.address].feeGrowthGlobal1X128()'
+          event: >-
+            Swap(indexed address,indexed
+            address,int256,int256,uint160,uint128,int24)
+          handler: handleSwap
+        - calls:
+            poolTickLower: 'Pool[event.address].ticks(event.params.tickLower)'
+            poolTickUpper: 'Pool[event.address].ticks(event.params.tickUpper)'
+          event: >-
+            Mint(address,indexed address,indexed int24,indexed
+            int24,uint128,uint256,uint256)
+          handler: handleMint
+        - calls:
+            poolTickLower: 'Pool[event.address].ticks(event.params.tickLower)'
+            poolTickUpper: 'Pool[event.address].ticks(event.params.tickUpper)'
+          event: >-
+            Burn(indexed address,indexed int24,indexed
+            int24,uint128,uint256,uint256)
+          handler: handleBurn
+        - calls:
+            feeGrowthGlobal0X128: 'Pool[event.address].feeGrowthGlobal0X128()'
+            feeGrowthGlobal1X128: 'Pool[event.address].feeGrowthGlobal1X128()'
+          event: >-
+            Flash(indexed address,indexed
+            address,uint256,uint256,uint256,uint256)
+          handler: handleFlash
+      file:
+        /: /ipfs/QmQgC18iXqZc5Jp78KZs6wNpk2oZvgbe9TeMQnH9K7eMah
+      kind: ethereum/events
+      language: wasm/assemblyscript
+    name: Pool
+    network: base
+    source:
+      abi: Pool

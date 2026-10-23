@@ -180,9 +180,90 @@ Null, Bytes, and BigInt. Entity IDs cover String, Bytes, and Int8.
   positive sign extension, and redundant negative sign extension are refused.
 - BigInt uses Graph Node's `bits + 1 <= 435,412` limit.
 - BigDecimal is the normalized `(coefficient, scale)` tuple where
-  `value = coefficient * 10^-scale`. Zero is `(empty, 0)`, nonzero
-  coefficients have at most 34 decimal digits and no base-10 trailing zero,
-  and scale is `-6144..=6143` (Graph exponent `-6143..=6144`).
+  `value = coefficient * 10^-scale`. Zero is `(empty, 0)` and scale is
+  `-6144..=6143` (Graph exponent `-6143..=6144`). A nonzero tuple is accepted
+  exactly when Graph Node v0.44's `BigDecimal::normalized()` maps it to itself.
+  That function calls bigdecimal 0.1.2's `with_prec(34)` and then strips base-10
+  trailing zeros. The validator ports the crate's digit count rather than
+  counting decimal digits, because the two differ for negative values:
+  - `count_decimal_digits` estimates `floor(bits / 3.3219280949)` from the
+    magnitude's bit length, then corrects upward while `int >= 10^digits`.
+    That comparison is signed, so it never fires for a negative coefficient.
+  - So a positive coefficient keeps at most 34 decimal digits. A negative
+    coefficient keeps any magnitude up to `2^116 - 1` (116 bits). That covers
+    every 34-digit negative and the 35-digit negatives below
+    83,076,749,736,557,242,056,487,941,267,521,536.
+  - Examples: Graph Node's `-1 / 3` is `-0.33333333333333333333333333333333333`
+    (35 digits) and `1 / 3` is `0.3333333333333333333333333333333333`
+    (34 digits). The V4 Base Token TVL `-1958.2627366648723548155211868460794`
+    has 35 digits and 114 bits, so it is accepted.
+  - A positive 35-digit coefficient is always refused, as is a negative one of
+    117 bits such as `-(10^35 - 1)`. A plain "35 digits if negative" rule
+    would wrongly accept the latter.
+  - A coefficient that is too long is refused with `DecimalPrecision` before
+    the trailing-zero check runs.
+
+  [`graph-decimal-domain.json`](../common/fixtures/block-changes-v1/graph-decimal-domain.json)
+  pins the boundary cases. The common tests check the validator against it.
+  The mapping-host tests check each row against Graph Node's real
+  `BigDecimal`, and also run a seeded sweep of random values.
+
+  This rule widens v1's accepted BigDecimal domain in place. The contract
+  string is unchanged, and every tuple the earlier 34-digit rule accepted is
+  still accepted. A consumer built on the earlier v1 validator, however,
+  refuses the newly accepted negatives with `DecimalPrecision`. It fails
+  closed and writes no wrong data, but it halts on frames that mapping-host
+  now seals, such as one carrying the V4 TVL value above. The engine's vendored
+  `third_party/backfill-common` at `COMMON_COMMIT` `d01b0fe7` is such a
+  consumer. It accepts the new values only after it re-vendors
+  `common/src/block_changes.rs` from a commit that has this rule, re-pins
+  `COMMON_COMMIT`, and updates the file's SHA-256 in both places it is pinned:
+  `COMMON_VALIDATOR_SHA256` in `src/block_changes_descriptor.rs`, and the
+  `validator` and `vendored_validator` entries of
+  `adapters/uniswap-v4-base/block-changes-v1.json`. A descriptor that pins the
+  validator's digest gets a new compatibility ID when it is regenerated.
+
+  The fixed-point set is exactly what an arithmetic result can be saved as.
+  Graph Node normalizes every BigDecimal that a mapping passes to the host,
+  including the entity data of `store.set`, and the host normalizes every
+  BigDecimal it computes. A result therefore goes through normalization twice
+  before it is saved, and the second pass always lands on a fixed point.
+  Normalization is not idempotent, though. A single pass can leave a negative
+  117-bit, 35-digit coefficient. The mapping can see such a value but never
+  saves it from arithmetic: for example, `-1958.23222 * 0.000443428497055167816687599679621575`
+  comes back as `-0.86833597019960473614471136709664557` and is saved as
+  `-0.8683359701996047361447113670966455`.
+
+  Graph Node does persist a non-fixed point when a mapping saves a value it
+  built inside WASM without host arithmetic. graph-ts `BigInt.toBigDecimal()`
+  is the common case: the value is normalized only once, at the store
+  boundary. For example, the raw `-(2^126 - 1)` is stored as
+  `(-85070591730234615865843651857942052, -3)`. v1 refuses such a value with
+  `DecimalPrecision` on purpose. It does not survive any consumer that
+  normalizes again: Graph Node itself truncates it if a mapping loads and
+  re-saves it, and so do the mapping-host checkpoint restore
+  (`BigDecimal::new`) and the engine's numeric writer. Accepting it would need
+  all of those consumers changed together.
+
+  This refusal is reachable, so it is a known liveness risk. Uniswap-V3-style
+  mappings convert token amounts with `convertTokenToDecimal`, which returns
+  the raw `amount.toBigDecimal()` when the token's `decimals` is 0. `handleSwap`
+  saves that result unchanged as `Swap.amount0` and `Swap.amount1`, and one of
+  the two is normally negative. The
+  [Aerodrome Slipstream Base target](provenance/aerodrome-slipstream-base-target.json)
+  does this, and it also records 0 decimals for a token whose `decimals()` call
+  reverts or is out of range. A single normalization leaves a refused value
+  only when the raw amount is negative with a magnitude of at least
+  `2^116 * 10^3` (83,076,749,736,557,242,056,487,941,267,521,536,000, which is
+  126 bits). Positive raw amounts always normalize to a fixed point. When a
+  swap like that is saved, mapping-host refuses to seal its block and the run
+  halts there. A read-only check of the live deployment decides whether a
+  carve-out is needed. The check looks for saved Swap rows whose `amount0` or
+  `amount1` is at or below that negative bound and whose coefficient
+  magnitude is at least `2^116`. If there are none, the strict rule covers
+  the history the deployment has indexed. If there are any, the run needs a
+  carve-out that accepts once-normalized values, and that means changing the
+  consumers above together.
 - Timestamp validation reproduces Graph Node v0.44.0/Chrono 0.4.44's
   `from_microseconds_since_epoch` domain exactly, including its rejection of
   negative fractional-second microsecond values.
@@ -201,6 +282,13 @@ Source contracts:
 - [BigInt limit](https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/graph/src/data/store/scalar/bigint.rs#L36-L52)
 - [BigDecimal normalization](https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/graph/src/data/store/scalar/bigdecimal.rs#L20-L106)
 - [BigDecimal host range](https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/runtime/wasm/src/to_from/external.rs#L89-L132)
+- [BigDecimal re-normalization at the WASM boundary](https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/runtime/wasm/src/to_from/external.rs#L105-L135)
+- [bigdecimal 0.1.2 `count_decimal_digits`](https://docs.rs/crate/bigdecimal/0.1.2/source/src/lib.rs#88-100)
+  and [`with_prec`](https://docs.rs/crate/bigdecimal/0.1.2/source/src/lib.rs#218-247),
+  linked by graph-node's `old_bigdecimal = "=0.1.2"` with num-bigint 0.2.6
+- [graph-ts `BigInt.toBigDecimal()`](https://github.com/graphprotocol/graph-tooling/blob/d14735839ff6a1e06b1dba15897c7b9ed69aead0/packages/ts/common/numbers.ts#L154-L156)
+  and the [`BigDecimal` constructor](https://github.com/graphprotocol/graph-tooling/blob/d14735839ff6a1e06b1dba15897c7b9ed69aead0/packages/ts/common/numbers.ts#L336-L343),
+  which build the value in WASM
 - [Timestamp domain](https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/graph/src/data/store/scalar/timestamp.rs#L28-L76)
 - [Null removal during materialization](https://github.com/graphprotocol/graph-node/blob/77823b5a7adc4eac4abf03202c8dd7cb00dea31d/graph/src/data/store/mod.rs#L1013-L1055)
 

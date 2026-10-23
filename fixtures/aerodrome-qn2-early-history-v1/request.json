@@ -1,0 +1,10 @@
+{
+  "format": "pinax.aerodrome.qn2-extractor-request/v1",
+  "input": "/private/tmp/aerodrome-live-wasm-m2-upgrade-v1/full-root/extractor.bcf1",
+  "input_sha256": "1444ef8a9ac545e7358d7b7b3396131783d221cf38936a407562828d55a98fde",
+  "input_bytes": 18286956,
+  "from_block": 13843704,
+  "to_block": 13919662,
+  "parent_hash": "6c2f61721e0cab3cc3543828a6cf7bd0965d69bd974dccdec557007c97023d16",
+  "head_hash": "d54f7cb172111932e7232caccefa30194d2a17babf4af52e9df81486af1fec51"
+}

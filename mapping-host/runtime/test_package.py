@@ -35,11 +35,12 @@ class PackagingTests(unittest.TestCase):
         pkg.seal(root)
         return root
 
-    def test_all_eight_bundles_and_binary_verify(self):
+    def test_all_nine_bundles_and_binary_verify(self):
+        # Eight Uniswap V3 deployments plus the Aerodrome Slipstream Base oracle.
         root = self.payload()
         document = pkg.verify(root, COMMIT)
         self.assertFalse(document["production_selectable"])
-        self.assertEqual(8, len(list((root / "opt/mapping-host/segments").iterdir())))
+        self.assertEqual(9, len(list((root / "opt/mapping-host/segments").iterdir())))
 
     def test_binary_mutation_refused(self):
         root = self.payload()
@@ -106,6 +107,29 @@ class PackagingTests(unittest.TestCase):
         root = self.payload()
         next((root / "opt/mapping-host/segments").rglob("*.sha256")).write_text("0" * 64)
         with self.assertRaisesRegex(ValueError, "sidecar"):
+            pkg.seal(root)
+
+    def test_in_band_descriptor_requires_complete_matching_pair(self):
+        root = self.payload()
+        segment = root / "opt/mapping-host/segments" / pkg.ROOT_SEGMENT
+        descriptor = segment / "block-changes-in-band-descriptor.json"
+        sidecar = descriptor.with_suffix(".json.sha256")
+        descriptor.write_bytes(pkg.canonical({"descriptor_version": 2, "message_type": "proto:pinax.graph.backfill.v2.BlockChanges"}))
+        with self.assertRaisesRegex(ValueError, "requires its sidecar"):
+            pkg.seal(root)
+        sidecar.write_text("0" * 64)
+        with self.assertRaisesRegex(ValueError, "sidecar mismatch"):
+            pkg.seal(root)
+        sidecar.write_text(pkg.digest(descriptor))
+        source = pkg.read_json(root / pkg.SOURCE)
+        source["files"] = {"mapping-host/segments/" + path: value for path, value in pkg.inventory(root / "opt/mapping-host/segments").items()}
+        source["input_set_sha256"] = pkg.sha(pkg.canonical(source["files"]))
+        (root / pkg.SOURCE).write_bytes(pkg.canonical(source))
+        pkg.seal(root)
+        pkg.verify(root, COMMIT)
+        descriptor.write_bytes(pkg.canonical({"descriptor_version": 1}))
+        sidecar.write_text(pkg.digest(descriptor))
+        with self.assertRaisesRegex(ValueError, "version/message type"):
             pkg.seal(root)
 
     def test_source_input_hash_cannot_be_replaced_independently(self):

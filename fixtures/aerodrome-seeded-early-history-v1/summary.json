@@ -1,0 +1,686 @@
+{
+  "format": "pinax.aerodrome.hermetic-seeded-early-history-summary/v1",
+  "purpose": "Early-history integration using reconstructed reference SQL and synthetic metadata, not production qualification or stratified M4.",
+  "production_qualified": false,
+  "stratified_M4": false,
+  "spool_READY": false,
+  "loadable": false,
+  "oracle_purpose_sticky": true,
+  "actual_windows": 20,
+  "requested_blocks": 20000,
+  "distinct_blocks": 19000,
+  "operations": 98116,
+  "triggered_blocks": 3537,
+  "handlers": {
+    "handlePoolCreated": 13,
+    "handleTransfer": 958,
+    "handleIncreaseLiquidity": 488,
+    "handleInitialize": 13,
+    "handleMint": 488,
+    "handleSwap": 3316,
+    "handleBurn": 540,
+    "handleCollect": 540,
+    "handleDecreaseLiquidity": 86
+  },
+  "actual_capture_boundaries": 23,
+  "sql_null_projection_fields": 0,
+  "proof_root": "/private/tmp/aerodrome-seeded-early-history-v2",
+  "proof_complete": {
+    "bytes": 20082,
+    "sha256": "57aa3f255991c41005dc35545ed5cff0d61463a546e7b95e22f9470e65d33d06"
+  },
+  "input_pins": {
+    "bytes": 45432,
+    "sha256": "04c1b4a8cd4a3584e3efd570180155e1c52043cf4b029e92c05684072d2e88bd"
+  },
+  "execution_script": {
+    "bytes": 24482,
+    "sha256": "4107eb01f54aa8cfb2b43544e290a1867712b7a66839786276e478a08acec592"
+  },
+  "comparison_helper": {
+    "binary": {
+      "bytes": 2074320,
+      "sha256": "c8d7923b6b8904c9cc1c1343f0e2a37fe93de3222400b3d08fed86cada9906ff"
+    },
+    "source": {
+      "bytes": 17316,
+      "sha256": "d0f5dfbf074e9a0d6551f99fead2f50c074dd4bdca0df3874cb6d4259bd28eb3"
+    },
+    "base_commit": "e4580444c56d6fcc778cb50394a9a693823457eb",
+    "production_qualified": false
+  },
+  "producer": {
+    "source_commit": "bd9a88d120e9c846e583a81a257d988e6988aadf",
+    "runtime_sha256": "5b976e577fd39b0c758c5ec155a768f2aac83e63a9a906de5251ca8f484487e9",
+    "binary_sha256": "72190238b26b69ee901473bb3e21770a8d2efbd292f4b08147861f90a9f5a6eb",
+    "descriptor_sha256": "462d4f6d5222bf45c4912a6251bf473a55ddf49dc3a74e9acc252ee142a25638"
+  },
+  "capture": {
+    "path": "/Users/denis/Github/.worktrees/aerodrome-engine-seed-zero-encoding/target/release/generic-seed-capture",
+    "pin": {
+      "bytes": 2985792,
+      "sha256": "5a8920cd020369bc5d95ea46812f506cd607cb786fa59d8ec6d3f963c8bda3ba"
+    },
+    "previous_capture": "fbcdaa27185a6eaca18c3006ef35cf414ff7d31c46bafffd8b715ad01f4bca54",
+    "reason": "Canonical zero encoding fix; prior failed populated capture retained.",
+    "production_qualified": false,
+    "source_provenance": {
+      "base_commit": "ed0aff32dbb3014b440f4e4bb1a13b2bcdd73363",
+      "rows_rs_sha256": "4420f953df36fab8d0e068bde9dbb27c4d2f32242f0026c140b5c9ef34535965",
+      "frozen_full_diff_sha256": "0121f7f8aad51183a75ed8ddb3c90a593fbca5fcb868d6daaaa7a4c0e53bdd58",
+      "final_commit": "2b4587b2c1272faad99a6a116258145ef72b61e0",
+      "tree": "cd36db33f9cf3bbf2d654a8566bce66619e4fa11"
+    }
+  },
+  "refusal_probes": {
+    "bytes": 821,
+    "sha256": "8395dd17590433a292609ac7ed5493f9091bab84c9b17de1f8de4b7cbe045039"
+  },
+  "retained_failures": [
+    {
+      "path": "seeds/13899662/capture.stderr",
+      "reason": "Harness supplied bundle .json.sha256 sidecar to engine requiring .sha256; corrected owned descriptor copy."
+    },
+    {
+      "path": "seeds-v2/13900662/capture.stderr",
+      "reason": "Actual E5 decoder emitted noncanonical zero signed bytes; reviewed successor binary fixes canonical zero only."
+    },
+    {
+      "path": "window-00/segment-0/failure.json",
+      "reason": "Harness used sorted JSON seed wrapper as typed completion; actual public inspect supplies canonical struct order. Native exit0, producer exit4; failed attempt never promoted."
+    }
+  ],
+  "windows": [
+    {
+      "ordinal": 0,
+      "from": 13899663,
+      "stop_exclusive": 13900663,
+      "native_exit": 0,
+      "producer_exit": 0,
+      "handlers": {
+        "handlePoolCreated": 4,
+        "handleTransfer": 4,
+        "handleIncreaseLiquidity": 4,
+        "handleInitialize": 4,
+        "handleMint": 4
+      },
+      "triggered_blocks": 4,
+      "operations": 137,
+      "entities_at_end": 63,
+      "sources_at_end": 4,
+      "sql_null_projection_fields": 0,
+      "comparison_sha256": "e836ad4f59ad5e1bd93428a0c9a5d3d2fbd1a73ebfcfe50c41ff4ba525bd3a70",
+      "host_complete_sha256": "db1df3fd11831ece8949e661ee0d4dfdf23f92d55befa1b6a1f595390d1d1003",
+      "checkpoint_sha256": "51f172208b2a68afe618897d201307df9ecce2b17fc9e980e64a88d5a921d7a9",
+      "reviewed_comparison_sha256": "e836ad4f59ad5e1bd93428a0c9a5d3d2fbd1a73ebfcfe50c41ff4ba525bd3a70"
+    },
+    {
+      "ordinal": 1,
+      "from": 13900663,
+      "stop_exclusive": 13901663,
+      "native_exit": 0,
+      "producer_exit": 0,
+      "handlers": {
+        "handlePoolCreated": 7,
+        "handleTransfer": 7,
+        "handleIncreaseLiquidity": 7,
+        "handleInitialize": 7,
+        "handleMint": 7
+      },
+      "triggered_blocks": 7,
+      "operations": 238,
+      "entities_at_end": 162,
+      "sources_at_end": 11,
+      "sql_null_projection_fields": 0,
+      "comparison_sha256": "4764331e86855ccdc57c935b84ea4b2b6e19c962dc26b0af89245addd89498dc",
+      "host_complete_sha256": "c6a0f95cb40315085eade8edb0a1caf044c6b6c4c11cd21581c0a99e5acb4161",
+      "checkpoint_sha256": "0800c1bb23ca6348eb6e25bb8f50e9c457ec94009c8d7561af014965113f6f11",
+      "reviewed_comparison_sha256": "4764331e86855ccdc57c935b84ea4b2b6e19c962dc26b0af89245addd89498dc"
+    },
+    {
+      "ordinal": 2,
+      "from": 13901663,
+      "stop_exclusive": 13902663,
+      "native_exit": 0,
+      "producer_exit": 0,
+      "handlers": {
+        "handlePoolCreated": 2,
+        "handleTransfer": 2,
+        "handleIncreaseLiquidity": 2,
+        "handleInitialize": 2,
+        "handleMint": 2
+      },
+      "triggered_blocks": 2,
+      "operations": 68,
+      "entities_at_end": 190,
+      "sources_at_end": 13,
+      "sql_null_projection_fields": 0,
+      "comparison_sha256": "8cd136526f74c569ec0f39ebfe9ccbb637d5584b2548ba23116d5e90da893389",
+      "host_complete_sha256": "b2dc5466dad01786cbcb14be390f8498f0b205983fe28eb7c89e2381c6c74adc",
+      "checkpoint_sha256": "14da67002779c3efe8e688b0da261094ec4e66a02e4de3ae2796adf789e9f358",
+      "reviewed_comparison_sha256": "8cd136526f74c569ec0f39ebfe9ccbb637d5584b2548ba23116d5e90da893389"
+    },
+    {
+      "ordinal": 3,
+      "from": 13903663,
+      "stop_exclusive": 13904663,
+      "native_exit": 0,
+      "producer_exit": 0,
+      "handlers": {
+        "handleMint": 5,
+        "handleTransfer": 5,
+        "handleIncreaseLiquidity": 5,
+        "handleSwap": 10
+      },
+      "triggered_blocks": 14,
+      "operations": 348,
+      "entities_at_end": 245,
+      "sources_at_end": 13,
+      "sql_null_projection_fields": 0,
+      "comparison_sha256": "ce0e6730356af41e7ea38e1f9c49963ed70ea18058a5b55984ee62c4b5274dc6",
+      "host_complete_sha256": "14414dceb2ef072bb4ff961f0e5346d89b43ee2e125e3905762602a7cefd11ff",
+      "checkpoint_sha256": "672082880e68fb066cd177268611c3b40918677474a8b507a6def00e75fc391f",
+      "reviewed_comparison_sha256": "ce0e6730356af41e7ea38e1f9c49963ed70ea18058a5b55984ee62c4b5274dc6"
+    },
+    {
+      "ordinal": 4,
+      "from": 13904663,
+      "stop_exclusive": 13905663,
+      "native_exit": 0,
+      "producer_exit": 0,
+      "handlers": {
+        "handleSwap": 26,
+        "handleMint": 5,
+        "handleTransfer": 5,
+        "handleIncreaseLiquidity": 5
+      },
+      "triggered_blocks": 31,
+      "operations": 704,
+      "entities_at_end": 341,
+      "sources_at_end": 13,
+      "sql_null_projection_fields": 0,
+      "comparison_sha256": "47f8eb5a6104c50d7a7084cdf29cb8a565aeb79510db503d8b28f559133ce290",
+      "host_complete_sha256": "3db83b0a6361ebdb8335d34c28e7c0600aba29b7b109e8ad05fe4e5c368a5fdd",
+      "checkpoint_sha256": "45f96b3317c7f50fead2e11c4d08fd3717349629505e46237c6d2a6f9bb13ac6",
+      "reviewed_comparison_sha256": "47f8eb5a6104c50d7a7084cdf29cb8a565aeb79510db503d8b28f559133ce290"
+    },
+    {
+      "ordinal": 5,
+      "from": 13905663,
+      "stop_exclusive": 13906663,
+      "native_exit": 0,
+      "producer_exit": 0,
+      "handlers": {
+        "handleSwap": 50,
+        "handleMint": 8,
+        "handleTransfer": 8,
+        "handleIncreaseLiquidity": 8
+      },
+      "triggered_blocks": 55,
+      "operations": 1292,
+      "entities_at_end": 487,
+      "sources_at_end": 13,
+      "sql_null_projection_fields": 0,
+      "comparison_sha256": "795ed6c7817e2374790146552bf5114a443f83df2dcb43e73f80eb44e47abf29",
+      "host_complete_sha256": "da9950384f9f047da42012b579b374126b8c3e201108d391120bf44d31d6ce55",
+      "checkpoint_sha256": "2a4f5e52e9bc9778edf65910619154e5ce4d20eb0ce4ab11bd4de7422c66685e",
+      "reviewed_comparison_sha256": "795ed6c7817e2374790146552bf5114a443f83df2dcb43e73f80eb44e47abf29"
+    },
+    {
+      "ordinal": 6,
+      "from": 13906663,
+      "stop_exclusive": 13907663,
+      "native_exit": 0,
+      "producer_exit": 0,
+      "handlers": {
+        "handleSwap": 39,
+        "handleMint": 6,
+        "handleTransfer": 7,
+        "handleIncreaseLiquidity": 6
+      },
+      "triggered_blocks": 44,
+      "operations": 1013,
+      "entities_at_end": 608,
+      "sources_at_end": 13,
+      "sql_null_projection_fields": 0,
+      "comparison_sha256": "35b28f0091b17a9d7a4e4379cb32da051d8193c9c97c433063faa37b3cf1870e",
+      "host_complete_sha256": "c89e3c92029fda14c3f12a59740a428e509590bde8eca6fac049260af526f362",
+      "checkpoint_sha256": "e28c9ede278a684c29afaf7b8b03d63ab01f3baed43af6aad01dfb990beb0907",
+      "reviewed_comparison_sha256": "35b28f0091b17a9d7a4e4379cb32da051d8193c9c97c433063faa37b3cf1870e"
+    },
+    {
+      "ordinal": 7,
+      "from": 13907663,
+      "stop_exclusive": 13908663,
+      "native_exit": 0,
+      "producer_exit": 0,
+      "handlers": {
+        "handleSwap": 72,
+        "handleMint": 16,
+        "handleTransfer": 16,
+        "handleIncreaseLiquidity": 16
+      },
+      "triggered_blocks": 84,
+      "operations": 1984,
+      "entities_at_end": 863,
+      "sources_at_end": 13,
+      "sql_null_projection_fields": 0,
+      "comparison_sha256": "d57528d3ad19eb49e0cf700ea23b190ec09c09e1e00cb2eee4f0d5d0093c843e",
+      "host_complete_sha256": "b120ef8e8904484d7c358288bb32007283231cca17d0b132dc73d2fdb826361d",
+      "checkpoint_sha256": "71973d6eed51b7917909a109b0d5f472411a48a594c2a4fcf06789f9fa4e4aed",
+      "reviewed_comparison_sha256": "d57528d3ad19eb49e0cf700ea23b190ec09c09e1e00cb2eee4f0d5d0093c843e"
+    },
+    {
+      "ordinal": 8,
+      "from": 13908663,
+      "stop_exclusive": 13909663,
+      "native_exit": 0,
+      "producer_exit": 0,
+      "handlers": {
+        "handleSwap": 239,
+        "handleMint": 15,
+        "handleTransfer": 19,
+        "handleIncreaseLiquidity": 15,
+        "handleBurn": 4,
+        "handleCollect": 4
+      },
+      "triggered_blocks": 219,
+      "operations": 5782,
+      "entities_at_end": 1485,
+      "sources_at_end": 13,
+      "sql_null_projection_fields": 0,
+      "comparison_sha256": "a32003f344262bc3140edc8da4d033ba63b7a8469cf0eaef01603584982b9ff3",
+      "host_complete_sha256": "7da9defffcac5dab88fca506529d849d95c7ade7b43fc79783bbcbc62edba28a",
+      "checkpoint_sha256": "622b7eb209877832010259c1d445a0eb56450f1c6502674666e719e76f967421",
+      "reviewed_comparison_sha256": "a32003f344262bc3140edc8da4d033ba63b7a8469cf0eaef01603584982b9ff3"
+    },
+    {
+      "ordinal": 9,
+      "from": 13908827,
+      "stop_exclusive": 13909827,
+      "native_exit": 0,
+      "producer_exit": 0,
+      "handlers": {
+        "handleSwap": 302,
+        "handleMint": 13,
+        "handleTransfer": 17,
+        "handleIncreaseLiquidity": 13,
+        "handleBurn": 4,
+        "handleCollect": 4
+      },
+      "triggered_blocks": 261,
+      "operations": 7150,
+      "entities_at_end": 1657,
+      "sources_at_end": 13,
+      "sql_null_projection_fields": 0,
+      "comparison_sha256": "629c31784b34489ad2ca89256f18f9653d5074f8e3063ce5cc0ce69f3527ac0d",
+      "host_complete_sha256": "67fa963acc2f6315fb8b665c87268440b39f22dd54e0b1079184a0ae9dbdbc05",
+      "checkpoint_sha256": "1b28a9a0d68ec249ea65b89f41000c40fa2958498485c2218178109758570b28",
+      "reviewed_comparison_sha256": "629c31784b34489ad2ca89256f18f9653d5074f8e3063ce5cc0ce69f3527ac0d"
+    },
+    {
+      "ordinal": 10,
+      "from": 13909663,
+      "stop_exclusive": 13910663,
+      "native_exit": 0,
+      "producer_exit": 0,
+      "handlers": {
+        "handleSwap": 321,
+        "handleMint": 37,
+        "handleTransfer": 43,
+        "handleIncreaseLiquidity": 37,
+        "handleBurn": 6,
+        "handleCollect": 6
+      },
+      "triggered_blocks": 293,
+      "operations": 8192,
+      "entities_at_end": 2337,
+      "sources_at_end": 13,
+      "sql_null_projection_fields": 0,
+      "comparison_sha256": "03b804c96cefda48832625db6056603872363a8f15a08ebd4d6147d35a8faf53",
+      "host_complete_sha256": "002a38b1fd889cfe261fb3de3ce29b72b96360542471a11c1dc3554d8da51916",
+      "checkpoint_sha256": "4800ce37b724d81520e8f6ddf57fcd8e7e8b3ad3fb333dc00e693a76cc563d3b",
+      "reviewed_comparison_sha256": "03b804c96cefda48832625db6056603872363a8f15a08ebd4d6147d35a8faf53"
+    },
+    {
+      "ordinal": 11,
+      "from": 13910663,
+      "stop_exclusive": 13911663,
+      "native_exit": 0,
+      "producer_exit": 0,
+      "handlers": {
+        "handleMint": 52,
+        "handleTransfer": 103,
+        "handleIncreaseLiquidity": 52,
+        "handleSwap": 211,
+        "handleBurn": 59,
+        "handleCollect": 59,
+        "handleDecreaseLiquidity": 8
+      },
+      "triggered_blocks": 257,
+      "operations": 7307,
+      "entities_at_end": 3224,
+      "sources_at_end": 13,
+      "sql_null_projection_fields": 0,
+      "comparison_sha256": "55234893c62e95ce2d09f1ec37975a51c9d65607f1edefd1619fa3365b9ba802",
+      "host_complete_sha256": "ed41c2b1889238ad2417113e501ec965c6786bbcfbdf9f23d89cf2dbbbbbd993",
+      "checkpoint_sha256": "79ed8d3c93ed12f2c9ce39a78d47a6b25c7f030f2876f4eacdb2ea74886df5b8",
+      "reviewed_comparison_sha256": "55234893c62e95ce2d09f1ec37975a51c9d65607f1edefd1619fa3365b9ba802"
+    },
+    {
+      "ordinal": 12,
+      "from": 13911663,
+      "stop_exclusive": 13912663,
+      "native_exit": 0,
+      "producer_exit": 0,
+      "handlers": {
+        "handleMint": 57,
+        "handleTransfer": 167,
+        "handleIncreaseLiquidity": 57,
+        "handleBurn": 122,
+        "handleCollect": 122,
+        "handleSwap": 290,
+        "handleDecreaseLiquidity": 24
+      },
+      "triggered_blocks": 354,
+      "operations": 10669,
+      "entities_at_end": 4435,
+      "sources_at_end": 13,
+      "sql_null_projection_fields": 0,
+      "comparison_sha256": "68bb76f8b86d56b8706d61466af26efdd6a16bcc9b5edd2375bbd6f9c07e874d",
+      "host_complete_sha256": "a46bcab5cdfeca845ce3446a617fb0bfd0b9ddf6cf7aa8ef4b4133248b51889b",
+      "checkpoint_sha256": "8b6b16d13bc591f6151d35bcff26c32e7bb83421e7bc0b22c9fb1fed104bbbed",
+      "reviewed_comparison_sha256": "68bb76f8b86d56b8706d61466af26efdd6a16bcc9b5edd2375bbd6f9c07e874d"
+    },
+    {
+      "ordinal": 13,
+      "from": 13912663,
+      "stop_exclusive": 13913663,
+      "native_exit": 0,
+      "producer_exit": 0,
+      "handlers": {
+        "handleBurn": 63,
+        "handleCollect": 63,
+        "handleTransfer": 102,
+        "handleSwap": 294,
+        "handleMint": 44,
+        "handleIncreaseLiquidity": 44,
+        "handleDecreaseLiquidity": 6
+      },
+      "triggered_blocks": 310,
+      "operations": 9006,
+      "entities_at_end": 5425,
+      "sources_at_end": 13,
+      "sql_null_projection_fields": 0,
+      "comparison_sha256": "481637629900d2b0fa76861da1046dedc2e510ad81f429e3bdb945fdaf1c67b3",
+      "host_complete_sha256": "530e527f7903365c9d94955a21a8bb57a41d3a6783cbb7c5ceb6eb97dce06095",
+      "checkpoint_sha256": "e4b5acb7bda8b0bb19a73076523bb40c906e2ae0dbd1f2527f4475f4ee23a962",
+      "reviewed_comparison_sha256": "481637629900d2b0fa76861da1046dedc2e510ad81f429e3bdb945fdaf1c67b3"
+    },
+    {
+      "ordinal": 14,
+      "from": 13913663,
+      "stop_exclusive": 13914663,
+      "native_exit": 0,
+      "producer_exit": 0,
+      "handlers": {
+        "handleSwap": 262,
+        "handleBurn": 61,
+        "handleCollect": 61,
+        "handleTransfer": 104,
+        "handleMint": 46,
+        "handleIncreaseLiquidity": 46,
+        "handleDecreaseLiquidity": 7
+      },
+      "triggered_blocks": 292,
+      "operations": 8339,
+      "entities_at_end": 6338,
+      "sources_at_end": 13,
+      "sql_null_projection_fields": 0,
+      "comparison_sha256": "e7516e0ca68c85d0c4ba407eb8cf833a11a5b6825c5be05c277f66976bc86a25",
+      "host_complete_sha256": "b333e3a0a2520f849a68cf812251c2840b8958faa0fb47105c470ff079a250ee",
+      "checkpoint_sha256": "26eb0eb984d923ae80f322d77ef8156eff24dc118023a88c973538bb48e8db67",
+      "reviewed_comparison_sha256": "e7516e0ca68c85d0c4ba407eb8cf833a11a5b6825c5be05c277f66976bc86a25"
+    },
+    {
+      "ordinal": 15,
+      "from": 13914663,
+      "stop_exclusive": 13915663,
+      "native_exit": 0,
+      "producer_exit": 0,
+      "handlers": {
+        "handleSwap": 210,
+        "handleBurn": 34,
+        "handleCollect": 34,
+        "handleTransfer": 57,
+        "handleMint": 28,
+        "handleIncreaseLiquidity": 28,
+        "handleDecreaseLiquidity": 5
+      },
+      "triggered_blocks": 233,
+      "operations": 6114,
+      "entities_at_end": 7006,
+      "sources_at_end": 13,
+      "sql_null_projection_fields": 0,
+      "comparison_sha256": "392a97a95512a310f1e9deac41663e13d0926156b12eb61e6196efc76e3bfef0",
+      "host_complete_sha256": "5e6d432e5b3de06c54acc8310d94cfe2fc608bfad43fb3c205bd89d241a4941c",
+      "checkpoint_sha256": "7d43d8bc02fbff6b3758e294b519448486fab8fa8b25c4133e001a3c531f8810",
+      "reviewed_comparison_sha256": "392a97a95512a310f1e9deac41663e13d0926156b12eb61e6196efc76e3bfef0"
+    },
+    {
+      "ordinal": 16,
+      "from": 13915663,
+      "stop_exclusive": 13916663,
+      "native_exit": 0,
+      "producer_exit": 0,
+      "handlers": {
+        "handleBurn": 44,
+        "handleCollect": 44,
+        "handleTransfer": 69,
+        "handleSwap": 206,
+        "handleMint": 31,
+        "handleIncreaseLiquidity": 31,
+        "handleDecreaseLiquidity": 8
+      },
+      "triggered_blocks": 234,
+      "operations": 6374,
+      "entities_at_end": 7714,
+      "sources_at_end": 13,
+      "sql_null_projection_fields": 0,
+      "comparison_sha256": "7e52f51973157c7b44f20a0ec554dbabeecf1b28224e66d91e9b1aaf60a7f1eb",
+      "host_complete_sha256": "cfad5840c6d96a55041e2de77999a5ce353a0fd0813c0109b1dd1b9dcdb2b681",
+      "checkpoint_sha256": "8c935a8deb65c0104d8cb896fa897aa6cfe2068c11888446ee420c8dca88551f",
+      "reviewed_comparison_sha256": "7e52f51973157c7b44f20a0ec554dbabeecf1b28224e66d91e9b1aaf60a7f1eb"
+    },
+    {
+      "ordinal": 17,
+      "from": 13916663,
+      "stop_exclusive": 13917663,
+      "native_exit": 0,
+      "producer_exit": 0,
+      "handlers": {
+        "handleMint": 38,
+        "handleTransfer": 81,
+        "handleIncreaseLiquidity": 38,
+        "handleSwap": 192,
+        "handleBurn": 58,
+        "handleCollect": 58,
+        "handleDecreaseLiquidity": 14
+      },
+      "triggered_blocks": 238,
+      "operations": 6558,
+      "entities_at_end": 8438,
+      "sources_at_end": 13,
+      "sql_null_projection_fields": 0,
+      "comparison_sha256": "972f25aeaa7502832a1fff533dc1298f95b5cd96d7440a0ed282128a89219aa9",
+      "host_complete_sha256": "c55db118c35fb5789feeb793d117bdfb6853d1b2b58acf9f2b2a66e9afb9afd5",
+      "checkpoint_sha256": "8545b31e7d1ae0db6ed7f499dd128fa4c523a9905436ce0978299971e76cf6bf",
+      "reviewed_comparison_sha256": "972f25aeaa7502832a1fff533dc1298f95b5cd96d7440a0ed282128a89219aa9"
+    },
+    {
+      "ordinal": 18,
+      "from": 13917663,
+      "stop_exclusive": 13918663,
+      "native_exit": 0,
+      "producer_exit": 0,
+      "handlers": {
+        "handleSwap": 328,
+        "handleMint": 47,
+        "handleTransfer": 83,
+        "handleIncreaseLiquidity": 47,
+        "handleBurn": 47,
+        "handleDecreaseLiquidity": 8,
+        "handleCollect": 47
+      },
+      "triggered_blocks": 328,
+      "operations": 9471,
+      "entities_at_end": 9463,
+      "sources_at_end": 13,
+      "sql_null_projection_fields": 0,
+      "comparison_sha256": "d893a2acefcfde398cb505a4a4a0fae5019f6615d9f248b8cf4ae9fdc20eb3c7",
+      "host_complete_sha256": "0586ed59719cd962150f5f586259c8cc05710fd670fd7bc605aaea159d84bec3",
+      "checkpoint_sha256": "a7ac4f0a21078c720bbfff5b5daac2aef61897034cf945c5d6a7f6b0baddf9d6",
+      "reviewed_comparison_sha256": "d893a2acefcfde398cb505a4a4a0fae5019f6615d9f248b8cf4ae9fdc20eb3c7"
+    },
+    {
+      "ordinal": 19,
+      "from": 13918663,
+      "stop_exclusive": 13919663,
+      "native_exit": 0,
+      "producer_exit": 0,
+      "handlers": {
+        "handleSwap": 264,
+        "handleBurn": 38,
+        "handleDecreaseLiquidity": 6,
+        "handleCollect": 38,
+        "handleTransfer": 59,
+        "handleMint": 27,
+        "handleIncreaseLiquidity": 27
+      },
+      "triggered_blocks": 277,
+      "operations": 7370,
+      "entities_at_end": 10213,
+      "sources_at_end": 13,
+      "sql_null_projection_fields": 0,
+      "comparison_sha256": "52ee3bc56b889b86826bc97c2575f52f3798d086e32dd2b8a81dcdc84408f06b",
+      "host_complete_sha256": "e81e693557ef0cc76ce38670e124db1470228d922af765c6fd639628fd8c8628",
+      "checkpoint_sha256": "bbf8af204e7d76b50a3dfb3c7983adab6da7849c4e7dbc0fbb6ea25c6b3492cf",
+      "reviewed_comparison_sha256": "52ee3bc56b889b86826bc97c2575f52f3798d086e32dd2b8a81dcdc84408f06b"
+    }
+  ],
+  "extractor": {
+    "runtime_source_commit": "5e65aa2226dbcb42ae25e8784af989327967e1e6",
+    "spkg_sha256": "7df52603a63b261ed27faf5f27a0b178b2004e156829c6c0edc1b3d605b4ff59",
+    "module": "map_extractor_block",
+    "module_hash": "5b880ad140246ec1bc3eefdd64c287769deac4f8"
+  },
+  "native": {
+    "source_commit": "76a60595fffecf45a4a4af6d11234706fd732b6d",
+    "binary_sha256": "0788ff70a923004be0c4060a0a7d3c23ef4707e23fd089dc6d8d7bafb3871876"
+  },
+  "reviewed_comparisons": {
+    "path": "reviewed-comparisons/complete.json",
+    "pin": {
+      "bytes": 11651,
+      "sha256": "6f9fe93cbbcbfb732660a31a2491a12c02e63acc25ddd3be3d299d84608c55bb"
+    },
+    "identity": {
+      "binary": {
+        "bytes": 2107344,
+        "sha256": "a5f49538d2adabbe3154101953d6da488a8e7621d6af17c82ca68129f80ca908"
+      },
+      "helper_source": {
+        "bytes": 18630,
+        "sha256": "a58b6af0f4ced027a94ee9c8be3382520c417b8a57b83377441185e264badfa5"
+      },
+      "harness_source": {
+        "bytes": 29231,
+        "sha256": "7f79e9bddb4a7142f3091fb6b735a2c498b2b7adbbd055b0e0ecb150a65b999a"
+      },
+      "base_engine_commit": "e4580444c56d6fcc778cb50394a9a693823457eb",
+      "changed_compile_inputs": {
+        "Cargo.toml": {
+          "bytes": 2187,
+          "sha256": "6778bd76ef9fd8018664468d341cafc065ee1c9d482302ea21518e95abee718f"
+        },
+        "Cargo.lock": {
+          "bytes": 42253,
+          "sha256": "4b776b4e1c1bf4e9c5eaf39368a10b9bf919ff640c629e6494065a4507cb2a37"
+        },
+        "adapters/uniswap-v4-base/block-changes-v1.json": {
+          "bytes": 27903,
+          "sha256": "dec69571023aa94279cbc340d782a49d83b16a4f232d52936381b85420888d03"
+        },
+        "adapters/uniswap-v4-base/block-changes-v1.sha256": {
+          "bytes": 65,
+          "sha256": "d40e56f8886fc60365dff565c24e28a5e2be95070808774f3015a98af826a357"
+        }
+      },
+      "production_qualified": false
+    },
+    "actual_native_requests_repeated": false,
+    "helper_commit": "4998678e7e57a4ece476e42c05b26ec9249bda1d"
+  },
+  "reviewed_refusal_probes": {
+    "path": "refusal-probes-reviewed/complete.json",
+    "pin": {
+      "bytes": 1586,
+      "sha256": "61ac9ff469fecf37729999a908775f945dab31e7c440709002243dae8716aabf"
+    },
+    "cases": 12
+  },
+  "independent_review": {
+    "positive": {
+      "path": "/private/tmp/aerodrome-seeded-helper-independent-positive.json",
+      "pin": {
+        "bytes": 688,
+        "sha256": "4764331e86855ccdc57c935b84ea4b2b6e19c962dc26b0af89245addd89498dc"
+      }
+    },
+    "negative": {
+      "path": "/private/tmp/aerodrome-seeded-helper-independent-negatives/complete.json",
+      "pin": {
+        "bytes": 1586,
+        "sha256": "61ac9ff469fecf37729999a908775f945dab31e7c440709002243dae8716aabf"
+      }
+    }
+  },
+  "validation": {
+    "path": "review-validation/complete.json",
+    "pin": {
+      "bytes": 1018,
+      "sha256": "f3296630bbf04841d47063c39f938cadfb494b0732acc598e4b00e09bbc9a671"
+    },
+    "make_validate_exit": 0,
+    "offline_verify_spkg_exit": 0,
+    "harness_tests": 6,
+    "black_box_refusals": 12,
+    "reviewed_windows": 20,
+    "production_qualified": false,
+    "linux_image_qualified": false
+  },
+  "reviewed_archive": {
+    "path": "/private/tmp/aerodrome-seeded-early-history-reviewed-v1.tar.gz",
+    "bytes": 69968965,
+    "sha256": "1d6b788546285adc4a61f7c6a89df3da93e32431a4ebe56604dbe0540116997c",
+    "regular_files": 1062,
+    "excluded_owned_postgres_data": true,
+    "special_files_retained_locally_only": [
+      {
+        "path": "refusal-probes/symlink_input/seed",
+        "kind": "symlink"
+      },
+      {
+        "path": "refusal-probes-reviewed/fifo_input/fifo",
+        "kind": "special"
+      },
+      {
+        "path": "refusal-probes-reviewed/symlink_input/seed",
+        "kind": "symlink"
+      }
+    ],
+    "production_qualified": false,
+    "all_regular_file_payloads_rehashed": true,
+    "hardlink_members": 21
+  }
+}

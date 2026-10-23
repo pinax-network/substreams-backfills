@@ -15,7 +15,9 @@ Node's own runtime crates, pinned to `graph-node` revision
 It is family-neutral. It knows about segment bundles, Firehose blocks, an
 in-memory store, an `eth_call` cassette and Graph Node's wave scheduler; it knows
 nothing about Uniswap. Uniswap V3 is simply the first family whose eight
-deployments are bundled under `segments/`.
+deployments are bundled under `segments/`. The second is Aerodrome Slipstream
+on Base, bundled as an execution oracle; see
+[Aerodrome Slipstream Base](#aerodrome-slipstream-base-the-oracle-segment).
 
 It runs the deployed mappings hermetically, records the **ordered per-save
 operation stream**, and seals one canonical
@@ -104,6 +106,16 @@ The first five declare no `features`, so their deterministic-error policy is
 **fatal**: one deterministic error discards every other write in the block. The
 last three are **non-fatal**. Getting that wrong is a silent correctness bug, so
 it is read from the resolved manifest and reported per block.
+
+One more bundle is not a Uniswap V3 deployment:
+
+| Deployment | Blocks | Spec | API | Features |
+|---|---|---|---|---|
+| `QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV` | Base 13,843,704–head | 1.2.0 | 0.0.7 | nonFatalErrors, grafting (no concrete graft) |
+
+It is the deployed Aerodrome Slipstream CL Base subgraph, built from the exact
+objects `aerodrome-slipstream-base/reference/` pins; see
+[Aerodrome Slipstream Base](#aerodrome-slipstream-base-the-oracle-segment).
 
 Rebuild the bundles from a directory of IPFS objects with:
 
@@ -318,7 +330,8 @@ Two different things happen at the end of a block:
 
 Version rule: spec `>= 0.0.6` uses `Fast`, below uses `Legacy`. All eight Uniswap
 V3 deployments are 0.0.2 or 0.0.4, so all eight are **Legacy**, which is why the
-`stable-hash` revisions are pinned.
+`stable-hash` revisions are pinned. The Aerodrome bundle is spec 1.2.0, so its
+chain is **Fast**; the rule is the same code path, read from the manifest.
 
 A block in which no handler ran produces no causality region, so no PoI entity is
 written and the digest does not advance. The report says `poi: null` for such a
@@ -1386,6 +1399,192 @@ fixture set, not of the deployed mapping, and the
 [parity-window run](#the-parity-window-run-1053-contiguous-blocks) above is the
 contiguous replay that separates the two.
 
+## Aerodrome Slipstream Base: the oracle segment
+
+`segments/QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV/` is the deployed
+Aerodrome Slipstream CL Base subgraph: spec 1.2.0, API 0.0.7, `nonFatalErrors`,
+a Factory at 13,843,704, a NonfungiblePositionManager at 13,843,719 and a `Pool`
+template. It is here to be the **exact oracle** every faster route is compared
+against — a Substreams extractor plus a native reducer must reproduce its frames
+and PoI digests on the windows it covers. It is not a route for the whole range;
+see the throughput below.
+
+### What it took to run a Base, spec 1.2.0 deployment
+
+Nothing in the host had to change. Every identity a V3 segment needed except
+one is read from the resolved manifest, and an Aerodrome segment reads different
+values out of the same code. The exception, `eth_call` gas, is a pinned
+constant, and the last row says why it still holds for Base:
+
+| Identity | Where it comes from | Aerodrome |
+|---|---|---|
+| network, PoI causality region | `manifest.network_name()`, `PoICausalityRegion::from_network` | `base`, `ethereum/base` |
+| PoI hasher | `poi::version_for_spec` (`>= 0.0.6`) | `fast` |
+| deterministic-error policy | `features` contains `nonFatalErrors` | non-fatal |
+| first block | lowest `startBlock`, or the block after a graft | 13,843,704 (`grafting` is declared, no graft is) |
+| `eth_call` gas | **not derived**: `calls::ETH_CALL_GAS`, a constant 50,000,000 the host sends with every recorded call. Graph Node sends the same value unless the RPC's `net_version` is in `GRAPH_ETH_CALL_NO_GAS` (default `421613,421614`, `runtime_adapter.rs` `eth_call_gas`), in which case it sends none. The host implements no such rule and `env_pin` does not pin that variable | 50,000,000, which equals Graph Node's value for Base because `8453` is not in the default list. An indexer that adds `8453` to the variable would send no gas, and these recordings would not describe it |
+
+Three things a Base spec-1.2.0 deployment brings, checked rather than assumed:
+
+* **OP-stack deposit transactions.** Every Base block opens with an
+  L1-attributes deposit transaction, type `0x7e`. graph-node v0.44's own
+  `TryInto<BlockFinality>` converts an unknown type into an
+  `AnyTxEnvelope::Unknown` (`chain/ethereum/src/codec.rs:146-253`, with its own
+  type-126 tests at `:936-1020`), and this host uses that conversion verbatim.
+  The root-window runs below converted 75,959 consecutive Base blocks with no
+  conversion error, and the dense fixture block also carries EIP-7702
+  transactions.
+* **Declared calls.** Spec 1.2.0 attaches `calls:` to handlers. graph-node's
+  parser resolves them and `match_and_decode` attaches them to each trigger, both
+  reused verbatim. Graph Node's `DecoderHook` then runs them ahead of the handler
+  purely to warm its call cache — a revert is only logged — so the handler's own
+  `ethereum.call` is what the cassette answers, and the hook is not reproduced.
+* **`grafting` without a graft.** The deployment is its own root, so a replay
+  from 13,843,704 is complete.
+
+What *was* Uniswap-V3-specific was outside the host: the all-bundles test and the
+runtime packaging test asserted exactly eight bundles, and the evidence writer
+could put an absolute path into a committed file when a cassette lived outside
+the crate.
+
+### The root window: 75,959 contiguous blocks
+
+Two live Firehose replays on 2026-10-20, from `base.firehose.pinax.network:443`
+with calls recorded against `base.rpc.pinax.network` (EIP-1898, pinned to the
+block hash):
+
+| Run | Range | Blocks | Handler groups | Operations | Wall clock | Max RSS |
+|---|---|---:|---:|---:|---:|---:|
+| root prefix | 13,843,704 → 13,899,663 | 55,959 | 0 | 0 | 587.8 s, 95.2 blocks/s | 138 MB |
+| first pools, recording | 13,899,663 → 13,919,663 | 20,000 | 6,089 | 90,966 | 997.0 s, 20.1 blocks/s | 586 MB |
+| first pools, replay from the prefix checkpoint | same | 20,000 | 6,089 | 90,966 | 462.6 s, 43.2 blocks/s | 267 MB |
+
+* **Nothing happens before 13,899,663.** The root prefix ran no handler, wrote
+  no PoI and made no call; eth_getLogs agrees, finding the first `PoolCreated`
+  at 13,899,663 and one position-manager log before it, for an event no handler
+  declares.
+* **One chain from the root.** The replay continued with `--checkpoint-in` from
+  the prefix's checkpoint, whose boundary hash is block 13,899,663's parent, with
+  recording off. Its `BCF1` stream and final store are byte-identical to the
+  recording run's.
+* **The wave trap is real.** All thirteen pools in the window are created by a
+  position-manager multicall, and in all thirteen `Initialize` is the log just
+  before `PoolCreated`. `handleInitialize` and `handleMint` therefore run in wave
+  1, after the wave-0 `handlePoolCreated`, `handleTransfer` and
+  `handleIncreaseLiquidity` — the last two at *higher* log indices. The summary
+  records this per pool (`data_source_creations`: the creating handler, and the
+  log index and wave of every handler in the creating transaction or on the new
+  pool in that block), and a CI test asserts all thirteen rows and that every
+  `handleInitialize` in the window is one of them.
+* **Every handler but `handleFlash` ran,** 6,089 invocations, all `ok`; no
+  `Flash` occurs in the window. `Collect`, `Flash` and `TickHourData` rows were
+  never written. No deterministic error, so no BigDecimal outside the
+  BlockChanges v1 precision contract reached a frame.
+* **Calls.** 9,394 cassette rows over nine function signatures; the 46 reverts
+  are all `positions(tokenId)` on a token the same block burns, because a call
+  reads end-of-block state.
+* **Throughput.** Recording is RPC-bound: 6 to 10 handler groups/s once density
+  passes 0.4 groups per block. Replay costs about 31 ms of CPU per handler group
+  (the prefix's 3.4 ms of CPU per block subtracted). Near head, at about 58
+  groups per block, that is roughly 0.5 blocks/s — an estimate, and one that the
+  growing store can only make worse.
+
+### What is committed, what is locked, and what CI checks
+
+The committed evidence is the two summaries,
+`evidence/aerodrome-root-prefix-13843704-13899663.json` and
+`evidence/aerodrome-first-pools-13899663-13919663.json`. Both were written with
+`summarize --per-block-scope handler-blocks`, which makes a
+**`run-evidence/v2`** summary:
+
+* the sparse per-block file (`per_block.file`) lists only blocks that ran a
+  handler, wrote a PoI, carried an operation or were discarded
+  (`per_block.scope` is `handler_blocks`);
+* the complete per-block file, one line per block, is written beside it and
+  named and pinned by `per_block.all_blocks`, so a re-run can still be compared
+  block by block;
+* `data_source_creations` places every created data source by wave, as above.
+
+The version is v2 rather than v1 so that a reader that knows nothing of
+`per_block.scope` refuses the file instead of taking a 3,276-line file for a
+20,000-block range. **A v2 reader must honour `per_block.scope`.**
+`RunEvidence::check_schema` refuses a summary whose version and shape disagree,
+and `summarize --per-block-scope all` still writes exactly the v1 summary it
+always did, so the parity-window file above regenerates unchanged.
+
+What the summaries were derived from is not committed. It is locked by digest
+and published as release assets, like the Uniswap V3 block fixtures
+(`docs/evidence-assets.md`):
+
+| Lock | Release | Holds | CI |
+|---|---|---|---|
+| `aerodrome-slipstream-base/fixtures/blocks.lock.json` | `aerodrome-base-block-fixtures-v1` | the two Base fixture blocks below | fetched |
+| `evidence/aerodrome-root-window.lock.json` | `aerodrome-root-window-evidence-v1` | both runs' streamed reports (90 MB and 35 MB), the window's cassette (6.5 MB), the window's sparse per-block file and both complete ones | fetched |
+| `evidence/aerodrome-root-window-archive.lock.json` | `aerodrome-root-window-archive-v1` | both `BCF1` streams, both closing checkpoints and the window's final store | not fetched |
+
+`ci-mapping-host` hydrates the first two before `cargo test`, and
+`tests/mapping_host/aerodrome_root_window_evidence.rs` then **re-derives both
+summaries byte for byte from the published reports**: every total, handler
+count, creation row, final store count, final PoI, cassette fact and per-block
+pin is recomputed by the same `summarize` code and must equal the committed
+file. It also checks the published per-block files against their pins directly,
+that the sparse file is exactly the complete file's handler blocks, and that
+every locked asset is one a summary names by digest. Changing any derived field
+of either summary by hand fails CI. The archive is for continuing the chain past
+13,919,662 with `--checkpoint-in`, or for checking the `BCF1` and store digests
+the prose states; fetch it explicitly:
+
+```sh
+cargo xtask evidence fetch --lock aerodrome-slipstream-base/fixtures/blocks.lock.json
+cargo xtask evidence fetch --lock mapping-host/evidence/aerodrome-root-window.lock.json
+cargo xtask evidence fetch --lock mapping-host/evidence/aerodrome-root-window-archive.lock.json   # optional
+```
+
+The prefix's sparse file is empty and is not published: its digest is the empty
+string's, which the summary proves without the file.
+
+All three immutable evidence releases were published and independently verified
+on 2026-10-21. Each release's exact remote asset set passed
+`cargo xtask evidence audit-release --lock <lock>`, then `evidence fetch` into a
+new empty root with a new empty cache downloaded and hash-checked every asset;
+`evidence check` passed on those downloaded files. The 13 assets total
+320,344,516 bytes. Release tags target main commit
+`bbe37830857c627561e13882119f5a40e0eed090`; the assets are the exact locked bytes
+from oracle source `a64a146`, not a fresh replay or executable runtime release.
+
+- [Base fixture blocks](https://github.com/pinax-network/substreams-backfills/releases/tag/aerodrome-base-block-fixtures-v1): 2 assets, 7,358,526 bytes.
+- [Root-window reports and cassette](https://github.com/pinax-network/substreams-backfills/releases/tag/aerodrome-root-window-evidence-v1): 6 assets, 143,757,163 bytes.
+- [Root-window BCF1 and state archive](https://github.com/pinax-network/substreams-backfills/releases/tag/aerodrome-root-window-archive-v1): 5 assets, 169,228,827 bytes.
+
+### Fixtures
+
+`fixtures/cassettes/QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV.json` answers
+every call two Base blocks make when replayed in sequence. The block files
+(708 KB and 6.6 MB) hydrate from the block-fixtures lock above, and
+`tests/mapping_host/segment_aerodrome.rs` replays them in two tests that make
+different claims:
+
+* **13,899,663: live-frame parity.** The first pool, the first position-manager
+  events and the first wave-1 handlers, all in one transaction. Replayed from
+  the fixture alone it produces the frame and PoI the live root run produced
+  (`62c0b927…`, PoI `6645b82f…`); the test compares them with the live run's own
+  line in the published complete per-block file.
+* **52,800,000: a regression pin for the non-fatal path, on a synthetic store
+  gap.** A dense recent block: 2,631 logs, 501 from the position manager, three
+  deposit and two EIP-7702 transactions. It is replayed with only the first pool
+  behind it, so its frame and PoI digests are this host's own: no live run has
+  produced them. 175 position-manager handlers abort on rows this two-block
+  store does not hold, and the non-fatal policy discards only those handlers'
+  saves: the block is kept, with the work of its other 80 handler groups (255 in
+  all, 479 operations). This is the only replay that reaches
+  `STORE_DISPOSITION_COMMITTED` after a deterministic error. **The non-fatal
+  path is therefore exercised only on an artificial gap, not shown on deployed
+  behaviour**: the root window had no deterministic error at all.
+
+The bundle tests (that it is byte-for-byte the target M7 pinned, that graph-node
+resolves it as deployed, the host identity and the descriptor's byte-for-byte
+regeneration) need nothing fetched.
+
 ## What could not be reproduced through public API
 
 | Wanted | Status | Why |
@@ -1414,10 +1613,40 @@ contiguous replay that separates the two.
   range from the factory forward with no sampling. Reaching it means replaying
   394,776 blocks from the graft-free root, which is what checkpoints are for; the
   run has not been done.
-* **`STORE_DISPOSITION_COMMITTED` after a deterministic error.** Untested, and
-  now for a better reason: the contiguous run produced no deterministic error at
-  all, so nothing in it reaches the non-fatal disposition. Reaching it needs one
-  of the three `nonFatalErrors` segments.
+* **`STORE_DISPOSITION_COMMITTED` after a deterministic error, on real data.**
+  Not reached by any Uniswap V3 run, nor by the Aerodrome root window: neither
+  produced a deterministic error. The Aerodrome dense fixture block reaches it,
+  but only because its two-block store lacks rows the handlers read, so the
+  non-fatal path is exercised on a synthetic gap and has not been shown on
+  deployed behaviour.
+* **Aerodrome parity with an indexer.** "Exact oracle" is still a claim about
+  this host alone. No Aerodrome PoI here has been compared with a production
+  Base indexer's `proofOfIndexing` (public, `indexer: null`); the first
+  candidate is the window's final Fast PoI, `f1d57922…` at 13,919,660. A match
+  would turn the root window from an observation into parity evidence. Also
+  open: whether ingesting blocks over RPC rather than Firehose changes any
+  transaction field a handler reads, `gasPrice` on OP-stack deposit transactions
+  in particular. Whether any handler in the window ran inside a deposit
+  transaction has not been checked: the report records transaction hashes, not
+  types.
+* **Aerodrome's `handleFlash`, root, and position-manager start.** No `Flash`
+  occurs in the root window, so `handleFlash` (which updates fee growth without
+  writing a `Flash` row) is unexercised. On 2026-10-20 an `eth_getLogs` scan of
+  `base.rpc.pinax.network` for the `Flash` topic (`0xbdbdb71d…`, as
+  `aerodrome-slipstream-base/layout-profile-v1.json` pins it) over the thirteen
+  root-window pools, in contiguous 10,000-block ranges from 13,899,663, found
+  the first at **14,713,512** (log 84, the first pool `0x98c7a233…`, transaction
+  `0x1d7aabe3…`), then five more by 14,717,636. That is an upper bound, not the
+  deployment's first `Flash`: pools created after 13,919,662 were not scanned.
+  Reaching it from the window's archived checkpoint is a replay of 793,850
+  blocks. The fixture set also has no block at the root (13,843,704) or at the
+  position manager's start (13,843,719); the root-window run covers both, but
+  no fixture replays them.
+* **Aerodrome's `data_sources$`.** `--data-sources-out` is bounded to a 10,000
+  block root run, and Aerodrome's first data source is created 55,959 blocks
+  after its root, so v1 can never cover it. The v2 source chunks are the path, and
+  they refuse a chunk with a deterministic error, which a `nonFatalErrors`
+  deployment is allowed to have.
 * **`RemoveEntity`.** Implemented end to end, including the pre-key remove the
   proto models, but no Uniswap V3 module imports `store.remove`, so no fixture
   reaches it.

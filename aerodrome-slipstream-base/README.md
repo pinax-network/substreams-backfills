@@ -65,9 +65,44 @@ position accounting, and a Flash handler that updates Pool fee-growth fields
 without creating a `Flash` row. The profile records these as static facts, not
 as a complete value/order/persistence proof.
 
+## Executable oracle
+
+The same eleven objects are bundled for the deployed-mapping host as
+`mapping-host/segments/QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV/`, so the
+deployed WASMs can be executed under Graph Node v0.44.0's own runtime and their
+per-save BlockChanges frames and Fast PoI digests used as the oracle for any
+reimplementation. Its first committed evidence replays the root window,
+13,843,704 to 13,919,662, from Firehose; see
+[the mapping-host README](../mapping-host/README.md#aerodrome-slipstream-base-the-oracle-segment).
+That is an executable observation, not parity with the deployed subgraph, and no
+truth gate in `QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV.yaml` changes.
+
+### Operator direction, 2026-10-20
+
+On 2026-10-20 the operator directed an Aerodrome backfill lane for this
+deployment: a Substreams extractor with a native reducer, a dedicated Graph Node
+worker in parallel, and this deployed mapping, executed by the mapping host, as
+the exact oracle for both. The oracle above was built and run under that
+direction, before the eligibility evidence the next section requires. It is
+recorded here as a scoped exception to that section's first sentence, and only
+that:
+
+- **Scope:** executing the deployed WASMs in `mapping-host` as an oracle, and the
+  root-window evidence that run produced.
+- **Unchanged:** every truth gate and the eligibility record in
+  `QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV.yaml` (eligibility stays
+  `indeterminate`, `no_fresh_evidence`), and every requirement below for
+  implementation parity, compute, load, Kubernetes, production and readiness.
+  `cargo xtask verify-target aerodrome-slipstream-base` still checks all of them.
+- **Not decided here:** whether the same direction also stands in for the
+  eligibility gate for the extractor and reducer, or eligibility is refreshed
+  first (decision D7 of the 2026-10-20 lane survey). That is the operator's call
+  and is not recorded as made; this record covers the oracle only.
+
 ## Remaining gates
 
-Runtime work must not begin until fresh evidence fully accounts for both
+Apart from the oracle execution recorded above, runtime work must not begin
+until fresh evidence fully accounts for both
 required clusters by inventorying every current copy or supplying fresh
 structural absence proof. When viable healthy copies exist, independently select the
 minimum stable same-pod 24-hour ETA and minimum stable same-pod 72-hour ETA across all viable

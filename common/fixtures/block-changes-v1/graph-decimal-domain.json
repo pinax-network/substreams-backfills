@@ -1,0 +1,172 @@
+{
+  "contract": "pinax.graph.backfill.block-changes/v1",
+  "graph_node": {
+    "version": "0.44.0",
+    "commit": "77823b5a7adc4eac4abf03202c8dd7cb00dea31d",
+    "bigdecimal": "0.1.2",
+    "num_bigint": "0.2.6"
+  },
+  "rule": "A nonzero (coefficient, scale) is accepted exactly when Graph Node's BigDecimal::normalized() maps it to itself.",
+  "cases": [
+    {
+      "name": "v4-base-token-tvl-negative-35-digits",
+      "coefficient": "-19582627366648723548155211868460794",
+      "scale": 31,
+      "graph_node_fixed_point": true,
+      "expected": "accept",
+      "note": "Production V4 Base Token TVL: (-1958.23222 * 0.000443428497055167816687599679621575) * 2255.190161262956454194198227130777, with the intermediate re-normalized at the WASM boundary. The engine's decimal.rs oracle test expects this value."
+    },
+    {
+      "name": "graph-negative-one-third-35-digits",
+      "coefficient": "-33333333333333333333333333333333333",
+      "scale": 35,
+      "graph_node_fixed_point": true,
+      "expected": "accept",
+      "note": "Graph Node's BigDecimal(-1) / BigDecimal(3)."
+    },
+    {
+      "name": "graph-positive-one-third-34-digits",
+      "coefficient": "3333333333333333333333333333333333",
+      "scale": 34,
+      "graph_node_fixed_point": true,
+      "expected": "accept",
+      "note": "Graph Node's BigDecimal(1) / BigDecimal(3)."
+    },
+    {
+      "name": "positive-35-digit-one-third-magnitude-refused",
+      "coefficient": "33333333333333333333333333333333333",
+      "scale": 35,
+      "graph_node_fixed_point": false,
+      "expected": "DecimalPrecision",
+      "note": "The positive twin of -1/3. Positive coefficients get a true digit count, so 35 digits are rounded."
+    },
+    {
+      "name": "positive-35-digit-repunit-refused",
+      "coefficient": "11111111111111111111111111111111111",
+      "scale": 0,
+      "graph_node_fixed_point": false,
+      "expected": "DecimalPrecision",
+      "note": "A positive 35-digit coefficient is always rounded to 34 digits."
+    },
+    {
+      "name": "negative-35-digit-repunit-accepted",
+      "coefficient": "-11111111111111111111111111111111111",
+      "scale": 0,
+      "graph_node_fixed_point": true,
+      "expected": "accept",
+      "note": "114 bits: the bit estimate counts 34 digits, so with_prec(34) leaves it unchanged."
+    },
+    {
+      "name": "positive-34-nines",
+      "coefficient": "9999999999999999999999999999999999",
+      "scale": 0,
+      "graph_node_fixed_point": true,
+      "expected": "accept",
+      "note": "The largest positive coefficient."
+    },
+    {
+      "name": "negative-34-nines",
+      "coefficient": "-9999999999999999999999999999999999",
+      "scale": 0,
+      "graph_node_fixed_point": true,
+      "expected": "accept",
+      "note": "Every 34-digit negative coefficient is a fixed point."
+    },
+    {
+      "name": "positive-smallest-35-digit-refused",
+      "coefficient": "10000000000000000000000000000000001",
+      "scale": 0,
+      "graph_node_fixed_point": false,
+      "expected": "DecimalPrecision",
+      "note": "10^34 + 1, 113 bits. Refused because it is positive, not because of its bit length."
+    },
+    {
+      "name": "negative-smallest-35-digit-accepted",
+      "coefficient": "-10000000000000000000000000000000001",
+      "scale": 0,
+      "graph_node_fixed_point": true,
+      "expected": "accept",
+      "note": "-(10^34 + 1), 113 bits."
+    },
+    {
+      "name": "negative-largest-116-bit-accepted",
+      "coefficient": "-83076749736557242056487941267521535",
+      "scale": 0,
+      "graph_node_fixed_point": true,
+      "expected": "accept",
+      "note": "-(2^116 - 1): the largest negative magnitude Graph Node's normalization leaves unchanged."
+    },
+    {
+      "name": "negative-2-pow-116-refused",
+      "coefficient": "-83076749736557242056487941267521536",
+      "scale": 0,
+      "graph_node_fixed_point": false,
+      "expected": "DecimalPrecision",
+      "note": "-2^116, 117 bits: the bit estimate counts 35 digits and with_prec truncates one."
+    },
+    {
+      "name": "negative-2-pow-116-plus-one-refused",
+      "coefficient": "-83076749736557242056487941267521537",
+      "scale": 0,
+      "graph_node_fixed_point": false,
+      "expected": "DecimalPrecision",
+      "note": "-(2^116 + 1), 117 bits."
+    },
+    {
+      "name": "positive-2-pow-116-minus-one-refused",
+      "coefficient": "83076749736557242056487941267521535",
+      "scale": 0,
+      "graph_node_fixed_point": false,
+      "expected": "DecimalPrecision",
+      "note": "The magnitude the negative side accepts is refused when positive."
+    },
+    {
+      "name": "negative-35-nines-refused",
+      "coefficient": "-99999999999999999999999999999999999",
+      "scale": 0,
+      "graph_node_fixed_point": false,
+      "expected": "DecimalPrecision",
+      "note": "-(10^35 - 1), 117 bits. A plain negative 35-digit bound would wrongly accept it."
+    },
+    {
+      "name": "wasm-transient-tvl-intermediate-refused",
+      "coefficient": "-86833597019960473614471136709664557",
+      "scale": 35,
+      "graph_node_fixed_point": false,
+      "expected": "DecimalPrecision",
+      "note": "N(-1958.23222 * 0.000443428497055167816687599679621575), 117 bits. Graph Node returns it to the mapping, but every value the mapping passes back is normalized again, so no save of an arithmetic result carries it."
+    },
+    {
+      "name": "wasm-transient-tvl-intermediate-renormalized",
+      "coefficient": "-8683359701996047361447113670966455",
+      "scale": 34,
+      "graph_node_fixed_point": true,
+      "expected": "accept",
+      "note": "What a save of that intermediate stores: one more normalization truncates it to 34 digits."
+    },
+    {
+      "name": "raw-to-big-decimal-negative-126-bit-refused",
+      "coefficient": "-85070591730234615865843651857942052",
+      "scale": -3,
+      "graph_node_fixed_point": false,
+      "expected": "DecimalPrecision",
+      "note": "What Graph Node stores when a mapping saves BigInt.toBigDecimal() of -(2^126 - 1) with no host arithmetic: the store boundary normalizes the raw value only once. It is not a fixed point, so v1 refuses it deliberately; see docs/block-changes-v1.md."
+    },
+    {
+      "name": "negative-35-digit-trailing-zero",
+      "coefficient": "-33333333333333333333333333333333330",
+      "scale": 0,
+      "graph_node_fixed_point": false,
+      "expected": "NonNormalizedDecimal",
+      "note": "Within the 116-bit bound but not stripped of its trailing zero."
+    },
+    {
+      "name": "negative-117-bit-trailing-zero",
+      "coefficient": "-83076749736557242056487941267521540",
+      "scale": 0,
+      "graph_node_fixed_point": false,
+      "expected": "DecimalPrecision",
+      "note": "Precision is checked before the trailing zero."
+    }
+  ]
+}

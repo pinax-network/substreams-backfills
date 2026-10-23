@@ -1,0 +1,20 @@
+[package]
+name = "graph-numerics"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+description = "Graph Node v0.44 numeric semantics at the AssemblyScript host boundary"
+
+[dependencies]
+backfill-common = { path = "../../common" }
+graph-bigdecimal = { package = "bigdecimal", version = "=0.1.2" }
+graph-num-bigint = { package = "num-bigint", version = "=0.2.6" }
+num-traits.workspace = true
+
+[dev-dependencies]
+hex.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true

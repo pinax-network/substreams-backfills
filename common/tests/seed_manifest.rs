@@ -221,6 +221,30 @@ fn exact_landing_manifest_and_full_stream_produce_verified_token() {
     );
 }
 #[test]
+fn deferred_query_indexes_do_not_refuse_an_exact_healthy_capture() {
+    for purpose in [SnapshotPurpose::Landing, SnapshotPurpose::Oracle] {
+        let (mut m, h, r) = fixture(purpose.clone());
+        m.deployment.postponed_indexes_created = false;
+        let (m, b, s) = seal(m, h, &r);
+        let decoded = Manifest::decode(&b).unwrap();
+        assert!(!decoded.deployment.postponed_indexes_created);
+        let read_purpose = if purpose == SnapshotPurpose::Landing {
+            ReadPurpose::Loadable
+        } else {
+            ReadPurpose::OracleComparison
+        };
+        let verified = read(&m, &b, &s, read_purpose).unwrap();
+        verified.require_complete_source_history().unwrap();
+        assert_eq!(
+            verified.require_loadable().is_ok(),
+            purpose == SnapshotPurpose::Landing
+        );
+        let mut changed = m.clone();
+        changed.catalog_sha256 = "99".repeat(32);
+        assert!(changed.validate().is_err());
+    }
+}
+#[test]
 fn oracle_never_becomes_loadable_even_with_valid_snapshot_and_manifest() {
     let (m, h, r) = fixture(SnapshotPurpose::Oracle);
     let (m, b, s) = seal(m, h, &r);
@@ -265,7 +289,9 @@ fn canonical_bytes_external_digest_and_capture_binding_are_independent() {
 #[test]
 fn unhealthy_failed_incomplete_locks_and_identity_observations_are_refused() {
     let (m, h, r) = fixture(SnapshotPurpose::Landing);
-    let (m, _, _) = seal(m, h, &r);
+    let (mut m, _, _) = seal(m, h, &r);
+    m.deployment.postponed_indexes_created = false;
+    m.validate().unwrap();
     let mutations: Vec<fn(&mut Manifest)> = vec![
         |m| m.capture.health = "unhealthy".into(),
         |m| m.capture.non_fatal_errors.push("error".into()),
@@ -281,7 +307,6 @@ fn unhealthy_failed_incomplete_locks_and_identity_observations_are_refused() {
         |m| m.capture.profile_sha256 = "99".repeat(32),
         |m| m.deployment.start_parent = boundary(8),
         |m| m.deployment.schema_sha256 = "99".repeat(32),
-        |m| m.deployment.postponed_indexes_created = false,
         |m| m.deployment.namespace_count = 2,
         |m| m.deployment.current_reorg_depth = 1,
         |m| m.capture.head = boundary(99),
@@ -296,6 +321,8 @@ fn unhealthy_failed_incomplete_locks_and_identity_observations_are_refused() {
 fn unsupported_or_pruned_history_cannot_supply_complete_source_claim() {
     let (m, h, r) = fixture(SnapshotPurpose::Landing);
     let (mut m, _, s) = seal(m, h, &r);
+    m.deployment.postponed_indexes_created = false;
+    m.validate().unwrap();
     m.history = History::Unproven {
         reason: "copy provenance is not yet retained".into(),
     };

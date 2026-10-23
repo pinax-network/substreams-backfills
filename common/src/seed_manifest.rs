@@ -135,6 +135,8 @@ pub struct DeploymentObservation {
     pub fatal_error: Option<String>,
     pub retained_error_count: u64,
     pub current_reorg_depth: u32,
+    /// Observed deferred attribute/query-index state, not a data-completeness
+    /// predicate. The exact physical profile/catalog remains independently bound.
     pub postponed_indexes_created: bool,
     pub namespace_count: u32,
 }
@@ -171,7 +173,10 @@ pub enum History {
     UnprunedFromDeploymentStart {
         history_blocks: u64,
         earliest_block: u64,
-        /// Exact physical entity inventory, keyed by logical entity type.
+        /// Exact physical entity inventory, keyed by logical entity type. Values
+        /// are Graph Node's LEFT JOIN-derived prune markers: an absent table_stats
+        /// row and a row with SQL NULL both produce None. Missing entity keys are
+        /// still refused; the observed earliest block independently bounds pruning.
         table_last_pruned_block: BTreeMap<String, Option<u64>>,
     },
 }
@@ -260,7 +265,6 @@ impl Manifest {
                 && d.fatal_error.is_none()
                 && d.retained_error_count == 0
                 && d.current_reorg_depth == 0
-                && d.postponed_indexes_created
                 && d.namespace_count == 1
                 && self.catalog_sha256 == b.catalog_sha256,
             "seed capture/deployment observation mismatch or unhealthy source",

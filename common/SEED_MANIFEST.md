@@ -37,13 +37,21 @@ The transaction must be read-only repeatable read. Advisory locks alone do not
 prove that a Graph Node worker was stopped. Captures must retain and separately
 verify that operational evidence before deployment use.
 
+`postponed_indexes_created` is retained as an observation of Graph Node's deferred
+attribute/query indexes. A false value does not imply missing entity data and is
+not an admission predicate. The exact physical profile and catalog digest remain
+mandatory, so this does not permit an unreviewed physical index layout.
+
 History has two explicit states. `Unproven` records why the capture cannot establish
 complete historical source/error coverage and permits only diagnostic landing
 reads. Complete coverage requires the observed unlimited history setting, an
 earliest block before deployment start, and the exact entity-table inventory of
-observed prune markers, all absent or earlier than deployment start. A missing
-`table_stats` row must not be relabeled as an observed SQL NULL marker by the
-capture implementation. Changing `history_blocks` after pruning is insufficient.
+observed prune markers, all absent or earlier than deployment start. Marker values
+follow Graph Node's LEFT JOIN semantics: a missing `table_stats` row and a SQL NULL
+marker both produce `None`; every entity type still requires an inventory entry.
+The observed earliest block is independent: Graph Node advances it before
+destructive pruning, and the held prune lock excludes concurrent pruning during
+capture. Changing `history_blocks` after pruning is insufficient.
 Oracle capture also requires this complete coverage. Future copied/pruned-history
 proofs require a separate reviewed contract; callers cannot replace them with a
 boolean or an asserted `no failed hosts` string.

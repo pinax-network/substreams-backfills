@@ -865,6 +865,32 @@ mod tests {
             .find(|s| s["uses"].as_str() == Some("docker/build-push-action@v6"))
             .unwrap();
         assert_eq!(build["with"]["push"].as_bool(), Some(false));
+        assert!(build["with"]["outputs"]
+            .as_str()
+            .unwrap()
+            .starts_with("type=oci,"));
+        assert_eq!(build["with"]["provenance"].as_bool(), Some(false));
+        assert_eq!(build["with"]["sbom"].as_bool(), Some(false));
+        let smoke = steps
+            .iter()
+            .find(|s| {
+                s["name"].as_str() == Some("Inspect and smoke the actual candidate image offline")
+            })
+            .unwrap()["run"]
+            .as_str()
+            .unwrap();
+        assert!(
+            smoke.find("docker load --input").unwrap()
+                < smoke.find("docker image inspect").unwrap()
+        );
+        assert!(steps
+            .iter()
+            .all(|s| !s["run"].as_str().unwrap_or("").contains("docker-daemon:")));
+        let upload = steps
+            .iter()
+            .find(|s| s["id"].as_str() == Some("upload"))
+            .unwrap();
+        assert_eq!(upload["if"].as_str(), Some("always()"));
         assert!(steps
             .iter()
             .all(|s| !s["run"].as_str().unwrap_or("").contains("docker push")));
@@ -905,6 +931,8 @@ mod tests {
         assert!(check.contains("EXPECTED_SOURCE") && check.contains("GITHUB_SHA"));
         let registry = steps[registry]["run"].as_str().unwrap();
         assert!(registry.contains("--preserve-digests"));
+        assert!(registry.contains("docker load --input"));
+        assert!(!registry.contains("docker-daemon:"));
         assert!(registry.contains("--expected-manifest"));
         assert!(registry.contains("docker run --rm --network none"));
         assert!(registry.contains("--password-stdin"));

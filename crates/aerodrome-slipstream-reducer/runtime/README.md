@@ -100,6 +100,13 @@ extractor_lock_asset: aerodrome-slipstream-base-extractor-v0.1.0-candidate.1.loc
 extractor_lock_sha256: 3d844e02d2de5017dce523e4f6c6365b566a2cd621bef431f5705fc7a0d622cd
 ```
 
+The first Linux candidate at `c239dd1` correctly refused OCI publication identity:
+Skopeo rewrote the Docker configuration during Docker-to-OCI conversion, changing
+its digest. The successor exports OCI directly and loads those exact retained
+bytes before every smoke and inspection; the raw configuration digest and every
+root filesystem DiffID remain mandatory. Failed candidate evidence is uploaded
+without implying a successful candidate receipt.
+
 ## Retained local validation
 
 `host-smoke-v1.json` pins the actual Darwin arm64 bundle built from producer

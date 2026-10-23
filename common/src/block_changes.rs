@@ -1,5 +1,6 @@
 //! Fail-closed semantic and canonical-wire validation for BlockChanges v1.
 
+use crate::descriptor::DescriptorCapabilities;
 use crate::pb::pinax::graph::backfill::v1::{
     entity_id, entity_operation, graph_value, BlockChanges, DeterministicErrorPolicy, EntityField,
     EntityKey, GraphValue, RemoveEntity, SetEntity, SetFailureStage, StoreDisposition,
@@ -12,7 +13,14 @@ use std::{collections::HashMap, error::Error, fmt};
 pub const BLOCK_CHANGES_V1_CONTRACT: &str = "pinax.graph.backfill.block-changes/v1";
 const COMPATIBILITY_ID_LEN: usize = 32;
 const GRAPH_BIGINT_MAX_BITS: u64 = 435_412;
-const GRAPH_DECIMAL_MAX_SIGNIFICANT_DIGITS: usize = 34;
+/// Graph Node v0.44 `BigDecimal::MAX_SIGNFICANT_DIGITS`: the precision its
+/// `normalized()` passes to bigdecimal 0.1.2's `with_prec`.
+const GRAPH_DECIMAL_PRECISION: u64 = 34;
+/// The literal divisor bigdecimal 0.1.2's `count_decimal_digits` uses to turn a
+/// bit length into a digit estimate. It is deliberately not
+/// `std::f64::consts::LOG2_10`: the port has to divide by the same `f64`.
+#[allow(clippy::approx_constant)]
+const BIGDECIMAL_0_1_2_BITS_PER_DIGIT: f64 = 3.3219280949;
 const GRAPH_DECIMAL_MIN_SCALE: i64 = -6_144;
 const GRAPH_DECIMAL_MAX_SCALE: i64 = 6_143;
 // Prost 0.13 enforces a 100-message decode recursion limit. Each list layer
@@ -25,6 +33,7 @@ pub struct BlockChangesCompatibility {
     id: [u8; COMPATIBILITY_ID_LEN],
     deterministic_error_policy: DeterministicErrorPolicy,
     expected_poi_causality_region: String,
+    capabilities: Option<DescriptorCapabilities>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -36,6 +45,7 @@ pub enum CompatibilityDescriptorError {
     Network,
     ExpectedPoiCausalityRegion,
     PoiCausalityRegionNetworkMismatch,
+    Capabilities(String),
 }
 
 impl BlockChangesCompatibility {
@@ -52,13 +62,21 @@ impl BlockChangesCompatibility {
         {
             return Err(CompatibilityDescriptorError::Contract);
         }
-        if object
+        let capabilities = match object
             .get("descriptor_version")
             .and_then(serde_json::Value::as_u64)
-            != Some(1)
         {
-            return Err(CompatibilityDescriptorError::DescriptorVersion);
-        }
+            Some(1) => None,
+            Some(2) => {
+                crate::descriptor::validate_unique_json(descriptor_bytes)
+                    .map_err(CompatibilityDescriptorError::Json)?;
+                Some(
+                    DescriptorCapabilities::from_descriptor(&descriptor)
+                        .map_err(CompatibilityDescriptorError::Capabilities)?,
+                )
+            }
+            _ => return Err(CompatibilityDescriptorError::DescriptorVersion),
+        };
         let deterministic_error_policy = match object
             .get("deterministic_error_policy")
             .and_then(serde_json::Value::as_str)
@@ -88,6 +106,7 @@ impl BlockChangesCompatibility {
             id,
             deterministic_error_policy,
             expected_poi_causality_region: expected_poi_causality_region.to_owned(),
+            capabilities,
         })
     }
 
@@ -106,6 +125,11 @@ impl BlockChangesCompatibility {
     pub fn to_vec(&self) -> Vec<u8> {
         self.id.to_vec()
     }
+
+    /// Absent for v1 descriptors, whose validation and raw-byte identity are unchanged.
+    pub fn capabilities(&self) -> Option<&DescriptorCapabilities> {
+        self.capabilities.as_ref()
+    }
 }
 
 impl AsRef<[u8]> for BlockChangesCompatibility {
@@ -122,7 +146,7 @@ impl fmt::Display for CompatibilityDescriptorError {
             }
             Self::Contract => write!(formatter, "compatibility descriptor contract drift"),
             Self::DescriptorVersion => {
-                write!(formatter, "compatibility descriptor version is not 1")
+                write!(formatter, "compatibility descriptor version is not 1 or 2")
             }
             Self::DeterministicErrorPolicy => write!(
                 formatter,
@@ -140,6 +164,9 @@ impl fmt::Display for CompatibilityDescriptorError {
                 formatter,
                 "compatibility descriptor PoI causality region does not match its network"
             ),
+            Self::Capabilities(error) => {
+                write!(formatter, "invalid descriptor v2 capabilities: {error}")
+            }
         }
     }
 }
@@ -228,6 +255,7 @@ struct HistoryStates {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ValidationError {
     Decode(String),
+    CreatedDataSource(String),
     NonCanonicalEncoding,
     Contract,
     CompatibilityIdLength {
@@ -431,6 +459,7 @@ impl fmt::Display for ValidationError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Decode(error) => write!(formatter, "invalid BlockChanges protobuf: {error}"),
+            Self::CreatedDataSource(error) => write!(formatter, "invalid created data source: {error}"),
             Self::NonCanonicalEncoding => write!(formatter, "noncanonical BlockChanges protobuf"),
             Self::Contract => write!(formatter, "BlockChanges contract identifier drift"),
             Self::CompatibilityIdLength { actual } => write!(
@@ -717,7 +746,7 @@ impl fmt::Display for ValidationError {
                 field,
             } => write!(
                 formatter,
-                "BlockChanges operation {operation_index} field {field:?} exceeds 34 decimal significant digits"
+                "BlockChanges operation {operation_index} field {field:?} has a decimal coefficient Graph Node v0.44 normalization would round: more than 34 digits if positive, a magnitude of 2^116 or more if negative"
             ),
             Self::NonNormalizedDecimal {
                 operation_index,
@@ -769,6 +798,77 @@ pub fn decode_canonical_block_changes(
 
 pub fn validate_block_changes(
     changes: &BlockChanges,
+    compatibility: &BlockChangesCompatibility,
+) -> Result<(), ValidationError> {
+    validate_block_changes_view(&BlockChangesView::from(changes), compatibility)
+}
+
+pub fn validate_in_band_block_changes(
+    changes: &crate::pb::pinax::graph::backfill::v2::BlockChanges,
+    compatibility: &BlockChangesCompatibility,
+) -> Result<(), ValidationError> {
+    validate_block_changes_view(&BlockChangesView::from(changes), compatibility)
+}
+
+pub fn encode_canonical_in_band_block_changes(
+    changes: &crate::pb::pinax::graph::backfill::v2::BlockChanges,
+    compatibility: &BlockChangesCompatibility,
+) -> Result<Vec<u8>, ValidationError> {
+    validate_in_band_block_changes(changes, compatibility)?;
+    Ok(changes.encode_to_vec())
+}
+
+pub fn decode_canonical_in_band_block_changes(
+    bytes: &[u8],
+    compatibility: &BlockChangesCompatibility,
+) -> Result<crate::pb::pinax::graph::backfill::v2::BlockChanges, ValidationError> {
+    let changes = crate::pb::pinax::graph::backfill::v2::BlockChanges::decode(bytes)
+        .map_err(|e| ValidationError::Decode(e.to_string()))?;
+    validate_in_band_block_changes(&changes, compatibility)?;
+    if changes.encode_to_vec() != bytes {
+        return Err(ValidationError::NonCanonicalEncoding);
+    }
+    Ok(changes)
+}
+
+struct BlockChangesView<'a> {
+    contract: &'a str,
+    compatibility_id: &'a [u8],
+    block_number: u64,
+    block_hash: &'a [u8],
+    mapping_triggered: bool,
+    triggered_poi_causality_regions: &'a [String],
+    operations: &'a [crate::pb::pinax::graph::backfill::v1::EntityOperation],
+    deterministic_error_policy: i32,
+    created_data_sources: &'a [crate::pb::pinax::graph::backfill::v2::CreatedDataSource],
+}
+macro_rules! changes_view {
+    ($ty:path, $sources:expr) => {
+        impl<'a> From<&'a $ty> for BlockChangesView<'a> {
+            fn from(c: &'a $ty) -> Self {
+                Self {
+                    contract: &c.contract,
+                    compatibility_id: &c.compatibility_id,
+                    block_number: c.block_number,
+                    block_hash: &c.block_hash,
+                    mapping_triggered: c.mapping_triggered,
+                    triggered_poi_causality_regions: &c.triggered_poi_causality_regions,
+                    operations: &c.operations,
+                    deterministic_error_policy: c.deterministic_error_policy,
+                    created_data_sources: ($sources)(c),
+                }
+            }
+        }
+    };
+}
+changes_view!(BlockChanges, |_| &[]);
+changes_view!(
+    crate::pb::pinax::graph::backfill::v2::BlockChanges,
+    |c: &'a crate::pb::pinax::graph::backfill::v2::BlockChanges| c.created_data_sources.as_slice()
+);
+
+fn validate_block_changes_view(
+    changes: &BlockChangesView<'_>,
     expected_compatibility: &BlockChangesCompatibility,
 ) -> Result<(), ValidationError> {
     if changes.contract != BLOCK_CHANGES_V1_CONTRACT {
@@ -782,7 +882,7 @@ pub fn validate_block_changes(
     if changes.compatibility_id.iter().all(|byte| *byte == 0) {
         return Err(ValidationError::ZeroCompatibilityId);
     }
-    if changes.compatibility_id.as_slice() != expected_compatibility.id() {
+    if changes.compatibility_id != expected_compatibility.id() {
         return Err(ValidationError::CompatibilityIdMismatch);
     }
     let deterministic_error_policy =
@@ -1047,6 +1147,72 @@ pub fn validate_block_changes(
         }
     }
 
+    validate_created_data_sources(changes, expected_compatibility, &deterministic_errors)?;
+    Ok(())
+}
+
+fn validate_created_data_sources(
+    changes: &BlockChangesView<'_>,
+    compatibility: &BlockChangesCompatibility,
+    failed_groups: &HashMap<u64, u64>,
+) -> Result<(), ValidationError> {
+    use crate::descriptor::{DataSourceTransport, TemplateParameter};
+    let capability = compatibility
+        .capabilities()
+        .filter(|c| c.data_sources.transport == DataSourceTransport::InBandV1);
+    let refuse = |message: &str| ValidationError::CreatedDataSource(message.to_owned());
+    if capability.is_some() && changes.block_hash.iter().all(|b| *b == 0) {
+        return Err(refuse("in_band_v1 requires an observed nonzero block hash"));
+    }
+    if changes.created_data_sources.is_empty() {
+        return Ok(());
+    }
+    let capability = capability.ok_or_else(|| refuse("descriptor lacks in_band_v1 capability"))?;
+    if !changes.mapping_triggered || changes.triggered_poi_causality_regions.is_empty() {
+        return Err(refuse(
+            "onchain creation requires a triggered mapping and PoI region",
+        ));
+    }
+    if compatibility.deterministic_error_policy() == DeterministicErrorPolicy::Fatal
+        && !failed_groups.is_empty()
+    {
+        return Err(refuse("fatal discarded block cannot persist data sources"));
+    }
+    let mut identities = std::collections::BTreeSet::new();
+    let mut previous_group = None;
+    for (ordinal, creation) in changes.created_data_sources.iter().enumerate() {
+        if creation.ordinal as usize != ordinal {
+            return Err(refuse("creation ordinals must be dense and zero-based"));
+        }
+        if previous_group.is_some_and(|g| creation.handler_group_order < g) {
+            return Err(refuse(
+                "creation handler groups are not in persistence order",
+            ));
+        }
+        previous_group = Some(creation.handler_group_order);
+        if failed_groups.contains_key(&creation.handler_group_order) {
+            return Err(refuse(
+                "creation belongs to a deterministically failed group",
+            ));
+        }
+        let template = capability
+            .data_sources
+            .templates
+            .iter()
+            .find(|t| t.manifest_idx == creation.manifest_idx)
+            .ok_or_else(|| refuse("undeclared template manifest index"))?;
+        if creation.template != template.name
+            || creation.context_json.is_some()
+            || matches!(template.param, TemplateParameter::Address20) && creation.param.len() != 20
+        {
+            return Err(refuse(
+                "template, address20 param or reserved context mismatch",
+            ));
+        }
+        if !identities.insert((creation.manifest_idx, &creation.param)) {
+            return Err(refuse("duplicate template/address identity"));
+        }
+    }
     Ok(())
 }
 
@@ -1067,7 +1233,7 @@ fn validate_handler_order(
     Ok(())
 }
 
-fn validate_triggered_regions(changes: &BlockChanges) -> Result<(), ValidationError> {
+fn validate_triggered_regions(changes: &BlockChangesView<'_>) -> Result<(), ValidationError> {
     if !changes.mapping_triggered
         && (!changes.triggered_poi_causality_regions.is_empty() || !changes.operations.is_empty())
     {
@@ -1608,6 +1774,19 @@ fn validate_disposition(
     }
 }
 
+/// Validate a snapshot/seed entity with the same scalar, field-order and ID
+/// rules as a materialized BlockChanges save. The index identifies the record
+/// in diagnostics; this does not invent a mapping operation or a PoI event.
+pub fn validate_materialized_entity(
+    record_index: u64,
+    key: &EntityKey,
+    fields: &[EntityField],
+) -> Result<(), ValidationError> {
+    let id = validate_key(record_index, Some(key))?;
+    validate_fields(record_index, "materialized", fields)?;
+    validate_id_field(record_index, "materialized", id, fields)
+}
+
 fn validate_key(
     operation_index: u64,
     key: Option<&EntityKey>,
@@ -1861,21 +2040,70 @@ fn validate_decimal(
         return Ok(());
     }
 
-    let digits = coefficient.to_str_radix(10);
-    let digits = digits.trim_start_matches('-');
-    if digits.len() > GRAPH_DECIMAL_MAX_SIGNIFICANT_DIGITS {
+    // A nonzero tuple is accepted exactly when Graph Node v0.44's
+    // `BigDecimal::normalized()` maps it to itself. That function runs
+    // bigdecimal 0.1.2's `with_prec(34)` and then strips base-10 trailing
+    // zeros. `with_prec` changes the value only in its `digits > prec` branch,
+    // which rounds a positive coefficient and truncates a negative one. Its
+    // `digits < prec` branch appends zeros, which the strip removes again, and
+    // its `digits == prec` branch is the identity. So the tuple is a fixed
+    // point if and only if the ported digit count is at most 34 and the
+    // coefficient has no trailing zero.
+    if bigdecimal_0_1_2_digits_exceed(&coefficient, GRAPH_DECIMAL_PRECISION) {
         return Err(ValidationError::DecimalPrecision {
             operation_index,
             field: field.to_owned(),
         });
     }
-    if digits.ends_with('0') {
+    if coefficient.magnitude() % 10u8 == num_bigint::BigUint::from(0u8) {
         return Err(ValidationError::NonNormalizedDecimal {
             operation_index,
             field: field.to_owned(),
         });
     }
     Ok(())
+}
+
+/// Whether bigdecimal 0.1.2's `count_decimal_digits(int)` exceeds `prec`.
+///
+/// This is a port of the pinned crate's arithmetic, not a digit count:
+///
+/// ```text
+/// let mut digits = (int.bits() as f64 / 3.3219280949) as u64;
+/// let mut num = ten_to_the(digits);
+/// while int >= &num { num *= 10u8; digits += 1; }
+/// ```
+///
+/// `bits()` is the magnitude's bit length in both num-bigint 0.2 and 0.4. The
+/// correction loop compares the *signed* integer with a positive power of ten,
+/// so it never runs for a negative coefficient. A negative coefficient's
+/// count is therefore the bit estimate alone, which is one short of its decimal
+/// length across part of each decade. For precision 34 that makes the exact
+/// boundary 116 bits, not 35 digits: a negative magnitude is accepted up to
+/// 2^116 - 1 = 83,076,749,736,557,242,056,487,941,267,521,535. A positive
+/// coefficient gets the true decimal length.
+///
+/// The loop only ever increases the count, so an estimate already above
+/// `prec` is final. Returning early there keeps the cost bounded however large
+/// the coefficient is; the port never computes a power of ten above `prec`.
+fn bigdecimal_0_1_2_digits_exceed(int: &BigInt, prec: u64) -> bool {
+    if int.sign() == num_bigint::Sign::NoSign {
+        // `count_decimal_digits` returns 1 for zero.
+        return 1 > prec;
+    }
+    let mut digits = (int.bits() as f64 / BIGDECIMAL_0_1_2_BITS_PER_DIGIT) as u64;
+    if digits > prec {
+        return true;
+    }
+    let mut num = BigInt::from(10u8).pow(digits as u32);
+    while int >= &num {
+        num *= 10u8;
+        digits += 1;
+        if digits > prec {
+            return true;
+        }
+    }
+    false
 }
 
 fn validate_signed_bytes(

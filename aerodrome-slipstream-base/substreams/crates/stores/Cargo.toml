@@ -1,0 +1,16 @@
+[package]
+name = "aerodrome-extractor-stores"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+[lib]
+crate-type = ["cdylib", "rlib"]
+[dependencies]
+aerodrome-extractor-core = { path = "../core" }
+aerodrome-extractor-pb = { path = "../pb" }
+prost = "=0.13.5"
+substreams = "=0.7.6"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "=0.2.16", features = ["custom"] }

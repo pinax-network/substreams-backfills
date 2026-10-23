@@ -24,6 +24,11 @@
 //!   reconnecting source: what a replay too long for one process or one
 //!   connection recovers from, and what it refuses
 //! * `parity_window_evidence` — the committed 1,053-block run summary
+//! * `segment_aerodrome` — the Aerodrome Slipstream Base bundle, its identity
+//!   and descriptor, and two real Base blocks from its locked fixtures: one
+//!   compared with the live run's frame, one pinning the non-fatal path
+//! * `aerodrome_root_window_evidence` — the committed Aerodrome root-window run
+//!   summaries, re-derived from their locked reports
 //! * `segment_qme66zn` — the segment bundle, wave scheduling and handler groups
 //! * `store_state_qme66zn` — `--store-out`, the final store a consumer is
 //!   compared against
@@ -31,13 +36,27 @@
 //! Adding another file here costs nothing; adding another file to `tests/`
 //! costs another full link, so put new suites in `tests/mapping_host/`.
 
+mod aerodrome_root_window_evidence;
 mod block_changes_qme66zn;
 mod block_source;
 mod checkpoint_resume;
 mod dynamic_sources;
 mod live_cli;
 mod long_run;
+mod numerics_corpus;
 mod parity_window_evidence;
+mod segment_aerodrome;
 mod segment_qme66zn;
 mod source_chunks;
 mod store_state_qme66zn;
+
+mod aerodrome_input_corpus;
+
+mod aerodrome_state_corpus;
+
+mod aerodrome_handlers_corpus;
+
+mod aerodrome_npm_corpus;
+mod aerodrome_pool_corpus;
+
+mod aerodrome_swap_corpus;

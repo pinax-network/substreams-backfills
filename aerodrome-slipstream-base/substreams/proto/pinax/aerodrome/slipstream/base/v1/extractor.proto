@@ -1,0 +1,178 @@
+syntax = "proto3";
+package pinax.aerodrome.slipstream.base.v1;
+
+// Exactly one per block in [requested start, stop). Never empty: number/hash/timestamp are always set,
+// so production mode always delivers it and substreams-native emits an Observed frame (engine-contract §3.2).
+message ExtractorBlock {
+  uint64 number = 1;
+  bytes  hash = 2;                         // 32; == Substreams clock id == BCF1 envelope hash
+  bytes  parent_hash = 3;                  // 32
+  uint64 timestamp = 4;                    // header.timestamp.seconds (Graph Node ethereum.Block.timestamp)
+  optional uint64 base_fee_per_gas = 5;    // header.base_fee_per_gas truncated U256→u64 as Graph Node does (codec.rs:494-497)
+  uint32 receipt_log_count = 6;            // number of logs over all receipts (successful txs; failed ones carry none)
+  repeated Transaction transactions = 7;   // only txs referenced by candidates; ascending index; unique
+  repeated CandidateLog candidates = 8;    // sorted by (wave, source_trigger_order); see §8.1
+  CallAnswers calls = 9;                   // end-of-block answers (§8.5)
+  repeated PoolCreatedFact pools_created = 10; // every Factory PoolCreated log in this block, log order
+  // ---- extractor extensions ----
+  uint32 firehose_block_version = 11;      // Block.ver: 4 (≤45,903,999) or 5 (≥45,904,000) on Base
+  ExtractorAudit audit = 12;               // audit.anomalies MUST be empty; the reducer refuses otherwise
+  string contract = 13;                    // "pinax.aerodrome.slipstream.base.extractor/v1"
+}
+
+message Transaction {
+  bytes  hash = 1;                         // 32
+  uint32 index = 2;                        // trace.index
+  bytes  from = 3;                         // 20 (Graph Node transaction.from → Swap/Mint/Burn.origin)
+  uint64 gas_limit = 4;                    // trace.gas_limit (Graph Node gasLimit → Transaction.gasUsed quirk)
+  uint32 type = 5;                         // trace.type (0,1,2,3,4; 126 = OP deposit)
+  optional bytes gas_price = 6;            // trace.gas_price minimal BE; ABSENT if unset (deposits)
+  optional bytes max_fee_per_gas = 7;      // trace.max_fee_per_gas; absence matters (codec.rs:259-262)
+  optional bytes max_priority_fee_per_gas = 8;
+  // ---- extensions ----
+  bytes  to = 10;                          // 20, or empty when Graph Node to() is None (codec.rs:863-876)
+  bytes  graph_gas_price = 11;             // core::gas::graph_node_gas_price (§8.2), minimal BE; cross-check only
+}
+
+enum DataSourceKind {
+  DATA_SOURCE_KIND_UNSPECIFIED = 0;
+  DATA_SOURCE_KIND_FACTORY = 1;            // manifest data source #0
+  DATA_SOURCE_KIND_POSITION_MANAGER = 2;   // manifest data source #1
+  DATA_SOURCE_KIND_POOL = 3;               // template `Pool`
+}
+
+message CandidateLog {
+  uint32 wave = 1;                         // 0 or 1 (§8.1)
+  uint32 source_trigger_order = 2;         // rank among ALL receipt logs of the block by block_index (== block_index; VERIFIED dense)
+  uint32 log_index = 3;                    // Log.block_index == Graph Node event.logIndex
+  uint32 tx = 4;                           // index into ExtractorBlock.transactions
+  bytes  address = 5;                      // 20
+  repeated bytes topics = 6;               // raw
+  bytes  data = 7;                         // raw
+  // ---- extensions ----
+  uint64 log_ordinal = 10;                 // Firehose Log.ordinal (provenance)
+  DataSourceKind source = 11;
+  uint64 host_order_key = 12;              // 0 Factory, 1 NPM, pool: 2 + created_block·2^24 + created_log_index
+                                           // (Graph Node host creation order; informational: one host per log)
+  bool   abi_decoded = 13;                 // extractor's Abigen decode succeeded (audit; the reducer decodes itself)
+}
+
+message CallAnswers {
+  repeated Erc20Answer erc20 = 1;                  // C1–C4
+  repeated FeeGrowthGlobalAnswer fee_growth = 2;   // C5
+  repeated TickAnswer ticks = 3;                   // C6, C7
+  repeated PositionAnswer positions = 4;           // C8
+  repeated GetPoolAnswer get_pool = 5;             // C9 and C10
+}
+
+message RawRetval {                        // Graph Node Retval (ethereum_adapter.rs:1550-1566)
+  oneof kind {
+    Null  reverted = 1;                    // RpcResponse.failed OR empty "0x"
+    bytes value = 2;                       // raw return bytes, never empty
+  }
+  message Null {}
+}
+
+message Erc20Answer {                      // eth_call at the block hash; one raw answer serves string AND bytes32 decodes
+  bytes token = 1;
+  RawRetval symbol = 2;                    // 0x95d89b41
+  RawRetval name = 3;                      // 0x06fdde03
+  RawRetval total_supply = 4;              // 0x18160ddd
+  RawRetval decimals = 5;                  // 0x313ce567
+  // ---- extensions (audit) ----
+  uint32 rpc_failed_mask = 10;             // bit i = RpcResponse.failed for selector i (symbol,name,totalSupply,decimals)
+  uint32 rpc_empty_mask = 11;              // bit i = !failed && raw.is_empty()
+}
+
+enum SlotSource {
+  SLOT_SOURCE_UNSPECIFIED = 0;
+  SLOT_SOURCE_IN_BLOCK = 1;                // last non-reverted write is in this block
+  SLOT_SOURCE_CARRIED = 2;                 // last write in an earlier block (store value)
+  SLOT_SOURCE_ZERO = 3;                    // never written, or cleared to zero (store key absent)
+}
+message SlotProvenance {
+  SlotSource source = 1;
+  uint64 last_change_block = 2;            // 0 when ZERO
+  uint64 last_change_ordinal = 3;          // Firehose StorageChange.ordinal of that write; 0 when ZERO
+}
+
+message FeeGrowthGlobalAnswer {            // CLPool slots 7 and 8
+  bytes pool = 1;
+  bytes fee_growth_global0_x128 = 2;       // U256-32
+  bytes fee_growth_global1_x128 = 3;       // U256-32
+  SlotProvenance p0 = 10;
+  SlotProvenance p1 = 11;
+}
+
+message TickAnswer {                       // ticks(int24): only value2/value3 (D:Pool:5398-5438)
+  bytes  pool = 1;
+  sint32 tick = 2;
+  bytes  staked_liquidity_net = 3;         // I128-16 (Tick.Info word 1, low 128 bits)
+  bytes  fee_growth_outside0_x128 = 4;     // U256-32 (Tick.Info word 2)
+  SlotProvenance p_staked = 10;
+  SlotProvenance p_fee0 = 11;
+  uint32 reasons = 12;                     // bit0 MINT_BURN_BOUNDARY, bit1 SWAP_WALK_WINDOW
+}
+
+message PositionAnswer {                   // NPM positions(uint256)
+  bytes token_id = 1;                      // minimal BE
+  oneof result {
+    RawRetval.Null reverted = 2;           // poolId == 0 at end of block ("ID")
+    PositionValue value = 3;
+  }
+}
+message PositionValue {                    // value2..value9 of the 12-tuple
+  bytes  token0 = 1;                       // 20 (_poolIdToPoolKey word 0)
+  bytes  token1 = 2;                       // 20 (word 1 [0,160))
+  sint32 tick_spacing = 3;                 // int24 (word 1 [160,184))
+  sint32 tick_lower = 4;                   // _positions word 1 [80,104)
+  sint32 tick_upper = 5;                   // word 1 [104,128)
+  bytes  fee_growth_inside0_last_x128 = 6; // U256-32 (word 2)
+  bytes  fee_growth_inside1_last_x128 = 7; // U256-32 (word 3)
+  uint64 pool_id = 10;                     // NPM-internal uint80 (audit)
+  SlotProvenance p_key = 11;               // provenance of the poolId/ticks fragment
+  SlotProvenance p_fee0 = 12;
+  SlotProvenance p_fee1 = 13;
+}
+
+message GetPoolAnswer {                    // Factory getPool(address,address,int24): never reverts
+  bytes  token_a = 1;
+  bytes  token_b = 2;
+  sint32 tick_spacing = 3;
+  bytes  pool = 4;                         // 20; zero address when none at END of block
+  uint64 created_block = 10;               // 0 when none (audit)
+}
+
+message PoolCreatedFact {
+  bytes  pool = 1;
+  bytes  token0 = 2;
+  bytes  token1 = 3;
+  sint32 tick_spacing = 4;
+  uint32 log_index = 5;
+  bytes  clone_implementation = 10;        // implementation decoded from the CREATE2 frame code_changes (§8.1)
+  uint64 log_ordinal = 11;
+}
+
+enum AnomalyKind {
+  ANOMALY_KIND_UNSPECIFIED = 0;
+  ANOMALY_UNCLASSIFIED_POOL_SLOT = 1;      // pool write outside the pinned layout (§8.3)
+  ANOMALY_ORDINAL_TIE = 2;                 // two writes to one slot share an ordinal
+  ANOMALY_FAILED_TX_WITH_RECEIPT_LOGS = 3;
+  ANOMALY_LOG_INDEX_NOT_DENSE = 4;         // receipt block_index not 0..n-1 / duplicate
+  ANOMALY_MISSING_POOL_KEY = 5;            // position fragment present but _poolIdToPoolKey words absent
+  ANOMALY_POOL_NOT_PINNED_CLONE = 6;       // PoolCreated pool's code is not the pinned EIP-1167 clone
+  ANOMALY_SWAP_WITHOUT_PRIOR_TICK = 7;     // no Initialize/Swap tick known for a swapping pool
+  ANOMALY_UNSUPPORTED_BLOCK_VERSION = 8;   // ver ∉ {4,5} or detail_level != EXTENDED
+  ANOMALY_TICK_ALIGNMENT = 9;              // initialized tick not multiple of the pool's tickSpacing
+  ANOMALY_SYSTEM_CALL_TOUCHED_TARGET = 10; // a v5 system call wrote Aerodrome storage
+}
+message Anomaly { AnomalyKind kind = 1; bytes address = 2; bytes key = 3; uint64 ordinal = 4; string detail = 5; }
+
+message ExtractorAudit {
+  uint32 relevant_storage_writes = 1;      // non-reverted writes to pool/NPM storage
+  uint32 reverted_writes_skipped = 2;      // pool/NPM writes ignored (failed tx or state_reverted call)
+  uint32 tick_candidates = 3;
+  uint32 swap_walk_probes = 4;             // marker lookups performed by the walk window
+  uint32 candidate_decode_failures = 5;    // candidates with abi_decoded = false
+  repeated Anomaly anomalies = 6;
+}

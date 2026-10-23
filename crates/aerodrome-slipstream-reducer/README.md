@@ -1,0 +1,766 @@
+# Aerodrome reducer foundations
+
+This crate implements the S-R2 input layer, S-R3 entity/state primitives, and
+all deployed Factory, Pool and NPM handlers for
+the locked Base deployment `QmasYjypV6nTLp4iNH4Vjf7fksRNxAkAskqDdKf2DCsQkV`.
+The library executes these handlers, journals their operations and seals
+canonical in-band BlockChanges. The runner schedules every candidate and refuses
+unknown matched handlers, using either memory or local transactional disk state.
+The offline durable runner provides segment checkpoints and immediate-predecessor
+rewind. Verified snapshot import, the live production supervisor and backfill
+qualification remain separate stages.
+
+The protobuf types and gas-price function come from the extractor's shared
+`pb`/`core` crates. There is no copied protobuf schema or Substreams runtime
+dependency. `backfill-common::clock` supplies the sole BCF1 codec.
+
+`InputBinding` verifies exact descriptor bytes against a supplied SHA-256 and
+matches the package verifier's extractor identity: SPKG digest, module hash,
+output type, initial block and **map_extractor_block**. The descriptor must name
+the locked deployment, Base, spec 1.2.0, deployed features, Graph Node v0.44,
+Fast PoI, no concrete graft, the 20 locked entity types and the in-band Pool
+template at manifest index 2.
+BCF1 carries no package hash; callers must obtain the extractor identity from
+package verification. Supplying an identity JSON alone is not that proof.
+The descriptor builder uses conservative persistent retention; future retention
+evidence deliberately changes the compatibility ID.
+
+`InputStream` requires a nonempty inclusive range, a known parent hash and one
+nonempty Observed frame for every block. It verifies canonical protobuf bytes,
+identity/parent linkage, extractor version and empty anomaly list, candidate
+order/waves, transaction references, gas price, and PoolCreated facts against
+independently decoded events. Every error poisons the stream. Completion needs
+actual EOF after the final required frame; early EOF, extra frames, synthetic
+fill and a caller stopping without `finish()` cannot establish completion.
+The supervising driver must separately prove producer exit success.
+
+ABI decoding uses Graph Node's exact locked alloy 1.7.2 versions and the locked
+ABI files. A matching log with malformed payload becomes no trigger. The
+extractor's `abi_decoded` flag is diagnostic and never chooses a handler.
+`HostSet` separately enforces the reducer's committed host set. It does not
+install hosts from decoded Factory events. The handler journal records
+committed or aborted creation outcomes explicitly. An unknown host is refused
+unless the exact deployed Factory exclusion or a recorded aborted creation
+explains it. Pool logs before their creation event remain eligible in wave 1.
+
+`CallBook` refuses duplicate keys, wrong widths, absent results, invalid masks,
+and inconsistent slot provenance. A missing lookup is `MissingCallAnswer`,
+including when a try-call would normally handle a revert. Only explicit reverted
+answers and actual ABI decode failures use mapping fallbacks. ERC20 symbol/name
+reuse the same raw bytes for string then bytes32 decoding; the bytes32 sentinel,
+lossy UTF-8, trailing zeros, oversized uint8 values and zero fallbacks follow the
+deployed rules. Interior NUL removal is a separate `graph_store_string` boundary.
+Unused answers are counted. The final extractor must emit `Some(CallAnswers)`
+even when empty; current candidate-only output is deliberately refused.
+
+Read-only CLI:
+
+```console
+cargo run -p aerodrome-slipstream-reducer --locked --bin aerodrome-reducer -- \
+  validate-input --input input.bcf1 \
+  --descriptor descriptor.json --descriptor-sha256 DESCRIPTOR_SHA256 \
+  --extractor-identity verified-extractor-identity.json \
+  --from FIRST_BLOCK --to LAST_BLOCK --expected-parent-hash PARENT_HASH
+```
+
+The identity file has the common `ExtractorIdentity` shape. The command emits a
+validation report only after complete EOF, with `handlers_executed: 0` and
+`production_qualified: false`; refusals exit 4. It is not the complete
+`pinax.backfill.producer/v1` CLI and cannot perform `reduce` or load a database.
+
+## Evidence
+
+Normal checks are `cargo test -p aerodrome-slipstream-reducer --locked` and
+`cargo clippy -p aerodrome-slipstream-reducer --locked --all-targets -- -D warnings`.
+The root CI runs these as part of the workspace checks.
+
+The first-pool test uses the retained extractor field projection for block
+13,899,663. It rematches all five events with Graph Node's decoder and verifies
+`[(0,172),(0,177),(0,178),(1,171),(1,176)]`. Its empty answer book is explicitly
+synthetic: this is an input/ABI test, not handler or storage parity evidence.
+The other tests exercise malformed frames, call answers, descriptor pins,
+checked range completion, host outcomes and the read-only CLI.
+
+The independent raw ABI corpus is generated by
+`mapping-host/tests/mapping_host/aerodrome_input_corpus.rs`, which imports actual
+Graph Node `EventExt`/`FunctionExt` and has no reducer dependency. It covers the
+five real creation-block events with six payload/topic mutations each, 24
+synthetic Initialize/Swap integer-padding and payload/topic boundary cases, and raw
+ERC20 returns through the six locked ABI functions. This independently verifies
+raw decoding, not execution of the Factory WASM metadata helper or a full handler.
+
+```console
+UPDATE_AERODROME_INPUT_CORPUS=1 cargo +1.98.0 test \
+  --manifest-path mapping-host/Cargo.toml --locked --test mapping_host aerodrome_input_corpus
+```
+
+Without the environment variable this command recomputes and compares the
+committed corpus exactly. Mapping-host CI watches the reducer, reference ABIs,
+and extractor fixture projection. Release locks, real call-answer coverage,
+full historical mapping-host frame parity, production checkpoint integration,
+executed-handler error/PoI parity, and end-to-end negative raw decimal support
+remain separate qualification gates.
+
+
+## Typed entities, handler journals and sealing
+
+`entity` provides all 20 typed mapping objects, exactly 289 stored fields from
+302 schema fields; 13 derived fields are excluded. A separate GraphQL parser
+checks every generated field and its nullability against the locked schema.
+Optional values preserve `Presence::{Absent, Null, Set}`. Loaded objects are
+owned copies; only a save changes the journal. String normalization happens at
+the store boundary, and decimals must satisfy the current fixed-point transport
+contract. Once-normalized negative decimals outside that domain are explicitly
+refused, even though Graph Node arithmetic can produce them.
+
+`BlockStore` overlays handler-local operations on prior committed handlers and
+backend images. A successful handler publishes its operations and source
+creations together; a deterministic abort drops both while retaining its PoI
+operations/error marker. A fatal API error or caught panic poisons the block.
+Partial writes are schema-checked against their complete post-merge image, and
+operations retain save/remove order through the shared `BlockOpsBuilder`.
+An existing entity removed then recreated can retain explicit Null in its LFU
+image. `MemoryBackend::database_rows` exposes the distinct physical reload image
+without those Null fields. Inserts strip Null at block finalization.
+
+`seal()` produces the extended v2 BlockChanges payload, runs the common canonical
+encoder/decoder, and wraps it in an Observed BCF1 frame. Only committed Pool
+creations appear in-band, with dense creation ordinals and handler-group order.
+Fatal deterministic-error policy seals a discarded, noncommittable block.
+Backend commit checks predecessor, descriptor, observed rows and source reads
+before atomically installing the patch and boundary. Writing a frame and
+committing memory are separate actions; a later driver must supply crash-safe
+output/checkpoint ordering. `from_images` is a structurally checked test/oracle
+seed, not authenticated snapshot import.
+
+The entity class labels describe the mapping design. They do not enable eviction:
+all rows remain persistent, including BlockLocal rows, until retention has
+independent evidence. Collect, Flash and TickHourData writes/removes are refused
+because the deployed handlers never write them. The local disk runner and rewind
+are described below; the live production output CLI remains separate work.
+
+Regenerate typed declarations with:
+
+```console
+python3 crates/aerodrome-slipstream-reducer/scripts/generate_entities.py
+cargo fmt --all
+```
+
+The independent state corpus generator uses actual Graph Node v0.44.0
+`BlockState` and `EntityCache` from commit
+`77823b5a7adc4eac4abf03202c8dd7cb00dea31d`, including real handler enter/exit/discard
+and `as_modifications`. It does not use the reducer or shared cache algebra to
+compute expectations. Its 64 scenarios cover initially present/absent entities,
+partial/full saves, Null, removes, recreations and aborted handlers across three
+blocks each. The native differential checks all 4,800 reads and boundaries.
+This is entity-cache API evidence; it does not execute deployed WASM handlers
+or certify Postgres persistence, complete frame/PoI parity or dynamic hosts.
+
+```console
+UPDATE_AERODROME_STATE_CORPUS=1 cargo +1.98.0 test \
+  --manifest-path mapping-host/Cargo.toml --locked --test mapping_host aerodrome_state_corpus
+```
+
+Without the environment variable, the command recomputes and byte-compares the
+committed corpus. The ordinary reducer tests consume that corpus without Graph
+Node dependencies.
+
+
+## First mapping checkpoint: Factory and Initialize
+
+`handlers::SupportedHandler::match_candidate` requires authoritative `HostSet`
+matching. It returns no trigger for an ABI mismatch or a justified absent host,
+and refuses every unsupported matched event. Its `run` method belongs inside
+`BlockStore::run_handler`. The primitive caller must install a returned Pool source only after handler
+commit, then persist hosts only after block commit; `MemoryRunner` supplies this
+complete scheduling boundary. This primitive is not permission to skip unsupported handlers and
+publish a complete block. The `aerodrome-reducer` CLI validates inputs;
+the separate fixture commands execute bounded offline ranges.
+
+Factory preserves the deployed exclusion, fee-tier lookup, both token loads
+before construction, metadata fallback behavior, whitelist append order, zero
+pool counts on tokens, and exact saves: Bundle on first factory creation, Pool,
+source creation, Token0, Token1, Factory. Existing tokens do not request metadata.
+Initialize saves Pool before loading its required dependencies, updates Bundle,
+PoolDayData and PoolHourData, then saves Token0 and Token1. It does not compute
+pool token prices. The daily close remains unchanged while hourly close updates.
+The two pricing helpers used here preserve strict thresholds and store reloads;
+full seeded pricing branch qualification belongs to the next checkpoint.
+
+Decimal comparisons perform the deployed `minus` followed by coefficient sign.
+Unqualified numeric failures refuse the block. Only the independently proven
+`ByteArray.toI32` overflow produces a numeric deterministic error, preserving
+already-recorded discarded saves and the error marker. Fixed-point transport
+limitations remain explicit refusals, including unsupported negative raw decimals.
+
+The independent handler corpus runs the locked Factory/Pool WASM through actual
+Graph Node. It has no native reducer dependency and compares all fields of every
+operation, including materialized images, dispositions, ordering, and in-band
+sources. The original first-pool case checks real groups 0 and 3, renumbering only
+the dense operation/group indices after excluding NPM/Mint groups from this focused
+test; it is not complete-block parity. The other 17 cases are explicitly
+synthetic mutations: isolated Factory/Initialize, four fee spacings, excluded
+pool, four metadata fallbacks, integer wrapping/overflow, timestamp wrapping/
+overflow, cached-token creation, and repeated Initialize with modified seed price.
+The last two seed from actual Graph Node checkpoint images; repeated Initialize
+changes only seed `Pool.token0Price` to 5 and proves daily/hourly close behavior.
+Cached-token replay has no metadata answers at the new block hash.
+
+The full first-pool extractor fixture and its upstream regeneration route are
+pinned in `fixtures/first-pool-extractor.provenance.json`. This evidence does not
+certify the final SPKG, a complete reduction range, or a production database.
+
+```console
+cargo xtask evidence fetch --lock aerodrome-slipstream-base/fixtures/blocks.lock.json
+UPDATE_AERODROME_HANDLER_CORPUS=1 cargo +1.98.0 test \
+  --manifest-path mapping-host/Cargo.toml --locked --test mapping_host aerodrome_handlers_corpus
+cargo test -p aerodrome-slipstream-reducer --locked --test handlers
+```
+
+Without the environment variable the oracle regenerates in memory and requires
+byte-identical committed results. It runs with recording disabled and no sockets.
+
+
+## Position manager and Flash checkpoint
+
+The dispatcher also supports NPM Transfer, IncreaseLiquidity, DecreaseLiquidity,
+Collect, and Pool Flash. Swap is implemented in its own module.
+A new Position reads the end-of-block positions/getPool answers, initializes
+liquidity and counters to zero, and saves Transaction during construction.
+An existing Position bypasses that construction call. Increase/Decrease/Collect
+refresh fee growth via positions; explicit revert preserves the prior values.
+Transfer has no fee refresh and a burn transfer persists the zero owner rather
+than removing the Position. Missing answers remain fatal contract failures.
+
+The historical Increase/Decrease block guard executes before loading Position.
+Their pool guard and Collect's pool guard execute after construction, so an
+unsaved new Position can still leave its construction Transaction save. Transfer
+has neither guard. Collected fees preserve `collected - withdrawn`, including
+negative results. Decimal transport refusals remain unchanged.
+
+Every snapshot saves Transaction first, with gasLimit in gasUsed and Graph Node's
+effective gas price. PositionSnapshot ID is position ID plus block number, so
+later events in the same block overwrite the same row. Each save stays in the
+PoI operation stream. Flash saves only Pool with both fee-growth values; it never
+constructs a Flash entity. Retention/burn hints and production integration are later
+work; the current backend keeps these entities persistent.
+
+The isolated NPM differential covers groups 0–3 in original order: Factory,
+NPM Transfer, NPM IncreaseLiquidity, Initialize. The runner test below combines
+this with Mint and checks the whole original block.
+`graph-node-npm-flash.json` adds 14 synthetic full-WASM probes: baseline;
+Decrease; Collect; negative collected fees; burn Transfer; positions revert;
+zero getPool; pool guard; new-position Increase; historical block guard; Flash;
+missing-token abort; existing-position Transfer without any answers; and an
+existing-position fee refresh that explicitly reverts. The last two continue an
+actual Graph Node host into another synthetic block; its captured checkpoint
+rows initialize the native differential. Independent tests prove missing
+positions and fee-growth answers poison the native block instead of committing
+previous successful handlers.
+
+```console
+UPDATE_AERODROME_NPM_CORPUS=1 cargo +1.98.0 test \
+  --manifest-path mapping-host/Cargo.toml --locked --test mapping_host aerodrome_npm_corpus
+cargo test -p aerodrome-slipstream-reducer --locked --test handlers
+```
+
+The generator imports no native reducer code, runs without recording/network,
+and byte-checks the committed corpus when the environment variable is absent.
+## Pool liquidity checkpoint: Mint and Burn
+
+The next handler slice adds Mint, Burn and all six interval updaters. Pool and
+Factory interval values are reloaded before their final handler saves; token
+interval values use the owned updated token with the stored Bundle. Arithmetic
+keeps the deployed parenthesization. Mint creates missing ticks, while Burn's
+missing ticks abort after the Transaction save. Tick fee fields deliberately
+copy Slipstream's signed stakedLiquidityNet and feeGrowthOutside0 words into the
+deployed mapping's feeGrowthOutside0/1 fields. TickDayData also copies token0
+volume into both token-volume fields. Pure tick-power memoization shares the
+independently qualified iterative arithmetic; it contains no entity state.
+
+The actual first Mint matches every original WASM operation. Eleven separate
+synthetic cases start from an actual first-block Graph Node checkpoint and
+retain their raw log bytes and complete seed images: repeated Mint, Burn,
+out-of-range liquidity, missing/Null pool ticks, missing Burn ticks, signed fee
+misbinding, nonzero interval seed values, timestamp overflow, and tick overflow
+after a Transaction save. The independent generator executes the original WASM
+without importing the reducer. Both whole envelopes and every operation are
+compared. Synthetic input changes are explicit; this is not an additional live
+block or full-range claim.
+
+Oracle cache images may contain explicit Null. The tests use a read-only cache
+backend to retain those fields while the production database-seed validator
+continues to reject top-level Null. The first test attempt exposed that boundary;
+no production seed rule was relaxed. The generator rebuilds synthetic checkpoint
+totals and cassette pins explicitly, and recomputes the committed corpus without
+updates for verification.
+
+```console
+UPDATE_AERODROME_POOL_CORPUS=1 cargo +1.98.0 test \
+  --manifest-path mapping-host/Cargo.toml --locked --test mapping_host aerodrome_pool_corpus
+cargo test -p aerodrome-slipstream-reducer --locked --test pool_handlers
+```
+
+Local durable state is described below. The live production supervisor remains
+separate work; `aerodrome-reducer` itself still only validates inputs.
+
+
+## In-memory block and range execution
+
+`MemoryRunner` derives authoritative Pool hosts from its memory backend and
+executes every validated candidate in `(wave, source_trigger_order)` order.
+Unmatched candidates remain in its report. Successful empty handlers still
+advance handler groups and set `mapping_triggered`; actual empty blocks produce
+Observed frames with `mapping_triggered = false`. Unsupported matched handlers
+refuse the complete block.
+
+Host outcomes are staged with the block. Successful Factory handlers enable
+wave-1 candidates, including Initialize before PoolCreated in receipt order.
+A nonfatal failed Factory records an explicit non-host outcome so later
+extractor-superset candidates can be skipped. Neither successful nor failed
+outcomes publish until the backend commit succeeds. Any fatal error, caught
+handler panic or fail-closed mapping abort poisons the runner, preserving its
+previous block boundary. Default `FailClosed` refuses every mapping abort even
+with a nonfatal descriptor. Explicit diagnostic `EmitNonFatal` requires the
+nonfatal descriptor, retains exact discarded PoI operations and commits other
+successful handlers. This diagnostic mode is not production qualification.
+
+`run_stream` consumes its runner and buffers the complete bounded range in
+memory. It returns `CompletedMemoryRun` only after exact contiguous input,
+actual EOF and a supervisor callback proving producer success. The callback is
+also called on input/execution refusal and receives `InputCompletion::Refused`,
+so a real supervisor can cancel or drain an unread pipe before waiting for the
+producer. Cancellation, nonzero exit, read failure, missing/extra blocks and
+resource-budget failures return no completed run. Explicit budgets cover block
+count, candidate count and retained output payload bytes. They are workload
+bounds, not an allocator-level memory cap. The callback is a driver obligation;
+this library does not spawn or supervise a process itself.
+
+`CompletedMemoryRun::into_runner` preserves failed-creation history for another
+range. Reconstructing a runner from only rows and accepted sources loses that
+history and is not checkpoint/resume support. `MemoryBackend::from_images`
+remains a structural test seed with no authenticated chain-state provenance.
+This all-in-memory adapter is not the durable streaming producer CLI and does
+not write a producer/v1 completion marker, database or checkpoint.
+
+The scheduler test compares the **entire** original first-pool Graph Node
+BlockChanges envelope for block 13,899,663: all five handlers, every operation,
+original dense indices, PoI dispositions and in-band source creations. Only the
+producer-specific compatibility ID is masked. No candidate or operation is
+filtered or renumbered. Another whole-envelope test uses the actual WASM
+Initialize-overflow corpus in diagnostic nonfatal mode. These bounded proofs
+do not establish a complete historical range or final-SPKG parity.
+
+The other runner tests cover atomic rollback after a later missing answer,
+failed-creation history, malformed ABI candidates, the excluded pool, no-save
+triggers, missing Swap call answers, both error policies, true empty frames, producer
+failure/cancellation, read failure, missing/extra range frames and budgets.
+Failed Factory creation is a clearly labeled scheduler fault-injection test;
+it is not presented as a naturally reachable or oracle-proven Factory abort.
+
+## Independent Swap oracle corpus
+
+`graph-node-swap-handlers.json` contains 18 synthetic Swap cases executed by the
+original deployed Pool WASM inside pinned Graph Node, with no native reducer
+import. Each starts from the actual first-pool Graph Node checkpoint, changes
+explicit seed rows and one receipt log, and supplies retained raw call answers
+at the synthetic next block/hash. The fixture retains every seed row, raw log,
+raw call, complete BlockChanges envelope, tick-save order, handler report, and
+actual Fast PoI report; it also records the original seed's PoI.
+
+Coverage includes upward/downward duplicate endpoint saves, negative remainder,
+fee-derived spacing 1/10/60/200, the inclusive 100-step walk and 101-step cutoff,
+both negative amounts, token-version upgrades and the lost getter-copy pushes,
+all four whitelist tracking branches with nonzero price state, absent pool tick,
+invalid fee tier, timestamp overflow after Pool/Bundle/Transaction saves, and
+unsigned global fee growth with bit 255 set. Generator assertions check those
+branches actually execute: Tick save sequences are exact, tracked USD is
+102/68/85/0 for token0-only/token1-only/both/neither, four nonzero getPool answers
+leave the original whitelist unchanged, and the high-bit global value stays
+positive. Invalid fee tier produces the deployed abort at tick.ts:57:3 with no
+message, after its preceding saves; the envelope preserves their discard/PoI
+semantics. The timestamp overflow likewise preserves three discarded saves.
+
+The native Swap implementation matches every operation and complete envelope
+in all 18 cases. It requires the actual four Factory getPool answers for each
+version-zero non-USDC token before discarding the returned addresses, matching
+the deployed helper's call order. Removing any of the four answers refuses the
+block without changing the successful golden envelope. This closes the native
+coverage gap found when the first live M2 run matched frames despite 44 missing
+call answers; that run remains incomplete evidence until the live extractor is
+corrected and the full call audit passes.
+
+Its arithmetic order, intermediate Pool save/reloads, interval
+quirks and fee-derived tick walk were also independently reviewed. It is not an actual historical Swap or a complete live range;
+the locked block fixtures contain the first-pool block and block 52,800,000,
+without the state chain needed to qualify a real Swap from an empty root.
+Synthetic call values and seeded prices are test inputs, never archive evidence.
+
+```console
+UPDATE_AERODROME_SWAP_CORPUS=1 cargo +1.98.0 test \
+  --manifest-path mapping-host/Cargo.toml --locked --test mapping_host aerodrome_swap_corpus
+```
+
+Without the update variable the original WASM executes again and the entire
+fixture must match byte for byte. The generator runs with recording disabled;
+no sockets or live RPC are needed after the existing first-block asset is hydrated.
+
+### Development reference extractor (M1 input)
+
+The `reference-extractor` feature converts original Firehose protobufs into
+native `ExtractorBlock` BCF1. It reuses the development extractor's candidate,
+storage, carry, tick-walk and call-answer code, then compares **every retained
+mapping call** with the independent cassette. Tick comparisons consume words
+2 and 3 of the full ten-word return; positions consume the deployed fields of
+the twelve-word return. Extra derived answers are permitted. Missing metadata,
+hash disagreements, storage/RPC disagreements and anomalies refuse the range.
+No missing answer is filled with a fabricated zero or revert.
+
+This is native reference input, not proof that a live Substreams package
+executes correctly. Registration uses the Graph Node decoder, as does the
+reference-only diagnostic `decoded` flag. The real package's generated ABI
+flag remains a separate comparison. ERC20 values come directly from the
+cassette; ambiguous null metadata is refused because the old cassette cannot
+distinguish failed RPC from empty return. The retained 20,000-block cassette
+has no null ERC20 values. Null positions are checked against actual derived
+storage reverts. Additional getPool calls retained for the mapping's token
+version upgrades are answered from the real pool registry and compared.
+
+`mapping-host/examples/capture_firehose_raw.rs` preserves the original
+protobuf bytes under the existing Firehose finality, type, block-number and
+concatenation guards. It checks every parent hash, only reconnects classified
+transport failures, and writes `capture-success.json` after the requested
+range and actual clean server EOF. Interrupted attempts have no completion
+receipt. Its payload type is `sf.ethereum.type.v2.Block`, despite using BCF1
+framing; it is not reducer input by itself.
+
+`aerodrome-reference-input` admits one or more disjoint capture directories in
+ascending order, starting at 13,843,704. It validates each complete receipt,
+source/binary pins, every index entry, raw digest, every protobuf/header identity
+and the parent link across every boundary before extraction starts. It then
+rereads the same open files and checks their digests again. This virtual join
+avoids copying the entire raw archive; its receipt records the SHA-256 of the
+byte concatenation and all individual receipts. Output goes to a new directory
+and `complete.json` is written last, only after all frames and the exact range
+finish. Partial output is not a completed reference input.
+
+```console
+cargo +1.98.0 run --locked -p aerodrome-slipstream-reducer \
+  --features reference-extractor --bin aerodrome-reference-input -- \
+  NEW_OUTPUT_DIRECTORY CASSETTE_JSON CASSETTE_SHA256 \
+  CAPTURE_SOURCE_COMMIT CAPTURE_BINARY_SHA256 REFERENCE_SOURCE_COMMIT \
+  CAPTURE_DIRECTORY_0 CAPTURE_DIRECTORY_1
+```
+
+The committed first-pool cassette is an exact 12-entry projection of the
+retained independently recorded cassette, SHA-256
+`1dabafa49d6c0e7725fd0a0a76975c22db183931cf56a2c76f12b35060fc61e3`.
+The test independently checks all call values against raw block SHA-256
+`5ac312712fef494a8c03f62c0987bba3339c5f693187e5f272467eee06af59ce`
+and compares the complete resulting extractor message with the retained fixture.
+Negative tests cover receipt/stream mutation, missing EOF, discontinuity,
+concatenated protobuf messages, wrong hashes, poisoned state, ambiguous/partial
+metadata, and storage/cassette mismatch.
+
+An explicitly ignored diagnostic can replay an early R1 prefix against the
+retained complete Graph Node envelopes using test-only empty state at the first
+pool. It reports per-handler counts, masks only compatibility ID, and does not
+qualify the root prefix, raw-capture completion or the full M1 window. The public
+reference API accepts only the deployment root; it has no arbitrary-height
+empty-state entry point.
+
+## Offline root replay and frame comparison
+
+Two development binaries consume retained artifacts. They do not implement the
+live producer protocol, snapshot import, durable checkpoints or recovery.
+
+`aerodrome-replay-fixture` executes a complete range from the deployment root
+using the bounded memory runner. The input must be a regular file with an
+explicit SHA-256. The digest is checked over the exact bytes consumed, after
+complete observed EOF. The descriptor also has an explicit digest; extractor
+identity must come from the package verifier or an explicitly labelled reference
+fixture. This tool does not authenticate the extractor identity itself.
+
+```console
+cargo run -p aerodrome-slipstream-reducer --locked --bin aerodrome-replay-fixture -- \
+  --input extractor.bcf1 --input-sha256 INPUT_SHA256 \
+  --descriptor descriptor.json --descriptor-sha256 DESCRIPTOR_SHA256 \
+  --extractor-identity verified-extractor-identity.json \
+  --from 13843704 --stop-exclusive 13919663 \
+  --expected-parent-hash ROOT_PARENT_HASH --output new-attempt-directory
+```
+
+The output directory must not exist, including after a failed attempt. Failures
+retain `attempt.json` and `failure.json`; they cannot publish a completion receipt.
+Only after the full range and input hash pass does the tool write `frames.bcf1`
+and `block-outcomes.jsonl`, sync both, and write `complete.json` with their hashes.
+It defaults to fail-closed aborts. `--error-mode emit-non-fatal` is available for
+diagnostic parity only and requires a matching descriptor. Explicit limits are
+`--max-blocks` (default 100000), `--max-candidates` (2000000), and
+`--max-output-bytes` (268435456). This is a bounded artifact tool, not a disk-backed
+backfill. Its completion is not a producer exit receipt or production certificate.
+
+`aerodrome-diff-frames` requires the entire nonempty range on both sides, including
+actual EOF. Each canonical payload is validated against its own pinned descriptor
+and checked against its observed frame header. It masks only `compatibility_id`;
+all operations, materialized fields, dispositions, groups, error markers and
+in-band source creations must be equal. It does not filter, sort or renumber.
+
+```console
+cargo run -p aerodrome-slipstream-reducer --locked --bin aerodrome-diff-frames -- \
+  --expected oracle.bcf1 --expected-descriptor oracle-descriptor.json \
+  --expected-descriptor-sha256 ORACLE_DESCRIPTOR_SHA256 \
+  --actual native.bcf1 --actual-descriptor native-descriptor.json \
+  --actual-descriptor-sha256 NATIVE_DESCRIPTOR_SHA256 \
+  --from 13843704 --stop-exclusive 13919663
+```
+
+Success prints a JSON equality report with both frame/descriptor hashes, counts
+and closing block hash. Short equal prefixes, extra frames, synthetic frames,
+unknown/noncanonical protobuf fields and terminal read failures refuse. Six
+focused tests exercise these mutations and offline output lifecycle, including
+actual Factory execution, bad input digests and no-clobber behavior.
+
+## Local durable execution and rewind
+
+`durable::DurableStore` stores exact Graph Node cache images in redb, including
+explicit Null after an existing entity is removed and recreated. A segment owns
+one write transaction. Per-block commits change that transaction's visible state;
+only complete input EOF and a successful producer callback allow the transaction
+to commit durably. A logical refusal or storage failure cannot be ignored to
+continue a poisoned runner. Storage failures poison the whole transaction, and
+dropping it rolls back every block since the preceding segment boundary.
+
+The first touch of each entity, accepted source and failed Factory host retains
+its before-image. `ARUNDO1` streams sorted before/after records with bounded
+lengths, a trailer count, checksum and mandatory EOF. Undo evidence and the
+canonical producer checkpoint are synced before an Immediate redb commit.
+Checkpoints use the shared producer-checkpoint contract, exact source ordering,
+failed-host commitments and optional full logical state digest. Physical redb
+file hashes are not logical state evidence. Every entity is retained
+conservatively; retention eviction, decoded LRUs and snapshot compaction are
+future performance work, not silently assumed safety.
+
+Accepted hosts retain their creation block and global creation ordinal. Their
+historical creation hash is not required by BCGSNAP1 and is not invented. Failed
+Factory hosts separately retain the observed failure block hash, which is part
+of the failed-host commitment and is checked when restoring the host set.
+
+`aerodrome-durable-fixture` is a **development** command, with
+`init`, `seed`, `seed-captured`, `inspect`, offline `reduce`, supervised `stream` and `rewind` operations.
+All require:
+
+```console
+--state-dir STATE --descriptor descriptor.json --descriptor-sha256 DESCRIPTOR_SHA256
+--extractor-identity verified-extractor-identity.json --producer-binding producer-binding.json
+```
+
+The producer binding has the exact fields in `common::producer_checkpoint::Binding`.
+Its executable digest must match this actual binary. Descriptor/package/source
+pins must come from the independent build/package evidence; the command verifies
+their agreement, not the authenticity of their origin. `--cache-mib` defaults to
+64 and configures redb's bounded page cache. `init` creates an empty root only and
+requires `--engine-lineage`; it never overwrites a state directory. The initial
+head is the shared `(13843703, zero hash)` sentinel.
+
+`reduce` additionally requires a regular `--input` file, `--input-sha256`,
+`--from`, `--stop-exclusive`, `--expected-parent-hash`, `--expected-head-block`,
+`--expected-head-hash`, `--expected-reducer-lineage`, `--engine-lineage` and a
+new `--output` directory. It refuses more than 50,000 blocks per segment. The
+input hash is checked over the exact consumed bytes after EOF and before durable
+commit. The first root transition separately records the actual observed parent.
+Later parent hashes must equal the committed predecessor. `--full-state-digest true`
+requests a complete logical scan; the default is false. Abort handling defaults
+to fail-closed; `--error-mode emit-non-fatal` retains diagnostic mapping aborts
+and requires the nonfatal descriptor.
+
+The output contains framed changes, the actual producer checkpoint, undo bytes
+and a final local `complete.json`. It explicitly does not claim a live subprocess
+receipt or production qualification. If a failure occurs after the redb commit
+but before the final marker, inspect the exact committed manifest; do not assume
+the old head or relabel partial output as complete. A fresh attempt can rewind
+and reproduce it. Immutable content-addressed evidence can be reused only if its
+bytes verify. Output and state directories must support hard links on the same
+filesystem; cross-filesystem publication fails before state commit.
+
+`rewind` requires `--expected-checkpoint-sha256`, `--to-block` and `--to-hash`,
+which must name the exact immediate predecessor. Every after-image must match
+the current state, and the complete undo checksum, pin and predecessor manifest
+must verify before a single atomic rewind commits. This local command knows no
+database loader and is not an operational rewind interface for a deployed lane.
+
+Tests cover segmentation/restart equality against both uninterrupted disk and
+memory execution, real process exit without destructors, EOF/producer refusal,
+injected partial storage failure, corrupt undo, failed Factory host history,
+missing/relabelled host inventories, explicit Null persistence and executable /
+input / head / rewind pin checks. Production seed import, crash roll-forward,
+live receipt supervision and end-to-end engine loading remain separate work.
+
+### Supervised streaming boundary
+
+`stream` consumes extractor BCF1 on stdin and emits provisional BlockChanges BCF1
+on stdout while retaining the same bytes in its new output directory. These
+bytes must not be published until the supervisor has verified the actual
+producer exit and checkpoint. JSON diagnostics go to stderr.
+
+It takes the same boundary, lineage, output, error-policy and digest-scan options
+as `reduce`, replacing `--input` / `--input-sha256` with
+`--attempt-nonce`, `--substreams-native-sha256` and
+`--upstream-completion-fd`. The fd must be a private inherited Unix pipe, numbered
+at least 3; reusable files are refused. The supervisor supplies a fresh random
+32-byte nonce as lowercase hex at startup. After exact input EOF, the reducer
+reads the bounded canonical `common::upstream_completion::Completion` to control
+EOF and verifies the nonce, all request/binary/package/lineage pins, actual input
+SHA-256 and byte count, and observed ending block/hash. Only native exit code 0
+is accepted. Missing, malformed, stale or mismatched completion aborts the whole
+transaction. Broken output or input failure returns without waiting for control;
+the supervisor must cancel/reap the native process and close its pipes.
+
+The supervisor writes this completion only after actually reaping the native
+child successfully. The reducer saves its exact bytes as
+`upstream-completion.json` before sealing state, then exits. Only after that
+actual producer exit may the supervisor write the engine's separate final
+producer receipt v2. Waiting for that final receipt inside the reducer would
+deadlock. The engine must wait for the final receipt in its completion callback
+or retain an extra pipe writer until the receipt is published. Pipe EOF alone
+never authorizes publication. The supervisor owns timeouts and cancellation.
+
+Black-box tests run a real upstream child and inherited control pipe, prove
+provisional output arrives before control, then exercise failed child exit,
+truncated input, stale nonce/lineage, wrong digest, invalid control framing and
+regular-file refusal. Separate writer-failure tests prove rollback on both
+partial writes and flush errors. The public producer entry below uses this same
+streaming implementation. The live engine supervisor remains separate integration work.
+
+## Development snapshot import
+
+`DurableStore::import_snapshot` and the local `seed` command consume the shared
+BCGSNAP1 format. They bind the exact descriptor and retention digest, sorted
+entity inventory, string ID domain, independently supplied boundary and profile
+digest, and explicit landing/oracle purpose. Every row is checked against the
+locked Aerodrome schema. Nonzero storage causality regions, retained block-local
+rows, and period rows outside the snapshot's declared maximum are refused.
+
+```console
+aerodrome-durable-fixture seed \
+  --state-dir NEW_STATE --descriptor descriptor.json --descriptor-sha256 DESCRIPTOR_SHA256 \
+  --extractor-identity extractor-identity.json --producer-binding producer-binding.json \
+  --from seed.bcgsnap --seed-manifest capture-manifest.json --seed-pins seed-pins.json
+```
+
+`seed-pins.json` serializes `durable::SeedImportPins`: exact 32-byte snapshot,
+capture-manifest and profile digests; the expected block/hash boundary; explicit
+`landing` or `oracle` purpose; the engine's initial snapshot lineage; and the
+caller assertion `complete_successful_sources_no_failed_hosts`. The manifest
+and pins files are capped at 1 MiB. Capture-manifest bytes are retained verbatim
+and pinned, but their contents are **opaque** in this development importer.
+Both its retained evidence and command result set `production_selectable: false`
+and `capture_manifest_verified: false`. A typed E5 capture verifier is still
+required before production import. A valid hash and a header claiming healthy
+state do not authenticate historical error completeness or landing eligibility.
+
+Rows stream into one uncommitted redb transaction. The shared reader must finish
+the declared row count, trailer, checksum, true EOF and independently pinned
+full-file digest before an initialized state can commit. Truncation, extra bytes,
+terminal read errors, identity mismatches and invalid rows leave no initialized
+manifest; the new directory is retained for diagnosis and cannot be reused by
+silently overwriting it. No existing state directory is replaced.
+
+Imported values remain exact get-visible images, including explicit nullable
+fields. They are not normalized or converted into a SQL reload image. A database
+capture normally omits SQL NULL columns; an imported snapshot cannot reconstruct
+the original process's unexported LFU cache. Accepted Pool hosts preserve the
+complete creation order, creation block and address, without inventing creation
+hashes or assuming dense physical VIDs. A nonempty declared error inventory is
+refused because BCGSNAP1 contains no failed-host history. The explicit caller
+history assertion is recorded, not independently established by this API.
+
+The initial producer checkpoint records snapshot/manifest pins, source commitment,
+row counts and an exhaustive logical state digest. Retained evidence is checked
+again on open, segment continuation and rewind. Oracle origin remains immutable
+through replay and rewind, and `require_loadable` always refuses it. A landing
+origin passing that structural method does not make this development import a
+production-qualified seed.
+
+Tests cover exact state and Initialize-frame parity after seeding, two identical
+imports, restart/rewind/no-clobber behavior, sparse source VIDs, all 53 distinct
+committed cache images from the pinned real Graph Node corpus, explicit Null,
+header/schema/causality failures, digest/truncation/extra/terminal-read failures,
+sticky oracle ancestry, retained-evidence mutation and the actual seed CLI.
+
+### Verified capture import
+
+`DurableStore::import_captured_snapshot` and `seed-captured` use the E5
+`SeedSnapshotReader` rather than accepting a caller's history assertion. The
+external `CapturedSeedPins` contains the exact capture-manifest digest, complete
+capture binding and expected engine lineage. The capture binding must also match
+the locked Aerodrome descriptor, start, spec, entity inventory and schema bytes.
+The deployment manifest remains ungrafted; the capture contract independently
+checks a physical self-copy tuple when present.
+
+Use the same `--from`, `--seed-manifest` and `--seed-pins` options as `seed`, with
+`seed-pins.json` serializing `CapturedSeedPins`. This path accepts the shared
+manifest's 4 MiB ceiling. It stages imported rows in one transaction and requires
+the opaque `VerifiedSeed` from the exact fully consumed stream before commit.
+Unproven source/error history, a wrong capture pin, incomplete input or mismatched
+row inventory cannot commit an initialized state.
+
+Retained evidence records `capture_manifest_verified: true` and is rechecked on
+open, continuation and rewind. `require_complete_seed_history` admits empty-root
+or typed captured state and refuses a development import's history assertion.
+Runtime consumers must call that gate before using seeded state. Oracle imports
+remain non-loadable through replay and rewind. `production_selectable` remains
+false: verified capture evidence does not certify a runtime/profile, establish
+stopped-writer authority or authorize database loading.
+
+Tests compare seeded Initialize output and logical state with uninterrupted
+execution for landing and oracle captures, preserve verification across restart
+and rewind, reject mutated retained evidence and corrupt/truncated/trailing input,
+and exercise the actual typed seed CLI with wrong and correct external pins.
+
+## Staged producer protocol
+
+The `producer` binary implements `pinax.backfill.producer/v1`. Its runtime root
+defaults to the parent of the installed `bin` directory. `--runtime-root DIR`
+overrides the directory; `--runtime-sha256 SHA256` pins the exact `runtime.json`
+bytes supplied independently by the driver. Runtime loading validates the closed
+file inventory, canonical JSON, descriptor sidecar, actual executable, package
+SHA-256, and the Substreams module hash computed from the package's executable
+graph. Unsupported module fields, network overrides, symlinks and extra files
+are refused. Package hashing follows the supported v1.18.4 map/store algorithm;
+the real strengthened M2 package was checked against the independent CLI hash.
+
+```console
+producer --runtime-sha256 RUNTIME_SHA256 version --json
+producer --runtime-sha256 RUNTIME_SHA256 stage --dest NEW_RUNTIME_DIR
+producer --runtime-sha256 RUNTIME_SHA256 --allow-non-final seed \
+  --empty --start-block 13843704 --out NEW_STATE --engine-lineage ENGINE_LINEAGE
+producer --runtime-sha256 RUNTIME_SHA256 --allow-non-final seed \
+  --from seed.bcgsnap --out NEW_STATE --seed-manifest capture.json --seed-pins pins.json
+```
+
+`stage` uses a new sibling directory, fsync and atomic no-replace promotion;
+an existing destination is never replaced. `version --json` returns the exact
+runtime manifest. The family contract is `aerodrome-slipstream-base`, with
+`producer_checkpoint_family: aerodrome-slipstream` preserving existing checkpoint
+bytes. Its required engine capabilities include in-band sources, receipt v2,
+fixed-point decimals, finalized blocks, deterministic-error handover and physical
+self-copy landing support. Physical profiles are supplied separately by the
+target, not bundled with the producer.
+
+`reduce` accepts the development `stream` parameters documented above, but
+identity parameters are forbidden: descriptor, extractor and producer bindings
+come only from the verified bundle. BCF1 is the only stdout output; the inherited
+private completion pipe and actual producer exit still govern commitment. There
+is no public offline-file shortcut or opaque seed import. `inspect --state-dir`
+and `rewind --state-dir --expected-checkpoint-sha256 --to-block --to-hash` use the
+same durable checkpoint implementation. Every state operation checks complete
+typed seed history; an imported development assertion cannot be upgraded by
+reopening it with the public binary.
+
+These bundles are explicitly non-final and `production_selectable: false`.
+Execution requires `--allow-non-final`; staging and version inspection do not.
+Exit 2 means invalid parameters, 4 means data/identity/execution refusal, and 5
+means the non-final execution guard. No command emits the engine's final producer
+receipt or certifies an OCI image. Source-built packaging and its artifact smoke
+are separate from the tiny synthetic package used in executable protocol tests.

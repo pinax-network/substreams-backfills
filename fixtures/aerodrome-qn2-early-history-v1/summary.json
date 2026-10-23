@@ -1,0 +1,120 @@
+{
+  "format": "pinax.aerodrome.qn2-early-history-evidence/v1",
+  "scope": "retained M2 ExtractorBlock early history only; no production SQL executed",
+  "full_range_qn2_closed": false,
+  "production_qualified": false,
+  "numeric_admission_changed": false,
+  "execution": {
+    "source_commit": "93fae41c8aaac5549af567390878f42a52bc340e",
+    "source_tree": "a28819dcf7b4aef59bce748fa6d71f84c82bdc38",
+    "binary_sha256": "e8a3343e3445cbc0d2ca3c5f323a0f089dc8cfdf154255b8a61fc02ea29137cc",
+    "binary_bytes": 1398016,
+    "exit_code": 0,
+    "finished_at": "2026-10-22T22:48:57.354750+00:00",
+    "binary_profile": "release",
+    "input_scope": "early history only"
+  },
+  "host_platform": {
+    "system": "Darwin",
+    "machine": "arm64"
+  },
+  "request": {
+    "path": "/private/tmp/aerodrome-qn2-early-history-v1/request.json",
+    "bytes": 476,
+    "sha256": "b4309d7be82835aa5d13add1c497a5ff99b89eb1cd7c898d9bca463c6066ac66"
+  },
+  "report": {
+    "path": "/private/tmp/aerodrome-qn2-early-history-v1/report.json",
+    "bytes": 1152,
+    "sha256": "c8d00efe0c7a69eda0b04daa82fdca89922a913f6117abe8992feb9df44096ca"
+  },
+  "debug_execution": {
+    "path": "/private/tmp/aerodrome-qn2-early-history-v1/debug-execution.json",
+    "bytes": 292,
+    "sha256": "fc407e996385a54ff4bc402249182ad38cfe78435fc03dccee164948bb5745f8"
+  },
+  "debug_and_release_reports_byte_identical": true,
+  "retained_input_origin_pointers": [
+    {
+      "path": "/private/tmp/aerodrome-live-wasm-m2-upgrade-v1/full-root/capture-complete.json",
+      "bytes": 1568,
+      "sha256": "dd900c87526036fe1a9aa97cf0932185bb1bc2de68fdb9e6f241943bcdae2b60"
+    },
+    {
+      "path": "/private/tmp/aerodrome-live-wasm-m2-upgrade-v1/M2-success.json",
+      "bytes": 8323,
+      "sha256": "e858d76620df03cfb48af9300edc21f4ce42e60ec09130fa70e2ed56e07bbddb"
+    }
+  ],
+  "validation": {
+    "workspace_tests_passed": 816,
+    "workspace_default_ignored": 1,
+    "explicit_owned_postgres16_tests_passed": 1,
+    "portable_audit_tests_passed": 7,
+    "workspace_strict_clippy": "passed",
+    "verify_all_checks_passed": 16,
+    "optimized_build": "passed",
+    "independent_review": "closed after physical-column fix"
+  },
+  "logs": [
+    {
+      "path": "/tmp/aerodrome-qn2-final-workspace-tests.log",
+      "bytes": 83790,
+      "sha256": "81d5c89ea66a7fbebc6817bac0ea5d68683f34e9403993c8d73089e62354c8c6"
+    },
+    {
+      "path": "/tmp/aerodrome-qn2-final-workspace-clippy.log",
+      "bytes": 4025,
+      "sha256": "c50b5dc810e3c49dcaa8c4b4aa76ac48769aebedac727b347c9300d35cf1a108"
+    },
+    {
+      "path": "/tmp/aerodrome-qn2-final-verify-all.log",
+      "bytes": 37383,
+      "sha256": "791394c30fa5f971687ab653017596c50a544181fcab5e7608277cec878f7208"
+    },
+    {
+      "path": "/tmp/aerodrome-qn2-final-release.log",
+      "bytes": 1393,
+      "sha256": "a7879dec4ad4328888f9c14d26f81cc3cd5cc55beb76dd75355d29c38e7bc0ba"
+    },
+    {
+      "path": "/tmp/aerodrome-qn2-physical-fix-tests.log",
+      "bytes": 2256,
+      "sha256": "a78d785b348c921d9b59a5397148bff4467c9a6827ab4b3a9846eb5a2817807a"
+    },
+    {
+      "path": "/tmp/aerodrome-qn2-physical-fix-postgres16.log",
+      "bytes": 361,
+      "sha256": "415cf430f012c35a29db71adc434e9eafdd2d992ea69487e3f0f1a5844f06043"
+    },
+    {
+      "path": "/tmp/aerodrome-qn2-independent-physical-fix.log",
+      "bytes": 816,
+      "sha256": "8f9d618b62b8a7acb6d90cf1d6ff61be6ff95d768824e6fe40cc058887b8b85c"
+    }
+  ],
+  "retained_first_attempts": [
+    {
+      "reason": "Initial SQL fixture mirrored logical amount0/amount1 names; independently identified and replaced by exact Graph Node-produced physical DDL. This first green result proved only the synthetic shape.",
+      "log": {
+        "path": "/tmp/aerodrome-qn2-postgres16.log",
+        "bytes": 361,
+        "sha256": "035edb5fee6819f96d88737795613b925aed65c330411db0838ac96466ec5ad7"
+      }
+    },
+    {
+      "reason": "First full workspace attempt lacked archived ignored baseline contracts. Only exact lock-matching local artifact bytes were hydrated before the successful rerun.",
+      "log": {
+        "path": "/tmp/aerodrome-qn2-workspace-tests.log",
+        "bytes": 92177,
+        "sha256": "87d8703767e98117b9a2c8407f63c8519f8915603d4a06026e441279f50bb256"
+      }
+    }
+  ],
+  "limits": [
+    "No full history through a live seed was scanned.",
+    "No live database identity or retention was verified.",
+    "Extractor candidate completeness, package origin and producer exits remain independent of this diagnostic report.",
+    "Any potential witness would still require mapping Token.decimals and committed handler provenance."
+  ]
+}

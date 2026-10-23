@@ -1,0 +1,7 @@
+{
+  "spkg_sha256": "b6b98d006e9bbbe195ba718623236a5e12d64445f1d209c6398a537a8b3c2098",
+  "module": "map_extractor_block",
+  "module_hash": "7c0a6332284912dd03c772c2549bb539b75c73af",
+  "output_type": "proto:pinax.aerodrome.slipstream.base.v1.ExtractorBlock",
+  "initial_block": 13843704
+}

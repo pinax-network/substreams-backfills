@@ -1,0 +1,76 @@
+{
+  "format": "pinax.backfill.producer-host-smoke/v1",
+  "production_selectable": false,
+  "oci_image_verified": false,
+  "engine_receipt": false,
+  "platform": {
+    "system": "Darwin",
+    "machine": "arm64"
+  },
+  "observed_at": "2026-10-22T20:06:12.512332+00:00",
+  "packaging_source_commit": "911653033a38dab8ab9d78437a997165d9954616",
+  "packaging_binary": {
+    "bytes": 21725400,
+    "sha256": "2e9a904b3640ac18dec6f0d1ebca806d7bb2ef767ab90796c11531080003e1d4"
+  },
+  "producer_source_commit": "bd9a88d120e9c846e583a81a257d988e6988aadf",
+  "actual_context_build_exit": 0,
+  "extractor_source_commit": "5e65aa2226dbcb42ae25e8784af989327967e1e6",
+  "artifacts": {
+    "runtime.json": {
+      "bytes": 1427,
+      "sha256": "5b976e577fd39b0c758c5ec155a768f2aac83e63a9a906de5251ca8f484487e9"
+    },
+    "bin/producer": {
+      "bytes": 5271136,
+      "sha256": "72190238b26b69ee901473bb3e21770a8d2efbd292f4b08147861f90a9f5a6eb"
+    },
+    "source.json": {
+      "bytes": 185192,
+      "sha256": "c89122a8629b259eb441c9329311417afb3ea641666800f274fc0d44a530b869"
+    },
+    "spkg/extractor.spkg": {
+      "bytes": 1975771,
+      "sha256": "7df52603a63b261ed27faf5f27a0b178b2004e156829c6c0edc1b3d605b4ff59"
+    },
+    "spkg/extractor-lock.json": {
+      "bytes": 464,
+      "sha256": "3d844e02d2de5017dce523e4f6c6365b566a2cd621bef431f5705fc7a0d622cd"
+    },
+    "contract/block-changes-descriptor.json": {
+      "bytes": 1850,
+      "sha256": "462d4f6d5222bf45c4912a6251bf473a55ddf49dc3a74e9acc252ee142a25638"
+    },
+    "smoke.json": {
+      "bytes": 491,
+      "sha256": "40f378d155366033b2f85552a772278ef003c72304ef52dc2b5ba301890631f6"
+    },
+    "producer-runtime.tar": {
+      "bytes": 7444480,
+      "sha256": "2081dc32fd5566a4d27bb3574478fd2d0207c60c7c2139d9b5330810c83f1dfa"
+    },
+    "discovery.json": {
+      "bytes": 480,
+      "sha256": "114401a0f5fcd26c794ce8e2358a5a38a42a0e546f896eb436dd7beb462ebf2a"
+    }
+  },
+  "steps": [
+    {
+      "command": "verify-source",
+      "exit_code": 0
+    },
+    {
+      "command": "smoke",
+      "exit_code": 0
+    },
+    {
+      "command": "archive",
+      "exit_code": 0
+    },
+    {
+      "command": "verify-discovery",
+      "exit_code": 0
+    }
+  ],
+  "scope": "Actual host process checks and archive byte identity. No Linux container state/stream execution, image push, OCI attachment, production qualification or completed engine segment."
+}

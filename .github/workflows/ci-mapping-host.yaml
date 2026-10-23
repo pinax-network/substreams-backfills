@@ -27,7 +27,16 @@ jobs:
               - '.github/workflows/ci-mapping-host.yaml'
               - 'mapping-host/**'
               - 'common/**'
+              - 'crates/graph-numerics/**'
+              - 'crates/aerodrome-slipstream-reducer/**'
+              - 'aerodrome-slipstream-base/reference/**'
+              - 'aerodrome-slipstream-base/substreams/fixtures/**'
               - 'uniswap-v3/fixtures/blocks.lock.json'
+              # The Aerodrome oracle tests read the M7 target record and the
+              # reference objects the bundle must equal, and hydrate the block
+              # fixtures from the lock under this directory.
+              - 'aerodrome-slipstream-base/**'
+              - 'docs/provenance/aerodrome-slipstream-base-target.json'
               - 'Cargo.toml'
   mapping-host:
     needs: changes
@@ -62,6 +71,27 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: cargo xtask evidence fetch --lock uniswap-v3/fixtures/blocks.lock.json --cache-dir ~/.cache/substreams-backfills/block-fixtures
+      - name: Restore checksum-keyed Aerodrome evidence cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/substreams-backfills/aerodrome-evidence
+          key: aerodrome-evidence-${{ hashFiles('aerodrome-slipstream-base/fixtures/blocks.lock.json', 'mapping-host/evidence/aerodrome-root-window.lock.json') }}
+      - name: Fetch and verify Aerodrome block fixtures and root-window evidence
+        # Two Base block fixtures, and the two root-window reports, the window's
+        # cassette and the per-block files the summaries pin (151 MB in all,
+        # cached by lock digest). The archive lock (frames, final store, checkpoints) is
+        # not fetched: no test reads it.
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          cargo xtask evidence fetch --lock aerodrome-slipstream-base/fixtures/blocks.lock.json --cache-dir ~/.cache/substreams-backfills/aerodrome-evidence
+          cargo xtask evidence fetch --lock mapping-host/evidence/aerodrome-root-window.lock.json --cache-dir ~/.cache/substreams-backfills/aerodrome-evidence
+      - name: Verify native Aerodrome reference input
+        # Uses the hydrated raw Base block and committed cassette projection.
+        # The live R1 diagnostic is explicitly ignored; no sockets are opened.
+        run: |
+          cargo test -p aerodrome-slipstream-reducer --locked --features reference-extractor
+          cargo clippy -p aerodrome-slipstream-reducer --locked --features reference-extractor --all-targets -- -D warnings
       - name: Check formatting
         working-directory: mapping-host
         run: cargo fmt --all --check

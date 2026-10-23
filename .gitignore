@@ -25,3 +25,16 @@ uniswap-v3/segment-writer-matrix/v1/contract.json
 
 # Block fixtures (see uniswap-v3/fixtures/README.md); hydrated by `cargo xtask evidence fetch --lock uniswap-v3/fixtures/blocks.lock.json`
 uniswap-v3/fixtures/blocks/**/*.pb
+
+# Aerodrome Slipstream Base block fixtures; hydrated by
+# `cargo xtask evidence fetch --lock aerodrome-slipstream-base/fixtures/blocks.lock.json`
+aerodrome-slipstream-base/fixtures/blocks/**/*.pb
+
+# Aerodrome root-window run artifacts (see mapping-host/README.md); hydrated by
+# `cargo xtask evidence fetch --lock mapping-host/evidence/aerodrome-root-window.lock.json`
+# and, outside CI, `--lock mapping-host/evidence/aerodrome-root-window-archive.lock.json`.
+# The committed files are the two `.json` summaries and the two locks.
+mapping-host/evidence/aerodrome-*.jsonl
+mapping-host/evidence/aerodrome-*.cassette.json
+mapping-host/evidence/aerodrome-*.store.json
+mapping-host/evidence/aerodrome-*.bcf1

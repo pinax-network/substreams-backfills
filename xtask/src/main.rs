@@ -6,6 +6,7 @@
 //!   evidence lock    --release-tag TAG [--repository OWNER/NAME] [--lock PATH] [--root DIR] [--write] PATH...
 //!   evidence audit-release [--lock PATH]
 
+mod aerodrome_substreams;
 mod diagnostic_package;
 mod eligibility;
 mod evidence;
@@ -13,6 +14,7 @@ mod fixtures;
 mod github;
 mod import_verify;
 mod logical_oracle;
+mod producer_runtime;
 mod target_common;
 mod targets;
 mod v4_engine_reference;
@@ -25,7 +27,10 @@ use std::process::ExitCode;
 
 use evidence::{DirectoryFetcher, FetchOptions, Fetcher, Lock, Outcome, Status, DEFAULT_LOCK_PATH};
 
-const USAGE: &str = "usage: cargo xtask <evidence|verify-all|verify-targets|eligibility> ...
+const USAGE: &str = "usage: cargo xtask <evidence|verify-all|verify-targets|eligibility|producer-runtime> ...
+  producer-runtime <context|verify-source|build-bundle|smoke|archive|verify-discovery> [options]
+  aerodrome-substreams <check|protogen [--check]|build [--twice]|cache-boundary> [--root DIR]   offline Aerodrome extractor tooling
+  aerodrome-substreams <audit-calls|audit-erc20> --input EXTRACTOR.pb --output NEW_DIR [--root DIR]
   eligibility capture --binding FILE --measurements FILE --output FILE [--policy PATH] [--root DIR]
   eligibility check --binding FILE --purpose implementation-start|compute-or-load-start [--now RFC3339] [--json] [--policy PATH] [--root DIR]
   verify-targets [--root DIR] [--policy PATH]   validate every target binding and pinned evidence (offline)
@@ -77,7 +82,8 @@ fn parse_args(raw: Vec<String>) -> Result<Args, String> {
     while let Some(arg) = iter.next() {
         if let Some(name) = arg.strip_prefix("--") {
             match name {
-                "offline" | "write" | "list" | "keep-going" | "json" | "write-contract" => {
+                "offline" | "write" | "list" | "keep-going" | "json" | "write-contract"
+                | "check" | "twice" => {
                     flags.insert(name.to_string(), None);
                 }
                 "track" => {
@@ -97,6 +103,7 @@ fn parse_args(raw: Vec<String>) -> Result<Args, String> {
                 | "binding"
                 | "measurements"
                 | "output"
+                | "input"
                 | "purpose"
                 | "now"
                 | "exact-source-root"
@@ -139,12 +146,27 @@ fn default_cache_dir() -> PathBuf {
 
 fn run() -> Result<(), String> {
     let raw: Vec<String> = std::env::args().skip(1).collect();
+    if raw.first().is_some_and(|s| s == "producer-runtime") {
+        return producer_runtime::run(&raw[1..]);
+    }
     let args = parse_args(raw)?;
     let mut positional = args.positional.iter();
     match (
         positional.next().map(String::as_str),
         positional.next().map(String::as_str),
     ) {
+        (Some("aerodrome-substreams"), Some(command)) => {
+            let root = PathBuf::from(args.value("root").unwrap_or("."));
+            if matches!(command, "audit-calls" | "audit-erc20") {
+                return aerodrome_substreams::audit(
+                    &root,
+                    args.value("input").ok_or("--input is required")?,
+                    args.value("output").ok_or("--output is required")?,
+                    command == "audit-erc20",
+                );
+            }
+            aerodrome_substreams::run(&root, command, args.has("check"), args.has("twice"))
+        }
         (Some("verify-all"), _) => verify_all_command(&args),
         (Some("verify-targets"), _) => verify_targets_command(&args),
         (Some("fixtures"), Some(sub @ ("check" | "normalize"))) => {

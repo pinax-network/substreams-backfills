@@ -65,7 +65,7 @@ use graph_chain_ethereum::trigger::EthereumTrigger;
 use graph_chain_ethereum::Chain;
 use graph_runtime_wasm::RuntimeHostBuilder;
 
-use backfill_common::pb::pinax::graph::backfill::v1 as pb;
+use backfill_common::pb::pinax::graph::backfill::v2 as pb;
 use backfill_common::{materialized_key, BlockChangesCompatibility};
 
 use crate::block;
@@ -131,6 +131,7 @@ pub struct SegmentHost {
     causality_region: String,
     recorder: Arc<OpRecorder>,
     compatibility: BlockChangesCompatibility,
+    data_sources_in_band: bool,
     descriptor_sha256: String,
     bundle_lock_sha256: String,
     bounds: SegmentBounds,
@@ -191,6 +192,14 @@ impl SegmentHost {
     /// Load a bundle, resolve its manifest through graph-node, and instantiate a
     /// host for every manifest data source, in manifest order.
     pub async fn load(config: SegmentHostConfig<'_>) -> Result<Self> {
+        Self::load_mode(config, false).await
+    }
+
+    pub async fn load_in_band(config: SegmentHostConfig<'_>) -> Result<Self> {
+        Self::load_mode(config, true).await
+    }
+
+    async fn load_mode(config: SegmentHostConfig<'_>, data_sources_in_band: bool) -> Result<Self> {
         crate::env_pin::pin();
 
         let logger = Logger::root(slog::Discard, o!());
@@ -244,7 +253,11 @@ impl SegmentHost {
         )
         .with_op_recorder(Some(recorder.clone()));
 
-        let (compatibility, descriptor_sha256) = descriptor::load(config.bundle_dir)?;
+        let (compatibility, descriptor_sha256) = if data_sources_in_band {
+            descriptor::load_in_band(config.bundle_dir)?
+        } else {
+            descriptor::load(config.bundle_dir)?
+        };
         let expected_policy = if errors_are_fatal {
             pb::DeterministicErrorPolicy::Fatal
         } else {
@@ -302,6 +315,44 @@ impl SegmentHost {
             },
         };
 
+        if let Some(cap) = compatibility.capabilities() {
+            let mut entities: Vec<_> = manifest
+                .schema
+                .entity_types()
+                .iter()
+                .map(|t| t.typename().to_string())
+                .collect();
+            entities.sort();
+            entities.dedup();
+            let mut declared_templates: Vec<_> = manifest
+                .templates
+                .iter()
+                .map(|t| (t.manifest_idx(), t.name().to_owned()))
+                .collect();
+            declared_templates.sort();
+            let capabilities_templates: Vec<_> = cap
+                .data_sources
+                .templates
+                .iter()
+                .map(|t| (t.manifest_idx, t.name.clone()))
+                .collect();
+            if cap.deployment != deployment.to_string()
+                || cap.spec_version != spec_version
+                || cap.start_block != bounds.start as u64
+                || cap.storage_profile.entity_types != entities
+                || declared_templates != capabilities_templates
+            {
+                bail!("in-band descriptor deployment/spec/start/schema/templates differ from loaded manifest");
+            }
+            let actual_poi = match poi_version {
+                ProofOfIndexingVersion::Fast => "fast",
+                ProofOfIndexingVersion::Legacy => "legacy",
+            };
+            if cap.graph_node.poi_version != actual_poi {
+                bail!("in-band descriptor PoI differs from manifest");
+            }
+        }
+
         let mut host = SegmentHost {
             logger,
             deployment,
@@ -323,6 +374,7 @@ impl SegmentHost {
             causality_region,
             recorder,
             compatibility,
+            data_sources_in_band,
             descriptor_sha256,
             bundle_lock_sha256: bundle.lock_sha256().to_string(),
             bounds,
@@ -873,7 +925,10 @@ impl SegmentHost {
         let mut stage: usize = 0;
         // Hosts this stage runs. Stage 0 is every host that already exists.
         let mut stage_hosts: Vec<Arc<Host>> = self.hosts.clone();
-        let mut pending: Vec<InstanceDSTemplateInfo> = Vec::new();
+        let mut pending: Vec<(u64, InstanceDSTemplateInfo)> = Vec::new();
+        let mut accepted_creations = Vec::new();
+        let original_host_count = self.hosts.len();
+        let original_dynamic_count = self.dynamic.len();
 
         loop {
             let data_sources: Vec<&graph_chain_ethereum::DataSource> = stage_hosts
@@ -912,7 +967,32 @@ impl SegmentHost {
                 break;
             }
             let created = std::mem::take(&mut pending);
-            let added = self.create_dynamic_data_sources(created)?;
+            let mut added = Vec::new();
+            for (group, info) in created {
+                let template = info.template.name().to_string();
+                for host in self.create_dynamic_data_sources(vec![info])? {
+                    if self.data_sources_in_band {
+                        let stored = host.data_source().as_stored_dynamic_data_source();
+                        if stored.context.is_some() || stored.done_at.is_some() {
+                            bail!("in-band source requires NULL context/done_at");
+                        }
+                        accepted_creations.push(pb::CreatedDataSource {
+                            ordinal: u32::try_from(accepted_creations.len())?,
+                            manifest_idx: stored.manifest_idx,
+                            template: template.clone(),
+                            handler_group_order: group,
+                            param: stored
+                                .param
+                                .as_ref()
+                                .context("onchain source has no address")?
+                                .as_ref()
+                                .to_vec(),
+                            context_json: None,
+                        });
+                    }
+                    added.push(host);
+                }
+            }
             if added.is_empty() {
                 break;
             }
@@ -927,6 +1007,11 @@ impl SegmentHost {
             // is applied on top, which is exactly the one modification Graph Node
             // keeps. The entity cache is dropped rather than rewound, because it
             // is only a cache: the next read repopulates it from the store.
+            if self.data_sources_in_band {
+                accepted_creations.clear();
+                self.hosts.truncate(original_host_count);
+                self.dynamic.truncate(original_dynamic_count);
+            }
             self.store.rollback(pre_block);
             self.lfu_cache = EntityLfuCache::default();
         }
@@ -983,6 +1068,8 @@ impl SegmentHost {
             )
             .with_context(|| format!("building BlockChanges for block {}", block_ptr.number))?;
 
+        let mut changes = pb::BlockChanges::from(changes);
+        changes.created_data_sources = accepted_creations;
         self.blocks_processed += 1;
         Ok(BlockOutcome { report, changes })
     }
@@ -1007,7 +1094,7 @@ impl SegmentHost {
         stage: usize,
         source_trigger_order: usize,
         handler_group_order: u32,
-        pending: &mut Vec<InstanceDSTemplateInfo>,
+        pending: &mut Vec<(u64, InstanceDSTemplateInfo)>,
         report: &mut BlockReport,
         ops: &mut BlockOpsBuilder,
         pre_block: &mut StoreUndo,
@@ -1110,7 +1197,11 @@ impl SegmentHost {
             report
                 .created_data_sources
                 .extend(created_reports.iter().cloned());
-            pending.extend(created);
+            pending.extend(
+                created
+                    .into_iter()
+                    .map(|info| (u64::from(handler_group_order), info)),
+            );
 
             let outcome = if errors.is_empty() {
                 "ok".to_string()
@@ -1157,6 +1248,9 @@ impl SegmentHost {
         }
 
         if let Some(failed_handler_order) = group_errored {
+            if self.data_sources_in_band {
+                pending.retain(|(group, _)| *group != u64::from(handler_group_order));
+            }
             proof_of_indexing.write_deterministic_error(&self.logger, &self.causality_region);
             ops.push_deterministic_error(
                 u64::from(handler_group_order),

@@ -2,12 +2,15 @@
 resolver = "2"
 members = [
     "common",
+    "crates/graph-numerics",
+    "crates/aerodrome-slipstream-reducer",
+    "crates/aerodrome-decimal-audit",
     "crates/uniswap-v3-overlay-pb",
     "crates/uniswap-v3-reducers",
     "crates/uniswap-v3-runtime",
     "xtask",
 ]
-exclude = ["mapping-host", "uniswap-v3/contract-tests", "uniswap-v3/source", "uniswap-v4"]
+exclude = ["mapping-host", "uniswap-v3/contract-tests", "uniswap-v3/source", "uniswap-v4", "aerodrome-slipstream-base/substreams"]
 
 [workspace.package]
 edition = "2021"

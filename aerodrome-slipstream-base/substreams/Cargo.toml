@@ -1,0 +1,9 @@
+[workspace]
+resolver = "2"
+members = ["crates/pb", "crates/core", "crates/extract", "crates/stores", "crates/rpc", "crates/answers", "crates/protogen", "crates/audit-native"]
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"

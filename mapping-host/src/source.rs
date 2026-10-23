@@ -145,7 +145,7 @@ impl<S: BlockSource> CheckedSource<S> {
                 .and_then(|hash| hex::decode(hash.trim_start_matches("0x")).ok())
                 .is_some_and(|bytes| bytes.len() == 32 && bytes.iter().any(|byte| *byte != 0));
             if !valid {
-                bail!("v2 source chunk block {number} has no valid parent hash");
+                bail!("observed source block {number} has no valid parent hash");
             }
         }
         if let Some(previous) = self.previous {
@@ -546,11 +546,11 @@ impl FirehoseSource {
     pub fn range(&self) -> (i32, i32) {
         (self.start, self.stop)
     }
-}
 
-#[async_trait]
-impl BlockSource for FirehoseSource {
-    async fn next_block(&mut self) -> Result<Option<BlockFinality>> {
+    /// Retain the original protobuf bytes while applying the same finality,
+    /// type, concatenation and number checks as normal mapping-host ingestion.
+    /// The caller still checks parent linkage and calls finish_raw_capture.
+    pub async fn next_raw_block(&mut self) -> Result<Option<(Vec<u8>, BlockFinality)>> {
         if self.expected >= self.stop {
             return Ok(None);
         }
@@ -563,7 +563,34 @@ impl BlockSource for FirehoseSource {
         };
         let block = block_from_response(self.expected, &response)?;
         self.expected += 1;
-        Ok(Some(block))
+        Ok(Some((response.block.unwrap().value, block)))
+    }
+
+    /// Raw-capture success additionally requires actual server EOF. Do not
+    /// infer it merely because the last requested block has arrived.
+    pub async fn finish_raw_capture(&mut self) -> Result<()> {
+        raw_capture_eof(&mut self.stream, self.expected, self.stop).await
+    }
+}
+
+async fn raw_capture_eof(
+    stream: &mut BoxStream<'static, Result<firehose::Response>>,
+    expected: i32,
+    stop: i32,
+) -> Result<()> {
+    if expected != stop {
+        bail!("raw capture has not consumed the complete requested range");
+    }
+    if stream.try_next().await?.is_some() {
+        bail!("raw capture received an extra response after its range");
+    }
+    Ok(())
+}
+
+#[async_trait]
+impl BlockSource for FirehoseSource {
+    async fn next_block(&mut self) -> Result<Option<BlockFinality>> {
+        Ok(self.next_raw_block().await?.map(|(_, block)| block))
     }
 
     fn describe(&self) -> String {
@@ -1101,5 +1128,35 @@ mod retry_tests {
                 "{code:?} must not be retried: {error:#}"
             );
         }
+    }
+}
+
+#[cfg(test)]
+mod raw_capture_tests {
+    use super::*;
+    use graph::futures03::stream;
+
+    #[tokio::test]
+    async fn only_complete_range_and_actual_clean_eof_succeed() {
+        let mut empty = stream::empty().boxed();
+        assert!(raw_capture_eof(&mut empty, 10, 10).await.is_ok());
+        assert!(raw_capture_eof(&mut empty, 9, 10)
+            .await
+            .unwrap_err()
+            .to_string()
+            .contains("complete requested range"));
+        let mut extra = stream::iter(vec![Ok(firehose::Response::default())]).boxed();
+        assert!(raw_capture_eof(&mut extra, 10, 10)
+            .await
+            .unwrap_err()
+            .to_string()
+            .contains("extra response"));
+        let mut failed =
+            stream::iter(vec![Err(anyhow!("producer failed after final block"))]).boxed();
+        assert!(raw_capture_eof(&mut failed, 10, 10)
+            .await
+            .unwrap_err()
+            .to_string()
+            .contains("producer failed"));
     }
 }

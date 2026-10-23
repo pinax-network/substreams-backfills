@@ -1,0 +1,19 @@
+{
+  "schema": "pinax.substreams-backfills.evidence-assets/v1",
+  "repository": "pinax-network/substreams-backfills",
+  "release_tag": "aerodrome-base-block-fixtures-v1",
+  "assets": [
+    {
+      "path": "aerodrome-slipstream-base/fixtures/blocks/base/13899663.pb",
+      "asset": "sha256-5ac312712fef494a8c03f62c0987bba3339c5f693187e5f272467eee06af59ce.pb",
+      "bytes": 708792,
+      "sha256": "5ac312712fef494a8c03f62c0987bba3339c5f693187e5f272467eee06af59ce"
+    },
+    {
+      "path": "aerodrome-slipstream-base/fixtures/blocks/base/52800000.pb",
+      "asset": "sha256-06fe030c7921ee57b12f711f5cfb66040f5b578b25cf86dc66c9cec6e809d957.pb",
+      "bytes": 6649734,
+      "sha256": "06fe030c7921ee57b12f711f5cfb66040f5b578b25cf86dc66c9cec6e809d957"
+    }
+  ]
+}

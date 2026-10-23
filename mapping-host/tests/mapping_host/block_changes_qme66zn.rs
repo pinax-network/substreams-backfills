@@ -22,8 +22,8 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
-use backfill_common::pb::pinax::graph::backfill::v1 as pb;
-use backfill_common::{decode_canonical_block_changes, validate_block_changes};
+use backfill_common::pb::pinax::graph::backfill::v2 as pb;
+use backfill_common::{decode_canonical_in_band_block_changes, validate_in_band_block_changes};
 use graph_mapping_host::runner::{SegmentHost, SegmentHostConfig};
 use graph_mapping_host::{block, blockchanges};
 
@@ -135,7 +135,7 @@ fn saves_of(changes: &pb::BlockChanges, group: u64, handler: u64) -> Vec<(String
 #[test]
 fn every_frame_validates_against_the_segment_descriptor() {
     for (changes, _) in &run().frames {
-        validate_block_changes(changes, &run().compatibility)
+        validate_in_band_block_changes(changes, &run().compatibility)
             .unwrap_or_else(|e| panic!("block {} does not validate: {e}", changes.block_number));
     }
 }
@@ -143,7 +143,7 @@ fn every_frame_validates_against_the_segment_descriptor() {
 #[test]
 fn every_frame_round_trips_through_the_canonical_codec() {
     for (changes, bytes) in &run().frames {
-        let decoded = decode_canonical_block_changes(bytes, &run().compatibility)
+        let decoded = decode_canonical_in_band_block_changes(bytes, &run().compatibility)
             .unwrap_or_else(|e| panic!("block {} did not decode: {e}", changes.block_number));
         assert_eq!(&decoded, changes, "block {}", changes.block_number);
     }

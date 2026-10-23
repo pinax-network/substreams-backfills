@@ -25,4 +25,7 @@ sha1.workspace = true
 chrono.workspace = true
 uniswap-v3-runtime = { path = "../crates/uniswap-v3-runtime" }
 
+backfill-common = { path = "../common" }
+aerodrome-slipstream-reducer = { path = "../crates/aerodrome-slipstream-reducer" }
+
 [dev-dependencies]

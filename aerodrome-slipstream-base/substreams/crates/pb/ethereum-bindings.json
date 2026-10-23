@@ -1,0 +1,8 @@
+{
+  "source": "substreams-ethereum-core",
+  "version": "0.11.1",
+  "git_commit": "d68edf3f525d32f969cad5b51fd27610bce7ab91",
+  "path": "core/src/pb/sf.ethereum.type.v2.rs",
+  "sha256": "19eeb2df5efb0ae455205cc88e183e162ef6d2645f652282ec45aacd0dc3214e",
+  "license": "Apache-2.0"
+}

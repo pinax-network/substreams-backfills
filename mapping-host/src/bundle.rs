@@ -38,6 +38,8 @@ const REPOSITORY_AUTHORED: &[&str] = &[
     "bundle.lock.json",
     crate::descriptor::DESCRIPTOR_FILE,
     crate::descriptor::DESCRIPTOR_SIDECAR,
+    crate::descriptor::IN_BAND_DESCRIPTOR_FILE,
+    crate::descriptor::IN_BAND_DESCRIPTOR_SIDECAR,
 ];
 
 /// One file in a bundle, with the provenance needed to prove it is the deployed

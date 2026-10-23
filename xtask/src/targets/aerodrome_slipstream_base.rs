@@ -1515,6 +1515,11 @@ mod tests {
         std::fs::create_dir_all(destination).unwrap();
         for entry in std::fs::read_dir(source).unwrap() {
             let entry = entry.unwrap();
+            // The family now has a nested Cargo workspace. Its mutable build
+            // cache is not provenance input and may change while tests run.
+            if entry.file_name() == "target" {
+                continue;
+            }
             let target = destination.join(entry.file_name());
             if entry.file_type().unwrap().is_dir() {
                 copy_tree(&entry.path(), &target);

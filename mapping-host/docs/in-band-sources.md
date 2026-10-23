@@ -47,12 +47,18 @@ The `verify_in_band_oracle` example accepts seven paths: v1 descriptor, in-band
 descriptor, retained v1 BCF1, fresh in-band BCF1, retained report, fresh report and
 fresh checkpoint. An optional eighth path names the retained checkpoint; its
 materialized entity/PoI rows, absent cache and dynamic inventory must match.
+Cache residency is reported separately because equal-priority LFU eviction can
+differ across processes; row identities, VIDs, values and Null/absent distinctions
+remain exact. This does not prove arbitrary future checkpoint equivalence.
+An optional ninth path names the initial in-band checkpoint for a continuation;
+its boundary, descriptor, inherited sources and predecessor link are verified.
 It streams and canonical-decodes both frame files, requires
 complete observed coverage, checks payload/clock/report identities, and removes
 only field 9 and replaces the compatibility ID to compare exact v1 bytes. Reports
 must match in every field except envelope length/hash, including each entity
 modification and PoI. The emitted creations must equal the checkpoint's runtime
 inventory in order; the source-order commitment uses the existing source-v2
-algorithm. The example expects an empty source inventory at the range's start,
-which holds for both Aerodrome R0 and R1. Successful comparison proves equivalence
-to the retained oracle evidence, not deployed indexer parity.
+algorithm. Without the ninth path, the example requires an empty source
+inventory at the range's start, as in Aerodrome R0 and R1. With it, inherited
+sources are retained in order. Successful comparison proves equivalence to the
+retained oracle evidence, not deployed indexer parity.

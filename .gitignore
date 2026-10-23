@@ -38,3 +38,4 @@ mapping-host/evidence/aerodrome-*.jsonl
 mapping-host/evidence/aerodrome-*.cassette.json
 mapping-host/evidence/aerodrome-*.store.json
 mapping-host/evidence/aerodrome-*.bcf1
+/mapping-host/evidence/aerodrome-in-band-*.tar.gz

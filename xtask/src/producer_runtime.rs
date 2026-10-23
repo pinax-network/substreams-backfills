@@ -859,6 +859,34 @@ mod tests {
             value["jobs"]["candidate"]["if"].as_str(),
             Some("github.event_name == 'workflow_dispatch'")
         );
+        for job in ["candidate", "publish"] {
+            let steps = value["jobs"][job]["steps"].as_sequence().unwrap();
+            let setup = steps
+                .iter()
+                .position(|s| s["name"].as_str() == Some("Enable OCI-capable Docker image store"))
+                .unwrap();
+            assert_eq!(
+                steps[setup]["uses"].as_str(),
+                Some("docker/setup-docker-action@7ec28a010822b4626af4874f9448a4b05ac6f3e5")
+            );
+            let config: serde_json::Value =
+                serde_json::from_str(steps[setup]["with"]["daemon-config"].as_str().unwrap())
+                    .unwrap();
+            assert_eq!(
+                config,
+                serde_json::json!({"features":{"containerd-snapshotter":true}})
+            );
+            let first_load = steps
+                .iter()
+                .position(|s| {
+                    s["run"]
+                        .as_str()
+                        .unwrap_or("")
+                        .contains("docker load --input")
+                })
+                .unwrap();
+            assert!(setup < first_load);
+        }
         let steps = value["jobs"]["candidate"]["steps"].as_sequence().unwrap();
         let build = steps
             .iter()

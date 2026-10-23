@@ -131,3 +131,15 @@ and 848. Those unrelated expressions remain unchanged. A separate xtask check
 passed with all other warnings denied and only that named lint allowed; this is
 not reported as a full strict xtask Clippy pass. No Linux image was built or
 smoked locally because the available Docker daemon was unavailable.
+
+The direct OCI candidate at `0198265` reached a separate hosted-runner limitation:
+the classic Docker image store refused the OCI archive with `blobs/json: no such
+file or directory` before executing the image. That failed attempt and its exact
+archive were retained by run `39980152393`. Candidate and publication jobs now
+explicitly select Docker's containerd image store before loading the retained
+OCI bytes, using the pinned official setup action. The archive/config identity
+checks are unchanged; no image-format conversion is admitted.
+The runner configuration follows the [official Docker containerd image-store
+setup](https://docs.docker.com/build/ci/github-actions/multi-platform/) and pins
+[`docker/setup-docker-action` v5](https://github.com/docker/setup-docker-action/commit/7ec28a010822b4626af4874f9448a4b05ac6f3e5)
+to its verified commit, rather than changing the local developer Docker daemon.

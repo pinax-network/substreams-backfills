@@ -44,6 +44,13 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Command {
+    /// Replay one bounded window over a streamed, complete disk seed.
+    DiskOracle {
+        #[arg(long)]
+        request: PathBuf,
+        #[arg(long)]
+        request_sha256: String,
+    },
     /// Replay blocks under one segment bundle.
     Run(Box<RunArgs>),
     /// Build segment bundles from a flat directory of IPFS objects.
@@ -253,6 +260,16 @@ fn main() -> Result<()> {
     graph_mapping_host::env_pin::pin();
     let cli = Cli::parse();
     match cli.command {
+        Command::DiskOracle {
+            request,
+            request_sha256,
+        } => tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()?
+            .block_on(graph_mapping_host::disk_oracle::run(
+                &request,
+                &request_sha256,
+            )),
         Command::Run(args) => tokio::runtime::Builder::new_multi_thread()
             .enable_all()
             .build()?

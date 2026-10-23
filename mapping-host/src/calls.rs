@@ -149,6 +149,32 @@ pub struct Cassette {
 }
 
 impl Cassette {
+    /// A bounded, exact replay input for the disk oracle. Parsing never reopens
+    /// the caller's file and duplicate call identities are refused.
+    pub(crate) fn replay_bytes(bytes: &[u8]) -> Result<Self> {
+        if bytes.len() > 64 * 1024 * 1024 {
+            bail!("disk oracle cassette exceeds 64 MiB");
+        }
+        let file: CassetteFile = serde_json::from_slice(bytes)?;
+        if file.schema != CASSETTE_SCHEMA {
+            bail!("disk oracle cassette schema mismatch");
+        }
+        if file.entries.len() > 100_000 {
+            bail!("disk oracle cassette exceeds 100000 entries");
+        }
+        let mut entries = BTreeMap::new();
+        for entry in file.entries {
+            if entries.insert(entry.key(), entry).is_some() {
+                bail!("disk oracle cassette repeats a call identity");
+            }
+        }
+        Ok(Self {
+            entries: RwLock::new(entries),
+            mode: CassetteMode::Replay,
+            dirty: RwLock::new(false),
+        })
+    }
+
     /// Load a cassette, or start an empty one if the file does not exist.
     pub fn load(path: &std::path::Path, mode: CassetteMode) -> Result<Self> {
         let entries = if path.exists() {

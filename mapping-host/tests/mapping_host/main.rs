@@ -60,3 +60,5 @@ mod aerodrome_npm_corpus;
 mod aerodrome_pool_corpus;
 
 mod aerodrome_swap_corpus;
+
+mod disk_oracle_cli;

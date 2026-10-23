@@ -92,6 +92,19 @@ jobs:
             ${{ runner.temp }}/mapping-host-smoke/runtime/opt/mapping-host/runtime.json
             ${{ runner.temp }}/mapping-host-smoke/runtime/opt/mapping-host/source.json
           if-no-files-found: error
+      - name: Retain the exact tested candidate executable and complete source context
+        run: |
+          python3 mapping-host/runtime/package.py candidate \
+            --runtime "$RUNNER_TEMP/mapping-host-smoke/runtime" \
+            --source-context "$RUNNER_TEMP/mapping-host-context" \
+            --smoke-receipt "$RUNNER_TEMP/mapping-host-smoke/smoke.json" \
+            --commit "$SOURCE_COMMIT" --dest "$RUNNER_TEMP/mapping-host-candidate"
+      - name: Upload usable non-final oracle candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: mapping-host-candidate-${{ env.SOURCE_COMMIT }}
+          path: ${{ runner.temp }}/mapping-host-candidate/*
+          if-no-files-found: error
       - name: Log in to GHCR for canonical publication only
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: docker/login-action@v3

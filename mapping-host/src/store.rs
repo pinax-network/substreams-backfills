@@ -52,6 +52,119 @@ use graph::components::store::{DerivedEntityQuery, EnsLookup, ReadStore, StoreEr
 use graph::data::store::Entity;
 use graph::schema::{EntityKey, InputSchema};
 
+/// The existing memory implementation remains unchanged. Disk mode makes I/O
+/// failures explicit at every runner boundary and refuses eager full exports.
+pub enum HostStore {
+    Memory(MemoryStore),
+    Disk(Box<crate::disk_store::DiskStore>),
+}
+
+impl HostStore {
+    pub fn schema(&self) -> &InputSchema {
+        match self {
+            Self::Memory(s) => s.schema(),
+            Self::Disk(s) => s.schema(),
+        }
+    }
+    pub fn poi_typename(&self) -> String {
+        self.schema().poi_type().typename().to_string()
+    }
+    pub fn lookup(&self, key: &EntityKey) -> anyhow::Result<Option<Entity>> {
+        match self {
+            Self::Memory(s) => Ok(s.lookup(key)),
+            Self::Disk(s) => s.lookup(key),
+        }
+    }
+    pub fn snapshot(&self) -> anyhow::Result<BTreeMap<EntityKey, Entity>> {
+        match self { Self::Memory(s) => Ok(s.snapshot()), Self::Disk(_) => anyhow::bail!("disk oracle refuses full in-memory checkpoint/export; use the initial streamed cold checkpoint") }
+    }
+    pub fn restore(&self, rows: BTreeMap<EntityKey, Entity>) -> anyhow::Result<()> {
+        match self {
+            Self::Memory(s) => {
+                s.restore(rows);
+                Ok(())
+            }
+            Self::Disk(_) => anyhow::bail!(
+                "disk oracle seed is immutable; eager checkpoint restore is unsupported"
+            ),
+        }
+    }
+    pub fn counts_by_type(&self) -> BTreeMap<String, usize> {
+        match self {
+            Self::Memory(s) => s.counts_by_type(),
+            Self::Disk(s) => s.counts_by_type(),
+        }
+    }
+    pub fn len(&self) -> usize {
+        match self {
+            Self::Memory(s) => s.len(),
+            Self::Disk(s) => s.len(),
+        }
+    }
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+    pub(crate) fn apply(&self, mods: &[EntityModification]) -> anyhow::Result<()> {
+        match self {
+            Self::Memory(s) => {
+                s.apply(mods);
+                Ok(())
+            }
+            Self::Disk(s) => s.apply_recording(mods, &mut StoreUndo::new()),
+        }
+    }
+    pub(crate) fn apply_recording(
+        &self,
+        mods: &[EntityModification],
+        undo: &mut StoreUndo,
+    ) -> anyhow::Result<()> {
+        match self {
+            Self::Memory(s) => {
+                s.apply_recording(mods, undo);
+                Ok(())
+            }
+            Self::Disk(s) => s.apply_recording(mods, undo),
+        }
+    }
+    pub(crate) fn rollback(&self, undo: StoreUndo) -> anyhow::Result<()> {
+        match self {
+            Self::Memory(s) => {
+                s.rollback(undo);
+                Ok(())
+            }
+            Self::Disk(s) => s.rollback(undo),
+        }
+    }
+}
+
+#[async_trait]
+impl ReadStore for HostStore {
+    async fn get(&self, key: &EntityKey) -> Result<Option<Entity>, StoreError> {
+        self.lookup(key).map_err(StoreError::from)
+    }
+    async fn get_many(
+        &self,
+        keys: BTreeSet<EntityKey>,
+    ) -> Result<BTreeMap<EntityKey, Entity>, StoreError> {
+        let mut rows = BTreeMap::new();
+        for key in keys {
+            if let Some(entity) = self.lookup(&key).map_err(StoreError::from)? {
+                rows.insert(key, entity);
+            }
+        }
+        Ok(rows)
+    }
+    async fn get_derived(
+        &self,
+        query: &DerivedEntityQuery,
+    ) -> Result<BTreeMap<EntityKey, Entity>, StoreError> {
+        match self { Self::Memory(s) => s.get_derived(query).await, Self::Disk(_) => Err(StoreError::from(anyhow::anyhow!("disk oracle does not implement full derived queries; refusing rather than returning overlay-only rows"))) }
+    }
+    fn input_schema(&self) -> InputSchema {
+        self.schema().clone()
+    }
+}
+
 /// A `BTreeMap`-backed store over one subgraph schema.
 pub struct MemoryStore {
     schema: InputSchema,

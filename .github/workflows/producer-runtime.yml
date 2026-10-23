@@ -11,6 +11,13 @@ on:
       - 'Cargo.lock'
   workflow_dispatch:
     inputs:
+      expected_source_commit:
+        description: Exact reviewed 40-character source commit; must equal the selected ref
+        required: true
+      publish_candidate:
+        description: Publish the verified non-final OCI candidate from current main only
+        type: boolean
+        default: false
       extractor_release:
         description: Existing development extractor release tag (no release is created)
         required: true
@@ -39,13 +46,24 @@ jobs:
       - run: cargo test --locked -p aerodrome-slipstream-reducer --lib runtime
       - run: cargo test --locked -p aerodrome-slipstream-reducer --test producer
       - run: cargo test --locked -p xtask producer_runtime
+      - run: python3 -m unittest discover -s crates/aerodrome-slipstream-reducer/runtime -p 'test_*.py' -v
   candidate:
     if: github.event_name == 'workflow_dispatch'
     needs: contracts
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    outputs:
+      artifact_id: ${{ steps.upload.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Require the explicitly reviewed source identity
+        env:
+          EXPECTED_SOURCE: ${{ inputs.expected_source_commit }}
+        run: |
+          test "$EXPECTED_SOURCE" = "$GITHUB_SHA"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
       - uses: dtolnay/rust-toolchain@1.90.0
       - name: Fetch only the explicitly pinned development extractor
         env:
@@ -62,7 +80,14 @@ jobs:
       - name: Export exact committed source closure
         run: |
           cargo xtask producer-runtime context --root . --revision "$GITHUB_SHA" --output "$RUNNER_TEMP/producer-context"
+      - name: Enable OCI-capable Docker image store
+        uses: docker/setup-docker-action@7ec28a010822b4626af4874f9448a4b05ac6f3e5 # v5
+        with:
+          daemon-config: |
+            {"features":{"containerd-snapshotter":true}}
       - uses: docker/setup-buildx-action@v3
+      - name: Prepare immutable OCI output
+        run: mkdir "$RUNNER_TEMP/image-proof"
       - name: Build candidate without publishing
         uses: docker/build-push-action@v6
         with:
@@ -71,12 +96,14 @@ jobs:
           build-contexts: extractor=${{ runner.temp }}/extractor
           build-args: SOURCE_COMMIT=${{ github.sha }}
           platforms: linux/amd64
-          load: true
+          outputs: type=oci,name=aerodrome-producer:development,dest=${{ runner.temp }}/image-proof/producer-linux-amd64.oci.tar,compression=gzip,oci-mediatypes=true
+          provenance: false
+          sbom: false
           push: false
           tags: aerodrome-producer:development
       - name: Inspect and smoke the actual candidate image offline
         run: |
-          mkdir "$RUNNER_TEMP/image-proof"
+          docker load --input "$RUNNER_TEMP/image-proof/producer-linux-amd64.oci.tar"
           docker image inspect aerodrome-producer:development > "$RUNNER_TEMP/image-proof/image.json"
           docker run --rm --network none aerodrome-producer:development version --json > "$RUNNER_TEMP/image-proof/runtime.json"
           container_id=$(docker create aerodrome-producer:development)
@@ -86,8 +113,104 @@ jobs:
           cargo xtask producer-runtime archive --root "$RUNNER_TEMP/image-proof/bundle" --smoke "$RUNNER_TEMP/image-proof/smoke/smoke.json" --output "$RUNNER_TEMP/image-proof/archive"
           cargo xtask producer-runtime verify-discovery --root "$RUNNER_TEMP/image-proof/archive"
           cmp "$RUNNER_TEMP/image-proof/runtime.json" "$RUNNER_TEMP/image-proof/bundle/runtime.json"
+      - name: Retain and verify the exact OCI candidate
+        run: |
+          python3 crates/aerodrome-slipstream-reducer/runtime/verify_oci.py \
+            --archive "$RUNNER_TEMP/image-proof/producer-linux-amd64.oci.tar" \
+            --bundle "$RUNNER_TEMP/image-proof/bundle" --inspection "$RUNNER_TEMP/image-proof/image.json" \
+            --source "$GITHUB_SHA" --output "$RUNNER_TEMP/image-proof/oci-identity.json"
       - uses: actions/upload-artifact@v4
+        id: upload
+        if: always()
         with:
           name: aerodrome-producer-nonfinal-${{ github.sha }}
           path: ${{ runner.temp }}/image-proof
+          if-no-files-found: error
+  publish:
+    if: github.event_name == 'workflow_dispatch' && inputs.publish_candidate && github.ref == 'refs/heads/main'
+    needs: candidate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ needs.candidate.outputs.artifact_id }}
+          path: ${{ runner.temp }}/candidate
+          merge-multiple: true
+      - name: Verify retained image and require unchanged canonical main
+        env:
+          EXPECTED_SOURCE: ${{ inputs.expected_source_commit }}
+        run: |
+          test "$EXPECTED_SOURCE" = "$GITHUB_SHA"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$GITHUB_SHA"
+          # GitHub artifact transport does not retain Unix modes. Restore only
+          # the sole runtime executable before executing its hash-checked bytes.
+          chmod 0755 "$RUNNER_TEMP/candidate/bundle/bin/producer"
+          python3 crates/aerodrome-slipstream-reducer/runtime/verify_oci.py \
+            --archive "$RUNNER_TEMP/candidate/producer-linux-amd64.oci.tar" \
+            --bundle "$RUNNER_TEMP/candidate/bundle" --inspection "$RUNNER_TEMP/candidate/image.json" \
+            --source "$GITHUB_SHA" --output "$RUNNER_TEMP/candidate/rechecked-identity.json"
+          cmp "$RUNNER_TEMP/candidate/oci-identity.json" "$RUNNER_TEMP/candidate/rechecked-identity.json"
+      - name: Enable OCI-capable Docker image store
+        uses: docker/setup-docker-action@7ec28a010822b4626af4874f9448a4b05ac6f3e5 # v5
+        with:
+          daemon-config: |
+            {"features":{"containerd-snapshotter":true}}
+      - name: Publish candidate and independently retrieve its exact OCI manifest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes skopeo
+          umask 077
+          auth="$RUNNER_TEMP/registry-auth.json"
+          trap 'rm -f "$auth"' EXIT
+          printf '%s' "$GH_TOKEN" | skopeo login --authfile "$auth" --username "$GITHUB_ACTOR" --password-stdin ghcr.io
+          repository="ghcr.io/${GITHUB_REPOSITORY,,}/aerodrome-producer"
+          ref="$repository:sha-$GITHUB_SHA-run-$GITHUB_RUN_ID-attempt-$GITHUB_RUN_ATTEMPT"
+          digest=$(python3 -c 'import json,os; print(json.load(open(os.environ["RUNNER_TEMP"]+"/candidate/oci-identity.json"))["oci_manifest"])')
+          skopeo copy --authfile "$auth" --preserve-digests "oci-archive:$RUNNER_TEMP/candidate/producer-linux-amd64.oci.tar" "docker://$ref"
+          skopeo copy --authfile "$auth" --preserve-digests "docker://$repository@$digest" "oci-archive:$RUNNER_TEMP/candidate/registry-roundtrip.oci.tar"
+          python3 crates/aerodrome-slipstream-reducer/runtime/verify_oci.py \
+            --archive "$RUNNER_TEMP/candidate/registry-roundtrip.oci.tar" \
+            --bundle "$RUNNER_TEMP/candidate/bundle" --inspection "$RUNNER_TEMP/candidate/image.json" \
+            --source "$GITHUB_SHA" --expected-manifest "$digest" --output "$RUNNER_TEMP/candidate/registry-roundtrip.json"
+          docker load --input "$RUNNER_TEMP/candidate/registry-roundtrip.oci.tar"
+          image_id=$(python3 -c 'import json,os; print(json.load(open(os.environ["RUNNER_TEMP"]+"/candidate/registry-roundtrip.json"))["image_id"])')
+          docker run --rm --network none "$image_id" version --json > "$RUNNER_TEMP/candidate/registry-version.json"
+          cmp "$RUNNER_TEMP/candidate/runtime.json" "$RUNNER_TEMP/candidate/registry-version.json"
+          printf '%s\n' "$repository@$digest" > "$RUNNER_TEMP/candidate/immutable-image.txt"
+      - name: Publish retained non-final evidence as a prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$GITHUB_SHA"
+          tag="aerodrome-producer-candidate-$GITHUB_SHA-run-$GITHUB_RUN_ID-attempt-$GITHUB_RUN_ATTEMPT"
+          python3 crates/aerodrome-slipstream-reducer/runtime/release_receipt.py \
+            --root "$RUNNER_TEMP/candidate" --source "$GITHUB_SHA" \
+            --run-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          gh release create "$tag" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "Aerodrome producer development candidate $GITHUB_SHA" --prerelease --latest=false \
+            --notes-file "$RUNNER_TEMP/candidate/release-notes.md" \
+            "$RUNNER_TEMP/candidate/producer-linux-amd64.oci.tar" \
+            "$RUNNER_TEMP/candidate/archive/producer-runtime.tar" \
+            "$RUNNER_TEMP/candidate/archive/discovery.json" \
+            "$RUNNER_TEMP/candidate/oci-identity.json" \
+            "$RUNNER_TEMP/candidate/registry-roundtrip.json" \
+            "$RUNNER_TEMP/candidate/smoke/smoke.json" \
+            "$RUNNER_TEMP/candidate/publication.json"
+          python3 crates/aerodrome-slipstream-reducer/runtime/verify_release.py \
+            --root "$RUNNER_TEMP/candidate" --tag "$tag" --output "$RUNNER_TEMP/candidate/release-roundtrip"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aerodrome-producer-publication-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/candidate
           if-no-files-found: error

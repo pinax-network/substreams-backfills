@@ -850,7 +850,7 @@ mod tests {
             .contains("special entry"));
     }
     #[test]
-    fn workflow_is_read_only_and_separates_manual_image_build_from_pr_checks() {
+    fn workflow_separates_read_only_candidate_from_explicit_main_publication() {
         let value: serde_yaml::Value =
             serde_yaml::from_str(include_str!("../../.github/workflows/producer-runtime.yml"))
                 .unwrap();
@@ -859,15 +859,115 @@ mod tests {
             value["jobs"]["candidate"]["if"].as_str(),
             Some("github.event_name == 'workflow_dispatch'")
         );
+        for job in ["candidate", "publish"] {
+            let steps = value["jobs"][job]["steps"].as_sequence().unwrap();
+            let setup = steps
+                .iter()
+                .position(|s| s["name"].as_str() == Some("Enable OCI-capable Docker image store"))
+                .unwrap();
+            assert_eq!(
+                steps[setup]["uses"].as_str(),
+                Some("docker/setup-docker-action@7ec28a010822b4626af4874f9448a4b05ac6f3e5")
+            );
+            let config: serde_json::Value =
+                serde_json::from_str(steps[setup]["with"]["daemon-config"].as_str().unwrap())
+                    .unwrap();
+            assert_eq!(
+                config,
+                serde_json::json!({"features":{"containerd-snapshotter":true}})
+            );
+            let first_load = steps
+                .iter()
+                .position(|s| {
+                    s["run"]
+                        .as_str()
+                        .unwrap_or("")
+                        .contains("docker load --input")
+                })
+                .unwrap();
+            assert!(setup < first_load);
+        }
         let steps = value["jobs"]["candidate"]["steps"].as_sequence().unwrap();
         let build = steps
             .iter()
             .find(|s| s["uses"].as_str() == Some("docker/build-push-action@v6"))
             .unwrap();
         assert_eq!(build["with"]["push"].as_bool(), Some(false));
+        assert!(build["with"]["outputs"]
+            .as_str()
+            .unwrap()
+            .starts_with("type=oci,"));
+        assert_eq!(build["with"]["provenance"].as_bool(), Some(false));
+        assert_eq!(build["with"]["sbom"].as_bool(), Some(false));
+        let smoke = steps
+            .iter()
+            .find(|s| {
+                s["name"].as_str() == Some("Inspect and smoke the actual candidate image offline")
+            })
+            .unwrap()["run"]
+            .as_str()
+            .unwrap();
+        assert!(
+            smoke.find("docker load --input").unwrap()
+                < smoke.find("docker image inspect").unwrap()
+        );
+        assert!(steps
+            .iter()
+            .all(|s| !s["run"].as_str().unwrap_or("").contains("docker-daemon:")));
+        let upload = steps
+            .iter()
+            .find(|s| s["id"].as_str() == Some("upload"))
+            .unwrap();
+        assert_eq!(upload["if"].as_str(), Some("always()"));
         assert!(steps
             .iter()
             .all(|s| !s["run"].as_str().unwrap_or("").contains("docker push")));
+        assert!(value["jobs"]["candidate"]["permissions"].is_null());
+        assert_eq!(
+            value["on"]["workflow_dispatch"]["inputs"]["publish_candidate"]["default"].as_bool(),
+            Some(false)
+        );
+        let publish = &value["jobs"]["publish"];
+        assert_eq!(publish["if"].as_str(), Some("github.event_name == 'workflow_dispatch' && inputs.publish_candidate && github.ref == 'refs/heads/main'"));
+        assert_eq!(publish["needs"].as_str(), Some("candidate"));
+        assert_eq!(publish["permissions"]["contents"].as_str(), Some("write"));
+        assert_eq!(publish["permissions"]["packages"].as_str(), Some("write"));
+        let steps = publish["steps"].as_sequence().unwrap();
+        let checks = steps
+            .iter()
+            .position(|s| {
+                s["name"].as_str()
+                    == Some("Verify retained image and require unchanged canonical main")
+            })
+            .unwrap();
+        let registry = steps
+            .iter()
+            .position(|s| {
+                s["name"].as_str()
+                    == Some("Publish candidate and independently retrieve its exact OCI manifest")
+            })
+            .unwrap();
+        let release = steps
+            .iter()
+            .position(|s| {
+                s["name"].as_str() == Some("Publish retained non-final evidence as a prerelease")
+            })
+            .unwrap();
+        assert!(checks < registry && registry < release);
+        let check = steps[checks]["run"].as_str().unwrap();
+        assert!(check.contains("git ls-remote origin refs/heads/main"));
+        assert!(check.contains("EXPECTED_SOURCE") && check.contains("GITHUB_SHA"));
+        let registry = steps[registry]["run"].as_str().unwrap();
+        assert!(registry.contains("--preserve-digests"));
+        assert!(registry.contains("docker load --input"));
+        assert!(!registry.contains("docker-daemon:"));
+        assert!(registry.contains("--expected-manifest"));
+        assert!(registry.contains("docker run --rm --network none"));
+        assert!(registry.contains("--password-stdin"));
+        assert!(steps[release]["run"]
+            .as_str()
+            .unwrap()
+            .contains("--prerelease --latest=false"));
     }
     #[test]
     fn parser_refuses_unknown_and_duplicate_options() {

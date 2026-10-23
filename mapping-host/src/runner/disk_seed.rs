@@ -222,13 +222,9 @@ impl SegmentHost {
             },
             counts_by_type: disk.counts_by_type(),
         };
-        writeln!(sink, "{}", serde_json::to_string(&checkpoint)?)?;
+        crate::disk_oracle::write_json_line(sink, &checkpoint)?;
         for source in &self.dynamic {
-            writeln!(
-                sink,
-                "{}",
-                serde_json::to_string(&CheckpointLine::DataSource(source.clone()))?
-            )?;
+            crate::disk_oracle::write_json_line(sink, &CheckpointLine::DataSource(source.clone()))?;
         }
         disk.visit_seed(|key, value| {
             let row = checkpoint_row(key, value)?;
@@ -277,11 +273,5 @@ fn checkpoint_row(key: &pb::EntityKey, value: &StoredEntity) -> Result<Checkpoin
     })
 }
 fn write_row(sink: &mut impl Write, row: CheckpointRow) -> Result<()> {
-    let bytes = serde_json::to_vec(&CheckpointLine::Row(row))?;
-    if bytes.len() >= 16 * 1024 * 1024 {
-        bail!("oracle checkpoint row exceeds 16 MiB consumer line bound");
-    }
-    sink.write_all(&bytes)?;
-    sink.write_all(b"\n")?;
-    Ok(())
+    crate::disk_oracle::write_json_line(sink, &CheckpointLine::Row(row))
 }

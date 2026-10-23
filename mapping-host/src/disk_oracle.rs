@@ -4,8 +4,6 @@ use crate::{
     block, blockchanges,
     bundle::sha256_hex,
     disk_store::OverlayLimits,
-    live::ReportWriter,
-    outputs::Disposition,
     report::RunHeader,
     runner::{DiskRunLimits, SegmentHost, SegmentHostConfig},
     source::{token_from_env, FirehoseSource, FirehoseTarget},
@@ -28,6 +26,8 @@ const MAX_INPUT: u64 = 16 * 1024 * 1024 * 1024;
 const MAX_BLOCK: usize = 64 * 1024 * 1024;
 // The engine canary bounds the payload, excluding the 52-byte BCF1 envelope.
 const MAX_FRAME: usize = 16 * 1024 * 1024;
+// Engine canary::oracle::Lines counts the terminating LF in its MAX_JSON bound.
+pub(crate) const MAX_JSON_LINE: usize = 4 * 1024 * 1024;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
@@ -236,7 +236,7 @@ pub async fn run(request_path: &Path, request_sha256: &str) -> Result<()> {
     let retained_descriptor = request.output.join("descriptor.json");
     save(
         &retained_descriptor,
-        &read_pin(&descriptor, 16 * 1024 * 1024)?,
+        &read_pin(&descriptor, MAX_JSON_LINE as u64)?,
     )?;
     let descriptor = pin_file(&retained_descriptor)?;
     let deadline =
@@ -285,11 +285,9 @@ pub async fn run(request_path: &Path, request_sha256: &str) -> Result<()> {
             },
             Some((start, stop)),
         );
-        let mut report = ReportWriter::lines(
-            &report_header,
-            Some(report_path.clone()),
-            Disposition::Fresh,
-        )?;
+        let mut report = BufWriter::new(new_file(&report_path)?);
+        write_json_line(&mut report, &report_header)?;
+        report.flush()?;
         while number < stop {
             let (raw, block) = if let Some(live) = live.as_mut() {
                 tokio::time::timeout_at(deadline, live.next_raw_block())
@@ -332,22 +330,21 @@ pub async fn run(request_path: &Path, request_sha256: &str) -> Result<()> {
             require_frame_bound(payload.len())?;
             outcome.report.block_changes =
                 Some(blockchanges::summarize(&outcome.changes, &payload));
-            if serde_json::to_vec(&outcome.report)?.len() >= 16 * 1024 * 1024 {
-                bail!("oracle report line exceeds 16 MiB consumer bound");
-            }
             frames.write_all(&blockchanges::bcf1_frame(
                 number as u64,
                 &outcome.changes.block_hash,
                 &payload,
             )?)?;
-            report.push(outcome.report)?;
+            write_json_line(&mut report, &outcome.report)?;
+            report.flush()?;
             number += 1;
         }
         input.flush()?;
         input.get_ref().sync_all()?;
         frames.flush()?;
         frames.get_ref().sync_all()?;
-        report.finish(host.cassette().len())?;
+        report.flush()?;
+        report.get_ref().sync_all()?;
         regular(&report_path)?.sync_all()?;
         File::open(&prefix)?.sync_all()?;
         partitions.push(serde_json::json!({"from":start,"to_exclusive":stop,"input":pin_file(&input_path)?,"frames":pin_file(&frames_path)?,"report":pin_file(&report_path)?}));
@@ -369,6 +366,38 @@ pub async fn run(request_path: &Path, request_sha256: &str) -> Result<()> {
         file.write_all(&out)?;
         Ok(())
     })?;
+    Ok(())
+}
+
+/// Every checkpoint and report line uses the exact consumer ceiling, including LF.
+/// Serialization and admission complete before the sink sees any bytes.
+pub(crate) fn write_json_line(sink: &mut impl Write, value: &impl Serialize) -> Result<()> {
+    struct Bounded(Vec<u8>);
+    impl Write for Bounded {
+        fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+            if self
+                .0
+                .len()
+                .checked_add(bytes.len())
+                .is_none_or(|n| n >= MAX_JSON_LINE)
+            {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    "oracle JSONL exceeds 4 MiB consumer line bound including LF",
+                ));
+            }
+            self.0.extend_from_slice(bytes);
+            Ok(bytes.len())
+        }
+        fn flush(&mut self) -> std::io::Result<()> {
+            Ok(())
+        }
+    }
+    let mut bounded = Bounded(Vec::new());
+    serde_json::to_writer(&mut bounded, value)?;
+    let mut bytes = bounded.0;
+    bytes.push(b'\n');
+    sink.write_all(&bytes)?;
     Ok(())
 }
 
@@ -398,6 +427,18 @@ fn publish_complete(directory: &Path, write: impl FnOnce(&mut File) -> Result<()
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn jsonl_bound_includes_lf_and_refuses_before_writing() {
+        let mut out = Vec::new();
+        let exact = "x".repeat(MAX_JSON_LINE - 3); // JSON string quotes plus LF.
+        write_json_line(&mut out, &exact).unwrap();
+        assert_eq!(out.len(), MAX_JSON_LINE);
+        assert_eq!(out.last(), Some(&b'\n'));
+        assert_eq!(serde_json::from_slice::<String>(&out).unwrap(), exact);
+        let before = out.clone();
+        assert!(write_json_line(&mut out, &(exact + "x")).is_err());
+        assert_eq!(out, before);
+    }
     #[test]
     fn frame_limit_matches_exact_consumer_payload_bound() {
         use backfill_common::clock::{self, Frame, FrameKind};

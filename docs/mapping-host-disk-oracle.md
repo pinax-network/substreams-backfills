@@ -75,7 +75,7 @@ must choose positive ceilings at or below those limits. `timeout_seconds` is
 waits after seed import. It is not an arbitrary time limit on importing the full
 historical seed. A raw block is at most 64 MiB, total raw window input at most
 16 GiB, BCF1 payload at most 16 MiB (excluding its 52-byte header), and a cold
-checkpoint/report line at most 16 MiB. The locked cassette is at most 64 MiB and
+checkpoint/report line at most 4 MiB including its terminating LF. The locked cassette is at most 64 MiB and
 100,000 unique entries. Any bound failure refuses completion.
 
 The initial `seed.checkpoint.jsonl` uses the existing checkpoint/v2 format and

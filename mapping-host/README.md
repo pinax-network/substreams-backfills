@@ -1682,3 +1682,12 @@ thing to that and nothing more: over 1,053 contiguous blocks, nine of the ten
 declared handlers ran and every one succeeded. It is an executable observation of
 the deployed mapping, not a comparison against the deployed subgraph. Nothing
 here has been checked against an indexer.
+
+## Disk-seeded bounded oracle
+
+The experimental `disk-oracle` command streams a complete pinned physical seed
+into a private immutable disk cache, then retains one bounded overlay and host
+across an Aerodrome comparison window. It avoids loading all historical entities
+into RAM and preserves exact Null, decimal, VID, source and PoI data. See
+[its admission, resource bounds, output and refusal contract](../docs/mapping-host-disk-oracle.md).
+It does not create a loadable engine or reducer checkpoint.

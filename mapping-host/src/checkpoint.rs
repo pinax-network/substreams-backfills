@@ -404,7 +404,7 @@ impl CheckpointRow {
 /// One line after the header.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
-enum CheckpointLine {
+pub(crate) enum CheckpointLine {
     DataSource(CheckpointDataSource),
     Row(CheckpointRow),
     /// A cache key the store has no row for.

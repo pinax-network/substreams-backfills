@@ -30,6 +30,7 @@ graph-runtime-wasm = { path = "vendor/graph-runtime-wasm" }
 [dependencies]
 backfill-common = { path = "../common" }
 prost = "0.13"
+redb = "=4.3.0"
 graph = { git = "https://github.com/graphprotocol/graph-node", rev = "77823b5a7adc4eac4abf03202c8dd7cb00dea31d" }
 graph-runtime-wasm = { git = "https://github.com/graphprotocol/graph-node", rev = "77823b5a7adc4eac4abf03202c8dd7cb00dea31d" }
 graph-chain-ethereum = { git = "https://github.com/graphprotocol/graph-node", rev = "77823b5a7adc4eac4abf03202c8dd7cb00dea31d" }
@@ -37,6 +38,7 @@ anyhow = "1"
 async-trait = "0.1"
 clap = { version = "4", features = ["derive"] }
 hex = "0.4"
+libc = "0.2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 serde_yaml = "0.9"

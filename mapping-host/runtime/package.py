@@ -4,6 +4,7 @@
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path, PurePosixPath
 import re
 import shutil
@@ -14,6 +15,9 @@ import tarfile
 import tempfile
 
 ROOT_SEGMENT = "Qme66ZNMxSdCQKzaDuvS381whCVYCQjf637sGZCqJHAWHB"
+DISK_FIXTURE = "mapping-host/fixtures/disk-oracle-v1"
+DISK_FILES = ("seed-manifest.json", "seed.bcgsnap", "rpc-cassette.json", "request.json", "provenance.json",
+              "block-0.pb", "block-1.pb", "expected-0.bcf1", "expected-1.bcf1", "expected-checkpoint.jsonl")
 BLOCKS = (12369621, 12369739, 12369879, 12370523)
 RUNTIME = "opt/mapping-host/runtime.json"
 SOURCE = "opt/mapping-host/source.json"
@@ -249,6 +253,7 @@ def verify_fixture_inputs(repo, commit):
              f"mapping-host/fixtures/cassettes/{ROOT_SEGMENT}.json",
              f"mapping-host/fixtures/reports/{ROOT_SEGMENT}.json"]
     names += [f"mapping-host/fixtures/block-changes/{ROOT_SEGMENT}/{number}.pb" for number in BLOCKS]
+    names += [DISK_FIXTURE + "/" + name for name in DISK_FILES]
     verified = {}
     for name in names:
         expected = run("git", "-C", str(repo), "cat-file", "blob", commit + ":" + name)
@@ -303,6 +308,7 @@ def smoke(repo, image, dest, commit):
             raise ValueError("block fixture differs from lock")
         (fixtures / f"{number}.pb").write_bytes(raw)
     shutil.copyfile(evidence / f"mapping-host/fixtures/cassettes/{ROOT_SEGMENT}.json", fixtures / "cassette.json")
+    shutil.copytree(evidence / DISK_FIXTURE, fixtures / "disk-seed")
     output = dest / "output"
     output.mkdir()
     # Runner host owns this directory; the image still executes as UID 10001.
@@ -321,19 +327,75 @@ def smoke(repo, image, dest, commit):
     report = read_json(output / "report.json")
     if report != read_json(evidence / f"mapping-host/fixtures/reports/{ROOT_SEGMENT}.json"):
         raise ValueError("packaged sampled replay report differs from golden")
+    disk_request = fixtures / "disk-seed/request.json"
+    disk_provenance = read_json(fixtures / "disk-seed/provenance.json")
+    if disk_provenance["fixture_only"] is not True or disk_provenance["request_sha256"] != digest(disk_request):
+        raise ValueError("disk oracle fixture provenance mismatch")
+    # The new command deliberately writes private0700/0600 evidence as UID10001.
+    # Read it back through our stopped container, preserving the real execution
+    # identity rather than weakening those modes for the host runner's UID.
+    disk_output = dest / "disk-output"
+    disk_output.mkdir()
+    disk_output.chmod(0o777)
+    disk_security = ["docker", "create", *security[3:]]
+    disk_security = [arg.replace(f"src={output.resolve()},dst=/output",
+                                f"src={disk_output.resolve()},dst=/output") for arg in disk_security]
+    cid = run(*disk_security, image_id, "disk-oracle", "--request", "/fixtures/disk-seed/request.json",
+              "--request-sha256", digest(disk_request)).decode().strip()
+    if not re.fullmatch(r"[0-9a-f]{64}", cid):
+        raise ValueError("docker create returned an invalid owned container ID")
+    try:
+        run("docker", "start", "--attach", cid)
+        state = json.loads(run("docker", "container", "inspect", cid))[0]["State"]
+        if state["Running"] is not False or state["ExitCode"] != 0:
+            raise ValueError("installed disk oracle process did not exit successfully")
+        run("docker", "cp", cid + ":/output/disk-oracle", str(dest / "disk-smoke"))
+    finally:
+        run("docker", "rm", "--force", cid)
+    disk_completion = verify_disk_smoke(dest / "disk-smoke", fixtures / "disk-seed", document["binary_sha256"])
     receipt = {"schema": "pinax.mapping-host.runtime-smoke/v1", "source_commit": commit,
                "image_config_sha256": image_id, "runtime_json_sha256": digest(dest / "runtime" / RUNTIME),
                "runtime_binary_sha256": document["binary_sha256"], "network": "none",
                "blocks": BLOCKS, "contiguous": False, "production_selectable": False,
-               "outputs": inventory(output)}
+               "disk_oracle": disk_completion, "outputs": inventory(output)}
     (dest / "smoke.json").write_bytes(canonical(receipt))
+
+
+def verify_disk_smoke(output, fixtures, binary_sha256):
+    completion = read_json(output / "complete.json")
+    request = read_json(fixtures / "request.json")
+    if (completion["format"] != "pinax.mapping-host.disk-oracle-complete/v1"
+            or completion["fixture_only"] is not True or completion["production_selectable"] is not False
+            or completion["request_sha256"] != digest(fixtures / "request.json")
+            or completion["executable"]["sha256"] != binary_sha256
+            or len(completion["partitions"]) != 2
+            or completion["from"] != request["seed_binding"]["boundary"]["block_number"] + 1
+            or completion["to_exclusive"] != request["to_exclusive"]):
+        raise ValueError("disk oracle smoke completion mismatch")
+    for i in range(2):
+        if (output / f"partition-{i:03}/frames.bcf1").read_bytes() != (fixtures / f"expected-{i}.bcf1").read_bytes():
+            raise ValueError("disk oracle installed frames differ from memory oracle")
+    if (output / "seed.checkpoint.jsonl").read_bytes() != (fixtures / "expected-checkpoint.jsonl").read_bytes():
+        raise ValueError("disk oracle installed cold seed differs from memory oracle")
+    if (output / ".complete.json.partial").exists():
+        raise ValueError("disk oracle smoke left a partial completion")
+    return {"fixture_only": True, "request_sha256": completion["request_sha256"],
+            "completion_sha256": digest(output / "complete.json"), "from": completion["from"],
+            "to_exclusive": completion["to_exclusive"], "partitions": 2, "network": "none"}
 
 
 def verify_smoke_binding(receipt, image_id, runtime_sha, document):
     if (receipt["schema"] != "pinax.mapping-host.runtime-smoke/v1" or receipt["source_commit"] != document["source_commit"]
             or receipt["image_config_sha256"] != image_id or receipt["runtime_json_sha256"] != runtime_sha
             or receipt["runtime_binary_sha256"] != document["binary_sha256"] or receipt["network"] != "none"
-            or receipt["blocks"] != list(BLOCKS) or receipt["production_selectable"] is not False):
+            or receipt["blocks"] != list(BLOCKS) or receipt["production_selectable"] is not False
+            or receipt.get("disk_oracle", {}).get("fixture_only") is not True
+            or receipt["disk_oracle"].get("partitions") != 2
+            or receipt["disk_oracle"].get("network") != "none"
+            or receipt["disk_oracle"].get("from") != 13899664
+            or receipt["disk_oracle"].get("to_exclusive") != 13899666
+            or any(not re.fullmatch(r"[0-9a-f]{64}", receipt["disk_oracle"].get(key, ""))
+                   for key in ("request_sha256", "completion_sha256"))):
         raise ValueError("published image differs from the exact tested image receipt")
 
 
@@ -358,6 +420,76 @@ def archive(image, dest, commit, smoke_receipt=None):
                     "archive": {"file": archive_file.name, "sha256": digest(archive_file)},
                     "production_selectable": False}
         (dest / "publication.json").write_bytes(canonical(external))
+
+
+def archive_exact(root, output):
+    expected = inventory(root)
+    class CheckedReader:
+        def __init__(self, stream):
+            self.stream, self.hash, self.bytes = stream, hashlib.sha256(), 0
+        def read(self, amount):
+            data = self.stream.read(amount)
+            self.hash.update(data)
+            self.bytes += len(data)
+            return data
+    with tarfile.open(output, "x:gz") as archive:
+        for name, pin in expected.items():
+            fd = os.open(root / name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+            with os.fdopen(fd, "rb") as stream:
+                meta = os.fstat(stream.fileno())
+                if not stat.S_ISREG(meta.st_mode) or meta.st_size != pin["bytes"]:
+                    raise ValueError("archive input is not the pinned regular file")
+                member = tarfile.TarInfo(name)
+                member.size, member.mode = meta.st_size, stat.S_IMODE(meta.st_mode)
+                member.uid, member.gid, member.mtime = 0, 0, 0
+                checked = CheckedReader(stream)
+                archive.addfile(member, checked)
+                if checked.bytes != pin["bytes"] or checked.hash.hexdigest() != pin["sha256"] or stream.read(1):
+                    raise ValueError("archive bytes changed during streaming")
+    if inventory(root) != expected:
+        raise ValueError("archive inventory changed during streaming")
+    with output.open("rb") as stream:
+        os.fsync(stream.fileno())
+    return {"file": output.name, "bytes": output.stat().st_size, "sha256": digest(output)}
+
+
+def candidate(runtime, source_context, smoke_receipt, commit, dest):
+    """Retain tested executable and full build inputs without a registry claim."""
+    document = verify(runtime, commit)
+    verify_source(source_context)
+    if (runtime / SOURCE).read_bytes() != (source_context / "source.json").read_bytes():
+        raise ValueError("candidate source context differs from installed source inventory")
+    if stat.S_IMODE((runtime / BINARY).stat().st_mode) != 0o555:
+        raise ValueError("candidate executable mode differs from installed image")
+    smoke = read_json(smoke_receipt)
+    if not re.fullmatch(r"sha256:[0-9a-f]{64}", smoke.get("image_config_sha256", "")):
+        raise ValueError("candidate requires actual tested image config identity")
+    verify_smoke_binding(smoke, smoke["image_config_sha256"], digest(runtime / RUNTIME), document)
+    dest.mkdir(parents=True, exist_ok=False)
+    app = archive_exact(runtime, dest / f"mapping-host-{commit}-linux-amd64.tar.gz")
+    source = archive_exact(source_context, dest / f"mapping-host-source-{commit}.tar.gz")
+    for source_file, name in ((runtime / RUNTIME, "runtime.json"), (runtime / SOURCE, "source.json"),
+                              (smoke_receipt, "smoke.json")):
+        shutil.copyfile(source_file, dest / name)
+    receipt = {"format": "pinax.mapping-host.candidate/v1", "source_commit": commit,
+               "image_config_sha256": smoke["image_config_sha256"], "platform": "linux/amd64",
+               "binary_sha256": document["binary_sha256"], "runtime_sha256": digest(runtime / RUNTIME),
+               "source_input_set_sha256": document["build_input_set_sha256"],
+               "smoke_sha256": digest(smoke_receipt), "archive": app, "source_archive": source,
+               "production_selectable": False, "registry_published": False}
+    pending = dest / ".candidate.json.partial"
+    with pending.open("xb") as stream:
+        stream.write(canonical(receipt))
+        stream.flush()
+        os.fsync(stream.fileno())
+    os.link(pending, dest / "candidate.json")
+    pending.unlink()
+    directory = os.open(dest, os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        os.fsync(directory)
+    finally:
+        os.close(directory)
+    return receipt
 
 
 def verify_discovery(discovery, manifest, image, attachment, commit):
@@ -424,6 +556,10 @@ def main():
             p.add_argument("--commit", required=True)
         if name == "archive":
             p.add_argument("--smoke-receipt", required=True, type=Path)
+    p = commands.add_parser("candidate")
+    for name in ("runtime", "source-context", "smoke-receipt", "dest"):
+        p.add_argument("--" + name, required=True, type=Path)
+    p.add_argument("--commit", required=True)
     p = commands.add_parser("verify-discovery")
     p.add_argument("--discovery", required=True, type=Path)
     p.add_argument("--manifest", required=True, type=Path)

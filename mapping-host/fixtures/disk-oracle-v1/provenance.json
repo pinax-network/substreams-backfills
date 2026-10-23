@@ -1,0 +1,10 @@
+{
+  "fixture_only": true,
+  "format": "pinax.mapping-host.disk-oracle-smoke-fixture/v1",
+  "production_selectable": false,
+  "request_sha256": "2aa9e7b52720f33071f7a45db36cedf151492795701888602cc62882aebaf3bb",
+  "seed": "synthetic complete cold seed from actual deployed first-pool memory replay",
+  "source_block": 13899663,
+  "source_block_sha256": "5ac312712fef494a8c03f62c0987bba3339c5f693187e5f272467eee06af59ce",
+  "successors": "two synthetic empty blocks with exact parent linkage"
+}

@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import shutil
 import struct
+import tarfile
 import subprocess
 import tempfile
 import sys
@@ -88,6 +89,12 @@ class PackagingTests(unittest.TestCase):
             path = repo / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text("committed")
+        disk_sources = ("mapping-host/src/disk_oracle.rs", "mapping-host/src/disk_store.rs",
+                        "mapping-host/src/disk_store/tests.rs", "mapping-host/src/runner/disk_seed.rs")
+        for name in disk_sources:
+            path = repo / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("committed disk source")
         (repo / "secret.env").write_text("not a build input")
         subprocess.run(["git", "-C", str(repo), "add", "."], check=True)
         subprocess.run(["git", "-C", str(repo), "-c", "user.name=Test", "-c", "user.email=test@example.invalid",
@@ -97,6 +104,8 @@ class PackagingTests(unittest.TestCase):
         dest = self.root / "context"
         pkg.context(repo, dest, "HEAD")
         self.assertEqual("committed", (dest / "Cargo.toml").read_text())
+        for name in disk_sources:
+            self.assertEqual("committed disk source", (dest / name).read_text())
         self.assertFalse((dest / "secret.env").exists())
         self.assertFalse((dest / "mapping-host/local.env").exists())
         (dest / "Cargo.toml").write_text("modified after export")
@@ -177,7 +186,13 @@ class PackagingTests(unittest.TestCase):
                    "image_config_sha256": image_id, "runtime_json_sha256": runtime_sha,
                    "runtime_binary_sha256": document["binary_sha256"], "network": "none",
                    "blocks": list(pkg.BLOCKS), "production_selectable": False}
+        receipt["disk_oracle"] = {"fixture_only": True, "partitions": 2, "network": "none", "from": 13899664,
+                                  "to_exclusive": 13899666, "request_sha256": "1"*64, "completion_sha256": "2"*64}
         pkg.verify_smoke_binding(receipt, image_id, runtime_sha, document)
+        without_disk = copy.deepcopy(receipt)
+        del without_disk["disk_oracle"]
+        with self.assertRaisesRegex(ValueError, "exact tested"):
+            pkg.verify_smoke_binding(without_disk, image_id, runtime_sha, document)
         for key in ("source_commit", "image_config_sha256", "runtime_json_sha256", "runtime_binary_sha256"):
             changed = dict(receipt, **{key: "wrong"})
             with self.subTest(key=key), self.assertRaisesRegex(ValueError, "exact tested"):
@@ -190,6 +205,7 @@ class PackagingTests(unittest.TestCase):
         paths = ["uniswap-v3/fixtures/blocks.lock.json", f"mapping-host/fixtures/cassettes/{pkg.ROOT_SEGMENT}.json",
                  f"mapping-host/fixtures/reports/{pkg.ROOT_SEGMENT}.json"]
         paths += [f"mapping-host/fixtures/block-changes/{pkg.ROOT_SEGMENT}/{number}.pb" for number in pkg.BLOCKS]
+        paths += [pkg.DISK_FIXTURE + "/" + name for name in pkg.DISK_FILES]
         for name in paths:
             path = repo / name
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -202,6 +218,105 @@ class PackagingTests(unittest.TestCase):
         (repo / paths[-1]).write_bytes(b"edited golden")
         with self.assertRaisesRegex(ValueError, "evidence input differs"):
             pkg.verify_fixture_inputs(repo, commit)
+
+    def test_disk_smoke_requires_actual_binary_complete_seed_and_both_frames(self):
+        fixtures = self.root / "fixtures"
+        output = self.root / "output"
+        fixtures.mkdir()
+        output.mkdir()
+        (fixtures / "request.json").write_bytes(pkg.canonical({"seed_binding":{"boundary":{"block_number":13899663}},"to_exclusive":13899666}))
+        for i in range(2):
+            (fixtures / f"expected-{i}.bcf1").write_bytes(f"frame-{i}".encode())
+            (output / f"partition-{i:03}").mkdir()
+            shutil.copyfile(fixtures / f"expected-{i}.bcf1", output / f"partition-{i:03}/frames.bcf1")
+        (fixtures / "expected-checkpoint.jsonl").write_bytes(b"complete cold seed\n")
+        shutil.copyfile(fixtures / "expected-checkpoint.jsonl", output / "seed.checkpoint.jsonl")
+        document = {"format":"pinax.mapping-host.disk-oracle-complete/v1", "fixture_only":True,
+                    "production_selectable":False, "request_sha256":pkg.digest(fixtures / "request.json"),
+                    "executable":{"sha256":"a"*64}, "from":13899664, "to_exclusive":13899666,
+                    "partitions":[{},{}]}
+        def seal():
+            (output / "complete.json").write_bytes(pkg.canonical(document))
+        seal()
+        self.assertEqual(2, pkg.verify_disk_smoke(output, fixtures, "a"*64)["partitions"])
+        for key, bad in (("fixture_only", False), ("production_selectable", True), ("partitions", [{}]),
+                         ("request_sha256", "b"*64), ("executable", {"sha256":"b"*64})):
+            original = document[key]
+            document[key] = bad
+            seal()
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                pkg.verify_disk_smoke(output, fixtures, "a"*64)
+            document[key] = original
+        seal()
+        for actual in (output / "partition-001/frames.bcf1", output / "seed.checkpoint.jsonl"):
+            original = actual.read_bytes()
+            actual.write_bytes(original[:-1])
+            with self.assertRaises(ValueError):
+                pkg.verify_disk_smoke(output, fixtures, "a"*64)
+            actual.write_bytes(original)
+        (output / ".complete.json.partial").write_bytes(b"partial")
+        with self.assertRaisesRegex(ValueError, "partial completion"):
+            pkg.verify_disk_smoke(output, fixtures, "a"*64)
+
+    def test_candidate_retains_usable_executable_and_complete_source_archives(self):
+        runtime = self.payload()
+        (runtime / pkg.BINARY).chmod(0o555)
+        context = self.root / "context"
+        context.mkdir()
+        shutil.copytree(runtime / "opt/mapping-host/segments", context / "mapping-host/segments")
+        for name in pkg.EXACT:
+            path = context / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(b"exact source input")
+        files = pkg.inventory(context)
+        source = {"schema":"pinax.mapping-host.build-inputs/v1", "source_commit":COMMIT,
+                  "files":files, "input_set_sha256":pkg.sha(pkg.canonical(files))}
+        (context / "source.json").write_bytes(pkg.canonical(source))
+        shutil.copyfile(context / "source.json", runtime / pkg.SOURCE)
+        pkg.seal(runtime)
+        document = pkg.verify(runtime, COMMIT)
+        receipt = {"schema":"pinax.mapping-host.runtime-smoke/v1", "source_commit":COMMIT,
+                   "image_config_sha256":"sha256:" + "b"*64, "runtime_json_sha256":pkg.digest(runtime/pkg.RUNTIME),
+                   "runtime_binary_sha256":document["binary_sha256"], "network":"none", "blocks":list(pkg.BLOCKS),
+                   "production_selectable":False,
+                   "disk_oracle":{"fixture_only":True, "partitions":2, "network":"none", "from":13899664,
+                                  "to_exclusive":13899666, "request_sha256":"1"*64, "completion_sha256":"2"*64}}
+        smoke = self.root / "smoke.json"
+        smoke.write_bytes(pkg.canonical(receipt))
+        output = self.root / "candidate"
+        result = pkg.candidate(runtime, context, smoke, COMMIT, output)
+        self.assertFalse(result["registry_published"])
+        self.assertFalse(result["production_selectable"])
+        for key, expected in (("archive", pkg.inventory(runtime)), ("source_archive", pkg.inventory(context))):
+            path = output / result[key]["file"]
+            self.assertEqual(result[key]["sha256"], pkg.digest(path))
+            with tarfile.open(path) as archive:
+                self.assertEqual(set(expected), set(archive.getnames()))
+                for member in archive:
+                    self.assertTrue(member.isfile())
+                    self.assertEqual((member.uid, member.gid, member.mtime), (0, 0, 0))
+                    self.assertEqual(pkg.sha(archive.extractfile(member).read()), expected[member.name]["sha256"])
+                    if member.name == pkg.BINARY:
+                        self.assertEqual(member.mode, 0o555)
+        self.assertTrue((output / "candidate.json").is_file())
+        self.assertFalse((output / ".candidate.json.partial").exists())
+        with self.assertRaises(FileExistsError):
+            pkg.candidate(runtime, context, smoke, COMMIT, output)
+        (context / "Cargo.toml").write_bytes(b"changed source")
+        with self.assertRaisesRegex(ValueError, "build inputs differ"):
+            pkg.candidate(runtime, context, smoke, COMMIT, self.root / "bad-candidate")
+        self.assertFalse((self.root / "bad-candidate/candidate.json").exists())
+
+    def test_streamed_archive_refuses_wrong_bytes_and_nonregular_inputs(self):
+        root = self.root / "input"
+        root.mkdir()
+        (root / "row").write_bytes(b"data")
+        with patch.object(pkg, "inventory", return_value={"row":{"sha256":"0"*64,"bytes":4}}):
+            with self.assertRaisesRegex(ValueError, "archive bytes changed"):
+                pkg.archive_exact(root, self.root / "bad.tar.gz")
+        (root / "link").symlink_to(root / "row")
+        with self.assertRaisesRegex(ValueError, "non-regular"):
+            pkg.archive_exact(root, self.root / "symlink.tar.gz")
 
     def test_bcf_smoke_requires_exact_four_payloads_and_order(self):
         goldens = REPO / f"fixtures/block-changes/{pkg.ROOT_SEGMENT}"
